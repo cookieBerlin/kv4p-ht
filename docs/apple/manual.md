@@ -23,7 +23,9 @@
 
 - 🖥 Mac with Apple Silicon, macOS 26 or later.
 - 📱 iPhone or iPad with iOS/iPadOS 26 or later *(phase 2)*.
-- A kv4p HT radio with firmware version 17 or later (BLE support).
+- A kv4p HT radio with firmware version 17 or later. Bluetooth LE needs a build
+  that includes the BLE service; the version 17 image of the Android app does not
+  (see [FAQ](faq.md#which-firmware-do-i-need)). USB works with both.
 - A valid amateur radio license to transmit.
 
 ## Installation
@@ -86,8 +88,10 @@ See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
 
 Used by developers before merging a milestone that touches hardware behaviour:
 
-- [ ] Connect via BLE; firmware version and module type shown correctly.
-- [ ] 🖥 Connect via USB.
+- [ ] Connect via BLE; firmware version and module type shown correctly
+      (until the app exists: `cd apple-src && swift run kv4p-probe --ble`).
+- [ ] 🖥 Connect via USB (`swift run kv4p-probe --serial`; add `--reset` if the
+      radio was already running, so it restarts and sends `HELLO`).
 - [ ] RX audio continuous for 10 minutes without drop-outs.
 - [ ] PTT into a dummy load; TX stops when PTT is released and when the link drops.
 - [ ] Reconnect after radio power cycle.

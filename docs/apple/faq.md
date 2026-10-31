@@ -16,8 +16,14 @@ devices without certification. On a Mac, both Bluetooth LE and USB work.
 
 ## Which firmware do I need?
 
-Firmware version 17 or later, which includes Bluetooth LE support. The app shows
-a notice if your firmware is too old.
+Firmware with Bluetooth LE support. The app shows a notice if your firmware is
+too old.
+
+Careful with version 17: the firmware image shipped with the Android app
+(`firmware_v17.bin`) reports version 17 but has **no** Bluetooth LE service; BLE
+was added to the source later without a new version number. Such a radio works
+over USB (Mac) but cannot be found over Bluetooth. Firmware built from the
+current source sets the FreeDV feature flag, which the older image lacks.
 
 ## Can I update the firmware from the Apple app?
 

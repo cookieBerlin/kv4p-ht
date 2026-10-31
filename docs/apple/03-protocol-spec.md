@@ -13,7 +13,9 @@ Swift implementation: `apple-src/Packages/KV4PProtocol` (`RadioState`,
 `DeviceState`, `FirmwareVersion`, `Hello`, `WindowUpdate`, `TXChannel`,
 `FrameEncoder`, `KISSParser`, `SMeter`, `FlowControlWindow`; device side:
 `HostFrameParser`, `DeviceFrameEncoder`). The device behaviour of §9 is
-reproduced by `apple-src/Packages/KV4PSimulator`.
+reproduced by `apple-src/Packages/KV4PSimulator`. Transports (§1):
+`apple-src/Packages/KV4PTransport` (`BLELink`, `BLETransport`,
+`SerialTransport`); GATT UUIDs: `BLEGATT`.
 
 All multi-byte values are **little-endian**. Floats are IEEE 754 binary32.
 Structs are packed (no padding).
@@ -247,6 +249,11 @@ Reference implementation: `ImaAdpcm.java`.
 - Exact semantics of `memoryId` on the device side.
 - Mapping table of SA818 CTCSS indices (to be extracted from Android `ToneHelper`).
 - Behaviour when several sessions request conflicting global flags.
+- **Two firmware builds report version 17**: the image bundled with the Android
+  app (`res/raw/firmware_v17.bin`) has no BLE GATT service; the current source
+  has it. The only visible difference in `HELLO` is `FEATURE_HAS_FREEDV_2400B`
+  (set by the current source). An upstream version bump would make this
+  unambiguous.
 
 ## 9. Firmware behaviour (firmware 17)
 

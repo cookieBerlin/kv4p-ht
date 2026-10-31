@@ -1,3 +1,10 @@
 # Files excluded from the 100 % coverage gate (ADR-0011).
 # One path per line, relative to apple-src/. Every entry needs a pull request
 # that explains why the file cannot be covered (thin hardware adapter only).
+
+# CoreBluetooth adapter: forwards callbacks and commands only (ADR-0018).
+Packages/KV4PTransport/Sources/KV4PTransport/CoreBluetoothCentral.swift
+# POSIX serial adapter: forwards termios, ioctl and read/write only (ADR-0018).
+Packages/KV4PTransport/Sources/KV4PTransport/POSIXSerialPort.swift
+# Entry point of the hardware probe tool.
+Packages/KV4PProbe/Sources/kv4p-probe/main.swift
