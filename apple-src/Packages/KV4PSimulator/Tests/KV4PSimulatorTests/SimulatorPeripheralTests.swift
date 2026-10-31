@@ -19,7 +19,10 @@ final class FakePeripheralManager: BLEPeripheralManager {
     var commands: [PeripheralCommand] { log.withLock { $0 } }
 
     var notified: [UInt8] {
-        commands.flatMap { if case .notify(let chunk) = $0 { chunk } else { [] } }
+        commands.flatMap { command -> [UInt8] in
+            guard case .notify(let chunk) = command else { return [] }
+            return chunk
+        }
     }
 
     func perform(_ command: PeripheralCommand) {
