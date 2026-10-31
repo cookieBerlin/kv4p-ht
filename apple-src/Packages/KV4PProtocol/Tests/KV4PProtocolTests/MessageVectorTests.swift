@@ -173,7 +173,8 @@ struct MessageVectorTests {
     @Test("WindowUpdate decodes like Android", arguments: vectors("WindowUpdate"))
     func decodeWindowUpdate(vector: Vector) throws {
         try check(vector, decode: WindowUpdate.init(decoding:)) { value, update in
-            #expect(update.size == UInt32(truncatingIfNeeded: try #require(value.window).size))
+            let expected = try #require(value.window)
+            #expect(update.size == UInt32(truncatingIfNeeded: expected.size))
         }
     }
 
@@ -184,13 +185,15 @@ struct MessageVectorTests {
         matches: (ValueJSON, T) throws -> Void
     ) throws {
         let bytes = Array(try [UInt8](hex: try #require(vector.input.bytes)).prefix(try #require(vector.input.len)))
-        do {
-            let decoded = try decode(bytes)
+        switch Result(catching: { () throws(ProtocolError) in try decode(bytes) }) {
+        case .success(let decoded):
             try matches(try #require(vector.expected.value), decoded)
-        } catch .invalidLength {
+        case .failure(.invalidLength):
             #expect(vector.expected.value == nil && vector.expected.error == nil)
-        } catch .unknownRFModuleType {
+        case .failure(.unknownRFModuleType):
             #expect(vector.expected.error == "invalidArgument")
+        case .failure(let error):
+            Issue.record("unexpected \(error)")
         }
     }
 }
