@@ -37,6 +37,9 @@ files=$(jq -r --arg root "$root/" '.data[0].files[].filename | ltrimstr($root)' 
 missing=""
 for module in "$root"/Packages/*/Sources/*/; do
   module="${module#"$root/"}"
+  # Modules whose files are all excluded (e.g. a tool's entry point) need no data.
+  covered_files=$(cd "$root" && find "$module" -name '*.swift' | grep -vxF "$excluded" || true)
+  [[ -z "$covered_files" ]] && continue
   grep -q "^$module" <<<"$files" || missing+="  $module"$'\n'
 done
 if [[ -n "$missing" ]]; then

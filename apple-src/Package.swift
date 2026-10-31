@@ -44,6 +44,12 @@ let package = Package(
             dependencies: ["KV4PSimulator", "KV4PTestSupport"],
             path: "Packages/KV4PSimulator/Tests/KV4PSimulatorTests"
         ),
+        // Development tool for the hardware checklist (macOS).
+        .executableTarget(
+            name: "kv4p-probe",
+            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            path: "Packages/KV4PProbe/Sources/kv4p-probe"
+        ),
         // Test doubles shared by the test targets (manual clock); not part of any product.
         .target(
             name: "KV4PTestSupport",
