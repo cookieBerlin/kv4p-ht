@@ -12,6 +12,11 @@ public enum DeviceFrameEncoder {
         vendor(.windowUpdate, update.encoded())
     }
 
+    /// One IMA ADPCM block of received audio.
+    public static func rxAudio(_ block: [UInt8]) -> [UInt8] {
+        vendor(.rxAudio, block)
+    }
+
     /// KISS DATA frame carrying a received AX.25 packet without FCS.
     public static func ax25(_ packet: [UInt8]) -> [UInt8] {
         KISS.frame(command: KISS.Command.data, payload: packet)
