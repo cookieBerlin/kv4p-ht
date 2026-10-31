@@ -72,6 +72,10 @@
             emit(.serviceAdded(error == nil))
         }
 
+        public func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: (any Error)?) {
+            emit(.advertisingStarted(error: error?.localizedDescription))
+        }
+
         public func peripheralManager(
             _ peripheral: CBPeripheralManager,
             central: CBCentral,

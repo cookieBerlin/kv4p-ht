@@ -4,6 +4,8 @@ import KV4PTransport
 public enum PeripheralEvent: Equatable, Sendable {
     case powerState(BLEPowerState)
     case serviceAdded(Bool)
+    /// `peripheralManagerDidStartAdvertising(_:error:)`, with the error description if it failed.
+    case advertisingStarted(error: String?)
     /// A central subscribed to the RX characteristic; its `maximumUpdateValueLength`.
     case subscribed(maximumUpdateLength: Int)
     case unsubscribed
@@ -31,7 +33,7 @@ public struct PeripheralLink: Sendable {
     public private(set) var simulator: RadioSimulator
     public private(set) var isAdvertising = false
     public private(set) var isSubscribed = false
-    /// The service could not be published.
+    /// The service could not be published or advertised.
     public private(set) var failed = false
 
     private var serviceRequested = false
@@ -60,6 +62,10 @@ public struct PeripheralLink: Sendable {
             failed = !added
             isAdvertising = added
             return added ? [.startAdvertising] : []
+        case .advertisingStarted(let error):
+            failed = error != nil
+            isAdvertising = error == nil
+            return []
         case .subscribed(let maximumUpdateLength):
             guard !isSubscribed else { return [] }
             isSubscribed = true
