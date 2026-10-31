@@ -14,12 +14,7 @@ public enum FrameEncoder {
         ctcssTx: UInt8
     ) throws(ProtocolError) -> [UInt8] {
         try requireAX25Length(packet)
-        var writer = ByteWriter()
-        writer.float(freqTx)
-        writer.uint8(bandwidth)
-        writer.uint8(ctcssTx)
-        writer.bytes(packet)
-        return vendor(.txAX25, writer.bytes)
+        return vendor(.txAX25, TXChannel(freqTx: freqTx, bandwidth: bandwidth, ctcssTx: ctcssTx).encoded() + packet)
     }
 
     /// One IMA ADPCM block of TX audio.

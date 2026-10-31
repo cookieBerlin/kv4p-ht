@@ -26,4 +26,13 @@ public struct StateFlags: OptionSet, Hashable, Sendable {
     public static let enableStatusReports = StateFlags(rawValue: 1 << 12)
     /// Host only.
     public static let freeDV2400B = StateFlags(rawValue: 1 << 13)
+
+    /// Flags that apply only to the sending session (`HOST_STATE_SESSION_FLAG_MASK`).
+    public static let sessionScope: StateFlags = [.rxAudioOpen, .enableStatusReports]
+    /// Flags that change the radio for all sessions (`HOST_STATE_GLOBAL_FLAG_MASK`).
+    public static let globalScope: StateFlags = [
+        .radioConfigValid, .pttRequested, .highPower, .rssiEnabled, .filterPre, .filterHigh, .filterLow, .txAllowed,
+        .freeDV2400B,
+    ]
+    public static let filters: StateFlags = [.filterPre, .filterHigh, .filterLow]
 }
