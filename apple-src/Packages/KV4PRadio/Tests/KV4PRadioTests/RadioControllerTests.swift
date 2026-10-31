@@ -1,9 +1,9 @@
-import KV4PProtocol
 import KV4PSimulator
 import KV4PTestSupport
 import KV4PTransport
 import Testing
 
+@testable import KV4PProtocol
 @testable import KV4PRadio
 
 /// `RadioController` end to end against the simulator (ADR-0014 A).
@@ -70,6 +70,7 @@ struct RadioControllerTests {
     func tuneBeforeHello() async {
         let setup = Setup()
         await #expect(throws: RadioError.notReady) { try await setup.controller.tune(rx: 146.52, tx: 146.52) }
+        #expect(await setup.controller.snapshot.sMeter == 0)
     }
 
     @Test("old firmware is refused")
@@ -103,6 +104,22 @@ struct RadioControllerTests {
         #expect(await setup.snapshots.next { $0.status == .failed(.helloTimeout) } != nil)
     }
 
+    @Test("a HELLO that arrives while connect is still running is kept")
+    func helloDuringConnect() async throws {
+        var simulator = RadioSimulator(scenario: .ble)
+        let hello = simulator.connect(at: .zero)
+        let controller = Box<RadioController<ManualClock>>()
+        let transport = ScriptedTransport { streams in
+            streams.deliver(hello)
+            while await controller.value?.snapshot.status != .ready {
+                await Task.yield()
+            }
+        }
+        controller.value = RadioController(transport: transport, clock: ManualClock())
+        await controller.value?.connect()
+        #expect(await controller.value?.snapshot.status == .ready)
+    }
+
     @Test("an invalid HELLO is refused")
     func invalidHello() async throws {
         let transport = ScriptedTransport()
@@ -111,6 +128,7 @@ struct RadioControllerTests {
         await controller.connect()
         transport.streams.deliver(FrameEncoder.vendor(.desiredState, [1, 2, 3]))  // ignored host command byte
         transport.streams.deliver(DeviceFrameEncoder.windowUpdate(WindowUpdate(size: 10)))
+        transport.streams.deliver(DeviceFrameEncoder.ax25([0x41]))  // handled by a later milestone
         transport.streams.deliver(KV4PProtocol.KV4P.vendorFrame(DeviceCommand.hello.rawValue, [17, 0]))
         #expect(await snapshots.next { $0.status == .failed(.invalidHello) } != nil)
         #expect(transport.sent.isEmpty)
@@ -118,7 +136,10 @@ struct RadioControllerTests {
 
     @Test("a failing transport is reported")
     func connectFails() async {
-        let controller = RadioController(transport: ScriptedTransport(connectError: .serviceNotFound), clock: ManualClock())
+        let controller = RadioController(
+            transport: ScriptedTransport(connectError: .serviceNotFound),
+            clock: ManualClock()
+        )
         var snapshots = controller.snapshots.makeAsyncIterator()
         await controller.connect()
         #expect(await snapshots.next { $0.status == .failed(.transport(.serviceNotFound)) } != nil)
@@ -146,4 +167,25 @@ struct RadioControllerTests {
         #expect(disconnected.firmware == nil)
         _ = try await setup.ready()
     }
+}
+
+@Suite("Radio controller lifetime")
+struct RadioControllerLifetimeTests {
+    @Test("a released controller finishes its snapshots")
+    func released() async {
+        var controller: RadioController? = RadioController(transport: ScriptedTransport())
+        let snapshots = controller?.snapshots
+        await controller?.connect()
+        controller = nil
+        var count = 0
+        for await _ in snapshots ?? AsyncStream { $0.finish() } {
+            count += 1
+        }
+        #expect(count >= 2)
+    }
+}
+
+/// Lets a transport closure reach the controller created after it.
+final class Box<Value: Sendable>: @unchecked Sendable {
+    var value: Value?
 }

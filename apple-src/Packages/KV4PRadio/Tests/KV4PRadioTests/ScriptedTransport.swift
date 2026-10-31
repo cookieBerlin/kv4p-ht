@@ -5,10 +5,13 @@ import Synchronization
 final class ScriptedTransport: RadioTransport {
     let streams = TransportStreams()
     private let connectError: TransportError?
+    private let onConnect: (@Sendable (TransportStreams) async -> Void)?
     private let sentFrames = Mutex<[[UInt8]]>([])
 
-    init(connectError: TransportError? = nil) {
+    /// `onConnect` runs inside `connect()` after the transport reports connected.
+    init(connectError: TransportError? = nil, onConnect: (@Sendable (TransportStreams) async -> Void)? = nil) {
         self.connectError = connectError
+        self.onConnect = onConnect
     }
 
     var states: AsyncStream<TransportState> { streams.states }
@@ -23,6 +26,7 @@ final class ScriptedTransport: RadioTransport {
             throw connectError
         }
         streams.publish(.connected)
+        await onConnect?(streams)
     }
 
     func send(_ bytes: [UInt8]) async throws(TransportError) {
