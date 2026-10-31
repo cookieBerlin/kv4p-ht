@@ -21,8 +21,11 @@ a notice if your firmware is too old.
 
 ## Can I update the firmware from the Apple app?
 
-No. Use the web flasher on the project website with desktop Chrome or Edge, or
-the Android app. See [Firmware updates](manual.md#firmware-updates).
+On a Mac, yes: connect the radio by USB and use the firmware update function
+*(planned)*. On iPhone and iPad this is not possible because iOS does not allow
+access to the radio's USB port; use the web flasher on the project website with
+desktop Chrome or Edge, the Android app, or a Mac. See
+[Firmware updates](manual.md#firmware-updates).
 
 ## Which Macs are supported?
 
@@ -32,7 +35,7 @@ Macs with Apple Silicon running macOS 26 or later. Intel Macs are not supported.
 
 That is the goal: receive, transmit, memories, scanning, APRS and FreeDV. Feature
 parity is tracked in the [feasibility analysis](01-feasibility.md#feature-inventory-android-app).
-Firmware flashing is not included.
+Firmware flashing is available on macOS only.
 
 ## Can I try the app without a radio?
 

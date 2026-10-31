@@ -70,10 +70,13 @@ in Settings before transmitting; the app ships with no callsign configured.
 
 ## Firmware updates
 
-The app warns when the radio's firmware is older than required. Update the
-firmware with the web flasher on the project website (desktop Chrome or Edge) —
-the Apple app does not flash firmware itself
-([ADR-0009](adr/0009-firmware-updates.md)).
+The app warns when the radio's firmware is older than required.
+
+- 🖥 *Planned:* connect the radio by USB and start the update from the notice or
+  from Settings. Do not disconnect the cable until the update has finished and
+  been verified. If an update fails, simply start it again.
+- 📱 Updating from iPhone or iPad is not possible. Use the web flasher on the
+  project website (desktop Chrome or Edge), the Android app or a Mac.
 
 ## Troubleshooting
 
