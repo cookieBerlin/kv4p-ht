@@ -104,6 +104,8 @@ public final class RadioViewModel {
 
     public var sMeter: Int { snapshot.sMeter }
 
+    public var sMeterText: String { Self.sMeterText(for: sMeter) }
+
     // MARK: Connection
 
     public func connect() async {
@@ -243,6 +245,15 @@ public final class RadioViewModel {
         case .connectionLost: "The connection to the radio was lost."
         case .portUnavailable(let path, _): "\(path) cannot be opened."
         default: "The connection failed."
+        }
+    }
+
+    /// `S0`…`S9`, then 20 dB steps (`S9+20`…`S9+60`), then `Overload` (`SMeter.overload`).
+    static func sMeterText(for value: Int) -> String {
+        switch value {
+        case SMeter.overload: "Overload"
+        case 10...: "S9+\((value - 9) * 20)"
+        default: "S\(value)"
         }
     }
 
