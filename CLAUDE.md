@@ -38,7 +38,9 @@ These rules apply to all work on the Apple port (`apple-src/`, `docs/apple/`,
 6. **No personal data in the repository.** No real names, e-mail addresses, private
    domains, phone numbers, locations or real callsigns — not in code, test data,
    docs or commit metadata. Use placeholders such as `N0CALL` and documentation
-   IP ranges/domains (`example.com`).
+   IP ranges/domains (`example.com`). Exception: the fork maintainer's GitHub
+   display name as author of merge commits created by GitHub (e-mail addresses
+   stay GitHub noreply addresses).
 7. **Architecture decisions require an ADR** in `docs/apple/adr/` (see
    [ADR-0001](docs/apple/adr/0001-record-architecture-decisions.md)). Accepted ADRs
    are immutable; supersede them with a new ADR.
