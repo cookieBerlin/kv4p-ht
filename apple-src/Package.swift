@@ -49,12 +49,12 @@ let package = Package(
         ),
         .target(
             name: "KV4PSimulator",
-            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio"],
             path: "Packages/KV4PSimulator/Sources/KV4PSimulator"
         ),
         .testTarget(
             name: "KV4PSimulatorTests",
-            dependencies: ["KV4PSimulator", "KV4PTestSupport"],
+            dependencies: ["KV4PSimulator", "KV4PAudio", "KV4PTestSupport"],
             path: "Packages/KV4PSimulator/Tests/KV4PSimulatorTests"
         ),
         .target(
