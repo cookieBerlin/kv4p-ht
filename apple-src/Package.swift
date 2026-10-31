@@ -19,7 +19,8 @@ let package = Package(
         .testTarget(
             name: "KV4PProtocolTests",
             dependencies: ["KV4PProtocol"],
-            path: "Packages/KV4PProtocol/Tests/KV4PProtocolTests"
+            path: "Packages/KV4PProtocol/Tests/KV4PProtocolTests",
+            resources: [.copy("Vectors")]
         ),
     ],
     swiftLanguageModes: [.v6]
