@@ -10,6 +10,10 @@ public enum KV4P {
     public static let protoMTU = 2048
     /// APRS maximum AX.25 UI frame without FCS: ten addresses, control/PID, 256-byte information field.
     public static let ax25MaxDataLength = 10 * 7 + 2 + 256
+    /// Audio sample rate on the wire (§5): mono, 16-bit PCM before IMA ADPCM encoding.
+    public static let audioSampleRate = 16_000
+    /// Samples in one 128-byte IMA ADPCM block, the payload of `RX_AUDIO` and `HOST_TX_AUDIO`.
+    public static let audioBlockSamples = 249
     /// Maximum decoded KISS frame: command byte, vendor header and payload.
     public static let maxFrameSize = 1 + vendorHeaderLength + protoMTU
 

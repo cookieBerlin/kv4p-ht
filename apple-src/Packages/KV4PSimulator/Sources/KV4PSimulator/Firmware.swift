@@ -6,8 +6,8 @@ enum Firmware {
     static let version: UInt16 = 17
     /// `DEVICE_STATE_REPORT_INTERVAL_MS`.
     static let statusReportInterval = Duration.milliseconds(500)
-    /// `TX_AUDIO_TIMEOUT_MS`: 50 blocks of 249 samples at 16 kHz, truncated to whole milliseconds.
-    static let txAudioTimeout = Duration.milliseconds(50 * 249 * 1000 / 16_000)
+    /// `TX_AUDIO_TIMEOUT_MS`: 50 audio blocks, truncated to whole milliseconds.
+    static let txAudioTimeout = Duration.milliseconds(50 * KV4P.audioBlockSamples * 1000 / KV4P.audioSampleRate)
     /// `RUNAWAY_TX_SEC`; TX stops once it is exceeded.
     static let runawayTX = Duration.seconds(200)
     /// `USB_BUFFER_SIZE`, the window of USB and Bluetooth Classic sessions.
