@@ -40,6 +40,9 @@
         exit(1)
     }
 
+    // Line-buffered, so the output can be piped into a log.
+    setvbuf(stdout, nil, _IOLBF, 0)
+
     let arguments = Array(CommandLine.arguments.dropFirst())
     let operand = arguments.dropFirst().first { !$0.hasPrefix("--") }
     let transport: any RadioTransport
