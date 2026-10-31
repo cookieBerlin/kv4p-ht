@@ -1,6 +1,6 @@
 # ADR-0005: Codec2 for FreeDV 2400B
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-31
 
 ## Context

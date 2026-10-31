@@ -1,6 +1,6 @@
 # ADR-0004: Reuse of the Android code as reference and test oracle
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-31
 
 ## Context

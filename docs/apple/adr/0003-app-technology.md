@@ -1,6 +1,6 @@
 # ADR-0003: App technology
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-31
 
 ## Context

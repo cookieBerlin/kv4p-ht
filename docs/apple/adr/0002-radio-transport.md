@@ -1,6 +1,6 @@
 # ADR-0002: Radio transport
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-31
 
 ## Context
