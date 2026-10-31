@@ -10,7 +10,10 @@ VECTORS := Packages/*/Tests/*/Vectors/*
 # SwiftPM names the scheme <package>-Package once there are several products.
 SCHEME ?= $(shell xcodebuild -list -json 2>/dev/null | jq -r '.workspace.schemes | (map(select(endswith("-Package")))[0] // .[0])')
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check ios-build ci
+APP_PROJECT := App/KV4PHT.xcodeproj
+SWIFT_SOURCES := Package.swift Packages App
+
+.PHONY: test coverage lint format privacy changed vectors vectors-check ios-build app ci
 
 test:
 	$(SWIFT) test
@@ -20,10 +23,10 @@ coverage:
 	scripts/coverage-gate.sh "$$($(SWIFT) build --show-bin-path)"
 
 lint:
-	$(SWIFT) format lint --strict --recursive --parallel Package.swift Packages
+	$(SWIFT) format lint --strict --recursive --parallel $(SWIFT_SOURCES)
 
 format:
-	$(SWIFT) format --in-place --recursive --parallel Package.swift Packages
+	$(SWIFT) format --in-place --recursive --parallel $(SWIFT_SOURCES)
 
 privacy:
 	scripts/privacy-check.sh $(BASE) $(HEAD_REF)
@@ -47,4 +50,9 @@ vectors-check: vectors
 ios-build:
 	xcodebuild build -quiet -scheme '$(SCHEME)' -destination '$(IOS_DESTINATION)'
 
-ci: lint privacy coverage ios-build
+# Builds the app (ADR-0019) for macOS and iOS without code signing.
+app:
+	xcodebuild build -quiet -project $(APP_PROJECT) -scheme KV4PHT -destination 'generic/platform=macOS' CODE_SIGNING_ALLOWED=NO
+	xcodebuild build -quiet -project $(APP_PROJECT) -scheme KV4PHT -destination '$(IOS_DESTINATION)' CODE_SIGNING_ALLOWED=NO
+
+ci: lint privacy coverage ios-build app
