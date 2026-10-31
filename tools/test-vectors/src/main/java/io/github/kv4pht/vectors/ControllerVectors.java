@@ -62,6 +62,8 @@ final class ControllerVectors {
         v.add(script("nothing is sent before ready or without a sender").rxFrequency(146.0f).attach()
                 .rxFrequency(146.52f).seed(state(0, BOOT_FLAGS, 145.5f)).squelch(2).ready().detach().squelch(5)
                 .vector());
+        v.add(script("a device state without a session is adopted but not in sync")
+                .deviceState(state(5, BOOT_FLAGS | REPORTS, 145.5f)).attach().ready().squelch(1).vector());
         v.add(script("FreeDV needs firmware support").attach().seed(state(0, BOOT_FLAGS, 145.5f)).ready()
                 .freeDv(true).firmware(version(0x07)).freeDv(true).firmware(version(0x0F)).freeDv(true)
                 .freeDv(false).vector());

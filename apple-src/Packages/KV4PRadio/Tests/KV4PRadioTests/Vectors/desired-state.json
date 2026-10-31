@@ -852,6 +852,47 @@
       }
     },
     {
+      "name": "a device state without a session is adopted but not in sync",
+      "input": {
+        "steps": [
+          {
+            "call": "deviceState",
+            "bytes": "05000000ffffffff191c01008011430080114300000066020000"
+          },
+          {
+            "call": "attach"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "squelch",
+            "int": 1
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d06000000ffffffff1918010080114300801143000100c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
       "name": "FreeDV needs firmware support",
       "input": {
         "steps": [
