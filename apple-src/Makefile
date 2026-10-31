@@ -17,7 +17,7 @@ test:
 
 coverage:
 	$(SWIFT) test --enable-code-coverage
-	scripts/coverage-gate.sh "$$($(SWIFT) test --show-codecov-path)"
+	scripts/coverage-gate.sh "$$($(SWIFT) build --show-bin-path)"
 
 lint:
 	$(SWIFT) format lint --strict --recursive --parallel Package.swift Packages
