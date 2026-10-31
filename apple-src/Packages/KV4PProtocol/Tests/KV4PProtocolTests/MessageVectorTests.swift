@@ -198,6 +198,33 @@ struct MessageVectorTests {
         try checkReencoding(vector, decode: WindowUpdate.init(decoding:)) { $0.encoded() }
     }
 
+    @Test("memberwise initializers build the decoded messages", arguments: vectors("Hello"))
+    func memberwiseInitializers(vector: Vector) throws {
+        guard let hello = try? Hello(decoding: try inputBytes(vector)) else { return }
+        let version = hello.version
+        let state = hello.deviceState
+        let rebuilt = Hello(
+            version: FirmwareVersion(
+                version: version.version,
+                radioModuleStatus: version.radioModuleStatus,
+                windowSize: version.windowSize,
+                moduleType: version.moduleType,
+                minRadioFreq: version.minRadioFreq,
+                maxRadioFreq: version.maxRadioFreq,
+                features: version.features
+            ),
+            deviceState: DeviceState(
+                radio: state.radio,
+                radioModuleStatus: state.radioModuleStatus,
+                mode: state.mode,
+                lastError: state.lastError,
+                latestRssi: state.latestRssi
+            )
+        )
+        #expect(rebuilt == hello)
+        #expect(WindowUpdate(size: version.windowSize).size == version.windowSize)
+    }
+
     private func inputBytes(_ vector: Vector) throws -> [UInt8] {
         Array(try [UInt8](hex: try #require(vector.input.bytes)).prefix(try #require(vector.input.len)))
     }

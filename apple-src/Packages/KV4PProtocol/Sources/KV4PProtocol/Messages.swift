@@ -63,6 +63,11 @@ public struct RadioState: Equatable, Sendable {
 
     public func encoded() -> [UInt8] {
         var writer = ByteWriter()
+        write(to: &writer)
+        return writer.bytes
+    }
+
+    func write(to writer: inout ByteWriter) {
         writer.uint32(sequence)
         writer.uint32(UInt32(bitPattern: memoryId))
         writer.uint16(flags.rawValue)
@@ -72,7 +77,6 @@ public struct RadioState: Equatable, Sendable {
         writer.uint8(ctcssTx)
         writer.uint8(squelch)
         writer.uint8(ctcssRx)
-        return writer.bytes
     }
 }
 
@@ -83,13 +87,22 @@ public typealias HostDesiredState = RadioState
 public enum RadioModuleStatus: Equatable, Sendable {
     case found
     case notFound
-    case unknown
+    /// Any other byte, kept so the state re-encodes unchanged.
+    case unknown(UInt8)
 
     init(byte: UInt8) {
         switch byte {
         case UInt8(ascii: "f"): self = .found
         case UInt8(ascii: "x"): self = .notFound
-        default: self = .unknown
+        default: self = .unknown(byte)
+        }
+    }
+
+    var byte: UInt8 {
+        switch self {
+        case .found: UInt8(ascii: "f")
+        case .notFound: UInt8(ascii: "x")
+        case .unknown(let byte): byte
         }
     }
 }
@@ -99,14 +112,24 @@ public enum DeviceMode: Equatable, Sendable {
     case tx
     case rx
     case stopped
-    case unknown
+    /// Any other byte, kept so the state re-encodes unchanged.
+    case unknown(UInt8)
 
     init(byte: UInt8) {
         switch byte {
         case 0: self = .tx
         case 1: self = .rx
         case 2: self = .stopped
-        default: self = .unknown
+        default: self = .unknown(byte)
+        }
+    }
+
+    var byte: UInt8 {
+        switch self {
+        case .tx: 0
+        case .rx: 1
+        case .stopped: 2
+        case .unknown(let byte): byte
         }
     }
 }
@@ -128,6 +151,20 @@ public struct DeviceState: Equatable, Sendable {
 
     public var hasRadioConfig: Bool { radio.flags.contains(.radioConfigValid) }
 
+    public init(
+        radio: RadioState,
+        radioModuleStatus: RadioModuleStatus,
+        mode: DeviceMode,
+        lastError: UInt8 = 0,
+        latestRssi: UInt8 = 0
+    ) {
+        self.radio = radio
+        self.radioModuleStatus = radioModuleStatus
+        self.mode = mode
+        self.lastError = lastError
+        self.latestRssi = latestRssi
+    }
+
     public init(decoding bytes: [UInt8]) throws(ProtocolError) {
         try bytes.requireCount(Self.byteCount)
         var reader = ByteReader(bytes)
@@ -136,6 +173,16 @@ public struct DeviceState: Equatable, Sendable {
         mode = DeviceMode(byte: reader.uint8())
         lastError = reader.uint8()
         latestRssi = reader.uint8()
+    }
+
+    public func encoded() -> [UInt8] {
+        var writer = ByteWriter()
+        radio.write(to: &writer)
+        writer.uint8(radioModuleStatus.byte)
+        writer.uint8(mode.byte)
+        writer.uint8(lastError)
+        writer.uint8(latestRssi)
+        return writer.bytes
     }
 }
 
@@ -176,6 +223,24 @@ public struct FirmwareVersion: Equatable, Sendable {
     public var maxRadioFreq: Float
     public var features: FirmwareFeatures
 
+    public init(
+        version: UInt16,
+        radioModuleStatus: RadioModuleStatus,
+        windowSize: UInt32,
+        moduleType: RFModuleType,
+        minRadioFreq: Float,
+        maxRadioFreq: Float,
+        features: FirmwareFeatures
+    ) {
+        self.version = version
+        self.radioModuleStatus = radioModuleStatus
+        self.windowSize = windowSize
+        self.moduleType = moduleType
+        self.minRadioFreq = minRadioFreq
+        self.maxRadioFreq = maxRadioFreq
+        self.features = features
+    }
+
     public init(decoding bytes: [UInt8]) throws(ProtocolError) {
         try bytes.requireCount(Self.byteCount)
         var reader = ByteReader(bytes)
@@ -189,6 +254,18 @@ public struct FirmwareVersion: Equatable, Sendable {
         maxRadioFreq = reader.float()
         features = FirmwareFeatures(rawValue: reader.uint8())
     }
+
+    public func encoded() -> [UInt8] {
+        var writer = ByteWriter()
+        writer.uint16(version)
+        writer.uint8(radioModuleStatus.byte)
+        writer.uint32(windowSize)
+        writer.uint8(moduleType.rawValue)
+        writer.float(minRadioFreq)
+        writer.float(maxRadioFreq)
+        writer.uint8(features.rawValue)
+        return writer.bytes
+    }
 }
 
 /// First message of a session (`HELLO`, 43 bytes).
@@ -198,10 +275,19 @@ public struct Hello: Equatable, Sendable {
     public var version: FirmwareVersion
     public var deviceState: DeviceState
 
+    public init(version: FirmwareVersion, deviceState: DeviceState) {
+        self.version = version
+        self.deviceState = deviceState
+    }
+
     public init(decoding bytes: [UInt8]) throws(ProtocolError) {
         try bytes.requireCount(Self.byteCount)
         version = try FirmwareVersion(decoding: Array(bytes.prefix(FirmwareVersion.byteCount)))
         deviceState = try DeviceState(decoding: Array(bytes.dropFirst(FirmwareVersion.byteCount)))
+    }
+
+    public func encoded() -> [UInt8] {
+        version.encoded() + deviceState.encoded()
     }
 }
 
@@ -212,9 +298,19 @@ public struct WindowUpdate: Equatable, Sendable {
     /// Encoded bytes the device consumed.
     public var size: UInt32
 
+    public init(size: UInt32) {
+        self.size = size
+    }
+
     public init(decoding bytes: [UInt8]) throws(ProtocolError) {
         try bytes.requireCount(Self.byteCount)
         var reader = ByteReader(bytes)
         size = reader.uint32()
+    }
+
+    public func encoded() -> [UInt8] {
+        var writer = ByteWriter()
+        writer.uint32(size)
+        return writer.bytes
     }
 }
