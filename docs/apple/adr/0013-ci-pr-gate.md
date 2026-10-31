@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-31
-- **Amended by:** [ADR-0015](0015-build-layout-and-tooling.md), [ADR-0016](0016-branch-protection.md)
+- **Amended by:** [ADR-0015](0015-build-layout-and-tooling.md), [ADR-0016](0016-branch-protection.md), [ADR-0017](0017-ci-change-detection.md)
 
 ## Context
 
