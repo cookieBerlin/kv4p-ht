@@ -142,6 +142,9 @@ Unknown commands are ignored by the host.
 | 20 | uint8 | `squelch` — 0…8 |
 | 21 | uint8 | `ctcssRx` — SA818 tone index, 0 = none |
 
+Tone index `n` (1…38) is the `n`-th of 67, 71.9, 74.4, … 250.3 Hz, as in the
+Android `ToneHelper` (`CTCSS` in `KV4PProtocol`, pinned by `ctcss.json`).
+
 ### 4.2 `DeviceState` (26 bytes)
 
 Bytes 0–21 have the same layout as `HostDesiredState` (`sequence` is
@@ -249,7 +252,6 @@ Reference implementation: `ImaAdpcm.java`.
 ## 8. Open points
 
 - Exact semantics of `memoryId` on the device side.
-- Mapping table of SA818 CTCSS indices (to be extracted from Android `ToneHelper`).
 - Behaviour when several sessions request conflicting global flags.
 - **Two firmware builds report version 17**: the image bundled with the Android
   app (`res/raw/firmware_v17.bin`) has no BLE GATT service; the current source
