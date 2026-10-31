@@ -1,3 +1,4 @@
+import KV4PAudio
 import KV4PProtocol
 
 /// A packet the device accepted for transmission.
@@ -15,7 +16,9 @@ public struct TransmittedPacket: Equatable, Sendable {
 /// Every call takes the time since power-on and returns the bytes the device writes to the host. Times
 /// must not decrease. Deadlines that pass between calls (status reports, watchdog) are processed in order.
 ///
-/// Not simulated yet: RX audio and squelch (always squelched), RSSI, FreeDV, the AX.25 TX scheduler (accepted
+/// RX audio follows `carrier`: without one the squelch is closed and the audio muted.
+///
+/// Not simulated yet: the squelch level, FreeDV, the AX.25 TX scheduler (accepted
 /// packets are recorded in `transmittedPackets`) and the physical PTT button.
 public struct RadioSimulator: Sendable {
     public let scenario: Scenario
@@ -25,6 +28,7 @@ public struct RadioSimulator: Sendable {
     public private(set) var isStalled = false
     public private(set) var transmittedPackets: [TransmittedPacket] = []
     public private(set) var kissParameters: [KISS.Parameter: UInt8] = [:]
+    public private(set) var carrier: Carrier?
 
     private var parser = HostFrameParser()
     private var desired: RadioState
@@ -38,10 +42,16 @@ public struct RadioSimulator: Sendable {
     private var lastReport = Duration.zero
     private var txStart = Duration.zero
     private var lastTXAudio = Duration.zero
+    private var isStreamingAudio = false
+    private var lastRXAudio = Duration.zero
+    private var rxEncoder = ImaAdpcm.Encoder()
+    /// Position in the tone, 0 ..< `KV4P.audioSampleRate`.
+    private var toneIndex = 0
 
     /// Boots the device at time zero.
     public init(scenario: Scenario = Scenario()) {
         self.scenario = scenario
+        carrier = scenario.carrier
         desired = Self.bootState(scenario)
         applied.memoryId = desired.memoryId
         radioResponds = scenario.radioModuleStatus == .found
@@ -55,11 +65,15 @@ public struct RadioSimulator: Sendable {
     public var deviceState: DeviceState {
         var radio = applied
         radio.sequence = desired.sequence
-        radio.flags = desired.flags.union(sessionFlags).union(.squelched)
+        radio.flags = desired.flags.union(sessionFlags)
+        if carrier == nil {
+            radio.flags.insert(.squelched)
+        }
         if mode == .tx {
             radio.flags.insert(.txActive)
         }
-        return DeviceState(radio: radio, radioModuleStatus: scenario.radioModuleStatus, mode: mode)
+        let rssi = radio.flags.contains(.rssiEnabled) ? carrier?.rssi ?? 0 : 0
+        return DeviceState(radio: radio, radioModuleStatus: scenario.radioModuleStatus, mode: mode, latestRssi: rssi)
     }
 
     /// The transport connected (BLE: notify subscription); the device sends `HELLO`.
@@ -112,6 +126,17 @@ public struct RadioSimulator: Sendable {
         inject(DeviceFrameEncoder.ax25(packet), at: time)
     }
 
+    /// A signal starts (or, with `nil`, ends) on the receive frequency.
+    public mutating func setCarrier(_ carrier: Carrier?, at time: Duration) -> [UInt8] {
+        step(to: time) { simulator in
+            if simulator.carrier != carrier {
+                simulator.carrier = carrier
+                simulator.stateDirty = true
+            }
+            return []
+        }
+    }
+
     /// Raw bytes written to a connected host, e.g. malformed frames.
     public mutating func inject(_ bytes: [UInt8], at time: Duration) -> [UInt8] {
         step(to: time) { simulator in simulator.isConnected ? bytes : [] }
@@ -138,6 +163,9 @@ public struct RadioSimulator: Sendable {
         if sessionFlags.contains(.enableStatusReports) {
             deadlines.append(lastReport + Firmware.statusReportInterval)
         }
+        if streamsAudio {
+            deadlines.append(lastRXAudio + Firmware.audioBlockPeriod)
+        }
         if mode == .tx {
             deadlines.append(lastTXAudio + Firmware.txAudioTimeout)
             deadlines.append(txStart + Firmware.runawayTX + .milliseconds(1))
@@ -145,10 +173,40 @@ public struct RadioSimulator: Sendable {
         return deadlines.min()
     }
 
-    /// The part of the firmware `loop()` after the protocol parser: `txAudioLoop()`, then `deviceStateLoop()`.
+    /// The part of the firmware `loop()` after the protocol parser: `txAudioLoop()`, `rxAudioLoop()`, then
+    /// `deviceStateLoop()`.
     private mutating func loop() -> [UInt8] {
         txAudioLoop()
-        return deviceStateLoop()
+        return rxAudioLoop() + deviceStateLoop()
+    }
+
+    /// `sendAudio()` streams only to sessions with `RX_AUDIO_OPEN`, and not while transmitting.
+    private var streamsAudio: Bool { isConnected && sessionFlags.contains(.rxAudioOpen) && mode != .tx }
+
+    /// One block per `audioBlockPeriod`, counted from the moment streaming starts.
+    private mutating func rxAudioLoop() -> [UInt8] {
+        guard streamsAudio else {
+            isStreamingAudio = false
+            return []
+        }
+        if !isStreamingAudio {
+            isStreamingAudio = true
+            lastRXAudio = now
+        }
+        var output: [UInt8] = []
+        while now - lastRXAudio >= Firmware.audioBlockPeriod {
+            lastRXAudio += Firmware.audioBlockPeriod
+            output += DeviceFrameEncoder.rxAudio(rxEncoder.encodeBlock(nextRXSamples()))
+        }
+        return output
+    }
+
+    /// The tone of the carrier; silence while squelched (`mute.setActive(squelched)`).
+    private mutating func nextRXSamples() -> [Int16] {
+        (0..<KV4P.audioBlockSamples).map { _ in
+            defer { toneIndex = (toneIndex + 1) % KV4P.audioSampleRate }
+            return carrier?.sample(toneIndex) ?? 0
+        }
     }
 
     private mutating func txAudioLoop() {
