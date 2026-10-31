@@ -1,0 +1,182 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "javAX25 Packet",
+  "vectors": [
+    {
+      "name": "position without path",
+      "input": {
+        "destination": "APRS",
+        "source": "N0CALL",
+        "path": [],
+        "control": 3,
+        "protocol": 240,
+        "payload": "21343930332e35304e2f30373230312e3735572d54657374"
+      },
+      "expected": {
+        "bytes": "82a0a4a64040609c60868298986103f021343930332e35304e2f30373230312e3735572d54657374",
+        "bytesWithCRC": "82a0a4a64040609c60868298986103f021343930332e35304e2f30373230312e3735572d54657374dd18",
+        "parsed": {
+          "destination": "APRS",
+          "source": "N0CALL",
+          "path": [],
+          "payload": "21343930332e35304e2f30373230312e3735572d54657374"
+        },
+        "formatted": "N0CALL>APRS:!4903.50N/07201.75W-Test"
+      }
+    },
+    {
+      "name": "position with WIDE path",
+      "input": {
+        "destination": "APRS",
+        "source": "N0CALL-9",
+        "path": ["WIDE1-1", "WIDE2-2"],
+        "control": 3,
+        "protocol": 240,
+        "payload": "3d343930332e35304e2f30373230312e3735573e6d6f62696c65"
+      },
+      "expected": {
+        "bytes": "82a0a4a64040609c608682989872ae92888a624062ae92888a64406503f03d343930332e35304e2f30373230312e3735573e6d6f62696c65",
+        "bytesWithCRC": "82a0a4a64040609c608682989872ae92888a624062ae92888a64406503f03d343930332e35304e2f30373230312e3735573e6d6f62696c6556a6",
+        "parsed": {
+          "destination": "APRS",
+          "source": "N0CALL-9",
+          "path": ["WIDE1-1", "WIDE2-2"],
+          "payload": "3d343930332e35304e2f30373230312e3735573e6d6f62696c65"
+        },
+        "formatted": "N0CALL-9>APRS,WIDE1-1,WIDE2-2:=4903.50N/07201.75W>mobile"
+      }
+    },
+    {
+      "name": "message with SSID 15",
+      "input": {
+        "destination": "APZ001",
+        "source": "N0CALL-15",
+        "path": ["WIDE2-1"],
+        "control": 3,
+        "protocol": 240,
+        "payload": "3a4e3043414c4c2d31203a68656c6c6f7b303031"
+      },
+      "expected": {
+        "bytes": "82a0b4606062609c60868298987eae92888a64406303f03a4e3043414c4c2d31203a68656c6c6f7b303031",
+        "bytesWithCRC": "82a0b4606062609c60868298987eae92888a64406303f03a4e3043414c4c2d31203a68656c6c6f7b303031e6f2",
+        "parsed": {
+          "destination": "APZ001",
+          "source": "N0CALL-15",
+          "path": ["WIDE2-1"],
+          "payload": "3a4e3043414c4c2d31203a68656c6c6f7b303031"
+        },
+        "formatted": "N0CALL-15>APZ001,WIDE2-1::N0CALL-1 :hello{001"
+      }
+    },
+    {
+      "name": "lower case and long call are normalised",
+      "input": {
+        "destination": "aprs",
+        "source": "n0call7x",
+        "path": [],
+        "control": 3,
+        "protocol": 240,
+        "payload": "3e737461747573"
+      },
+      "expected": {
+        "bytes": "82a0a4a64040609c60868298986103f03e737461747573",
+        "bytesWithCRC": "82a0a4a64040609c60868298986103f03e7374617475736641",
+        "parsed": {
+          "destination": "APRS",
+          "source": "N0CALL",
+          "path": [],
+          "payload": "3e737461747573"
+        },
+        "formatted": "N0CALL>APRS:>status"
+      }
+    },
+    {
+      "name": "invalid SSID becomes 0",
+      "input": {
+        "destination": "APRS",
+        "source": "N0CALL-16",
+        "path": [],
+        "control": 3,
+        "protocol": 240,
+        "payload": "3e737461747573"
+      },
+      "expected": {
+        "bytes": "82a0a4a64040609c60868298986103f03e737461747573",
+        "bytesWithCRC": "82a0a4a64040609c60868298986103f03e7374617475736641",
+        "parsed": {
+          "destination": "APRS",
+          "source": "N0CALL",
+          "path": [],
+          "payload": "3e737461747573"
+        },
+        "formatted": "N0CALL>APRS:>status"
+      }
+    },
+    {
+      "name": "empty payload",
+      "input": {
+        "destination": "APRS",
+        "source": "N0CALL",
+        "path": [],
+        "control": 3,
+        "protocol": 240,
+        "payload": ""
+      },
+      "expected": {
+        "bytes": "82a0a4a64040609c60868298986103f0",
+        "bytesWithCRC": "82a0a4a64040609c60868298986103f0a3a2",
+        "parsed": {
+          "destination": "APRS",
+          "source": "N0CALL",
+          "path": [],
+          "payload": ""
+        },
+        "formatted": "N0CALL>APRS:"
+      }
+    },
+    {
+      "name": "eight digipeaters",
+      "input": {
+        "destination": "APRS",
+        "source": "N0CALL",
+        "path": ["WIDE1-1", "WIDE2-1", "WIDE3-1", "WIDE4-1", "WIDE5-1", "WIDE6-1", "WIDE7-1", "RELAY"],
+        "control": 3,
+        "protocol": 240,
+        "payload": "3e78"
+      },
+      "expected": {
+        "bytes": "82a0a4a64040609c608682989860ae92888a624062ae92888a644062ae92888a664062ae92888a684062ae92888a6a4062ae92888a6c4062ae92888a6e4062a48a9882b2406103f03e78",
+        "bytesWithCRC": "82a0a4a64040609c608682989860ae92888a624062ae92888a644062ae92888a664062ae92888a684062ae92888a6a4062ae92888a6c4062ae92888a6e4062a48a9882b2406103f03e783e99",
+        "parsed": {
+          "destination": "APRS",
+          "source": "N0CALL",
+          "path": ["WIDE1-1", "WIDE2-1", "WIDE3-1", "WIDE4-1", "WIDE5-1", "WIDE6-1", "WIDE7-1", "RELAY"],
+          "payload": "3e78"
+        },
+        "formatted": "N0CALL>APRS,WIDE1-1,WIDE2-1,WIDE3-1,WIDE4-1,WIDE5-1,WIDE6-1,WIDE7-1,RELAY:>x"
+      }
+    },
+    {
+      "name": "binary payload",
+      "input": {
+        "destination": "APRS",
+        "source": "N0CALL",
+        "path": [],
+        "control": 3,
+        "protocol": 240,
+        "payload": "c0db00ff"
+      },
+      "expected": {
+        "bytes": "82a0a4a64040609c60868298986103f0c0db00ff",
+        "bytesWithCRC": "82a0a4a64040609c60868298986103f0c0db00ff4953",
+        "parsed": {
+          "destination": "APRS",
+          "source": "N0CALL",
+          "path": [],
+          "payload": "c0db00ff"
+        },
+        "formatted": "N0CALL>APRS:\\xc0\\xdb\\x00\\xff"
+      }
+    }
+  ]
+}

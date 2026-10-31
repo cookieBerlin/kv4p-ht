@@ -1,0 +1,425 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "Protocol message decoders",
+  "vectors": [
+    {
+      "name": "HostDesiredState all zero",
+      "input": {
+        "type": "HostDesiredState",
+        "state": {
+          "sequence": 0,
+          "memoryId": 0,
+          "flags": 0,
+          "bw": 0,
+          "freqTx": 0.0,
+          "freqRx": 0.0,
+          "ctcssTx": 0,
+          "squelch": 0,
+          "ctcssRx": 0
+        }
+      },
+      "expected": {
+        "bytes": "00000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "name": "HostDesiredState VHF simplex",
+      "input": {
+        "type": "HostDesiredState",
+        "state": {
+          "sequence": 1,
+          "memoryId": 3,
+          "flags": 4117,
+          "bw": 1,
+          "freqTx": 146.52,
+          "freqRx": 146.52,
+          "ctcssTx": 0,
+          "squelch": 4,
+          "ctcssRx": 0
+        }
+      },
+      "expected": {
+        "bytes": "01000000030000001510011f8512431f851243000400"
+      }
+    },
+    {
+      "name": "HostDesiredState UHF repeater with CTCSS",
+      "input": {
+        "type": "HostDesiredState",
+        "state": {
+          "sequence": 2147483647,
+          "memoryId": -1,
+          "flags": 16383,
+          "bw": 0,
+          "freqTx": 444.95,
+          "freqRx": 449.95,
+          "ctcssTx": 12,
+          "squelch": 8,
+          "ctcssRx": 12
+        }
+      },
+      "expected": {
+        "bytes": "ffffff7fffffffffff3f009a79de439af9e0430c080c"
+      }
+    },
+    {
+      "name": "HostDesiredState bytes that need escaping",
+      "input": {
+        "type": "HostDesiredState",
+        "state": {
+          "sequence": -1059340069,
+          "memoryId": 219,
+          "flags": 192,
+          "bw": 192,
+          "freqTx": 145.5,
+          "freqRx": 145.5,
+          "ctcssTx": 219,
+          "squelch": 192,
+          "ctcssRx": 219
+        }
+      },
+      "expected": {
+        "bytes": "dbc0dbc0db000000c000c00080114300801143dbc0db"
+      }
+    },
+    {
+      "name": "HostDesiredState negative sequence",
+      "input": {
+        "type": "HostDesiredState",
+        "state": {
+          "sequence": -2147483648,
+          "memoryId": 0,
+          "flags": 65535,
+          "bw": 255,
+          "freqTx": 134.0,
+          "freqRx": 174.0,
+          "ctcssTx": 255,
+          "squelch": 255,
+          "ctcssRx": 255
+        }
+      },
+      "expected": {
+        "bytes": "0000008000000000ffffff0000064300002e43ffffff"
+      }
+    },
+    {
+      "name": "DeviceState receiving",
+      "input": {
+        "type": "DeviceState",
+        "bytes": "07000000020000000507011f8512431f85124300040066010080",
+        "len": 26
+      },
+      "expected": {
+        "value": {
+          "appliedSequence": 7,
+          "memoryId": 2,
+          "flags": 1797,
+          "bw": 1,
+          "freqTx": 146.52,
+          "freqRx": 146.52,
+          "ctcssTx": 0,
+          "squelch": 4,
+          "ctcssRx": 0,
+          "radioModuleStatus": "RADIO_STATUS_FOUND",
+          "mode": "DEVICE_MODE_RX",
+          "lastError": 0,
+          "latestRssi": 128,
+          "hasRadioConfig": true
+        }
+      }
+    },
+    {
+      "name": "DeviceState transmitting with error",
+      "input": {
+        "type": "DeviceState",
+        "bytes": "feffffff000000000b0b011f8512431f85124300040066000300",
+        "len": 26
+      },
+      "expected": {
+        "value": {
+          "appliedSequence": -2,
+          "memoryId": 0,
+          "flags": 2827,
+          "bw": 1,
+          "freqTx": 146.52,
+          "freqRx": 146.52,
+          "ctcssTx": 0,
+          "squelch": 4,
+          "ctcssRx": 0,
+          "radioModuleStatus": "RADIO_STATUS_FOUND",
+          "mode": "DEVICE_MODE_TX",
+          "lastError": 3,
+          "latestRssi": 0,
+          "hasRadioConfig": true
+        }
+      }
+    },
+    {
+      "name": "DeviceState radio not found",
+      "input": {
+        "type": "DeviceState",
+        "bytes": "00000000000000000000011f8512431f851243000400780209ff",
+        "len": 26
+      },
+      "expected": {
+        "value": {
+          "appliedSequence": 0,
+          "memoryId": 0,
+          "flags": 0,
+          "bw": 1,
+          "freqTx": 146.52,
+          "freqRx": 146.52,
+          "ctcssTx": 0,
+          "squelch": 4,
+          "ctcssRx": 0,
+          "radioModuleStatus": "RADIO_STATUS_NOT_FOUND",
+          "mode": "DEVICE_MODE_STOPPED",
+          "lastError": 9,
+          "latestRssi": 255,
+          "hasRadioConfig": false
+        }
+      }
+    },
+    {
+      "name": "DeviceState unknown status and mode",
+      "input": {
+        "type": "DeviceState",
+        "bytes": "0100000001000000ffff011f8512431f8512430004007107ff01",
+        "len": 26
+      },
+      "expected": {
+        "value": {
+          "appliedSequence": 1,
+          "memoryId": 1,
+          "flags": 65535,
+          "bw": 1,
+          "freqTx": 146.52,
+          "freqRx": 146.52,
+          "ctcssTx": 0,
+          "squelch": 4,
+          "ctcssRx": 0,
+          "radioModuleStatus": "RADIO_STATUS_UNKNOWN",
+          "mode": "DEVICE_MODE_UNKNOWN",
+          "lastError": 255,
+          "latestRssi": 1,
+          "hasRadioConfig": true
+        }
+      }
+    },
+    {
+      "name": "DeviceState wrong length",
+      "input": {
+        "type": "DeviceState",
+        "bytes": "01000000010000000100011f8512431f85124300040066010000",
+        "len": 25
+      },
+      "expected": {
+        "value": null
+      }
+    },
+    {
+      "name": "FirmwareVersion VHF all features",
+      "input": {
+        "type": "FirmwareVersion",
+        "bytes": "11006600100000000000064300002e430b",
+        "len": 17
+      },
+      "expected": {
+        "value": {
+          "ver": 17,
+          "radioModuleStatus": "RADIO_STATUS_FOUND",
+          "windowSize": 4096,
+          "moduleType": "RF_SA818_VHF",
+          "minRadioFreq": 134.0,
+          "maxRadioFreq": 174.0,
+          "hasHl": true,
+          "hasPhysPtt": true,
+          "hasFreeDv2400b": true
+        }
+      }
+    },
+    {
+      "name": "FirmwareVersion UHF no features",
+      "input": {
+        "type": "FirmwareVersion",
+        "bytes": "10007800040000010000c8430000f04300",
+        "len": 17
+      },
+      "expected": {
+        "value": {
+          "ver": 16,
+          "radioModuleStatus": "RADIO_STATUS_NOT_FOUND",
+          "windowSize": 1024,
+          "moduleType": "RF_SA818_UHF",
+          "minRadioFreq": 400.0,
+          "maxRadioFreq": 480.0,
+          "hasHl": false,
+          "hasPhysPtt": false,
+          "hasFreeDv2400b": false
+        }
+      }
+    },
+    {
+      "name": "FirmwareVersion only physical PTT",
+      "input": {
+        "type": "FirmwareVersion",
+        "bytes": "1100750000000000000010430000144302",
+        "len": 17
+      },
+      "expected": {
+        "value": {
+          "ver": 17,
+          "radioModuleStatus": "RADIO_STATUS_UNKNOWN",
+          "windowSize": 0,
+          "moduleType": "RF_SA818_VHF",
+          "minRadioFreq": 144.0,
+          "maxRadioFreq": 148.0,
+          "hasHl": false,
+          "hasPhysPtt": true,
+          "hasFreeDv2400b": false
+        }
+      }
+    },
+    {
+      "name": "FirmwareVersion unknown status and high version",
+      "input": {
+        "type": "FirmwareVersion",
+        "bytes": "ffff7affffffff010000d2430000e143f4",
+        "len": 17
+      },
+      "expected": {
+        "value": {
+          "ver": -1,
+          "radioModuleStatus": "RADIO_STATUS_UNKNOWN",
+          "windowSize": -1,
+          "moduleType": "RF_SA818_UHF",
+          "minRadioFreq": 420.0,
+          "maxRadioFreq": 450.0,
+          "hasHl": false,
+          "hasPhysPtt": false,
+          "hasFreeDv2400b": false
+        }
+      }
+    },
+    {
+      "name": "FirmwareVersion unknown module type",
+      "input": {
+        "type": "FirmwareVersion",
+        "bytes": "11006600100000020000064300002e430b",
+        "len": 17
+      },
+      "expected": {
+        "error": "invalidArgument"
+      }
+    },
+    {
+      "name": "FirmwareVersion wrong length",
+      "input": {
+        "type": "FirmwareVersion",
+        "bytes": "11006600100000000000064300002e430b",
+        "len": 16
+      },
+      "expected": {
+        "value": null
+      }
+    },
+    {
+      "name": "Hello",
+      "input": {
+        "type": "Hello",
+        "bytes": "11006600100000000000064300002e430b00000000000000000000011f8512431f85124300040066020000",
+        "len": 43
+      },
+      "expected": {
+        "value": {
+          "version": {
+            "ver": 17,
+            "radioModuleStatus": "RADIO_STATUS_FOUND",
+            "windowSize": 4096,
+            "moduleType": "RF_SA818_VHF",
+            "minRadioFreq": 134.0,
+            "maxRadioFreq": 174.0,
+            "hasHl": true,
+            "hasPhysPtt": true,
+            "hasFreeDv2400b": true
+          },
+          "deviceState": {
+            "appliedSequence": 0,
+            "memoryId": 0,
+            "flags": 0,
+            "bw": 1,
+            "freqTx": 146.52,
+            "freqRx": 146.52,
+            "ctcssTx": 0,
+            "squelch": 4,
+            "ctcssRx": 0,
+            "radioModuleStatus": "RADIO_STATUS_FOUND",
+            "mode": "DEVICE_MODE_STOPPED",
+            "lastError": 0,
+            "latestRssi": 0,
+            "hasRadioConfig": false
+          }
+        }
+      }
+    },
+    {
+      "name": "Hello wrong length",
+      "input": {
+        "type": "Hello",
+        "bytes": "11006600100000000000064300002e430b00000000000000000000011f8512431f85124300040066020000",
+        "len": 42
+      },
+      "expected": {
+        "value": null
+      }
+    },
+    {
+      "name": "Hello unknown module type",
+      "input": {
+        "type": "Hello",
+        "bytes": "11006600100000090000064300002e430b00000000000000000000011f8512431f85124300040066020000",
+        "len": 43
+      },
+      "expected": {
+        "error": "invalidArgument"
+      }
+    },
+    {
+      "name": "WindowUpdate",
+      "input": {
+        "type": "WindowUpdate",
+        "bytes": "00100000",
+        "len": 4
+      },
+      "expected": {
+        "value": {
+          "size": 4096
+        }
+      }
+    },
+    {
+      "name": "WindowUpdate large",
+      "input": {
+        "type": "WindowUpdate",
+        "bytes": "ffffffff",
+        "len": 4
+      },
+      "expected": {
+        "value": {
+          "size": -1
+        }
+      }
+    },
+    {
+      "name": "WindowUpdate wrong length",
+      "input": {
+        "type": "WindowUpdate",
+        "bytes": "00100000",
+        "len": 3
+      },
+      "expected": {
+        "value": null
+      }
+    }
+  ]
+}

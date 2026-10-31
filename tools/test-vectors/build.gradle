@@ -1,0 +1,48 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+// The Android sources are compiled unmodified, straight from android-src/.
+def androidRoot = 'android-src/KV4PHT/app/src/main/java/'
+def androidSources = file("../../${androidRoot}")
+def oracleSources = file('oracle-sources.txt').readLines()
+        .findAll { !it.isBlank() && !it.startsWith('#') }
+        .collect { it.substring(androidRoot.length()) }
+        .collect { it.endsWith('.java') ? it : "${it}/**" }
+
+sourceSets {
+    main {
+        java {
+            srcDir androidSources
+            include oracleSources
+            // Generator and stubs for the Android APIs the sources import.
+            include 'io/github/kv4pht/vectors/**'
+            include 'android/**'
+            include 'androidx/**'
+        }
+    }
+}
+
+dependencies {
+    // Same Lombok version as android-src/KV4PHT/app/build.gradle.
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainClass = 'io.github.kv4pht.vectors.Main'
+}
+
+tasks.named('run') {
+    workingDir = rootProject.projectDir
+    args = [file('../../apple-src/Packages').path]
+}

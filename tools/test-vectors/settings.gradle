@@ -1,0 +1,3 @@
+// Golden test vector generator (docs/apple/adr/0004-android-code-reuse.md).
+// Run through `make vectors` in apple-src/, which uses the Android Gradle wrapper.
+rootProject.name = 'kv4p-test-vectors'

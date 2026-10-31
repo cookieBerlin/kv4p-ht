@@ -1,0 +1,2310 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "Protocol.calculateSMeterValue",
+  "vectors": [
+    {
+      "name": "rssi 0",
+      "input": {
+        "rssi": 0
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 1",
+      "input": {
+        "rssi": 1
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 2",
+      "input": {
+        "rssi": 2
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 3",
+      "input": {
+        "rssi": 3
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 4",
+      "input": {
+        "rssi": 4
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 5",
+      "input": {
+        "rssi": 5
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 6",
+      "input": {
+        "rssi": 6
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 7",
+      "input": {
+        "rssi": 7
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 8",
+      "input": {
+        "rssi": 8
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 9",
+      "input": {
+        "rssi": 9
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 10",
+      "input": {
+        "rssi": 10
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 11",
+      "input": {
+        "rssi": 11
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 12",
+      "input": {
+        "rssi": 12
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 13",
+      "input": {
+        "rssi": 13
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 14",
+      "input": {
+        "rssi": 14
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 15",
+      "input": {
+        "rssi": 15
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 16",
+      "input": {
+        "rssi": 16
+      },
+      "expected": {
+        "sMeter": 0
+      }
+    },
+    {
+      "name": "rssi 17",
+      "input": {
+        "rssi": 17
+      },
+      "expected": {
+        "sMeter": 1
+      }
+    },
+    {
+      "name": "rssi 18",
+      "input": {
+        "rssi": 18
+      },
+      "expected": {
+        "sMeter": 1
+      }
+    },
+    {
+      "name": "rssi 19",
+      "input": {
+        "rssi": 19
+      },
+      "expected": {
+        "sMeter": 1
+      }
+    },
+    {
+      "name": "rssi 20",
+      "input": {
+        "rssi": 20
+      },
+      "expected": {
+        "sMeter": 1
+      }
+    },
+    {
+      "name": "rssi 21",
+      "input": {
+        "rssi": 21
+      },
+      "expected": {
+        "sMeter": 1
+      }
+    },
+    {
+      "name": "rssi 22",
+      "input": {
+        "rssi": 22
+      },
+      "expected": {
+        "sMeter": 2
+      }
+    },
+    {
+      "name": "rssi 23",
+      "input": {
+        "rssi": 23
+      },
+      "expected": {
+        "sMeter": 2
+      }
+    },
+    {
+      "name": "rssi 24",
+      "input": {
+        "rssi": 24
+      },
+      "expected": {
+        "sMeter": 2
+      }
+    },
+    {
+      "name": "rssi 25",
+      "input": {
+        "rssi": 25
+      },
+      "expected": {
+        "sMeter": 2
+      }
+    },
+    {
+      "name": "rssi 26",
+      "input": {
+        "rssi": 26
+      },
+      "expected": {
+        "sMeter": 2
+      }
+    },
+    {
+      "name": "rssi 27",
+      "input": {
+        "rssi": 27
+      },
+      "expected": {
+        "sMeter": 3
+      }
+    },
+    {
+      "name": "rssi 28",
+      "input": {
+        "rssi": 28
+      },
+      "expected": {
+        "sMeter": 3
+      }
+    },
+    {
+      "name": "rssi 29",
+      "input": {
+        "rssi": 29
+      },
+      "expected": {
+        "sMeter": 3
+      }
+    },
+    {
+      "name": "rssi 30",
+      "input": {
+        "rssi": 30
+      },
+      "expected": {
+        "sMeter": 3
+      }
+    },
+    {
+      "name": "rssi 31",
+      "input": {
+        "rssi": 31
+      },
+      "expected": {
+        "sMeter": 3
+      }
+    },
+    {
+      "name": "rssi 32",
+      "input": {
+        "rssi": 32
+      },
+      "expected": {
+        "sMeter": 4
+      }
+    },
+    {
+      "name": "rssi 33",
+      "input": {
+        "rssi": 33
+      },
+      "expected": {
+        "sMeter": 4
+      }
+    },
+    {
+      "name": "rssi 34",
+      "input": {
+        "rssi": 34
+      },
+      "expected": {
+        "sMeter": 4
+      }
+    },
+    {
+      "name": "rssi 35",
+      "input": {
+        "rssi": 35
+      },
+      "expected": {
+        "sMeter": 4
+      }
+    },
+    {
+      "name": "rssi 36",
+      "input": {
+        "rssi": 36
+      },
+      "expected": {
+        "sMeter": 4
+      }
+    },
+    {
+      "name": "rssi 37",
+      "input": {
+        "rssi": 37
+      },
+      "expected": {
+        "sMeter": 5
+      }
+    },
+    {
+      "name": "rssi 38",
+      "input": {
+        "rssi": 38
+      },
+      "expected": {
+        "sMeter": 5
+      }
+    },
+    {
+      "name": "rssi 39",
+      "input": {
+        "rssi": 39
+      },
+      "expected": {
+        "sMeter": 5
+      }
+    },
+    {
+      "name": "rssi 40",
+      "input": {
+        "rssi": 40
+      },
+      "expected": {
+        "sMeter": 5
+      }
+    },
+    {
+      "name": "rssi 41",
+      "input": {
+        "rssi": 41
+      },
+      "expected": {
+        "sMeter": 5
+      }
+    },
+    {
+      "name": "rssi 42",
+      "input": {
+        "rssi": 42
+      },
+      "expected": {
+        "sMeter": 6
+      }
+    },
+    {
+      "name": "rssi 43",
+      "input": {
+        "rssi": 43
+      },
+      "expected": {
+        "sMeter": 6
+      }
+    },
+    {
+      "name": "rssi 44",
+      "input": {
+        "rssi": 44
+      },
+      "expected": {
+        "sMeter": 6
+      }
+    },
+    {
+      "name": "rssi 45",
+      "input": {
+        "rssi": 45
+      },
+      "expected": {
+        "sMeter": 6
+      }
+    },
+    {
+      "name": "rssi 46",
+      "input": {
+        "rssi": 46
+      },
+      "expected": {
+        "sMeter": 6
+      }
+    },
+    {
+      "name": "rssi 47",
+      "input": {
+        "rssi": 47
+      },
+      "expected": {
+        "sMeter": 7
+      }
+    },
+    {
+      "name": "rssi 48",
+      "input": {
+        "rssi": 48
+      },
+      "expected": {
+        "sMeter": 7
+      }
+    },
+    {
+      "name": "rssi 49",
+      "input": {
+        "rssi": 49
+      },
+      "expected": {
+        "sMeter": 7
+      }
+    },
+    {
+      "name": "rssi 50",
+      "input": {
+        "rssi": 50
+      },
+      "expected": {
+        "sMeter": 7
+      }
+    },
+    {
+      "name": "rssi 51",
+      "input": {
+        "rssi": 51
+      },
+      "expected": {
+        "sMeter": 7
+      }
+    },
+    {
+      "name": "rssi 52",
+      "input": {
+        "rssi": 52
+      },
+      "expected": {
+        "sMeter": 8
+      }
+    },
+    {
+      "name": "rssi 53",
+      "input": {
+        "rssi": 53
+      },
+      "expected": {
+        "sMeter": 8
+      }
+    },
+    {
+      "name": "rssi 54",
+      "input": {
+        "rssi": 54
+      },
+      "expected": {
+        "sMeter": 8
+      }
+    },
+    {
+      "name": "rssi 55",
+      "input": {
+        "rssi": 55
+      },
+      "expected": {
+        "sMeter": 8
+      }
+    },
+    {
+      "name": "rssi 56",
+      "input": {
+        "rssi": 56
+      },
+      "expected": {
+        "sMeter": 8
+      }
+    },
+    {
+      "name": "rssi 57",
+      "input": {
+        "rssi": 57
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 58",
+      "input": {
+        "rssi": 58
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 59",
+      "input": {
+        "rssi": 59
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 60",
+      "input": {
+        "rssi": 60
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 61",
+      "input": {
+        "rssi": 61
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 62",
+      "input": {
+        "rssi": 62
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 63",
+      "input": {
+        "rssi": 63
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 64",
+      "input": {
+        "rssi": 64
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 65",
+      "input": {
+        "rssi": 65
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 66",
+      "input": {
+        "rssi": 66
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 67",
+      "input": {
+        "rssi": 67
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 68",
+      "input": {
+        "rssi": 68
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 69",
+      "input": {
+        "rssi": 69
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 70",
+      "input": {
+        "rssi": 70
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 71",
+      "input": {
+        "rssi": 71
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 72",
+      "input": {
+        "rssi": 72
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 73",
+      "input": {
+        "rssi": 73
+      },
+      "expected": {
+        "sMeter": 9
+      }
+    },
+    {
+      "name": "rssi 74",
+      "input": {
+        "rssi": 74
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 75",
+      "input": {
+        "rssi": 75
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 76",
+      "input": {
+        "rssi": 76
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 77",
+      "input": {
+        "rssi": 77
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 78",
+      "input": {
+        "rssi": 78
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 79",
+      "input": {
+        "rssi": 79
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 80",
+      "input": {
+        "rssi": 80
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 81",
+      "input": {
+        "rssi": 81
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 82",
+      "input": {
+        "rssi": 82
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 83",
+      "input": {
+        "rssi": 83
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 84",
+      "input": {
+        "rssi": 84
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 85",
+      "input": {
+        "rssi": 85
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 86",
+      "input": {
+        "rssi": 86
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 87",
+      "input": {
+        "rssi": 87
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 88",
+      "input": {
+        "rssi": 88
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 89",
+      "input": {
+        "rssi": 89
+      },
+      "expected": {
+        "sMeter": 10
+      }
+    },
+    {
+      "name": "rssi 90",
+      "input": {
+        "rssi": 90
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 91",
+      "input": {
+        "rssi": 91
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 92",
+      "input": {
+        "rssi": 92
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 93",
+      "input": {
+        "rssi": 93
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 94",
+      "input": {
+        "rssi": 94
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 95",
+      "input": {
+        "rssi": 95
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 96",
+      "input": {
+        "rssi": 96
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 97",
+      "input": {
+        "rssi": 97
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 98",
+      "input": {
+        "rssi": 98
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 99",
+      "input": {
+        "rssi": 99
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 100",
+      "input": {
+        "rssi": 100
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 101",
+      "input": {
+        "rssi": 101
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 102",
+      "input": {
+        "rssi": 102
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 103",
+      "input": {
+        "rssi": 103
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 104",
+      "input": {
+        "rssi": 104
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 105",
+      "input": {
+        "rssi": 105
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 106",
+      "input": {
+        "rssi": 106
+      },
+      "expected": {
+        "sMeter": 11
+      }
+    },
+    {
+      "name": "rssi 107",
+      "input": {
+        "rssi": 107
+      },
+      "expected": {
+        "sMeter": 12
+      }
+    },
+    {
+      "name": "rssi 108",
+      "input": {
+        "rssi": 108
+      },
+      "expected": {
+        "sMeter": 12
+      }
+    },
+    {
+      "name": "rssi 109",
+      "input": {
+        "rssi": 109
+      },
+      "expected": {
+        "sMeter": 12
+      }
+    },
+    {
+      "name": "rssi 110",
+      "input": {
+        "rssi": 110
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 111",
+      "input": {
+        "rssi": 111
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 112",
+      "input": {
+        "rssi": 112
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 113",
+      "input": {
+        "rssi": 113
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 114",
+      "input": {
+        "rssi": 114
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 115",
+      "input": {
+        "rssi": 115
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 116",
+      "input": {
+        "rssi": 116
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 117",
+      "input": {
+        "rssi": 117
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 118",
+      "input": {
+        "rssi": 118
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 119",
+      "input": {
+        "rssi": 119
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 120",
+      "input": {
+        "rssi": 120
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 121",
+      "input": {
+        "rssi": 121
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 122",
+      "input": {
+        "rssi": 122
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 123",
+      "input": {
+        "rssi": 123
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 124",
+      "input": {
+        "rssi": 124
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 125",
+      "input": {
+        "rssi": 125
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 126",
+      "input": {
+        "rssi": 126
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 127",
+      "input": {
+        "rssi": 127
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 128",
+      "input": {
+        "rssi": 128
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 129",
+      "input": {
+        "rssi": 129
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 130",
+      "input": {
+        "rssi": 130
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 131",
+      "input": {
+        "rssi": 131
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 132",
+      "input": {
+        "rssi": 132
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 133",
+      "input": {
+        "rssi": 133
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 134",
+      "input": {
+        "rssi": 134
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 135",
+      "input": {
+        "rssi": 135
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 136",
+      "input": {
+        "rssi": 136
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 137",
+      "input": {
+        "rssi": 137
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 138",
+      "input": {
+        "rssi": 138
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 139",
+      "input": {
+        "rssi": 139
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 140",
+      "input": {
+        "rssi": 140
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 141",
+      "input": {
+        "rssi": 141
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 142",
+      "input": {
+        "rssi": 142
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 143",
+      "input": {
+        "rssi": 143
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 144",
+      "input": {
+        "rssi": 144
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 145",
+      "input": {
+        "rssi": 145
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 146",
+      "input": {
+        "rssi": 146
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 147",
+      "input": {
+        "rssi": 147
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 148",
+      "input": {
+        "rssi": 148
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 149",
+      "input": {
+        "rssi": 149
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 150",
+      "input": {
+        "rssi": 150
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 151",
+      "input": {
+        "rssi": 151
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 152",
+      "input": {
+        "rssi": 152
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 153",
+      "input": {
+        "rssi": 153
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 154",
+      "input": {
+        "rssi": 154
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 155",
+      "input": {
+        "rssi": 155
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 156",
+      "input": {
+        "rssi": 156
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 157",
+      "input": {
+        "rssi": 157
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 158",
+      "input": {
+        "rssi": 158
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 159",
+      "input": {
+        "rssi": 159
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 160",
+      "input": {
+        "rssi": 160
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 161",
+      "input": {
+        "rssi": 161
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 162",
+      "input": {
+        "rssi": 162
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 163",
+      "input": {
+        "rssi": 163
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 164",
+      "input": {
+        "rssi": 164
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 165",
+      "input": {
+        "rssi": 165
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 166",
+      "input": {
+        "rssi": 166
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 167",
+      "input": {
+        "rssi": 167
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 168",
+      "input": {
+        "rssi": 168
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 169",
+      "input": {
+        "rssi": 169
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 170",
+      "input": {
+        "rssi": 170
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 171",
+      "input": {
+        "rssi": 171
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 172",
+      "input": {
+        "rssi": 172
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 173",
+      "input": {
+        "rssi": 173
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 174",
+      "input": {
+        "rssi": 174
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 175",
+      "input": {
+        "rssi": 175
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 176",
+      "input": {
+        "rssi": 176
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 177",
+      "input": {
+        "rssi": 177
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 178",
+      "input": {
+        "rssi": 178
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 179",
+      "input": {
+        "rssi": 179
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 180",
+      "input": {
+        "rssi": 180
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 181",
+      "input": {
+        "rssi": 181
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 182",
+      "input": {
+        "rssi": 182
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 183",
+      "input": {
+        "rssi": 183
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 184",
+      "input": {
+        "rssi": 184
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 185",
+      "input": {
+        "rssi": 185
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 186",
+      "input": {
+        "rssi": 186
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 187",
+      "input": {
+        "rssi": 187
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 188",
+      "input": {
+        "rssi": 188
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 189",
+      "input": {
+        "rssi": 189
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 190",
+      "input": {
+        "rssi": 190
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 191",
+      "input": {
+        "rssi": 191
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 192",
+      "input": {
+        "rssi": 192
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 193",
+      "input": {
+        "rssi": 193
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 194",
+      "input": {
+        "rssi": 194
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 195",
+      "input": {
+        "rssi": 195
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 196",
+      "input": {
+        "rssi": 196
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 197",
+      "input": {
+        "rssi": 197
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 198",
+      "input": {
+        "rssi": 198
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 199",
+      "input": {
+        "rssi": 199
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 200",
+      "input": {
+        "rssi": 200
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 201",
+      "input": {
+        "rssi": 201
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 202",
+      "input": {
+        "rssi": 202
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 203",
+      "input": {
+        "rssi": 203
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 204",
+      "input": {
+        "rssi": 204
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 205",
+      "input": {
+        "rssi": 205
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 206",
+      "input": {
+        "rssi": 206
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 207",
+      "input": {
+        "rssi": 207
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 208",
+      "input": {
+        "rssi": 208
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 209",
+      "input": {
+        "rssi": 209
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 210",
+      "input": {
+        "rssi": 210
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 211",
+      "input": {
+        "rssi": 211
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 212",
+      "input": {
+        "rssi": 212
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 213",
+      "input": {
+        "rssi": 213
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 214",
+      "input": {
+        "rssi": 214
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 215",
+      "input": {
+        "rssi": 215
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 216",
+      "input": {
+        "rssi": 216
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 217",
+      "input": {
+        "rssi": 217
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 218",
+      "input": {
+        "rssi": 218
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 219",
+      "input": {
+        "rssi": 219
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 220",
+      "input": {
+        "rssi": 220
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 221",
+      "input": {
+        "rssi": 221
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 222",
+      "input": {
+        "rssi": 222
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 223",
+      "input": {
+        "rssi": 223
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 224",
+      "input": {
+        "rssi": 224
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 225",
+      "input": {
+        "rssi": 225
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 226",
+      "input": {
+        "rssi": 226
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 227",
+      "input": {
+        "rssi": 227
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 228",
+      "input": {
+        "rssi": 228
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 229",
+      "input": {
+        "rssi": 229
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 230",
+      "input": {
+        "rssi": 230
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 231",
+      "input": {
+        "rssi": 231
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 232",
+      "input": {
+        "rssi": 232
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 233",
+      "input": {
+        "rssi": 233
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 234",
+      "input": {
+        "rssi": 234
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 235",
+      "input": {
+        "rssi": 235
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 236",
+      "input": {
+        "rssi": 236
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 237",
+      "input": {
+        "rssi": 237
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 238",
+      "input": {
+        "rssi": 238
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 239",
+      "input": {
+        "rssi": 239
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 240",
+      "input": {
+        "rssi": 240
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 241",
+      "input": {
+        "rssi": 241
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 242",
+      "input": {
+        "rssi": 242
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 243",
+      "input": {
+        "rssi": 243
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 244",
+      "input": {
+        "rssi": 244
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 245",
+      "input": {
+        "rssi": 245
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 246",
+      "input": {
+        "rssi": 246
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 247",
+      "input": {
+        "rssi": 247
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 248",
+      "input": {
+        "rssi": 248
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 249",
+      "input": {
+        "rssi": 249
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 250",
+      "input": {
+        "rssi": 250
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 251",
+      "input": {
+        "rssi": 251
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 252",
+      "input": {
+        "rssi": 252
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 253",
+      "input": {
+        "rssi": 253
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 254",
+      "input": {
+        "rssi": 254
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    },
+    {
+      "name": "rssi 255",
+      "input": {
+        "rssi": 255
+      },
+      "expected": {
+        "sMeter": 13
+      }
+    }
+  ]
+}
