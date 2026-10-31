@@ -45,9 +45,11 @@ Firmware flashing is available on macOS only.
 
 ## Can I try the app without a radio?
 
-Development builds include a built-in radio simulator, and a separate macOS
-simulator app can act as a virtual radio over Bluetooth
-([ADR-0014](adr/0014-radio-simulator.md)).
+Development builds include a built-in radio simulator, and a Mac can act as a
+virtual radio over Bluetooth for another device: `cd apple-src && swift run
+kv4p-sim-peripheral` advertises as `kv4p-000000` until stopped
+([ADR-0014](adr/0014-radio-simulator.md)). The Mac running it cannot connect to
+itself; use a second Mac, iPhone/iPad or the Android app.
 
 ## Does the app collect personal data?
 

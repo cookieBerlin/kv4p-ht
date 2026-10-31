@@ -54,7 +54,7 @@ App targets:
 | Target | Content |
 |---|---|
 | `App` | SwiftUI views and composition root (dependency wiring), macOS + iOS + iPadOS |
-| `SimulatorPeripheral` | macOS app: `CBPeripheralManager` adapter around `KV4PSimulator` ([ADR-0014](adr/0014-radio-simulator.md)) |
+| `kv4p-sim-peripheral` | macOS command-line app: `SimulatorPeripheral` with the `CBPeripheralManager` adapter around `KV4PSimulator` ([ADR-0014](adr/0014-radio-simulator.md)) |
 
 ## Key abstractions
 

@@ -21,7 +21,7 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
 | Unit | pure types: codecs, parsers, state machines, view models | Swift Testing (`@Test`) | yes |
 | Vector | Swift implementation vs. golden JSON vectors | Swift Testing, parameterised | yes |
 | Integration | `RadioController` + protocol + audio pipeline against `KV4PSimulator` (A) with scenarios (C) | Swift Testing | yes |
-| BLE integration | real `BLETransport` against `SimulatorPeripheral` (B) | manual / local script | no (needs two BLE endpoints) |
+| BLE integration | a real BLE central (the Apple app, `kv4p-probe` or the Android app) against `kv4p-sim-peripheral` (B) | manual, on two devices (a Mac cannot discover its own advertisement) | no |
 | Hardware | real kv4p HT over BLE and USB | manual checklist per milestone | no |
 | UI | view models fully; views via previews and optional snapshot tests | Swift Testing | yes |
 
