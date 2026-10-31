@@ -2,9 +2,9 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: planning. The structure below is the target layout defined in
-> [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md); it is
-> created incrementally.
+> Status: milestone 1.0 (foundation). The structure below is the target layout
+> defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
+> it is created incrementally.
 
 ## Platforms
 
@@ -16,8 +16,13 @@ Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
 ## Layout
 
+One SwiftPM package (`Package.swift`) with one target per module
+([ADR-0015](../docs/apple/adr/0015-build-layout-and-tooling.md)); targets are
+added when their milestone starts.
+
 ```
 apple-src/
+├── Package.swift
 ├── Packages/
 │   ├── KV4PProtocol/    # KISS framing, KV4P vendor frames, HELLO/DeviceState codecs
 │   ├── KV4PTransport/   # Transport abstraction; BLE (CoreBluetooth) + USB serial (macOS) adapters
@@ -31,6 +36,8 @@ apple-src/
 ├── App/                 # Thin SwiftUI app target (macOS, iOS, iPadOS)
 ├── SimulatorPeripheral/ # macOS app: BLE peripheral simulating a kv4p HT
 ├── Config/              # xcconfig files
+├── scripts/             # coverage gate, privacy check
+├── coverage-exclusions.txt
 └── Makefile             # single entry point, used locally and in CI
 ```
 
@@ -39,12 +46,17 @@ apple-src/
 All commands run natively on the Mac — no iOS simulator required for tests.
 
 ```bash
-make test       # swift test for all packages
+make test       # swift test for all modules
 make coverage   # tests + coverage report + 100 % gate
-make lint       # SwiftLint + SwiftFormat --lint
-make vectors    # regenerate golden test vectors from the Android code (tools/test-vectors)
+make lint       # swift format lint --strict
+make format     # swift format --in-place
+make privacy    # personal data check (files + commit e-mails), BASE=<ref> optional
+make ios-build  # compile all modules for iOS (no simulator)
 make ci         # everything CI runs, in the same order
+make vectors    # (from milestone 1.1) regenerate golden test vectors from the Android code
 ```
+
+Requires Xcode (with `swift format`) and `jq`.
 
 CI calls `make ci`; never duplicate command lines in workflow files.
 

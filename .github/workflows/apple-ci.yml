@@ -1,0 +1,66 @@
+# Apple app pull request gate (docs/apple/adr/0013-ci-pr-gate.md).
+# Every job only calls a target of apple-src/Makefile.
+name: Apple CI
+
+on:
+  pull_request:
+    paths: &apple-paths
+      - "apple-src/**"
+      - "tools/test-vectors/**"
+      - "docs/apple/**"
+      - "CLAUDE.md"
+      - ".github/workflows/apple-ci.yml"
+  push:
+    branches: [main]
+    paths: *apple-paths
+
+concurrency:
+  group: apple-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apple-src
+
+jobs:
+  lint:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: make lint
+
+  privacy:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check files and commit metadata
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+          # Check the PR head, not GitHub's synthetic merge commit.
+          HEAD_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: make privacy BASE="$BASE" HEAD_REF="$HEAD_REF"
+
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: make coverage
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: apple-src/.build/**/codecov/*.json
+          if-no-files-found: ignore
+
+  ios-build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: make ios-build
