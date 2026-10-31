@@ -24,12 +24,12 @@ struct VectorFile<Input: Decodable & Sendable, Expected: Decodable & Sendable>: 
 
 extension [UInt8] {
     /// Decodes a lowercase hex string as used in the vector files.
-    init(hex: String) {
+    init(hex: String) throws {
         var bytes: [UInt8] = []
         var index = hex.startIndex
         while index < hex.endIndex {
             let next = hex.index(index, offsetBy: 2)
-            bytes.append(UInt8(hex[index..<next], radix: 16)!)
+            bytes.append(try #require(UInt8(hex[index..<next], radix: 16)))
             index = next
         }
         self = bytes

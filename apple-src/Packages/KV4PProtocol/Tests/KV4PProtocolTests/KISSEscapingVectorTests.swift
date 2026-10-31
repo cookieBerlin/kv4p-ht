@@ -14,7 +14,8 @@ struct KISSEscapingVectorTests {
         let frames: [String]?
     }
 
-    static let dataFrames = try! VectorFile<Input, Expected>.load("kiss-sender")
+    // A load failure leaves this empty, which `vectorsPresent` reports.
+    static let dataFrames = ((try? VectorFile<Input, Expected>.load("kiss-sender")) ?? [])
         .filter { $0.input.call == "txAx25" && $0.expected.frames != nil }
 
     @Test("vector file contains DATA frames")
@@ -24,9 +25,9 @@ struct KISSEscapingVectorTests {
 
     @Test("escaped payload matches the Android DATA frame body", arguments: dataFrames)
     func matchesAndroid(vector: VectorFile<Input, Expected>.Vector) throws {
-        let frame = [UInt8](hex: try #require(vector.expected.frames?.first))
+        let frame = try [UInt8](hex: try #require(vector.expected.frames?.first))
         // FEND, KISS command, escaped payload, FEND
         let body = Array(frame.dropFirst(2).dropLast())
-        #expect(KISS.escape([UInt8](hex: try #require(vector.input.payload))) == body)
+        #expect(KISS.escape(try [UInt8](hex: try #require(vector.input.payload))) == body)
     }
 }
