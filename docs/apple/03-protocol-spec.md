@@ -249,6 +249,11 @@ Reference implementation: `ImaAdpcm.java`.
 - Exact semantics of `memoryId` on the device side.
 - Mapping table of SA818 CTCSS indices (to be extracted from Android `ToneHelper`).
 - Behaviour when several sessions request conflicting global flags.
+- **Two firmware builds report version 17**: the image bundled with the Android
+  app (`res/raw/firmware_v17.bin`) has no BLE GATT service; the current source
+  has it. The only visible difference in `HELLO` is `FEATURE_HAS_FREEDV_2400B`
+  (set by the current source). An upstream version bump would make this
+  unambiguous.
 
 ## 9. Firmware behaviour (firmware 17)
 
