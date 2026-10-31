@@ -27,8 +27,9 @@
         private var manager: CBPeripheralManager?
         private var central: CBCentral?
 
-        /// `localName` is advertised like the firmware's `kv4p-XXXXXX`.
-        public init(localName: String = "kv4p-000000") {
+        /// `localName` is advertised with the 128-bit service UUID. Both fit the 31-byte advertising packet only with
+        /// at most 8 characters; macOS drops a longer name (the firmware sends its `kv4p-XXXXXX` in the scan response).
+        public init(localName: String = "kv4p-sim") {
             self.localName = localName
             (events, continuation) = AsyncStream.makeStream()
             super.init()

@@ -47,7 +47,7 @@ Firmware flashing is available on macOS only.
 
 Development builds include a built-in radio simulator, and a Mac can act as a
 virtual radio over Bluetooth for another device: `cd apple-src && swift run
-kv4p-sim-peripheral` advertises as `kv4p-000000` until stopped
+kv4p-sim-peripheral` advertises as `kv4p-sim` until stopped
 ([ADR-0014](adr/0014-radio-simulator.md)). The Mac running it cannot connect to
 itself; use a second Mac, iPhone/iPad or the Android app.
 

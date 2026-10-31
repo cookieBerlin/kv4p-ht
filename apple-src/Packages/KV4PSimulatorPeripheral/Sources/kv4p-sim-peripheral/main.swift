@@ -7,7 +7,7 @@
 
     let usage = """
         usage: kv4p-sim-peripheral [--uhf] [--no-radio-module] [--verbose]
-        Advertises as kv4p-000000 until stopped with Ctrl-C.
+        Advertises as kv4p-sim until stopped with Ctrl-C.
         """
 
     /// Prints every event and command (`--verbose`); notifications and writes as byte counts.
@@ -59,6 +59,6 @@
     let central = CoreBluetoothPeripheralManager()
     let manager: any BLEPeripheralManager =
         arguments.contains("--verbose") ? LoggingPeripheralManager(central) : central
-    print("advertising as kv4p-000000 (\(scenario.moduleType)), Ctrl-C to stop")
+    print("advertising as kv4p-sim (\(scenario.moduleType)), Ctrl-C to stop")
     await SimulatorPeripheral(manager: manager, simulator: RadioSimulator(scenario: scenario)).run()
 #endif
