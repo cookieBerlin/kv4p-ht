@@ -1,3 +1,4 @@
+import KV4PTestSupport
 import Testing
 
 @testable import KV4PProtocol
@@ -23,7 +24,7 @@ struct FrameEncoderVectorTests {
 
     typealias Vector = VectorFile<Input, Expected>.Vector
 
-    static let vectors = (try? VectorFile<Input, Expected>.load("kiss-sender")) ?? []
+    static let vectors = (try? VectorFile<Input, Expected>.load("kiss-sender", from: .module)) ?? []
 
     @Test("vector file covers every send call")
     func vectorsPresent() {

@@ -1,3 +1,4 @@
+import KV4PTestSupport
 import Testing
 
 @testable import KV4PProtocol
@@ -13,7 +14,7 @@ struct SMeterVectorTests {
         let sMeter: Int
     }
 
-    static let vectors = (try? VectorFile<Input, Expected>.load("s-meter")) ?? []
+    static let vectors = (try? VectorFile<Input, Expected>.load("s-meter", from: .module)) ?? []
 
     @Test("vector file covers every RSSI value")
     func vectorsPresent() {

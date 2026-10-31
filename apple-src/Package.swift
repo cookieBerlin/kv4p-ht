@@ -20,7 +20,7 @@ let package = Package(
         ),
         .testTarget(
             name: "KV4PProtocolTests",
-            dependencies: ["KV4PProtocol"],
+            dependencies: ["KV4PProtocol", "KV4PTestSupport"],
             path: "Packages/KV4PProtocol/Tests/KV4PProtocolTests",
             resources: [.copy("Vectors")]
         ),

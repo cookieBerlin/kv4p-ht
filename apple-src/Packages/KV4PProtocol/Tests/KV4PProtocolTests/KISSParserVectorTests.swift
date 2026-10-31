@@ -1,3 +1,4 @@
+import KV4PTestSupport
 import Testing
 
 @testable import KV4PProtocol
@@ -28,7 +29,7 @@ struct KISSParserVectorTests {
 
     typealias Vector = VectorFile<Input, Expected>.Vector
 
-    static let vectors = (try? VectorFile<Input, Expected>.load("kiss-parser")) ?? []
+    static let vectors = (try? VectorFile<Input, Expected>.load("kiss-parser", from: .module)) ?? []
 
     @Test("vector file is present")
     func vectorsPresent() {

@@ -1,3 +1,4 @@
+import KV4PTestSupport
 import Testing
 
 @testable import KV4PProtocol
@@ -128,7 +129,7 @@ struct MessageVectorTests {
 
     typealias Vector = VectorFile<Input, Expected>.Vector
 
-    static let vectors = (try? VectorFile<Input, Expected>.load("messages")) ?? []
+    static let vectors = (try? VectorFile<Input, Expected>.load("messages", from: .module)) ?? []
 
     static func vectors(_ type: String) -> [Vector] { vectors.filter { $0.input.type == type } }
 

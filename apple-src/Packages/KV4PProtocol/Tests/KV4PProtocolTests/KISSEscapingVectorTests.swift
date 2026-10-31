@@ -1,3 +1,4 @@
+import KV4PTestSupport
 import Testing
 
 @testable import KV4PProtocol
@@ -15,7 +16,7 @@ struct KISSEscapingVectorTests {
     }
 
     // A load failure leaves this empty, which `vectorsPresent` reports.
-    static let dataFrames = ((try? VectorFile<Input, Expected>.load("kiss-sender")) ?? [])
+    static let dataFrames = ((try? VectorFile<Input, Expected>.load("kiss-sender", from: .module)) ?? [])
         .filter { $0.input.call == "txAx25" && $0.expected.frames != nil }
 
     @Test("vector file contains DATA frames")
