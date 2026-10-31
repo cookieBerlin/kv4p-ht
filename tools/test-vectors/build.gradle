@@ -21,6 +21,7 @@ sourceSets {
             include oracleSources
             // Generator and stubs for the Android APIs the sources import.
             include 'io/github/kv4pht/vectors/**'
+            include 'com/vagell/kv4pht/radio/ControllerAccess.java'
             include 'android/**'
             include 'androidx/**'
         }
