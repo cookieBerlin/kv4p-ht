@@ -9,6 +9,10 @@ the code**: `microcontroller-src/kv4p_ht_esp32_wroom_32/protocol.h` (firmware) a
 document must be fixed. Golden test vectors (see
 [05-testing-strategy.md](05-testing-strategy.md)) pin the byte-level behaviour.
 
+Swift implementation: `apple-src/Packages/KV4PProtocol` (`RadioState`,
+`DeviceState`, `FirmwareVersion`, `Hello`, `WindowUpdate`, `FrameEncoder`,
+`KISSParser`, `SMeter`, `FlowControlWindow`).
+
 All multi-byte values are **little-endian**. Floats are IEEE 754 binary32.
 Structs are packed (no padding).
 
