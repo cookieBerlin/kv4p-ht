@@ -9,7 +9,8 @@ let package = Package(
         .iOS("26.0"),
     ],
     products: [
-        .library(name: "KV4PProtocol", targets: ["KV4PProtocol"])
+        .library(name: "KV4PProtocol", targets: ["KV4PProtocol"]),
+        .library(name: "KV4PSimulator", targets: ["KV4PSimulator"]),
     ],
     targets: [
         .target(
@@ -21,6 +22,16 @@ let package = Package(
             dependencies: ["KV4PProtocol"],
             path: "Packages/KV4PProtocol/Tests/KV4PProtocolTests",
             resources: [.copy("Vectors")]
+        ),
+        .target(
+            name: "KV4PSimulator",
+            dependencies: ["KV4PProtocol"],
+            path: "Packages/KV4PSimulator/Sources/KV4PSimulator"
+        ),
+        .testTarget(
+            name: "KV4PSimulatorTests",
+            dependencies: ["KV4PSimulator"],
+            path: "Packages/KV4PSimulator/Tests/KV4PSimulatorTests"
         ),
     ],
     swiftLanguageModes: [.v6]
