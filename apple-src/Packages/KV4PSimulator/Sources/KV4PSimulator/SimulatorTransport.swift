@@ -56,6 +56,11 @@ public actor SimulatorTransport<C: Clock>: RadioTransport where C.Duration == Du
         streams.deliver(simulator.hear(packet, at: elapsed))
     }
 
+    /// A signal starts (or, with `nil`, ends) on the receive frequency.
+    public func setCarrier(_ carrier: Carrier?) {
+        streams.deliver(simulator.setCarrier(carrier, at: elapsed))
+    }
+
     private var elapsed: Duration { powerOn.duration(to: clock.now) }
 
     private func startTicking() {
