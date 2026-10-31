@@ -21,6 +21,7 @@ public final class Main {
         write(packages, "KV4PProtocol", "messages.json", "Protocol message decoders", ProtocolVectors.messages());
         write(packages, "KV4PProtocol", "s-meter.json", "Protocol.calculateSMeterValue", ProtocolVectors.sMeter());
         write(packages, "KV4PRadio", "desired-state.json", "RadioModuleController", ControllerVectors.all());
+        write(packages, "KV4PProtocol", "ctcss.json", "ToneHelper", ToneVectors.all());
         write(packages, "KV4PAudio", "ima-adpcm.json", "ImaAdpcm", AdpcmVectors.all());
         write(packages, "KV4PAPRS", "ax25-packets.json", "javAX25 Packet", Ax25Vectors.all());
     }

@@ -1,0 +1,31 @@
+// Build settings of the app target, shared by all configurations (ADR-0010, ADR-0019).
+// The bundle identifier is defined here and nowhere else.
+
+PRODUCT_BUNDLE_IDENTIFIER = io.github.cookieberlin.kv4pht
+PRODUCT_NAME = KV4PHT
+MARKETING_VERSION = 0.1
+CURRENT_PROJECT_VERSION = 1
+
+SDKROOT = auto
+SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator
+TARGETED_DEVICE_FAMILY = 1,2
+MACOSX_DEPLOYMENT_TARGET = 26.0
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+SWIFT_VERSION = 6.0
+
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_KEY_CFBundleDisplayName = kv4p HT
+INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.utilities
+INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = kv4p HT connects to your radio over Bluetooth.
+INFOPLIST_KEY_UILaunchScreen_Generation = YES
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+
+// App Sandbox with Bluetooth and USB serial access; signed to run locally, no team.
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = KV4PHT.entitlements
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY[sdk=macosx*] = -
+ENABLE_HARDENED_RUNTIME = YES
+
+// Required by current Xcode versions.
+ALWAYS_SEARCH_USER_PATHS = NO

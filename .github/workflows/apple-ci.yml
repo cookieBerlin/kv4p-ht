@@ -98,3 +98,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: make ios-build
+
+  app:
+    needs: changes
+    if: needs.changes.outputs.apple == 'true'
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: make app

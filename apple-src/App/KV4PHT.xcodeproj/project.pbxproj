@@ -1,0 +1,234 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* KV4PRadio in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000001 /* KV4PRadio */; };
+		A10000000000000000000002 /* KV4PTransport in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000002 /* KV4PTransport */; };
+		A10000000000000000000003 /* KV4PSimulator in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000003 /* KV4PSimulator */; };
+		A10000000000000000000004 /* KV4PProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000004 /* KV4PProtocol */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A30000000000000000000001 /* KV4PHT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KV4PHT.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A30000000000000000000002 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Base.xcconfig; path = ../Config/Base.xcconfig; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000003 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../Config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000004 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../Config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000005 /* KV4PHT.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KV4PHT.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		A40000000000000000000001 /* KV4PHT */ = {isa = PBXFileSystemSynchronizedRootGroup; path = KV4PHT; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A50000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* KV4PRadio in Frameworks */,
+				A10000000000000000000002 /* KV4PTransport in Frameworks */,
+				A10000000000000000000003 /* KV4PSimulator in Frameworks */,
+				A10000000000000000000004 /* KV4PProtocol in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A60000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000001 /* KV4PHT */,
+				A30000000000000000000005 /* KV4PHT.entitlements */,
+				A60000000000000000000002 /* Config */,
+				A60000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A60000000000000000000002 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A30000000000000000000002 /* Base.xcconfig */,
+				A30000000000000000000003 /* Debug.xcconfig */,
+				A30000000000000000000004 /* Release.xcconfig */,
+			);
+			name = Config;
+			sourceTree = "<group>";
+		};
+		A60000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A30000000000000000000001 /* KV4PHT.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A70000000000000000000001 /* KV4PHT */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000002 /* Build configuration list for PBXNativeTarget "KV4PHT" */;
+			buildPhases = (
+				A80000000000000000000001 /* Sources */,
+				A50000000000000000000001 /* Frameworks */,
+				A80000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A40000000000000000000001 /* KV4PHT */,
+			);
+			name = KV4PHT;
+			packageProductDependencies = (
+				A20000000000000000000001 /* KV4PRadio */,
+				A20000000000000000000002 /* KV4PTransport */,
+				A20000000000000000000003 /* KV4PSimulator */,
+				A20000000000000000000004 /* KV4PProtocol */,
+			);
+			productName = KV4PHT;
+			productReference = A30000000000000000000001 /* KV4PHT.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					A70000000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = A90000000000000000000001 /* Build configuration list for PBXProject "KV4PHT" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A60000000000000000000001;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AB0000000000000000000001 /* XCLocalSwiftPackageReference ".." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A60000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A70000000000000000000001 /* KV4PHT */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A80000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A80000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AC0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A30000000000000000000003 /* Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		AC0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A30000000000000000000004 /* Release.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		AC0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		AC0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A90000000000000000000001 /* Build configuration list for PBXProject "KV4PHT" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC0000000000000000000001 /* Debug */,
+				AC0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000002 /* Build configuration list for PBXNativeTarget "KV4PHT" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC0000000000000000000003 /* Debug */,
+				AC0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AB0000000000000000000001 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A20000000000000000000001 /* KV4PRadio */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KV4PRadio;
+		};
+		A20000000000000000000002 /* KV4PTransport */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KV4PTransport;
+		};
+		A20000000000000000000003 /* KV4PSimulator */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KV4PSimulator;
+		};
+		A20000000000000000000004 /* KV4PProtocol */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KV4PProtocol;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AA0000000000000000000001 /* Project object */;
+}

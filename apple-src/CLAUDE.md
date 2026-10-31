@@ -36,7 +36,7 @@ apple-src/
 │   ├── KV4PSimulatorPeripheral/ # kv4p-sim-peripheral: simulated kv4p HT over real BLE (macOS)
 │   ├── KV4PTestSupport/ # Test doubles shared by test targets (ManualClock); not shipped
 │   └── KV4PProbe/       # kv4p-probe: prints the HELLO of real hardware (macOS dev tool)
-├── App/                 # Thin SwiftUI app target (macOS, iOS, iPadOS)
+├── App/                 # KV4PHT.xcodeproj + thin SwiftUI app target (ADR-0019)
 ├── Config/              # xcconfig files
 ├── scripts/             # coverage gate, privacy check, change detection
 ├── apple-paths.txt      # Apple port paths (CI change detection, privacy check)
@@ -56,6 +56,7 @@ make format     # swift format --in-place
 make privacy    # personal data check (files + commit e-mails), BASE=<ref> optional
 make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
 make ios-build  # compile all modules for iOS (no simulator)
+make app        # build the app (App/KV4PHT.xcodeproj) for macOS and iOS, unsigned
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors from the unmodified Android code
 make vectors-check # make vectors, then fail if the committed vectors differ
