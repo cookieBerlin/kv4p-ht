@@ -10,8 +10,10 @@ document must be fixed. Golden test vectors (see
 [05-testing-strategy.md](05-testing-strategy.md)) pin the byte-level behaviour.
 
 Swift implementation: `apple-src/Packages/KV4PProtocol` (`RadioState`,
-`DeviceState`, `FirmwareVersion`, `Hello`, `WindowUpdate`, `FrameEncoder`,
-`KISSParser`, `SMeter`, `FlowControlWindow`).
+`DeviceState`, `FirmwareVersion`, `Hello`, `WindowUpdate`, `TXChannel`,
+`FrameEncoder`, `KISSParser`, `SMeter`, `FlowControlWindow`; device side:
+`HostFrameParser`, `DeviceFrameEncoder`). The device behaviour of §9 is
+reproduced by `apple-src/Packages/KV4PSimulator`.
 
 All multi-byte values are **little-endian**. Floats are IEEE 754 binary32.
 Structs are packed (no padding).
@@ -220,7 +222,11 @@ Reference implementation: `ImaAdpcm.java`.
 - Before writing a frame, the host waits until the window ≥ the **encoded** frame
   length (including `FEND`s and escapes), then subtracts that length.
 - After processing each received frame, the device sends `WINDOW_UPDATE` with the
-  encoded length it consumed; the host adds it to the window.
+  encoded length it consumed (opening and closing `FEND` included); the host adds
+  it to the window.
+- Frames the device ignores (other KISS port, unknown command, wrong length) are
+  acknowledged too. **Empty and dropped frames (unknown escape, oversize) are not
+  acknowledged**: their credit is lost until the next `HELLO`.
 - Device → host traffic has no application-level flow control.
 
 ## 7. Session lifecycle
@@ -241,3 +247,20 @@ Reference implementation: `ImaAdpcm.java`.
 - Exact semantics of `memoryId` on the device side.
 - Mapping table of SA818 CTCSS indices (to be extracted from Android `ToneHelper`).
 - Behaviour when several sessions request conflicting global flags.
+
+## 9. Firmware behaviour (firmware 17)
+
+Observed in `kv4p_ht_esp32_wroom_32.ino` and `txAudio.h`; the simulator
+reproduces it and its tests pin it.
+
+| Topic | Behaviour |
+|---|---|
+| Sequence | Session flags of a `HOST_DESIRED_STATE` always apply; the global part only if its `sequence` is greater than the device's. Hosts sync from `DeviceState.appliedSequence` before their next update. |
+| Reported flags | `DeviceState.flags` = global desired flags ∪ the session's flags ∪ `PHYS_PTT_DOWN`, `TX_ACTIVE`, `SQUELCHED`. Radio fields are the applied configuration. |
+| Status reports | With `ENABLE_STATUS_REPORTS`: on every change (in the main loop after the frame's `WINDOW_UPDATE`) and every 500 ms. |
+| TX | Only with `PTT_REQUESTED` and `TX_ALLOWED`. KISS DATA is transmitted only with `TX_ALLOWED`; `HOST_TX_AX25` only needs a frequency within the module range. |
+| TX watchdog | After 778 ms without `HOST_TX_AUDIO` the device clears `PTT_REQUESTED` and increments the sequence. |
+| Runaway TX | TX stops after more than 200 s, even with audio. |
+| Disconnect | Clears the session flags; a requested PTT stays until the watchdog fires. A reconnect sends `HELLO` again. |
+| Boot | The stored configuration is loaded with `sequence` 0, PTT and session flags cleared; out-of-range frequencies are clamped (memory id −1). New device: 144 MHz (VHF) / 435 MHz (UHF), 25 kHz, high power, RSSI on. |
+| SA818 missing | The firmware retries SA818 commands forever: the first `HOST_DESIRED_STATE` that needs one (always the first after boot without module) stalls the device. Hosts must not send radio configuration when `radioModuleStatus` is not found. |
