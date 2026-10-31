@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "KV4PProtocol", targets: ["KV4PProtocol"]),
         .library(name: "KV4PTransport", targets: ["KV4PTransport"]),
         .library(name: "KV4PSimulator", targets: ["KV4PSimulator"]),
+        .library(name: "KV4PRadio", targets: ["KV4PRadio"]),
     ],
     targets: [
         .target(
@@ -20,7 +21,7 @@ let package = Package(
         ),
         .testTarget(
             name: "KV4PProtocolTests",
-            dependencies: ["KV4PProtocol"],
+            dependencies: ["KV4PProtocol", "KV4PTestSupport"],
             path: "Packages/KV4PProtocol/Tests/KV4PProtocolTests",
             resources: [.copy("Vectors")]
         ),
@@ -44,10 +45,21 @@ let package = Package(
             dependencies: ["KV4PSimulator", "KV4PTestSupport"],
             path: "Packages/KV4PSimulator/Tests/KV4PSimulatorTests"
         ),
+        .target(
+            name: "KV4PRadio",
+            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            path: "Packages/KV4PRadio/Sources/KV4PRadio"
+        ),
+        .testTarget(
+            name: "KV4PRadioTests",
+            dependencies: ["KV4PRadio", "KV4PSimulator", "KV4PTestSupport"],
+            path: "Packages/KV4PRadio/Tests/KV4PRadioTests",
+            resources: [.copy("Vectors")]
+        ),
         // Development tool for the hardware checklist (macOS).
         .executableTarget(
             name: "kv4p-probe",
-            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            dependencies: ["KV4PProtocol", "KV4PRadio", "KV4PTransport"],
             path: "Packages/KV4PProbe/Sources/kv4p-probe"
         ),
         // Simulated kv4p HT over real BLE (macOS), ADR-0014 B.

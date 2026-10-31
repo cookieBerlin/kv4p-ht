@@ -3,4 +3,5 @@
 # Single source for build.gradle and CI change detection.
 android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/radio/Protocol.java
 android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/radio/ImaAdpcm.java
+android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/radio/RadioModuleController.java
 android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/javAX25

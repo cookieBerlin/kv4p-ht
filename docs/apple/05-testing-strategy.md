@@ -63,7 +63,11 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
   versions, module types, feature flags and faults. `RadioSimulator` is a value
   type driven by explicit time (`receive(_:at:)`, `advance(to:)`), so status
   reports and watchdogs are tested without a clock. Its tests read the output
-  with the Android-verified `KISSParser`.
+  with the Android-verified `KISSParser`. `RadioController` is tested end to
+  end against `SimulatorTransport`.
+- The desired-state rules of the Android `RadioModuleController` are pinned by
+  scripted vectors (`desired-state.json`): the generator calls the unmodified
+  controller through `ControllerAccess` and records the frames it sends.
 
 ## Coverage measurement
 

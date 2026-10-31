@@ -1,0 +1,1045 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "RadioModuleController",
+  "vectors": [
+    {
+      "name": "connect: seed from HELLO, ready, open audio",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "openAudio"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "the device confirms the sent state",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "01000000ffffffff191c01008011430080114300000066020000"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "tuning in one update sends one state",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "begin"
+          },
+          {
+            "call": "rxFrequency",
+            "float": 146.52
+          },
+          {
+            "call": "txFrequency",
+            "float": 146.52
+          },
+          {
+            "call": "memoryId",
+            "int": 3
+          },
+          {
+            "call": "end"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000030000001918011f8512431f851243000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "unchanged values send nothing",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "rxFrequency",
+            "float": 145.5
+          },
+          {
+            "call": "highPower",
+            "bool": true
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "unbalanced end is ignored",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "end"
+          },
+          {
+            "call": "squelch",
+            "int": 4
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1918010080114300801143000400c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "nested updates send once",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "begin"
+          },
+          {
+            "call": "begin"
+          },
+          {
+            "call": "squelch",
+            "int": 2
+          },
+          {
+            "call": "end"
+          },
+          {
+            "call": "bandwidth",
+            "int": 0
+          },
+          {
+            "call": "end"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1918000080114300801143000200c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "every setter",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "bandwidth",
+            "int": 0
+          },
+          {
+            "call": "txTone",
+            "int": 5
+          },
+          {
+            "call": "rxTone",
+            "int": 7
+          },
+          {
+            "call": "squelch",
+            "int": 3
+          },
+          {
+            "call": "filters",
+            "pre": true,
+            "high": true,
+            "low": false
+          },
+          {
+            "call": "filters",
+            "pre": false,
+            "high": false,
+            "low": true
+          },
+          {
+            "call": "highPower",
+            "bool": false
+          },
+          {
+            "call": "rssi",
+            "bool": false
+          },
+          {
+            "call": "txAllowed",
+            "bool": false
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1918000080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d03000000ffffffff1918000080114300801143050000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d04000000ffffffff1918000080114300801143050007c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d05000000ffffffff1918000080114300801143050307c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d06000000ffffffff7918000080114300801143050307c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d07000000ffffffff9918000080114300801143050307c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d08000000ffffffff9118000080114300801143050307c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d09000000ffffffff8118000080114300801143050307c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d0a000000ffffffff8110000080114300801143050307c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "PTT down and up",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "pttDown"
+          },
+          {
+            "call": "pttUp"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1b18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d03000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "a lagging device gets the state again, at most three times",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "openAudio"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "01000000ffffffff191c01008011430080114300000066020000"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "01000000ffffffff191c01008011430080114300000066020000"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "01000000ffffffff191c01008011430080114300000066020000"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "01000000ffffffff191c01008011430080114300000066020000"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "a device error is not in sync",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "01000000ffffffff191c01008011430080114300000066020100"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "the watchdog releasing PTT is adopted",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "openAudio"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "02000000ffffffff1d1c01008011430080114300000066020000"
+          },
+          {
+            "call": "pttDown"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "03000000ffffffff1f1c01008011430080114300000066020000"
+          },
+          {
+            "call": "deviceState",
+            "bytes": "04000000ffffffff1d1c01008011430080114300000066020000"
+          },
+          {
+            "call": "pttDown"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d03000000ffffffff1f18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d05000000ffffffff1f18010080114300801143000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "a newer device sequence while a change is unsent",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "begin"
+          },
+          {
+            "call": "squelch",
+            "int": 6
+          },
+          {
+            "call": "deviceState",
+            "bytes": "09000000ffffffff191c01000013430000134300000066020000"
+          },
+          {
+            "call": "end"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d0a000000ffffffff1918010000134300001343000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "a device without radio configuration seeds defaults",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff180401000000000000000000000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "rxFrequency",
+            "float": 146.52
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1810010000000000000000000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff191001000000001f851243000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "nothing is sent before ready or without a sender",
+      "input": {
+        "steps": [
+          {
+            "call": "rxFrequency",
+            "float": 146.0
+          },
+          {
+            "call": "attach"
+          },
+          {
+            "call": "rxFrequency",
+            "float": 146.52
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "squelch",
+            "int": 2
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "detach"
+          },
+          {
+            "call": "squelch",
+            "int": 5
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000200c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "a device state without a session is adopted but not in sync",
+      "input": {
+        "steps": [
+          {
+            "call": "deviceState",
+            "bytes": "05000000ffffffff191c01008011430080114300000066020000"
+          },
+          {
+            "call": "attach"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "squelch",
+            "int": 1
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d06000000ffffffff1918010080114300801143000100c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "FreeDV needs firmware support",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "freeDv",
+            "bool": true
+          },
+          {
+            "call": "firmware",
+            "bytes": "11006600100000000000064300002e4307"
+          },
+          {
+            "call": "freeDv",
+            "bool": true
+          },
+          {
+            "call": "firmware",
+            "bytes": "11006600100000000000064300002e430f"
+          },
+          {
+            "call": "freeDv",
+            "bool": true
+          },
+          {
+            "call": "freeDv",
+            "bool": false
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1938010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d03000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "close audio and stop clear the session flags",
+      "input": {
+        "steps": [
+          {
+            "call": "attach"
+          },
+          {
+            "call": "seed",
+            "bytes": "00000000ffffffff190c01008011430080114300000066020000"
+          },
+          {
+            "call": "ready"
+          },
+          {
+            "call": "openAudio"
+          },
+          {
+            "call": "pttDown"
+          },
+          {
+            "call": "closeAudio"
+          },
+          {
+            "call": "openAudio"
+          },
+          {
+            "call": "stop"
+          }
+        ]
+      },
+      "expected": {
+        "steps": [
+          {
+            "sent": [],
+            "inSync": false
+          },
+          {
+            "sent": [],
+            "inSync": true
+          },
+          {
+            "sent": ["c0064b563450010d01000000ffffffff1918010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d02000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d03000000ffffffff1f18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d04000000ffffffff1908010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d05000000ffffffff1d18010080114300801143000000c0"],
+            "inSync": false
+          },
+          {
+            "sent": ["c0064b563450010d06000000ffffffff1908010080114300801143000000c0"],
+            "inSync": false
+          }
+        ]
+      }
+    }
+  ]
+}
