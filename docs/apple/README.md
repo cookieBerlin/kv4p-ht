@@ -26,6 +26,7 @@ No changes to the firmware or the Android app are required.
 - BLE everywhere, USB serial on macOS ([ADR-0002](adr/0002-radio-transport.md))
 - Android code reused unmodified as test oracle ([ADR-0004](adr/0004-android-code-reuse.md))
 - Minimum OS 26 ([ADR-0008](adr/0008-minimum-os-versions.md))
+- Firmware flashing over USB on macOS; external on iOS/iPadOS ([ADR-0009](adr/0009-firmware-updates.md))
 - 100 % coverage with minimal adapter exclusions ([ADR-0011](adr/0011-coverage-policy.md))
 - GitHub Actions PR gate ([ADR-0013](adr/0013-ci-pr-gate.md))
 - In-process + BLE peripheral simulator with scenarios ([ADR-0014](adr/0014-radio-simulator.md))

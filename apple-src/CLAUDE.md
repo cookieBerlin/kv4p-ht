@@ -26,6 +26,7 @@ apple-src/
 │   ├── KV4PAPRS/        # AX.25 / APRS encode + decode
 │   ├── KV4PRadio/       # Radio controller, state machine, use cases, view models
 │   ├── KV4PPersistence/ # Memories, settings, APRS history
+│   ├── KV4PFlasher/     # ESP32 ROM bootloader flashing (macOS only)
 │   └── KV4PSimulator/   # In-process radio simulator + scenarios
 ├── App/                 # Thin SwiftUI app target (macOS, iOS, iPadOS)
 ├── SimulatorPeripheral/ # macOS app: BLE peripheral simulating a kv4p HT

@@ -42,7 +42,7 @@ which keeps both implementations provably compatible.
 | APRS-IS / iGate | `AprsIsClient` (`java-aprs`) | All platforms (TCP). |
 | Location for beacons | Play Services Location | CoreLocation. |
 | FreeDV 2400B digital voice | modem on ESP32, Codec2 1300 on host (`codec2-android`) | All platforms; Codec2 is C and can be built as an XCFramework. |
-| Firmware flashing | `esp32-flash-lib` over USB | macOS over USB is possible; iOS/iPadOS not over USB. |
+| Firmware flashing | `esp32-flash-lib` over USB | macOS over USB ([ADR-0009](adr/0009-firmware-updates.md)); iOS/iPadOS not possible. |
 | Background operation | foreground service | macOS: unrestricted. iOS: `audio` + `bluetooth-central` background modes. |
 
 ## Platform constraints
@@ -56,9 +56,9 @@ which keeps both implementations provably compatible.
   and has App Review implications.
 - **App Store:** an app that transmits on amateur radio frequencies is allowed,
   but review notes should explain the required license and hardware.
-- **Firmware updates:** without USB on iOS, flashing stays external
-  (web flasher / Android / macOS) unless OTA is added to the firmware
-  ([ADR-0009](adr/0009-firmware-updates.md)).
+- **Firmware updates:** the macOS app flashes over USB; on iOS/iPadOS flashing
+  stays external (web flasher / Android / macOS) unless OTA is added to the
+  firmware ([ADR-0009](adr/0009-firmware-updates.md)).
 
 ## Dependencies and Apple counterparts
 
@@ -71,7 +71,7 @@ which keeps both implementations provably compatible.
 | `javAX25` (own code) | AX.25 packet model | Swift port, pinned by golden vectors |
 | `io.github.dkaukov:java-aprs` | APRS parsing, APRS-IS | Swift implementation ([ADR-0006](adr/0006-aprs-ax25.md)) |
 | `io.github.dkaukov:codec2-android` | Codec2 1300 | Codec2 C library as XCFramework ([ADR-0005](adr/0005-codec2-freedv.md)) |
-| `io.github.dkaukov:esp32-flash-lib` | flashing | out of scope for phase 1 |
+| `io.github.dkaukov:esp32-flash-lib` | flashing | `KV4PFlasher` Swift implementation, macOS only |
 | Room | persistence | SwiftData ([ADR-0007](adr/0007-persistence.md)) |
 | Play Services Location | location | CoreLocation |
 

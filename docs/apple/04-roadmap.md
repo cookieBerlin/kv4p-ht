@@ -9,7 +9,7 @@ Every milestone that changes user-visible behaviour updates the
 
 - [x] Fork, branch, `CLAUDE.md`
 - [x] Feasibility, protocol specification, ADRs, architecture
-- [ ] Review of proposed ADRs → Accepted/Rejected
+- [x] Review of proposed ADRs → all accepted (ADR-0009 with option 2)
 
 ## Phase 1 — macOS (Apple Silicon)
 
@@ -27,7 +27,8 @@ Every milestone that changes user-visible behaviour updates the
 | 1.9 | **Memories & scan** | Memories and groups (SwiftData), scan mode, RepeaterBook CSV import. |
 | 1.10 | **APRS** | AX.25 + APRS parsing/formatting, message list, beacons (CoreLocation), digipeat setting, APRS-IS client/iGate. |
 | 1.11 | **FreeDV 2400B** | Codec2 XCFramework, RX/TX digital voice. |
-| 1.12 | **Release candidate macOS** | Settings parity, manual + FAQ complete for macOS, signed and notarised build. |
+| 1.12 | **Firmware flashing (macOS)** | `KV4PFlasher` against fake ROM bootloader and vectors from `esp32-flash-lib`; firmware images taken from `android-src` at build time; flashes real hardware and verifies MD5; outdated-firmware notice offers the update. |
+| 1.13 | **Release candidate macOS** | Settings parity, manual + FAQ complete for macOS, signed and notarised build. |
 
 ## Phase 2 — iOS and iPadOS
 
@@ -36,11 +37,11 @@ Every milestone that changes user-visible behaviour updates the
 | 2.1 | **Platform adapters** | AVAudioSession (play-and-record, interruptions, route changes), iOS BLE adapter specifics. |
 | 2.2 | **Background operation** | `audio` and `bluetooth-central` background modes; RX continues with screen locked. |
 | 2.3 | **Layouts** | iPhone (compact) and iPad (regular, multitasking) layouts; PTT ergonomics on touch. |
-| 2.4 | **Distribution** | TestFlight builds, App Store review notes, manual + FAQ for iOS/iPadOS. |
+| 2.4 | **Firmware notice** | Outdated firmware on iOS/iPadOS links to the web flasher and the manual. |
+| 2.5 | **Distribution** | TestFlight builds, App Store review notes, manual + FAQ for iOS/iPadOS. |
 
 ## Later (candidates)
 
-- USB firmware flashing on macOS ([ADR-0009](adr/0009-firmware-updates.md)).
 - Bluetooth Classic SPP on macOS.
 - Memory import/export compatible with the Android app.
 - Upstream pull request to the original project.

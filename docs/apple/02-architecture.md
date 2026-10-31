@@ -25,6 +25,8 @@ flowchart TD
     T --> BLE["BLETransport (CoreBluetooth)"]
     T --> SER["SerialTransport (macOS, IOKit)"]
     T --> SIM["SimulatorTransport (KV4PSimulator)"]
+    VM --> FL["KV4PFlasher (macOS): ESP32 ROM bootloader"]
+    FL --> SER
     AU --> AIO["AudioIO protocol → AVAudioEngine adapter"]
     SIM --> P
     SIM --> AU
@@ -44,7 +46,8 @@ every protocol constant ([03-protocol-spec.md](03-protocol-spec.md)).
 | `KV4PAPRS` | AX.25 frames, APRS parse/format, beacon scheduling, APRS-IS client | none (Network.framework behind a protocol) |
 | `KV4PPersistence` | repository protocols + SwiftData implementation | none |
 | `KV4PRadio` | `RadioController` state machine (connecting, handshake, RX, TX, scan, error), use cases, `@Observable` view models | none |
-| `KV4PSimulator` | device-side protocol state machine, scenarios, signal generators | none |
+| `KV4PFlasher` | ESP32 ROM bootloader protocol (SLIP, sync, baud change, flash, MD5 verify), firmware image set | macOS only; DTR/RTS control in the serial adapter |
+| `KV4PSimulator` | device-side protocol state machine, fake ROM bootloader, scenarios, signal generators | none |
 
 App targets:
 
@@ -95,7 +98,7 @@ forwarding; they are the only coverage exclusions.
 | `javAX25/`, `java-aprs`, `AprsBeaconSchedule`, `AprsRfFrequencyPolicy` | `KV4PAPRS` |
 | `data/` (Room) | `KV4PPersistence` (SwiftData) |
 | `ui/*Activity`, `MainViewModel` | `App` views + `KV4PRadio` view models |
-| `firmware/FirmwareUtils` | version check in `KV4PRadio` only ([ADR-0009](adr/0009-firmware-updates.md)) |
+| `firmware/FirmwareUtils`, `esp32-flash-lib` | `KV4PFlasher` (macOS) + version check in `KV4PRadio` ([ADR-0009](adr/0009-firmware-updates.md)) |
 
 ## Configuration
 
