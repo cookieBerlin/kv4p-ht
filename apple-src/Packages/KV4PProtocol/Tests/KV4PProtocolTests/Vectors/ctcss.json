@@ -1,0 +1,436 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "ToneHelper",
+  "vectors": [
+    {
+      "name": "tone table",
+      "input": {
+        "type": "table"
+      },
+      "expected": {
+        "tones": [
+          {
+            "label": "None",
+            "index": 0
+          },
+          {
+            "label": "67",
+            "index": 1
+          },
+          {
+            "label": "71.9",
+            "index": 2
+          },
+          {
+            "label": "74.4",
+            "index": 3
+          },
+          {
+            "label": "77",
+            "index": 4
+          },
+          {
+            "label": "79.7",
+            "index": 5
+          },
+          {
+            "label": "82.5",
+            "index": 6
+          },
+          {
+            "label": "85.4",
+            "index": 7
+          },
+          {
+            "label": "88.5",
+            "index": 8
+          },
+          {
+            "label": "91.5",
+            "index": 9
+          },
+          {
+            "label": "94.8",
+            "index": 10
+          },
+          {
+            "label": "97.4",
+            "index": 11
+          },
+          {
+            "label": "100",
+            "index": 12
+          },
+          {
+            "label": "103.5",
+            "index": 13
+          },
+          {
+            "label": "107.2",
+            "index": 14
+          },
+          {
+            "label": "110.9",
+            "index": 15
+          },
+          {
+            "label": "114.8",
+            "index": 16
+          },
+          {
+            "label": "118.8",
+            "index": 17
+          },
+          {
+            "label": "123",
+            "index": 18
+          },
+          {
+            "label": "127.3",
+            "index": 19
+          },
+          {
+            "label": "131.8",
+            "index": 20
+          },
+          {
+            "label": "136.5",
+            "index": 21
+          },
+          {
+            "label": "141.3",
+            "index": 22
+          },
+          {
+            "label": "146.2",
+            "index": 23
+          },
+          {
+            "label": "151.4",
+            "index": 24
+          },
+          {
+            "label": "156.7",
+            "index": 25
+          },
+          {
+            "label": "162.2",
+            "index": 26
+          },
+          {
+            "label": "167.9",
+            "index": 27
+          },
+          {
+            "label": "173.8",
+            "index": 28
+          },
+          {
+            "label": "179.9",
+            "index": 29
+          },
+          {
+            "label": "186.2",
+            "index": 30
+          },
+          {
+            "label": "192.8",
+            "index": 31
+          },
+          {
+            "label": "203.5",
+            "index": 32
+          },
+          {
+            "label": "210.7",
+            "index": 33
+          },
+          {
+            "label": "218.1",
+            "index": 34
+          },
+          {
+            "label": "225.7",
+            "index": 35
+          },
+          {
+            "label": "233.6",
+            "index": 36
+          },
+          {
+            "label": "241.8",
+            "index": 37
+          },
+          {
+            "label": "250.3",
+            "index": 38
+          }
+        ]
+      }
+    },
+    {
+      "name": "normalize \"\"",
+      "input": {
+        "type": "normalize",
+        "tone": ""
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"   \"",
+      "input": {
+        "type": "normalize",
+        "tone": "   "
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"None\"",
+      "input": {
+        "type": "normalize",
+        "tone": "None"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"67\"",
+      "input": {
+        "type": "normalize",
+        "tone": "67"
+      },
+      "expected": {
+        "normalized": "67",
+        "index": 1
+      }
+    },
+    {
+      "name": "normalize \" 67 \"",
+      "input": {
+        "type": "normalize",
+        "tone": " 67 "
+      },
+      "expected": {
+        "normalized": "67",
+        "index": 1
+      }
+    },
+    {
+      "name": "normalize \"67.0\"",
+      "input": {
+        "type": "normalize",
+        "tone": "67.0"
+      },
+      "expected": {
+        "normalized": "67",
+        "index": 1
+      }
+    },
+    {
+      "name": "normalize \"100\"",
+      "input": {
+        "type": "normalize",
+        "tone": "100"
+      },
+      "expected": {
+        "normalized": "100",
+        "index": 12
+      }
+    },
+    {
+      "name": "normalize \"100.0\"",
+      "input": {
+        "type": "normalize",
+        "tone": "100.0"
+      },
+      "expected": {
+        "normalized": "100",
+        "index": 12
+      }
+    },
+    {
+      "name": "normalize \"71.5\"",
+      "input": {
+        "type": "normalize",
+        "tone": "71.5"
+      },
+      "expected": {
+        "normalized": "71.9",
+        "index": 2
+      }
+    },
+    {
+      "name": "normalize \"71.95\"",
+      "input": {
+        "type": "normalize",
+        "tone": "71.95"
+      },
+      "expected": {
+        "normalized": "71.9",
+        "index": 2
+      }
+    },
+    {
+      "name": "normalize \"72.9\"",
+      "input": {
+        "type": "normalize",
+        "tone": "72.9"
+      },
+      "expected": {
+        "normalized": "71.9",
+        "index": 2
+      }
+    },
+    {
+      "name": "normalize \"73.0\"",
+      "input": {
+        "type": "normalize",
+        "tone": "73.0"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"0\"",
+      "input": {
+        "type": "normalize",
+        "tone": "0"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"1\"",
+      "input": {
+        "type": "normalize",
+        "tone": "1"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"1.5\"",
+      "input": {
+        "type": "normalize",
+        "tone": "1.5"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"65.9\"",
+      "input": {
+        "type": "normalize",
+        "tone": "65.9"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"66.0\"",
+      "input": {
+        "type": "normalize",
+        "tone": "66.0"
+      },
+      "expected": {
+        "normalized": "67",
+        "index": 1
+      }
+    },
+    {
+      "name": "normalize \"250.3\"",
+      "input": {
+        "type": "normalize",
+        "tone": "250.3"
+      },
+      "expected": {
+        "normalized": "250.3",
+        "index": 38
+      }
+    },
+    {
+      "name": "normalize \"251.3\"",
+      "input": {
+        "type": "normalize",
+        "tone": "251.3"
+      },
+      "expected": {
+        "normalized": "250.3",
+        "index": 38
+      }
+    },
+    {
+      "name": "normalize \"251.4\"",
+      "input": {
+        "type": "normalize",
+        "tone": "251.4"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"300\"",
+      "input": {
+        "type": "normalize",
+        "tone": "300"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"88.4\"",
+      "input": {
+        "type": "normalize",
+        "tone": "88.4"
+      },
+      "expected": {
+        "normalized": "88.5",
+        "index": 8
+      }
+    },
+    {
+      "name": "normalize \"abc\"",
+      "input": {
+        "type": "normalize",
+        "tone": "abc"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    },
+    {
+      "name": "normalize \"-67\"",
+      "input": {
+        "type": "normalize",
+        "tone": "-67"
+      },
+      "expected": {
+        "normalized": "None",
+        "index": 0
+      }
+    }
+  ]
+}
