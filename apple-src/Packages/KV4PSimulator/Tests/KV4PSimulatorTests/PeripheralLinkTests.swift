@@ -50,7 +50,9 @@ struct PeripheralLinkTests {
     func subscribe() throws {
         var (link, commands) = Self.subscribed()
         #expect(commands.first == .stopAdvertising)
-        #expect(commands.dropFirst().allSatisfy { if case .notify(let chunk) = $0 { chunk.count == 20 } else { false } })
+        #expect(
+            commands.dropFirst().allSatisfy { if case .notify(let chunk) = $0 { chunk.count == 20 } else { false } }
+        )
         let bytes = Self.drain(&link, commands, at: .ms(10))
         guard case .hello(let hello) = try #require(try events(bytes).first) else {
             Issue.record("no HELLO")
@@ -86,7 +88,11 @@ struct PeripheralLinkTests {
     func statusReports() throws {
         var (link, hello) = Self.subscribed()
         _ = Self.drain(&link, hello, at: .ms(10))
-        _ = Self.drain(&link, link.handle(.write(FrameEncoder.desiredState(desiredState(sequence: 1))), at: .ms(20)), at: .ms(20))
+        _ = Self.drain(
+            &link,
+            link.handle(.write(FrameEncoder.desiredState(desiredState(sequence: 1))), at: .ms(20)),
+            at: .ms(20)
+        )
         let report = Self.drain(&link, link.advance(to: .ms(500)), at: .ms(500))
         #expect(try events(report).states.count == 1)
     }
