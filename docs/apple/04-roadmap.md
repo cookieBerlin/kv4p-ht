@@ -15,7 +15,7 @@ Every milestone that changes user-visible behaviour updates the
 
 | # | Milestone | Acceptance criteria |
 |---|---|---|
-| 1.0 | **Foundation** | Swift package skeletons, `Makefile`, SwiftLint/SwiftFormat, coverage gate script, `apple-ci.yml` with all required checks green, branch protection on the fork. |
+| 1.0 | **Foundation** | SwiftPM package with first module, `Makefile`, `swift format` ([ADR-0015](adr/0015-build-layout-and-tooling.md)), coverage gate script, privacy check, `apple-ci.yml` with all required checks green, branch protection on the fork ([ADR-0016](adr/0016-branch-protection.md)). |
 | 1.1 | **Test vectors** | `tools/test-vectors/` builds the unmodified Android `Protocol`, `ImaAdpcm`, `javAX25` and emits JSON vectors; CI consistency check active. |
 | 1.2 | **Protocol** | `KV4PProtocol` encodes/decodes all frames and structs of [03-protocol-spec.md](03-protocol-spec.md); passes all vectors; flow-control window implemented. |
 | 1.3 | **Simulator A + C** | `KV4PSimulator` with HELLO, desired state, status reports, window updates, TX watchdog; base fault scenarios. |
