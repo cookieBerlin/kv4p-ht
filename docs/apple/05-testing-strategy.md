@@ -56,13 +56,18 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
 - Time is injected (`Clock` protocol) so timeouts, status-report intervals and the
   TX watchdog are tested without sleeping.
 - `KV4PSimulator` provides end-to-end behaviour; scenarios cover firmware
-  versions, module types, feature flags and faults.
+  versions, module types, feature flags and faults. `RadioSimulator` is a value
+  type driven by explicit time (`receive(_:at:)`, `advance(to:)`), so status
+  reports and watchdogs are tested without a clock. Its tests read the output
+  with the Android-verified `KISSParser`.
 
 ## Coverage measurement
 
-- `make coverage` runs `swift test --enable-code-coverage`, exports llvm-cov JSON,
-  removes files listed in `apple-src/coverage-exclusions.txt`, and fails if line
-  coverage is below 100.00 %. The same script runs in CI.
+- `make coverage` runs `swift test --enable-code-coverage`, exports llvm-cov JSON
+  from the merged profile of **all** test bundles (`swift test
+  --show-codecov-path` covers only the first one), removes files listed in
+  `apple-src/coverage-exclusions.txt`, and fails if line coverage is below
+  100.00 % or a module has no coverage data. The same script runs in CI.
 - The coverage report is uploaded as a CI artifact.
 
 ## Hardware test checklist (per milestone)

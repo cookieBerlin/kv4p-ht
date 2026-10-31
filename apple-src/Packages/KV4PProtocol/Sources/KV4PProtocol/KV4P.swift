@@ -12,6 +12,21 @@ public enum KV4P {
     public static let ax25MaxDataLength = 10 * 7 + 2 + 256
     /// Maximum decoded KISS frame: command byte, vendor header and payload.
     public static let maxFrameSize = 1 + vendorHeaderLength + protoMTU
+
+    /// Builds a KISS SETHARDWARE frame carrying a KV4P vendor command.
+    static func vendorFrame(_ command: UInt8, _ payload: some Sequence<UInt8>) -> [UInt8] {
+        KISS.frame(command: KISS.Command.setHardware, payload: vendorPrefix + [protocolVersion, command] + payload)
+    }
+
+    /// Splits a SETHARDWARE payload into the vendor command byte and its payload; `nil` if the header does not match.
+    static func vendorCommand(_ payload: ArraySlice<UInt8>) -> (command: UInt8, payload: [UInt8])? {
+        guard payload.count >= vendorHeaderLength,
+            payload.starts(with: vendorPrefix),
+            payload.dropFirst(vendorPrefix.count).first == protocolVersion
+        else { return nil }
+        let command = payload[payload.startIndex + vendorPrefix.count + 1]
+        return (command, Array(payload.dropFirst(vendorHeaderLength)))
+    }
 }
 
 /// Commands sent by the host (`docs/apple/03-protocol-spec.md` §3.1).

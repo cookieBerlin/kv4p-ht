@@ -11,8 +11,17 @@ public enum KISS {
     /// KISS command bytes on port 0 (`port << 4 | command`).
     public enum Command {
         public static let data: UInt8 = 0x00
-        public static let txDelay: UInt8 = 0x01
+        public static let txDelay = Parameter.txDelay.rawValue
         public static let setHardware: UInt8 = 0x06
+    }
+
+    /// KISS parameters with a one-byte value that the firmware applies to AX.25 transmission.
+    public enum Parameter: UInt8, Sendable {
+        /// Units of 10 ms.
+        case txDelay = 0x01
+        case persist = 0x02
+        /// Units of 10 ms.
+        case slotTime = 0x03
     }
 
     /// Builds `FEND <command> <escaped payload> FEND`.

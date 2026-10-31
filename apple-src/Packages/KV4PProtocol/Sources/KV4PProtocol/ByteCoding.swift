@@ -45,10 +45,6 @@ struct ByteWriter {
     mutating func float(_ value: Float) {
         uint32(value.bitPattern)
     }
-
-    mutating func bytes(_ value: some Sequence<UInt8>) {
-        bytes += value
-    }
 }
 
 extension Array where Element == UInt8 {

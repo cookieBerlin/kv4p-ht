@@ -14,12 +14,7 @@ public enum FrameEncoder {
         ctcssTx: UInt8
     ) throws(ProtocolError) -> [UInt8] {
         try requireAX25Length(packet)
-        var writer = ByteWriter()
-        writer.float(freqTx)
-        writer.uint8(bandwidth)
-        writer.uint8(ctcssTx)
-        writer.bytes(packet)
-        return vendor(.txAX25, writer.bytes)
+        return vendor(.txAX25, TXChannel(freqTx: freqTx, bandwidth: bandwidth, ctcssTx: ctcssTx).encoded() + packet)
     }
 
     /// One IMA ADPCM block of TX audio.
@@ -43,8 +38,7 @@ public enum FrameEncoder {
 
     /// Vendor payloads longer than `KV4P.protoMTU` are truncated, as in the Android sender.
     static func vendor(_ command: HostCommand, _ payload: some Collection<UInt8>) -> [UInt8] {
-        let header = KV4P.vendorPrefix + [KV4P.protocolVersion, command.rawValue]
-        return KISS.frame(command: KISS.Command.setHardware, payload: header + payload.prefix(KV4P.protoMTU))
+        KV4P.vendorFrame(command.rawValue, payload.prefix(KV4P.protoMTU))
     }
 
     private static func requireAX25Length(_ packet: [UInt8]) throws(ProtocolError) {
