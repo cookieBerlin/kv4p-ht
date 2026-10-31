@@ -1,0 +1,21 @@
+import KV4PProtocol
+
+/// Firmware 17 behaviour the simulator reproduces (`microcontroller-src/kv4p_ht_esp32_wroom_32`).
+enum Firmware {
+    /// `FIRMWARE_VER`.
+    static let version: UInt16 = 17
+    /// `DEVICE_STATE_REPORT_INTERVAL_MS`.
+    static let statusReportInterval = Duration.milliseconds(500)
+    /// `TX_AUDIO_TIMEOUT_MS`: 50 blocks of 249 samples at 16 kHz, truncated to whole milliseconds.
+    static let txAudioTimeout = Duration.milliseconds(50 * 249 * 1000 / 16_000)
+    /// `RUNAWAY_TX_SEC`; TX stops once it is exceeded.
+    static let runawayTX = Duration.seconds(200)
+    /// `USB_BUFFER_SIZE`, the window of USB and Bluetooth Classic sessions.
+    static let usbWindowSize: UInt32 = 2048
+    /// `BLE_KISS_WINDOW_SIZE`.
+    static let bleWindowSize: UInt32 = 4096
+    /// Flags restored from flash at boot (`persistedStateFlags`).
+    static let persistedFlags: StateFlags = [
+        .radioConfigValid, .highPower, .rssiEnabled, .filterPre, .filterHigh, .filterLow, .txAllowed,
+    ]
+}

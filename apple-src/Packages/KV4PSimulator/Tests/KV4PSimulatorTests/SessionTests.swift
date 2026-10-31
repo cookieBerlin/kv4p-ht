@@ -1,6 +1,6 @@
-import KV4PProtocol
 import Testing
 
+@testable import KV4PProtocol
 @testable import KV4PSimulator
 
 /// HELLO, desired-state handling, status reports and window updates (firmware 17).
@@ -115,7 +115,9 @@ struct SessionTests {
         _ = simulator.connect(at: .zero)
         _ = simulator.receive(FrameEncoder.desiredState(desiredState(sequence: 5)), at: .ms(10))
         let stale = desiredState(sequence: 5, flags: [.rxAudioOpen], freq: 145.5)
-        let state = try #require(try events(simulator.receive(FrameEncoder.desiredState(stale), at: .ms(20))).states.last)
+        let state = try #require(
+            try events(simulator.receive(FrameEncoder.desiredState(stale), at: .ms(20))).states.last
+        )
         #expect(state.radio.freqRx == 146.52)
         #expect(state.radio.flags.contains(.rxAudioOpen))
         #expect(state.mode == .rx)
