@@ -13,7 +13,9 @@ Swift implementation: `apple-src/Packages/KV4PProtocol` (`RadioState`,
 `DeviceState`, `FirmwareVersion`, `Hello`, `WindowUpdate`, `TXChannel`,
 `FrameEncoder`, `KISSParser`, `SMeter`, `FlowControlWindow`; device side:
 `HostFrameParser`, `DeviceFrameEncoder`). The device behaviour of §9 is
-reproduced by `apple-src/Packages/KV4PSimulator`.
+reproduced by `apple-src/Packages/KV4PSimulator`. Transports (§1):
+`apple-src/Packages/KV4PTransport` (`BLELink`, `BLETransport`,
+`SerialTransport`); GATT UUIDs: `BLEGATT`.
 
 All multi-byte values are **little-endian**. Floats are IEEE 754 binary32.
 Structs are packed (no padding).

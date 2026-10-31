@@ -52,7 +52,11 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
 ## Fakes and simulator
 
 - Every OS-facing protocol (`RadioTransport`, `AudioIO`, `LocationProvider`,
-  `Clock`, `NetworkConnection`) has an in-memory fake in a shared test-support target.
+  `Clock`, `NetworkConnection`) has an in-memory fake. Shared doubles live in
+  the `KV4PTestSupport` target (`ManualClock`, `collect(_:from:)`); adapter
+  fakes such as `FakeCentral` and `FakeSerialPort` live next to their tests.
+- Transport adapters are event/command shims ([ADR-0018](adr/0018-transport-adapters.md));
+  `BLELink`, `BLETransport` and `SerialTransport` are tested against fakes.
 - Time is injected (`Clock` protocol) so timeouts, status-report intervals and the
   TX watchdog are tested without sleeping.
 - `KV4PSimulator` provides end-to-end behaviour; scenarios cover firmware

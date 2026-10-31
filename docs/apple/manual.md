@@ -86,8 +86,10 @@ See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
 
 Used by developers before merging a milestone that touches hardware behaviour:
 
-- [ ] Connect via BLE; firmware version and module type shown correctly.
-- [ ] 🖥 Connect via USB.
+- [ ] Connect via BLE; firmware version and module type shown correctly
+      (until the app exists: `cd apple-src && swift run kv4p-probe --ble`).
+- [ ] 🖥 Connect via USB (`swift run kv4p-probe --serial`; add `--reset` if the
+      radio was already running, so it restarts and sends `HELLO`).
 - [ ] RX audio continuous for 10 minutes without drop-outs.
 - [ ] PTT into a dummy load; TX stops when PTT is released and when the link drops.
 - [ ] Reconnect after radio power cycle.
