@@ -36,7 +36,9 @@ struct HostFrameParserTests {
     @Test("bytes before the first FEND are neither parsed nor acknowledged")
     func garbageBeforeFirstFEND() {
         var parser = HostFrameParser()
-        #expect(parser.process([0x01, 0x02, 0xC0, 0x00, 0x41, 0xC0]) == [.init(content: .ax25([0x41]), encodedLength: 4)])
+        #expect(
+            parser.process([0x01, 0x02, 0xC0, 0x00, 0x41, 0xC0]) == [.init(content: .ax25([0x41]), encodedLength: 4)]
+        )
     }
 
     @Test("frames sharing one FEND are each acknowledged with both FENDs")
