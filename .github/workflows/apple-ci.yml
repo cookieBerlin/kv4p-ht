@@ -42,7 +42,9 @@ jobs:
       - name: Check files and commit metadata
         env:
           BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
-        run: make privacy BASE="$BASE"
+          # Check the PR head, not GitHub's synthetic merge commit.
+          HEAD_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: make privacy BASE="$BASE" HEAD_REF="$HEAD_REF"
 
   test:
     runs-on: macos-26

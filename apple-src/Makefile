@@ -22,7 +22,7 @@ format:
 	$(SWIFT) format --in-place --recursive --parallel Package.swift Packages
 
 privacy:
-	scripts/privacy-check.sh $(BASE)
+	scripts/privacy-check.sh $(BASE) $(HEAD_REF)
 
 ios-build:
 	xcodebuild build -quiet -scheme '$(SCHEME)' -destination '$(IOS_DESTINATION)'

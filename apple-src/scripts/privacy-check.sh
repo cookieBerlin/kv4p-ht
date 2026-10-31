@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # Fails if Apple port files or commit metadata contain personal data
 # (CLAUDE.md rule 6, ADR-0013). Checks e-mail addresses in tracked files and
-# author/committer e-mails of commits in the given range.
-# Usage: privacy-check.sh [<base-ref>]   (default base: upstream/main or origin/main)
+# author/committer e-mails of commits in <base>..<head>.
+# Findings are reported by location only and never echoed, because CI logs
+# may be public.
+# Usage: privacy-check.sh [<base-ref> [<head-ref>]]
+#   default base: upstream/main or origin/main; default head: HEAD
 set -euo pipefail
 
 repo="$(git rev-parse --show-toplevel)"
 cd "$repo"
 
 base="${1:-}"
+head="${2:-HEAD}"
 if [[ -z "$base" ]]; then
   for candidate in upstream/main origin/main; do
     if git rev-parse --verify --quiet "$candidate" >/dev/null; then base="$candidate"; break; fi
@@ -23,18 +27,20 @@ status=0
 existing=()
 for p in "${paths[@]}"; do [[ -e "$p" ]] && existing+=("$p"); done
 
-hits=$(git grep -nIoE "$email" -- "${existing[@]}" | grep -vE "$allowed" || true)
+# git grep -o prints "file:line:match"; keep only the location.
+hits=$(git grep -nIoE "$email" -- "${existing[@]}" | grep -vE "$allowed" | cut -d: -f1,2 | sort -u || true)
 if [[ -n "$hits" ]]; then
-  echo "privacy: e-mail addresses found in files:" >&2
+  echo "privacy: non-placeholder e-mail addresses found at:" >&2
   echo "$hits" >&2
   status=1
 fi
 
 if [[ -n "$base" ]]; then
-  authors=$(git log --format='%ae%n%ce' "$base..HEAD" | sort -u | grep -vE "$allowed" || true)
-  if [[ -n "$authors" ]]; then
-    echo "privacy: commits in $base..HEAD use non-anonymous e-mails:" >&2
-    echo "$authors" >&2
+  commits=$(git log --format='%h %ae %ce' "$base..$head" \
+    | ALLOWED="$allowed" awk '$2 !~ ENVIRON["ALLOWED"] || $3 !~ ENVIRON["ALLOWED"] { print $1 }' || true)
+  if [[ -n "$commits" ]]; then
+    echo "privacy: commits in $base..$head use non-anonymous author/committer e-mails:" >&2
+    echo "$commits" >&2
     status=1
   fi
 fi
