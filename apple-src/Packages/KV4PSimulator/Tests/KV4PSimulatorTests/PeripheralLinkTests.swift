@@ -46,6 +46,19 @@ struct PeripheralLinkTests {
         #expect(!link.isAdvertising)
     }
 
+    @Test("advertising that fails to start is reported")
+    func advertisingFails() {
+        var link = PeripheralLink(simulator: RadioSimulator())
+        _ = link.handle(.powerState(.poweredOn), at: .zero)
+        _ = link.handle(.serviceAdded(true), at: .zero)
+        #expect(link.handle(.advertisingStarted(error: nil), at: .zero).isEmpty)
+        #expect(link.isAdvertising)
+        #expect(!link.failed)
+        #expect(link.handle(.advertisingStarted(error: "not permitted"), at: .zero).isEmpty)
+        #expect(!link.isAdvertising)
+        #expect(link.failed)
+    }
+
     @Test("a subscription stops advertising and sends HELLO in chunks of the update length")
     func subscribe() throws {
         var (link, commands) = Self.subscribed()
