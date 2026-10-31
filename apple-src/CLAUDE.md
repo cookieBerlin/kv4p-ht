@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 1.4 (transport). The structure below is the target layout
+> Status: milestone 1.5 (BLE simulator). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -32,11 +32,11 @@ apple-src/
 │   ├── KV4PRadio/       # Radio controller, state machine, use cases, view models
 │   ├── KV4PPersistence/ # Memories, settings, APRS history
 │   ├── KV4PFlasher/     # ESP32 ROM bootloader flashing (macOS only)
-│   ├── KV4PSimulator/   # In-process radio simulator + scenarios, SimulatorTransport
+│   ├── KV4PSimulator/   # In-process radio simulator + scenarios, SimulatorTransport, SimulatorPeripheral
+│   ├── KV4PSimulatorPeripheral/ # kv4p-sim-peripheral: simulated kv4p HT over real BLE (macOS)
 │   ├── KV4PTestSupport/ # Test doubles shared by test targets (ManualClock); not shipped
 │   └── KV4PProbe/       # kv4p-probe: prints the HELLO of real hardware (macOS dev tool)
 ├── App/                 # Thin SwiftUI app target (macOS, iOS, iPadOS)
-├── SimulatorPeripheral/ # macOS app: BLE peripheral simulating a kv4p HT
 ├── Config/              # xcconfig files
 ├── scripts/             # coverage gate, privacy check, change detection
 ├── apple-paths.txt      # Apple port paths (CI change detection, privacy check)
@@ -60,6 +60,7 @@ make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors from the unmodified Android code
 make vectors-check # make vectors, then fail if the committed vectors differ
 swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list]  # hardware check
+swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--verbose]  # simulated radio over BLE
 ```
 
 Requires Xcode (with `swift format`) and `jq`; `make vectors` also needs JDK 17

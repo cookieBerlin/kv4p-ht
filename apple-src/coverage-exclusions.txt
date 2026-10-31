@@ -8,3 +8,7 @@ Packages/KV4PTransport/Sources/KV4PTransport/CoreBluetoothCentral.swift
 Packages/KV4PTransport/Sources/KV4PTransport/POSIXSerialPort.swift
 # Entry point of the hardware probe tool.
 Packages/KV4PProbe/Sources/kv4p-probe/main.swift
+# CBPeripheralManager adapter of the BLE simulator: forwards only (ADR-0018).
+Packages/KV4PSimulator/Sources/KV4PSimulator/CoreBluetoothPeripheralManager.swift
+# Entry point of the BLE simulator tool.
+Packages/KV4PSimulatorPeripheral/Sources/kv4p-sim-peripheral/main.swift

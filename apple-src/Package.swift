@@ -50,6 +50,12 @@ let package = Package(
             dependencies: ["KV4PProtocol", "KV4PTransport"],
             path: "Packages/KV4PProbe/Sources/kv4p-probe"
         ),
+        // Simulated kv4p HT over real BLE (macOS), ADR-0014 B.
+        .executableTarget(
+            name: "kv4p-sim-peripheral",
+            dependencies: ["KV4PSimulator"],
+            path: "Packages/KV4PSimulatorPeripheral/Sources/kv4p-sim-peripheral"
+        ),
         // Test doubles shared by the test targets (manual clock); not part of any product.
         .target(
             name: "KV4PTestSupport",
