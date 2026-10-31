@@ -47,7 +47,9 @@ struct SimulatorTransportTests {
         var incoming = transport.incoming.makeAsyncIterator()
         try await transport.connect()
         _ = await incoming.next()
-        try await transport.send(FrameEncoder.desiredState(desiredState(sequence: 1, flags: [.pttRequested, .txAllowed])))
+        try await transport.send(
+            FrameEncoder.desiredState(desiredState(sequence: 1, flags: [.pttRequested, .txAllowed]))
+        )
         #expect(try events(try #require(await incoming.next())).states.last?.mode == .tx)
         await clock.waitForSleepers(1)
         clock.advance(by: .milliseconds(778))
