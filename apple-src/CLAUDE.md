@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 1.5 (BLE simulator). The structure below is the target layout
+> Status: milestone 1.6 (radio control). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -59,7 +59,7 @@ make ios-build  # compile all modules for iOS (no simulator)
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors from the unmodified Android code
 make vectors-check # make vectors, then fail if the committed vectors differ
-swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list]  # hardware check
+swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz>]  # hardware check
 swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--verbose]  # simulated radio over BLE
 ```
 

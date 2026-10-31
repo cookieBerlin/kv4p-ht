@@ -15,7 +15,9 @@ Swift implementation: `apple-src/Packages/KV4PProtocol` (`RadioState`,
 `HostFrameParser`, `DeviceFrameEncoder`). The device behaviour of §9 is
 reproduced by `apple-src/Packages/KV4PSimulator`. Transports (§1):
 `apple-src/Packages/KV4PTransport` (`BLELink`, `BLETransport`,
-`SerialTransport`); GATT UUIDs: `BLEGATT`.
+`SerialTransport`); GATT UUIDs: `BLEGATT`. Session lifecycle (§7):
+`apple-src/Packages/KV4PRadio` (`RadioController`, `DesiredStateController`,
+pinned to the Android `RadioModuleController` by `desired-state.json`).
 
 All multi-byte values are **little-endian**. Floats are IEEE 754 binary32.
 Structs are packed (no padding).

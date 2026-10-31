@@ -96,3 +96,5 @@ Used by developers before merging a milestone that touches hardware behaviour:
 - [ ] PTT into a dummy load; TX stops when PTT is released and when the link drops.
 - [ ] Reconnect after radio power cycle.
 - [ ] Out-of-range frequency is rejected.
+- [ ] Tuning is applied and confirmed by the radio
+      (`swift run kv4p-probe --serial --reset --tune 145.525`, then back).
