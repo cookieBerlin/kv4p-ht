@@ -42,7 +42,12 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
   - AX.25 / APRS packets.
 - Additional cases are taken from the firmware native tests in
   `microcontroller-src/test/` where applicable.
-- `make vectors` regenerates; CI fails if the output differs from the committed files.
+- The included Android sources are listed once in
+  `tools/test-vectors/oracle-sources.txt`.
+- `make vectors` regenerates (JDK 17); `make vectors-check` fails if the output
+  differs from the committed files. The CI `vectors` job runs it whenever Apple
+  paths or the listed Android sources change, so upstream changes to the Android
+  reference code surface as a failing check.
 
 ## Fakes and simulator
 

@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 1.0 (foundation). The structure below is the target layout
+> Status: milestone 1.1 (test vectors). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -55,10 +55,12 @@ make privacy    # personal data check (files + commit e-mails), BASE=<ref> optio
 make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
 make ios-build  # compile all modules for iOS (no simulator)
 make ci         # everything CI runs, in the same order
-make vectors    # (from milestone 1.1) regenerate golden test vectors from the Android code
+make vectors    # regenerate golden test vectors from the unmodified Android code
+make vectors-check # make vectors, then fail if the committed vectors differ
 ```
 
-Requires Xcode (with `swift format`) and `jq`.
+Requires Xcode (with `swift format`) and `jq`; `make vectors` also needs JDK 17
+(`brew install openjdk@17`, or set `JAVA17_HOME`). Gradle 9 does not run on newer JDKs.
 
 CI calls `make ci`; never duplicate command lines in workflow files.
 
@@ -70,7 +72,7 @@ CI calls `make ci`; never duplicate command lines in workflow files.
   tested against fakes or the simulator.
 - Platform differences use `#if os(macOS)` / `#if os(iOS)` only inside adapters.
 - Protocol constants exist once, in `KV4PProtocol`. Other modules import them.
-- Golden test vectors live in `Packages/*/Tests/**/Vectors/*.json` and are
+- Golden test vectors live in `Packages/*/Tests/*/Vectors/*.json` and are
   generated, never edited by hand.
 - Test data uses placeholders only (`N0CALL`, `example.com`).
 
