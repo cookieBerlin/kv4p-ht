@@ -16,5 +16,7 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0010](0010-repository-structure.md) | Repository structure | Accepted |
 | [0011](0011-coverage-policy.md) | Test coverage policy | Accepted |
 | [0012](0012-platform-strategy.md) | Platform strategy | Accepted |
-| [0013](0013-ci-pr-gate.md) | CI and pull request gate | Accepted |
+| [0013](0013-ci-pr-gate.md) | CI and pull request gate | Accepted, amended by 0015, 0016 |
 | [0014](0014-radio-simulator.md) | Radio simulator | Accepted |
+| [0015](0015-build-layout-and-tooling.md) | Build layout and lint tooling | Accepted |
+| [0016](0016-branch-protection.md) | Branch protection without required approvals | Accepted |
