@@ -28,6 +28,7 @@ let package = Package(
         ),
         .target(
             name: "KV4PAudio",
+            dependencies: ["KV4PProtocol"],
             path: "Packages/KV4PAudio/Sources/KV4PAudio"
         ),
         .testTarget(
