@@ -34,6 +34,12 @@ struct DeviceFrameEncoderTests {
         )
     }
 
+    @Test("RX_AUDIO round-trips through the KISS parser")
+    func rxAudio() {
+        let block: [UInt8] = [0xC0, 0xDB, 0x00, 0x00, 0x12, 0x34]
+        #expect(parse(DeviceFrameEncoder.rxAudio(block)) == [.command(.rxAudio, payload: block)])
+    }
+
     @Test("WINDOW_UPDATE round-trips through the KISS parser")
     func windowUpdate() {
         let update = WindowUpdate(size: 0xDBC0)
