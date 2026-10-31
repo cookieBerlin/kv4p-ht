@@ -195,6 +195,20 @@ struct RadioViewModelTests {
         #expect(model.txTone == "None")
     }
 
+    @Test(
+        "S-meter text",
+        arguments: [(0, "S0"), (1, "S1"), (9, "S9"), (10, "S9+20"), (11, "S9+40"), (12, "S9+60"), (13, "Overload")]
+    )
+    func sMeterText(value: Int, text: String) {
+        #expect(RadioViewModel.sMeterText(for: value) == text)
+    }
+
+    @Test("the S-meter text follows the snapshot")
+    func sMeterOfModel() async {
+        let model = await connected()
+        #expect(model.sMeterText == "S0")
+    }
+
     @Test("UHF firmware text")
     func uhf() async {
         let model = await connected(.uhf)
