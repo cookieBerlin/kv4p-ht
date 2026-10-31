@@ -17,7 +17,8 @@ struct KISSParserVectorTests {
         func frame() throws -> ReceivedFrame {
             let bytes = try [UInt8](hex: payload)
             guard type == "command" else { return .ax25(bytes) }
-            return .command(try #require(DeviceCommand(rawValue: try #require(command))), payload: bytes)
+            let raw = try #require(command)
+            return .command(try #require(DeviceCommand(rawValue: raw)), payload: bytes)
         }
     }
 
