@@ -45,7 +45,7 @@ Firmware flashing is available on macOS only.
 
 ## Can I try the app without a radio?
 
-Development builds include a built-in radio simulator, and a Mac can act as a
+Yes: choose **Simulator** under **Radio** in the app. A Mac can also act as a
 virtual radio over Bluetooth for another device: `cd apple-src && swift run
 kv4p-sim-peripheral` advertises as `kv4p-sim` until stopped
 ([ADR-0014](adr/0014-radio-simulator.md)). The Mac running it cannot connect to

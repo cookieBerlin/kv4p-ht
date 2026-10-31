@@ -30,23 +30,42 @@
 
 ## Installation
 
-*Planned.* Signed macOS builds and TestFlight builds for iOS/iPadOS will be linked
-here. To build from source, see [`apple-src/CLAUDE.md`](../../apple-src/CLAUDE.md).
+*Planned:* signed macOS builds and TestFlight builds for iOS/iPadOS will be linked
+here.
+
+🖥 To build from source, open `apple-src/App/KV4PHT.xcodeproj` in Xcode and run
+the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
+[`apple-src/CLAUDE.md`](../../apple-src/CLAUDE.md).
 
 ## Connecting the radio
 
-*Planned.*
+Choose the connection under **Radio** and click **Connect**:
 
-- **Bluetooth LE (all platforms):** power on the radio; the app lists devices
-  named `kv4p-XXXXXX`. Select one to connect. Grant Bluetooth permission when asked.
-- **USB (🖥 only):** connect the radio by USB cable; the app detects the serial
-  port automatically.
-- After connecting, the app shows the firmware version, RF module (VHF/UHF) and
-  supported frequency range.
+- **Bluetooth:** power on the radio; the app connects to the first kv4p HT it
+  finds. Allow Bluetooth access when macOS asks. The radio serves one Bluetooth
+  connection at a time, so disconnect other apps first.
+- **USB (🖥 only):** connect the radio by USB cable; it appears as
+  `USB cu.usbserial-…`. The app restarts the radio when connecting, so it
+  reports itself.
+- **Simulator:** a built-in simulated radio, to try the app without hardware.
+
+After connecting, the app shows the firmware version, RF module (VHF/UHF) and
+frequency range. *Connected, applying settings…* means the radio has not yet
+confirmed the latest change. **Disconnect** ends the session; the radio keeps its
+settings.
 
 ## Receiving
 
-*Planned.* Frequency entry, bandwidth (12.5/25 kHz), CTCSS, squelch, S-meter.
+- **Frequency:** type it in MHz and press Return. As in the Android app, `1467`
+  becomes 146.7 MHz and frequencies outside the module range are set to the
+  nearest limit. RX and TX use the same frequency (simplex); repeater offsets come
+  with memories.
+- **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8.
+- **TX/RX tone (CTCSS):** one of the 38 standard tones or *None*.
+- **High power** and the **audio filters** (pre-emphasis, high-pass, low-pass).
+- **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*.
+
+*Planned:* RX audio playback.
 
 ## Transmitting
 
@@ -81,6 +100,15 @@ The app warns when the radio's firmware is older than required.
   project website (desktop Chrome or Edge), the Android app or a Mac.
 
 ## Troubleshooting
+
+| Message | What to do |
+|---|---|
+| *The radio did not answer.* | Switch the radio on; it needs firmware 17 or later. |
+| *Firmware … is too old.* | Update the firmware (see [Firmware updates](#firmware-updates)). |
+| *The SA818 radio module did not respond.* | Restart the radio. The app sends no settings in this state, because the firmware would stop responding. |
+| *This device is not a kv4p HT, or its firmware has no Bluetooth LE service.* | Use USB, or update to firmware with Bluetooth LE ([FAQ](faq.md#which-firmware-do-i-need)). |
+| *Bluetooth access is not allowed.* | System Settings → Privacy & Security → Bluetooth. |
+| *… cannot be opened.* | Close other apps that use the USB port. |
 
 See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
 
