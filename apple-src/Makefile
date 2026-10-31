@@ -29,8 +29,9 @@ privacy:
 	scripts/privacy-check.sh $(BASE) $(HEAD_REF)
 
 # Prints true/false: does BASE...HEAD_REF touch an Apple port path?
+# ORACLE=--oracle also counts the Android sources of the test vectors.
 changed:
-	@scripts/apple-changed.sh $(BASE) $(HEAD_REF)
+	@scripts/apple-changed.sh '$(BASE)' '$(HEAD_REF)' $(ORACLE)
 
 # Regenerates the golden test vectors from the unmodified Android code (ADR-0004).
 vectors:

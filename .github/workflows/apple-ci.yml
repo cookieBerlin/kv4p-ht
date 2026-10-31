@@ -31,12 +31,30 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       apple: ${{ steps.detect.outputs.apple }}
+      vectors: ${{ steps.detect.outputs.vectors }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - id: detect
-        run: echo "apple=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "apple=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF")" >> "$GITHUB_OUTPUT"
+          echo "vectors=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF" ORACLE=--oracle)" >> "$GITHUB_OUTPUT"
+
+  vectors:
+    needs: changes
+    # Also runs when the Android sources the vectors are generated from change.
+    if: needs.changes.outputs.vectors == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+          cache-dependency-path: tools/test-vectors/*.gradle
+      - run: make vectors-check JAVA17_HOME="$JAVA_HOME"
 
   lint:
     needs: changes
