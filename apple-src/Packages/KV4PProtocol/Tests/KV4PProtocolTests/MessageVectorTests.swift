@@ -178,13 +178,48 @@ struct MessageVectorTests {
         }
     }
 
+    @Test("DeviceState re-encodes to the decoded bytes", arguments: vectors("DeviceState"))
+    func reencodeDeviceState(vector: Vector) throws {
+        try checkReencoding(vector, decode: DeviceState.init(decoding:)) { $0.encoded() }
+    }
+
+    @Test("FirmwareVersion re-encodes to the decoded bytes", arguments: vectors("FirmwareVersion"))
+    func reencodeFirmwareVersion(vector: Vector) throws {
+        try checkReencoding(vector, decode: FirmwareVersion.init(decoding:)) { $0.encoded() }
+    }
+
+    @Test("Hello re-encodes to the decoded bytes", arguments: vectors("Hello"))
+    func reencodeHello(vector: Vector) throws {
+        try checkReencoding(vector, decode: Hello.init(decoding:)) { $0.encoded() }
+    }
+
+    @Test("WindowUpdate re-encodes to the decoded bytes", arguments: vectors("WindowUpdate"))
+    func reencodeWindowUpdate(vector: Vector) throws {
+        try checkReencoding(vector, decode: WindowUpdate.init(decoding:)) { $0.encoded() }
+    }
+
+    private func inputBytes(_ vector: Vector) throws -> [UInt8] {
+        Array(try [UInt8](hex: try #require(vector.input.bytes)).prefix(try #require(vector.input.len)))
+    }
+
+    /// The device-side encoders (used by the simulator) reproduce every message the decoders accept.
+    private func checkReencoding<T>(
+        _ vector: Vector,
+        decode: ([UInt8]) throws(ProtocolError) -> T,
+        encode: (T) -> [UInt8]
+    ) throws {
+        let bytes = try inputBytes(vector)
+        guard let decoded = try? decode(bytes) else { return }
+        #expect(encode(decoded) == bytes)
+    }
+
     /// Android returns no value for a wrong length and throws for an unknown module type.
     private func check<T>(
         _ vector: Vector,
         decode: ([UInt8]) throws(ProtocolError) -> T,
         matches: (ValueJSON, T) throws -> Void
     ) throws {
-        let bytes = Array(try [UInt8](hex: try #require(vector.input.bytes)).prefix(try #require(vector.input.len)))
+        let bytes = try inputBytes(vector)
         switch Result(catching: { () throws(ProtocolError) in try decode(bytes) }) {
         case .success(let decoded):
             try matches(try #require(vector.expected.value), decoded)
