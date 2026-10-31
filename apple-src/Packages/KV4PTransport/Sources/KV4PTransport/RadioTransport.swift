@@ -25,7 +25,7 @@ public enum TransportError: Error, Equatable, Sendable {
 ///
 /// Each stream has a single consumer.
 public protocol RadioTransport: Sendable {
-    /// State changes, starting with the next change.
+    /// Every state change since the transport was created (the initial state is `.disconnected`).
     var states: AsyncStream<TransportState> { get }
     /// Raw device → host bytes; KISS frames may span chunks.
     var incoming: AsyncStream<[UInt8]> { get }

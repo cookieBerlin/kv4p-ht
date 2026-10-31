@@ -1,4 +1,5 @@
 import Foundation
+import KV4PTestSupport
 import Testing
 
 @testable import KV4PTransport
@@ -78,9 +79,8 @@ struct BLETransportTests {
         let central = FakeCentral()
         let transport = BLETransport(central: central)
         try await transport.connect()
-        var states = transport.states.makeAsyncIterator()
         await transport.disconnect()
-        #expect(await states.next() == .disconnected)
+        #expect(await collect(3, from: transport.states) == [.connecting, .connected, .disconnected])
         #expect(central.commands.last == .cancelConnection)
     }
 
@@ -89,9 +89,8 @@ struct BLETransportTests {
         let central = FakeCentral()
         let transport = BLETransport(central: central)
         try await transport.connect()
-        var states = transport.states.makeAsyncIterator()
         central.emit(.disconnected)
-        #expect(await states.next() == .failed(.connectionLost))
+        #expect(await collect(3, from: transport.states) == [.connecting, .connected, .failed(.connectionLost)])
     }
 
     @Test("cancelling a pending connect stops scanning and throws")

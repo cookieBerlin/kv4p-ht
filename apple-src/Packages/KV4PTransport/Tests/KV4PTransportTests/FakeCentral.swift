@@ -12,7 +12,10 @@ final class FakeCentral: BLECentral {
     private let log = Mutex<[BLECommand]>([])
     private let responses: @Sendable (BLECommand) -> [BLEEvent]
 
-    init(power: BLEPowerState = .poweredOn, responses: @escaping @Sendable (BLECommand) -> [BLEEvent] = FakeCentral.kv4p) {
+    init(
+        power: BLEPowerState = .poweredOn,
+        responses: @escaping @Sendable (BLECommand) -> [BLEEvent] = FakeCentral.kv4p
+    ) {
         (events, continuation) = AsyncStream.makeStream()
         self.responses = responses
         continuation.yield(.powerState(power))
