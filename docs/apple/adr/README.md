@@ -22,3 +22,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0016](0016-branch-protection.md) | Branch protection without required approvals | Accepted |
 | [0017](0017-ci-change-detection.md) | CI change detection instead of path filters | Accepted |
 | [0018](0018-transport-adapters.md) | Transport logic as state machines behind thin adapters | Proposed |
+| [0019](0019-xcode-app-project.md) | Xcode project for the app target | Accepted |
