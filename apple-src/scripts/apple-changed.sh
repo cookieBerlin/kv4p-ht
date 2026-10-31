@@ -2,12 +2,13 @@
 # Prints "true" if <base>...<head> touches an Apple port path, else "false".
 # Prints "true" if the base cannot be resolved (e.g. a new branch), so the
 # Apple jobs run rather than being skipped by mistake.
-# Usage: apple-changed.sh <base-ref> [<head-ref>]
+# With --oracle, the Android sources of the test vectors count as well.
+# Usage: apple-changed.sh <base-ref> [<head-ref>] [--oracle]
 set -euo pipefail
 
 base="${1:-}"
 head="${2:-HEAD}"
-paths=$("$(dirname "$0")/apple-paths.sh")
+paths=$("$(dirname "$0")/apple-paths.sh" ${3:-})
 cd "$(git rev-parse --show-toplevel)"
 
 if [[ -z "$base" ]] || ! git rev-parse --verify --quiet "$base^{commit}" >/dev/null; then
