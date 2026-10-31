@@ -1,0 +1,37 @@
+package io.github.kv4pht.vectors;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+/**
+ * Writes golden test vectors produced by the unmodified Android code to
+ * apple-src/Packages/&lt;Module&gt;/Tests/&lt;Module&gt;Tests/Vectors/.
+ * Output is deterministic; CI regenerates it and fails on any diff.
+ */
+public final class Main {
+    private Main() {}
+
+    public static void main(String[] args) throws IOException {
+        Path packages = Path.of(args[0]);
+        write(packages, "KV4PProtocol", "kiss-sender.json", "Protocol.Sender", ProtocolVectors.sender());
+        write(packages, "KV4PProtocol", "kiss-parser.json", "Protocol.KissParser", ProtocolVectors.parser());
+        write(packages, "KV4PProtocol", "messages.json", "Protocol message decoders", ProtocolVectors.messages());
+        write(packages, "KV4PProtocol", "s-meter.json", "Protocol.calculateSMeterValue", ProtocolVectors.sMeter());
+        write(packages, "KV4PAudio", "ima-adpcm.json", "ImaAdpcm", AdpcmVectors.all());
+        write(packages, "KV4PAPRS", "ax25-packets.json", "javAX25 Packet", Ax25Vectors.all());
+    }
+
+    private static void write(Path packages, String module, String file, String source, List<Object> vectors)
+            throws IOException {
+        Path dir = packages.resolve(module).resolve("Tests").resolve(module + "Tests").resolve("Vectors");
+        Files.createDirectories(dir);
+        Json.Obj root = Json.obj()
+                .put("generator", "tools/test-vectors")
+                .put("source", source)
+                .put("vectors", vectors);
+        Files.writeString(dir.resolve(file), Json.write(root), StandardCharsets.UTF_8);
+    }
+}
