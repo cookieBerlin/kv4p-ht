@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "KV4PTransport", targets: ["KV4PTransport"]),
         .library(name: "KV4PSimulator", targets: ["KV4PSimulator"]),
         .library(name: "KV4PRadio", targets: ["KV4PRadio"]),
+        .library(name: "KV4PAudio", targets: ["KV4PAudio"]),
     ],
     targets: [
         .target(
@@ -23,6 +24,16 @@ let package = Package(
             name: "KV4PProtocolTests",
             dependencies: ["KV4PProtocol", "KV4PTestSupport"],
             path: "Packages/KV4PProtocol/Tests/KV4PProtocolTests",
+            resources: [.copy("Vectors")]
+        ),
+        .target(
+            name: "KV4PAudio",
+            path: "Packages/KV4PAudio/Sources/KV4PAudio"
+        ),
+        .testTarget(
+            name: "KV4PAudioTests",
+            dependencies: ["KV4PAudio", "KV4PTestSupport"],
+            path: "Packages/KV4PAudio/Tests/KV4PAudioTests",
             resources: [.copy("Vectors")]
         ),
         .target(
