@@ -1,18 +1,14 @@
 # Apple app pull request gate (docs/apple/adr/0013-ci-pr-gate.md).
 # Every job only calls a target of apple-src/Makefile.
+# Runs on every pull request so the required checks always report; the Apple
+# jobs are skipped (reported as successful) when no Apple port path changed
+# (docs/apple/adr/0017-ci-change-detection.md).
 name: Apple CI
 
 on:
   pull_request:
-    paths: &apple-paths
-      - "apple-src/**"
-      - "tools/test-vectors/**"
-      - "docs/apple/**"
-      - "CLAUDE.md"
-      - ".github/workflows/apple-ci.yml"
   push:
     branches: [main]
-    paths: *apple-paths
 
 concurrency:
   group: apple-ci-${{ github.ref }}
@@ -25,8 +21,26 @@ defaults:
   run:
     working-directory: apple-src
 
+env:
+  BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+  # Check the PR head, not GitHub's synthetic merge commit.
+  HEAD_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      apple: ${{ steps.detect.outputs.apple }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: detect
+        run: echo "apple=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF")" >> "$GITHUB_OUTPUT"
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.apple == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -34,19 +48,19 @@ jobs:
       - run: make lint
 
   privacy:
+    needs: changes
+    if: needs.changes.outputs.apple == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Check files and commit metadata
-        env:
-          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
-          # Check the PR head, not GitHub's synthetic merge commit.
-          HEAD_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: make privacy BASE="$BASE" HEAD_REF="$HEAD_REF"
 
   test:
+    needs: changes
+    if: needs.changes.outputs.apple == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +74,8 @@ jobs:
           if-no-files-found: ignore
 
   ios-build:
+    needs: changes
+    if: needs.changes.outputs.apple == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4

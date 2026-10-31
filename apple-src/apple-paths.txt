@@ -1,0 +1,7 @@
+# Paths that belong to the Apple port (repository-relative, one per line).
+# Single source for CI change detection and the personal data check.
+CLAUDE.md
+apple-src
+docs/apple
+tools/test-vectors
+.github/workflows/apple-ci.yml

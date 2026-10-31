@@ -6,7 +6,7 @@ IOS_DESTINATION ?= generic/platform=iOS
 # SwiftPM names the scheme <package>-Package once there are several products.
 SCHEME ?= $(shell xcodebuild -list -json 2>/dev/null | jq -r '.workspace.schemes | (map(select(endswith("-Package")))[0] // .[0])')
 
-.PHONY: test coverage lint format privacy ios-build ci
+.PHONY: test coverage lint format privacy changed ios-build ci
 
 test:
 	$(SWIFT) test
@@ -23,6 +23,10 @@ format:
 
 privacy:
 	scripts/privacy-check.sh $(BASE) $(HEAD_REF)
+
+# Prints true/false: does BASE...HEAD_REF touch an Apple port path?
+changed:
+	@scripts/apple-changed.sh $(BASE) $(HEAD_REF)
 
 ios-build:
 	xcodebuild build -quiet -scheme '$(SCHEME)' -destination '$(IOS_DESTINATION)'

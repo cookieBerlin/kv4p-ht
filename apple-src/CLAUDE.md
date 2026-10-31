@@ -36,7 +36,8 @@ apple-src/
 ├── App/                 # Thin SwiftUI app target (macOS, iOS, iPadOS)
 ├── SimulatorPeripheral/ # macOS app: BLE peripheral simulating a kv4p HT
 ├── Config/              # xcconfig files
-├── scripts/             # coverage gate, privacy check
+├── scripts/             # coverage gate, privacy check, change detection
+├── apple-paths.txt      # Apple port paths (CI change detection, privacy check)
 ├── coverage-exclusions.txt
 └── Makefile             # single entry point, used locally and in CI
 ```
@@ -51,6 +52,7 @@ make coverage   # tests + coverage report + 100 % gate
 make lint       # swift format lint --strict
 make format     # swift format --in-place
 make privacy    # personal data check (files + commit e-mails), BASE=<ref> optional
+make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
 make ios-build  # compile all modules for iOS (no simulator)
 make ci         # everything CI runs, in the same order
 make vectors    # (from milestone 1.1) regenerate golden test vectors from the Android code

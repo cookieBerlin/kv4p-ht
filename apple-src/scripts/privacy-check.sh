@@ -8,8 +8,9 @@
 #   default base: upstream/main or origin/main; default head: HEAD
 set -euo pipefail
 
-repo="$(git rev-parse --show-toplevel)"
-cd "$repo"
+paths=()
+while IFS= read -r p; do paths+=("$p"); done < <("$(dirname "$0")/apple-paths.sh")
+cd "$(git rev-parse --show-toplevel)"
 
 base="${1:-}"
 head="${2:-HEAD}"
@@ -19,7 +20,6 @@ if [[ -z "$base" ]]; then
   done
 fi
 
-paths=(CLAUDE.md apple-src docs/apple tools .github/workflows/apple-ci.yml)
 allowed='(noreply@anthropic\.com|noreply@github\.com|@users\.noreply\.github\.com|@example\.(com|org|net))$'
 email='[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
 status=0
