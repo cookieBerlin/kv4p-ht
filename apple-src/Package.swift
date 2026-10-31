@@ -59,7 +59,7 @@ let package = Package(
         // Development tool for the hardware checklist (macOS).
         .executableTarget(
             name: "kv4p-probe",
-            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            dependencies: ["KV4PProtocol", "KV4PRadio", "KV4PTransport"],
             path: "Packages/KV4PProbe/Sources/kv4p-probe"
         ),
         // Simulated kv4p HT over real BLE (macOS), ADR-0014 B.

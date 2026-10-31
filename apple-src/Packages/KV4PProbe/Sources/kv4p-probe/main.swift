@@ -3,6 +3,7 @@
 #if os(macOS)
     import Foundation
     import KV4PProtocol
+    import KV4PRadio
     import KV4PTransport
 
     let usage = """
@@ -10,6 +11,7 @@
                kv4p-probe --serial [<device>] [--reset] [--verbose]
                kv4p-probe --list
         Connects, waits up to 10 s for HELLO and prints it.
+        With --tune <MHz>, the RadioController handshakes, tunes RX and TX and waits until the radio confirms.
         """
 
     /// Prints every BLE event and command (`--verbose`), to see where the connection sequence stops.
@@ -43,7 +45,13 @@
     // Line-buffered, so the output can be piped into a log.
     setvbuf(stdout, nil, _IOLBF, 0)
 
-    let arguments = Array(CommandLine.arguments.dropFirst())
+    var arguments = Array(CommandLine.arguments.dropFirst())
+    var tune: Float?
+    if let index = arguments.firstIndex(of: "--tune") {
+        guard index + 1 < arguments.count, let frequency = Float(arguments[index + 1]) else { fail(usage) }
+        tune = frequency
+        arguments.removeSubrange(index...index + 1)
+    }
     let operand = arguments.dropFirst().first { !$0.hasPrefix("--") }
     let transport: any RadioTransport
     switch arguments.first {
@@ -68,6 +76,35 @@
     Task {
         try? await Task.sleep(for: .seconds(10))
         fail("no HELLO within 10 s")
+    }
+
+    if let tune {
+        let controller = RadioController(transport: transport)
+        var snapshots = controller.snapshots.makeAsyncIterator()
+        var tuning = false
+        await controller.connect()
+        while let snapshot = await snapshots.next() {
+            let rx = snapshot.deviceState?.radio.freqRx ?? 0
+            print(
+                "  \(snapshot.status), in sync \(snapshot.isInSync), sequence \(snapshot.desired.sequence), RX \(rx) MHz"
+            )
+            if case .failed(let failure) = snapshot.status { fail("failed: \(failure)") }
+            guard snapshot.status == .ready, snapshot.isInSync else { continue }
+            if rx == tune {
+                print("tuned to \(tune) MHz and confirmed by the radio")
+                await controller.disconnect()
+                exit(0)
+            }
+            if !tuning {
+                tuning = true
+                do {
+                    try await controller.tune(rx: tune, tx: tune)
+                } catch {
+                    fail("tune failed: \(error)")
+                }
+            }
+        }
+        fail("controller stopped")
     }
 
     print("connecting…")
