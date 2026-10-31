@@ -84,6 +84,9 @@ struct RadioViewModelTests {
         await model.applyFrequency()
         #expect(model.message == "\"abc\" is not a frequency.")
         #expect(model.frequencyText == "174.0000")
+        model.frequencyText = "inf"
+        await model.applyFrequency()
+        #expect(model.message == "\"inf\" is not a frequency.")
     }
 
     @Test("settings are sent to the radio")
@@ -108,6 +111,8 @@ struct RadioViewModelTests {
         #expect(!model.isWideBandwidth)
         #expect(model.squelch == 4)
         #expect(!model.isHighPower)
+        model.isWideBandwidth = true
+        #expect(await eventually(model) { $0.snapshot.deviceState?.radio.bandwidth == 1 && $0.isWideBandwidth })
     }
 
     @Test("settings before connecting are ignored")
@@ -138,12 +143,16 @@ struct RadioViewModelTests {
             (.invalidHello, "The firmware of the radio is too old. Update it to version 17 or later."),
             (.firmwareTooOld(16), "Firmware 16 is too old. Update the radio to version 17 or later."),
             (.radioModuleNotFound, "The SA818 radio module did not respond. Restart the radio."),
-            (.transport(.bluetoothUnavailable(.unauthorized)),
-                "Bluetooth access is not allowed. Allow it in System Settings → Privacy & Security → Bluetooth."),
+            (
+                .transport(.bluetoothUnavailable(.unauthorized)),
+                "Bluetooth access is not allowed. Allow it in System Settings → Privacy & Security → Bluetooth."
+            ),
             (.transport(.bluetoothUnavailable(.poweredOff)), "Bluetooth is off."),
             (.transport(.bluetoothUnavailable(.unsupported)), "Bluetooth is not available."),
-            (.transport(.serviceNotFound),
-                "This device is not a kv4p HT, or its firmware has no Bluetooth LE service."),
+            (
+                .transport(.serviceNotFound),
+                "This device is not a kv4p HT, or its firmware has no Bluetooth LE service."
+            ),
             (.transport(.connectionLost), "The connection to the radio was lost."),
             (.transport(.portUnavailable(path: "/dev/cu.x", errno: 16)), "/dev/cu.x cannot be opened."),
             (.transport(.notConnected), "The connection failed."),
@@ -170,6 +179,20 @@ struct RadioViewModelTests {
         #expect(RadioViewModel.statusText(for: snapshot) == "Waiting for the radio…")
         snapshot.status = .ready
         #expect(RadioViewModel.statusText(for: snapshot) == "Connected, applying settings…")
+    }
+
+    @Test("an invalid stored tone is shown as no tone")
+    func invalidStoredTone() async {
+        var scenario = Scenario.ble
+        scenario.storedState = RadioState(
+            flags: [.radioConfigValid],
+            bandwidth: 1,
+            freqTx: 146,
+            freqRx: 146,
+            ctcssTx: 99
+        )
+        let model = await connected(scenario)
+        #expect(model.txTone == "None")
     }
 
     @Test("UHF firmware text")

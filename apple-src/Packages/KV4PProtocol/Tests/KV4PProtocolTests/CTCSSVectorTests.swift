@@ -41,6 +41,6 @@ struct CTCSSVectorTests {
     func normalize(vector: Vector) throws {
         let input = try #require(vector.input.tone)
         #expect(CTCSS.normalize(input) == vector.expected.normalized)
-        #expect(CTCSS.index(of: input).map(Int.init) == vector.expected.index)
+        #expect(Int(CTCSS.index(of: input)) == vector.expected.index)
     }
 }

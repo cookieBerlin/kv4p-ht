@@ -17,28 +17,29 @@ public enum CTCSS {
         labels.indices.contains(Int(index)) ? labels[Int(index)] : nil
     }
 
-    /// The index of an entered tone after normalising it.
-    public static func index(of tone: String) -> UInt8? {
-        labels.firstIndex(of: normalize(tone)).map(UInt8.init)
-    }
-
-    /// The closest tone within 1 Hz, or `"None"`; `0` and `1` mean no tone.
-    public static func normalize(_ tone: String) -> String {
+    /// The index of an entered tone: an exact label, else the closest tone within 1 Hz, else 0 (no tone). `0` and
+    /// `1` mean no tone.
+    public static func index(of tone: String) -> UInt8 {
         let trimmed = trimmed(tone)
-        if labels.contains(trimmed) {
-            return trimmed
+        if let exact = labels.firstIndex(of: trimmed) {
+            return UInt8(exact)
         }
-        guard let value = Double(trimmed), value != 0, value != 1 else { return none }
-        var closest: Double?
+        guard let value = Double(trimmed), value != 0, value != 1 else { return 0 }
+        var closest = 0
         var smallest = Double.greatestFiniteMagnitude
-        for frequency in frequencies {
+        for (offset, frequency) in frequencies.enumerated() {
             let distance = abs(value - frequency)
             if distance <= 1, distance < smallest {
-                closest = frequency
+                closest = offset + 1
                 smallest = distance
             }
         }
-        return closest.map(label) ?? none
+        return UInt8(closest)
+    }
+
+    /// The label of `index(of:)`, e.g. `"100.0"` → `"100"`.
+    public static func normalize(_ tone: String) -> String {
+        labels[Int(index(of: tone))]
     }
 
     /// Java `String.trim()`: drops leading and trailing characters up to U+0020.

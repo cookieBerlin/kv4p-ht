@@ -154,7 +154,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     }
 
     /// Applies several changes as one desired state, e.g. `update { $0.setSquelch(4) }`.
-    public func update(_ changes: (inout DesiredStateController) -> Void) {
+    public func update(_ changes: @Sendable (inout DesiredStateController) -> Void) {
         desiredState.beginUpdate()
         changes(&desiredState)
         desiredState.endUpdate()
