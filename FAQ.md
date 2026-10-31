@@ -17,6 +17,8 @@ If it doesn't detect your device while trying to flash, you may need to hold dow
 **A:** No, and the core contributors of this project don't currently have the skillset to build one. However, several community members have expressed interest in working on this, and have started exploring what's possible. The main sticking-point (besides iOS app programming skills) is that iPhone does not allow USB devices to just work, you have to pay an expensive licensing fee, and since this is a free open source project that's not going to happen! The people looking into this are working on getting the kv4p HT device to connect via Bluetooth instead of USB. If you're interested in helping with this, please hop into ⁠contributors and share your skills!
 
 **Update:** Some people working on it and they have a working prototype,they're updating the [firmware to use Bluetooth instead of USB](https://github.com/VanceVagell/kv4p-ht/issues/107).
+
+**Apple app:** For the status of the macOS, iOS and iPadOS app, see the [Apple FAQ](docs/apple/faq.md).
 # Q: When I plug my kv4p HT into my phone, none of the lights turn on and it doesn't seem to work. The kv4p HT app asks if the radio is plugged in. What gives?
 **A:** This is most common with v1.x versions of kv4p HT, since the ESP32 dev boards available on the market are often missing a couple resistors that tell Android to power it (computers ignore this and just send power). The most common solutions:
 
