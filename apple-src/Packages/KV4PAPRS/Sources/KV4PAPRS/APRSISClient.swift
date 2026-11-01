@@ -14,42 +14,54 @@ public protocol LineConnector: Sendable {
     func connect(host: String, port: Int) async throws -> any LineConnection
 }
 
+/// What the app tells the APRS-IS connection.
+public struct APRSISSettings: Equatable, Sendable {
+    public var isEnabled: Bool
+    /// Show APRS-IS packets near the filter location.
+    public var isReceiveEnabled: Bool
+    /// iGate: send lines (needs a verified login).
+    public var isTransmitEnabled: Bool
+    public var callsign: String
+    public var server: APRSIS.Server?
+    public var latitude: Double?
+    public var longitude: Double?
+    public var radiusKm: Double
+
+    public init(
+        isEnabled: Bool = false,
+        isReceiveEnabled: Bool = false,
+        isTransmitEnabled: Bool = false,
+        callsign: String = "",
+        server: APRSIS.Server? = APRSIS.Server(APRSIS.defaultServer),
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        radiusKm: Double = 50
+    ) {
+        self.isEnabled = isEnabled
+        self.isReceiveEnabled = isReceiveEnabled
+        self.isTransmitEnabled = isTransmitEnabled
+        self.callsign = callsign
+        self.server = server
+        self.latitude = latitude
+        self.longitude = longitude
+        self.radiusKm = radiusKm
+    }
+}
+
+/// An APRS-IS connection as the view model uses it; `APRSISClient` implements it.
+public protocol APRSInternetLink: Sendable {
+    var received: AsyncStream<String> { get }
+    var delivered: AsyncStream<APRSInternetRequest> { get }
+    var isLoggedIn: Bool { get }
+    func update(_ settings: APRSISSettings)
+    func send(_ request: APRSInternetRequest, as callsign: String) -> Bool
+}
+
 /// The APRS-IS connection of the Android app (java-aprs `AprsIsClient`): logs in with passcode and filter, sends
 /// queued lines (at most four) once logged in, delivers received packets, and reconnects with a backoff of 1 s to
 /// 60 s. Settings changes reconnect; a new filter location only after moving 5 km.
-public final class APRSISClient<C: Clock>: Sendable where C.Duration == Duration {
-    public struct Settings: Equatable, Sendable {
-        public var isEnabled: Bool
-        /// Show APRS-IS packets near the filter location.
-        public var isReceiveEnabled: Bool
-        /// iGate: send lines (needs a verified login).
-        public var isTransmitEnabled: Bool
-        public var callsign: String
-        public var server: APRSIS.Server?
-        public var latitude: Double?
-        public var longitude: Double?
-        public var radiusKm: Double
-
-        public init(
-            isEnabled: Bool = false,
-            isReceiveEnabled: Bool = false,
-            isTransmitEnabled: Bool = false,
-            callsign: String = "",
-            server: APRSIS.Server? = APRSIS.Server(APRSIS.defaultServer),
-            latitude: Double? = nil,
-            longitude: Double? = nil,
-            radiusKm: Double = 50
-        ) {
-            self.isEnabled = isEnabled
-            self.isReceiveEnabled = isReceiveEnabled
-            self.isTransmitEnabled = isTransmitEnabled
-            self.callsign = callsign
-            self.server = server
-            self.latitude = latitude
-            self.longitude = longitude
-            self.radiusKm = radiusKm
-        }
-    }
+public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == Duration {
+    public typealias Settings = APRSISSettings
 
     static var maximumPending: Int { 4 }
     static var maximumLineBytes: Int { 510 }
