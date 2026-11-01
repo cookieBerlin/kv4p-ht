@@ -1,0 +1,2535 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs Parser.parseAX25",
+  "vectors": [
+    {
+      "name": "N0CALL>APRS,WIDE1-1,WIDE2-1:!4903.50N/07201.75W-Test 001234",
+      "input": {
+        "frame": "82a0a4a64040e09c608682989860ae92888a624062ae92888a64406303f021343930332e35304e2f30373230312e3735572d5465737420303031323334"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": ["WIDE1-1", "WIDE2-1"],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "-",
+          "source": "Uncompressed",
+          "comment": "Test 001234",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL-9>APRS:=4903.50N/07201.75W>mobile",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298987303f03d343930332e35304e2f30373230312e3735573e6d6f62696c65"
+      },
+      "expected": {
+        "source": "N0CALL-9",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "Uncompressed",
+          "comment": "mobile",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:@092345z4903.50N/07201.75W>with time",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0403039323334357a343930332e35304e2f30373230312e3735573e776974682074696d65"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "@",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_TIMESTAMP", "T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "Uncompressed",
+          "comment": "with time",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:/092345z4903.50N/07201.75W>no messaging",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f02f3039323334357a343930332e35304e2f30373230312e3735573e6e6f206d6573736167696e67"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "/",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_TIMESTAMP", "T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "Uncompressed",
+          "comment": "no messaging",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50S\\07201.75E#digi",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e3530535c30373230312e3735452364696769"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": -49.05833,
+          "longitude": 72.02917,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": "#",
+          "source": "Uncompressed",
+          "comment": "digi",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.  N/07201.  W-two digits",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e20204e2f30373230312e2020572d74776f20646967697473"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.025,
+          "ambiguity": 3,
+          "symbolTable": "/",
+          "symbolCode": "-",
+          "source": "Uncompressed",
+          "comment": "two digits",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!49  .  N/072  .  W-degrees only",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343920202e20204e2f30373220202e2020572d64656772656573206f6e6c79"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.5,
+          "ambiguity": 1,
+          "symbolTable": "/",
+          "symbolCode": "-",
+          "source": "Uncompressed",
+          "comment": "degrees only",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.5 N/07201.7 W-one digit",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35204e2f30373230312e3720572d6f6e65206469676974"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05917,
+          "longitude": -72.02917,
+          "ambiguity": 4,
+          "symbolTable": "/",
+          "symbolCode": "-",
+          "source": "Uncompressed",
+          "comment": "one digit",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W>088/036course",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735573e3038382f303336636f75727365"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "Uncompressed",
+          "comment": "088/036course",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W>xxx/036bad course",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735573e7878782f30333662616420636f75727365"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "Uncompressed",
+          "comment": "xxx/036bad course",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W#PHG5132phg",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735572350484735313332706867"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "#",
+          "source": "Uncompressed",
+          "comment": "PHG5132phg",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W#PHG51x2bad phg",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e373557235048473531783262616420706867"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "#",
+          "source": "Uncompressed",
+          "comment": "PHG51x2bad phg",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "4903.50N",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50X/07201.75W-bad sign",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e3530582f30373230312e3735572d626164207369676e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Uncompressed",
+          "comment": "bad sign",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75X-bad sign",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735582d626164207369676e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Uncompressed",
+          "comment": "bad sign",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4963.50N/07201.75W-bad minutes",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343936332e35304e2f30373230312e3735572d626164206d696e75746573"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Uncompressed",
+          "comment": "bad minutes",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!9103.50N/07201.75W-too far north",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021393130332e35304e2f30373230312e3735572d746f6f20666172206e6f727468"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Uncompressed",
+          "comment": "too far north",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903,50N/07201.75W-no dot",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332c35304e2f30373230312e3735572d6e6f20646f74"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Uncompressed",
+          "comment": "no dot",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e373557"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Uncompressed",
+          "comment": "Uncompressed packet too short",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W_220/004g005t077r001p002P003h50b09900wRSW",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735575f3232302f303034673030357430373772303031703030325030303368353062303939303077525357"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION", "T_WX"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "_",
+          "source": "Uncompressed",
+          "comment": null,
+          "hasFault": false
+        },
+        "weather": {
+          "windDirection": 220,
+          "windSpeed": 4,
+          "windGust": 5,
+          "temp": 77,
+          "rainLastHour": 0.01,
+          "rainLast24Hours": 0.02,
+          "rainSinceMidnight": 0.03,
+          "humidity": 50.0,
+          "pressure": 990.0,
+          "luminosity": null,
+          "snowfallLast24Hours": null,
+          "comment": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:@092345z4903.50N/07201.75W_090/000g000t-05r000p000P000h00b10218s002L123",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0403039323334357a343930332e35304e2f30373230312e3735575f3039302f30303067303030742d3035723030307030303050303030683030623130323138733030324c313233"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "@",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_TIMESTAMP", "T_POSITION", "T_WX"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "_",
+          "source": "Uncompressed",
+          "comment": null,
+          "hasFault": false
+        },
+        "weather": {
+          "windDirection": 90,
+          "windSpeed": 0,
+          "windGust": 0,
+          "temp": -5,
+          "rainLastHour": 0.0,
+          "rainLast24Hours": 0.0,
+          "rainSinceMidnight": 0.0,
+          "humidity": 100.0,
+          "pressure": 1021.8,
+          "luminosity": 123,
+          "snowfallLast24Hours": 2.0,
+          "comment": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W_short",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735575f73686f7274"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION", "T_WX"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "_",
+          "source": "Uncompressed",
+          "comment": null,
+          "hasFault": false
+        },
+        "weather": {
+          "windDirection": null,
+          "windSpeed": null,
+          "windGust": null,
+          "temp": null,
+          "rainLastHour": null,
+          "rainLast24Hours": null,
+          "rainSinceMidnight": null,
+          "humidity": null,
+          "pressure": null,
+          "luminosity": null,
+          "snowfallLast24Hours": null,
+          "comment": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!/5L!!<*e7>7P[",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0212f354c21213c2a65373e37505b"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.75001,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "Compressed",
+          "comment": null,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=/5L!!<*e7OS]S compressed comment",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d2f354c21213c2a65374f535d5320636f6d7072657373656420636f6d6d656e74"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.75001,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "O",
+          "source": "Compressed",
+          "comment": " compressed comment",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=/5L!!<*e7{?!range",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d2f354c21213c2a65377b3f2172616e6765"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.75001,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "{",
+          "source": "Compressed",
+          "comment": "ange",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=/5L!!<*e7 sTspace",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d2f354c21213c2a65372073547370616365"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.75001,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": " ",
+          "source": "Compressed",
+          "comment": "pace",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=/5L!!<*e7>S!Galtitude",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d2f354c21213c2a65373e532147616c746974756465"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.75001,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "Compressed",
+          "comment": "altitude",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=/5L!!<*e7_ !!weather",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d2f354c21213c2a65375f20212177656174686572"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION", "T_WX"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.75001,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "_",
+          "source": "Compressed",
+          "comment": null,
+          "hasFault": false
+        },
+        "weather": {
+          "windDirection": null,
+          "windSpeed": null,
+          "windGust": null,
+          "temp": null,
+          "rainLastHour": null,
+          "rainLast24Hours": null,
+          "rainSinceMidnight": null,
+          "humidity": null,
+          "pressure": null,
+          "luminosity": null,
+          "snowfallLast24Hours": null,
+          "comment": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=/5L!!",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d2f354c2121"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "/5L!!",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=/5L!\u007f<*e7>7P[",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d2f354c217f3c2a65373e37505b"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:=a5L!!<*e7>7P[overlay",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03d61354c21213c2a65373e37505b6f7665726c6179"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "=",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.5,
+          "longitude": -72.75001,
+          "ambiguity": 0,
+          "symbolTable": "a",
+          "symbolCode": ">",
+          "source": "Compressed",
+          "comment": "overlay",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_fn\"Oj/Mic-E",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f666e224f6a2f4d69632d45"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 42.50117,
+          "longitude": -12.129,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "j",
+          "source": "MICe",
+          "comment": "ic-E",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W-2:`(_fn\"Oj/]=",
+      "input": {
+        "frame": "a864a6a060aee49c60868298986103f060285f666e224f6a2f5d3d"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W-2",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 42.50117,
+          "longitude": -12.129,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "j",
+          "source": "MICe",
+          "comment": "=",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>S32U6T:`(_f n\"Oj/>\"4T}altitude",
+      "input": {
+        "frame": "a66664aa6ca8e09c60868298986103f060285f66206e224f6a2f3e2234547d616c746974756465"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "S32U6T",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>TQSPKZ:'(_fn\"Oj/ambiguous",
+      "input": {
+        "frame": "a8a2a6a096b4e09c60868298986103f027285f666e224f6a2f616d626967756f7573"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "TQSPKZ",
+        "digipeaters": [],
+        "dti": "'",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SPLW:`(_fn\"Oj/",
+      "input": {
+        "frame": "a864a6a098aee09c60868298986103f060285f666e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SPLW",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 42.5095,
+          "longitude": -12.08333,
+          "ambiguity": 3,
+          "symbolTable": "/",
+          "symbolCode": "j",
+          "source": "MICe",
+          "comment": null,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SPL:`(_fn\"Oj/",
+      "input": {
+        "frame": "a864a6a09840e09c60868298986103f060285f666e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SPL",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2MP0W:`(_fn\"Oj/",
+      "input": {
+        "frame": "a8649aa060aee09c60868298986103f060285f666e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2MP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SPMW:`(_fn\"Oj/",
+      "input": {
+        "frame": "a864a6a09aaee09c60868298986103f060285f666e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SPMW",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>K2SP0W:`(_fn\"Oj/",
+      "input": {
+        "frame": "9664a6a060aee09c60868298986103f060285f666e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "K2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`\u0010_fn\"Oj/",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060105f666e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(\u007ffn\"Oj/",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060287f666e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_\u0010n\"Oj/",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f106e224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_f\u0010\"Oj/",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f6610224f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_fn\u0010Oj/",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f666e104f6a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_fn\"\u0010j/",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f666e22106a2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_fn\"O~/",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f666e224f7e2f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_fn\"Oj!",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f666e224f6a21"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>T2SP0W:`(_",
+      "input": {
+        "frame": "a864a6a060aee09c60868298986103f060285f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "T2SP0W",
+        "digipeaters": [],
+        "dti": "`",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPRMC,063909,A,3349.4302,N,11700.3721,W,43.022,89.3,291099,13.1,E*5D",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0244750524d432c3036333930392c412c333334392e343330322c4e2c31313730302e333732312c572c34332e3032322c38392e332c3239313039392c31332e312c452a3544"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 33.82384,
+          "longitude": -117.0062,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "NMEA",
+          "comment": "GPRMC,063909,A,3349.4302,N,11700.3721,W,43.022,89.3,291099,13.1,E*5D",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPRMC,063909,V,3349.4302,N,11700.3721,W,43.022,89.3,291099,13.1,E*5D",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0244750524d432c3036333930392c562c333334392e343330322c4e2c31313730302e333732312c572c34332e3032322c38392e332c3239313039392c31332e312c452a3544"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPGGA,175059,3347.4969,N,11805.7319,W,1,12,1.0,6.8,M,-32.1,M,,*7D",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f02447504747412c3137353035392c333334372e343936392c4e2c31313830352e373331392c572c312c31322c312e302c362e382c4d2c2d33322e312c4d2c2c2a3744"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 33.79162,
+          "longitude": -118.09552,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "NMEA",
+          "comment": "GPGGA,175059,3347.4969,N,11805.7319,W,1,12,1.0,6.8,M,-32.1,M,,*7D",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPGGA,175059,3347.4969,N,11805.7319,W,2,12,1.0,6.8,M,-32.1,M,,*7D",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f02447504747412c3137353035392c333334372e343936392c4e2c31313830352e373331392c572c322c31322c312e302c362e382c4d2c2d33322e312c4d2c2c2a3744"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPGLL,4916.45,N,12311.12,W,225444,A,A*5C",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0244750474c4c2c343931362e34352c4e2c31323331312e31322c572c3232353434342c412c412a3543"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.27417,
+          "longitude": -123.18533,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "NMEA",
+          "comment": "GPGLL,4916.45,N,12311.12,W,225444,A,A*5C",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPWPL,4610.586,S,00607.754,E,4*70",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f024475057504c2c343631302e3538362c532c30303630372e3735342c452c342a3730"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": -46.17643,
+          "longitude": 6.12923,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": ">",
+          "source": "NMEA",
+          "comment": "GPWPL,4610.586,S,00607.754,E,4*70",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPVTG,054.7,T,034.4,M*48",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f02447505654472c3035342e372c542c3033342e342c4d2a3438"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GPXYZ,1,2,3,4,5",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f024475058595a2c312c322c332c342c35"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "null INVALID position format.",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$GP",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0244750"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "GP",
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:$ULTW0000",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f024554c545730303030"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "$",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!ULT00000000",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021554c543030303030303030"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "ambiguity": 0,
+          "symbolTable": "\\",
+          "symbolCode": ".",
+          "source": "Unknown",
+          "comment": "ULT00000000",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::N1CALL   :hello{001",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a68656c6c6f7b303031"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "N1CALL",
+          "body": "hello",
+          "number": "001",
+          "ack": false,
+          "rej": false,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::N1CALL-7 :ack001",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2d37203a61636b303031"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "N1CALL-7",
+          "body": "ack",
+          "number": "001",
+          "ack": true,
+          "rej": false,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::N1CALL   :REJ002",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a52454a303032"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "N1CALL",
+          "body": "REJ",
+          "number": "002",
+          "ack": false,
+          "rej": true,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::n1call   :no number",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a6e3163616c6c2020203a6e6f206e756d626572"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "N1CALL",
+          "body": "no number",
+          "number": "",
+          "ack": false,
+          "rej": false,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::N1CALL:unpadded",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c3a756e706164646564"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "N1CALL",
+          "body": "unpadded",
+          "number": "",
+          "ack": false,
+          "rej": false,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::N1CALL   :{only number",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a7b6f6e6c79206e756d626572"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "N1CALL",
+          "body": "",
+          "number": "only number",
+          "ack": false,
+          "rej": false,
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "",
+          "body": null,
+          "number": null,
+          "ack": false,
+          "rej": false,
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS::N1CALLnocolon",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c6e6f636f6c6f6e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ":",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": [],
+        "message": {
+          "target": "UNKNOWN",
+          "body": null,
+          "number": null,
+          "ack": false,
+          "rej": false,
+          "hasFault": true
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:>status text  ",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03e73746174757320746578742020"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": "status text"
+      }
+    },
+    {
+      "name": "N0CALL>APRS:>092345zstatus with time",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03e3039323334357a73746174757320776974682074696d65"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": "status with time"
+      }
+    },
+    {
+      "name": "N0CALL>APRS:>09a345zno time",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03e3039613334357a6e6f2074696d65"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": "09a345zno time"
+      }
+    },
+    {
+      "name": "N0CALL>APRS:>",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": ""
+      }
+    },
+    {
+      "name": "N0CALL>APRS:;LEADER   *092345z4903.50N/07201.75W>088/036object",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03b4c45414445522020202a3039323334357a343930332e35304e2f30373230312e3735573e3038382f3033366f626a656374"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ";",
+        "hasFault": false,
+        "comment": "088/036object",
+        "infoComment": "",
+        "types": ["T_OBJECT"],
+        "object": {
+          "name": "LEADER",
+          "live": true,
+          "comment": "088/036object",
+          "position": {
+            "latitude": 49.05833,
+            "longitude": -72.02917,
+            "ambiguity": 0,
+            "symbolTable": "/",
+            "symbolCode": ">",
+            "source": "Uncompressed",
+            "comment": "088/036object",
+            "hasFault": false
+          }
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:;DEAD     _092345z4903.50N/07201.75W>",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03b4445414420202020205f3039323334357a343930332e35304e2f30373230312e3735573e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ";",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_OBJECT"],
+        "object": {
+          "name": "DEAD",
+          "live": false,
+          "comment": null,
+          "position": {
+            "latitude": 49.05833,
+            "longitude": -72.02917,
+            "ambiguity": 0,
+            "symbolTable": "/",
+            "symbolCode": ">",
+            "source": "Uncompressed",
+            "comment": null,
+            "hasFault": false
+          }
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:;SHORT    *092345z",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03b53484f5254202020202a3039323334357a"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ";",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:;BADPOS   *092345z4903.50N/07201.75Q>x",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03b424144504f532020202a3039323334357a343930332e35304e2f30373230312e3735513e78"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ";",
+        "hasFault": false,
+        "comment": "x",
+        "infoComment": "",
+        "types": ["T_OBJECT"],
+        "object": {
+          "name": "BADPOS",
+          "live": true,
+          "comment": "x",
+          "position": {
+            "latitude": 0.0,
+            "longitude": 0.0,
+            "ambiguity": 0,
+            "symbolTable": "\\",
+            "symbolCode": ".",
+            "source": "Uncompressed",
+            "comment": "x",
+            "hasFault": true
+          }
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:)AID #2!4903.50N/07201.75WA",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f02941494420233221343930332e35304e2f30373230312e37355741"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ")",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:<IGATE,MSG_CNT=10,LOC_CNT=1",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03c49474154452c4d53475f434e543d31302c4c4f435f434e543d31"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "<",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATCAPA"],
+        "capabilities": {
+          "displayText": "IGate \u00b7 10 messages \u00b7 1 local station",
+          "igate": true,
+          "messageCount": 10,
+          "localStationCount": 1
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:<igate,MSG_CNT=1,LOC_CNT=3,MSG_CNT=x,LOC_CNT=-1,,FOO",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03c69676174652c4d53475f434e543d312c4c4f435f434e543d332c4d53475f434e543d782c4c4f435f434e543d2d312c2c464f4f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "<",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATCAPA"],
+        "capabilities": {
+          "displayText": "IGate \u00b7 MSG_CNT=x \u00b7 LOC_CNT=-1 \u00b7 FOO",
+          "igate": true,
+          "messageCount": null,
+          "localStationCount": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:<",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03c"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "<",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATCAPA"],
+        "capabilities": {
+          "displayText": "",
+          "igate": false,
+          "messageCount": null,
+          "localStationCount": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:_10090556c220s004g005t077r000p000P000h50b09900wRSW",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f05f31303039303535366332323073303034673030357430373772303030703030305030303068353062303939303077525357"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "_",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_WX"],
+        "weather": {
+          "windDirection": null,
+          "windSpeed": null,
+          "windGust": 5,
+          "temp": 77,
+          "rainLastHour": 0.0,
+          "rainLast24Hours": 0.0,
+          "rainSinceMidnight": 0.0,
+          "humidity": 50.0,
+          "pressure": 990.0,
+          "luminosity": null,
+          "snowfallLast24Hours": 4.0,
+          "comment": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:#weather t050",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f023776561746865722074303530"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "#",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_WX"],
+        "weather": {
+          "windDirection": null,
+          "windSpeed": null,
+          "windGust": null,
+          "temp": 50,
+          "rainLastHour": null,
+          "rainLast24Hours": null,
+          "rainSinceMidnight": null,
+          "humidity": null,
+          "pressure": null,
+          "luminosity": null,
+          "snowfallLast24Hours": null,
+          "comment": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:}N2CALL>APRS,TCPIP,N0CALL*:>inner status",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f07d4e3243414c4c3e415052532c54435049502c4e3043414c4c2a3a3e696e6e657220737461747573"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "}",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_THIRDPARTY"],
+        "thirdParty": {
+          "source": "N2CALL",
+          "destination": "APRS",
+          "digipeaters": ["TCPIP", "N0CALL*", "N0CALL"],
+          "dti": ">",
+          "hasFault": false,
+          "comment": null,
+          "infoComment": "",
+          "types": ["T_STATUS"],
+          "status": "inner status"
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:}N2CALL>APRS:!4903.50N/07201.75W-inner position",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f07d4e3243414c4c3e415052533a21343930332e35304e2f30373230312e3735572d696e6e657220706f736974696f6e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "}",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_THIRDPARTY"],
+        "thirdParty": {
+          "source": "N2CALL",
+          "destination": "APRS",
+          "digipeaters": ["N0CALL"],
+          "dti": "!",
+          "hasFault": false,
+          "comment": null,
+          "infoComment": "",
+          "types": ["T_POSITION"],
+          "position": {
+            "latitude": 49.05833,
+            "longitude": -72.02917,
+            "ambiguity": 0,
+            "symbolTable": "/",
+            "symbolCode": "-",
+            "source": "Uncompressed",
+            "comment": "inner position",
+            "hasFault": false
+          }
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:}N2CALL>APRS:Ainvalid inner",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f07d4e3243414c4c3e415052533a41696e76616c696420696e6e6572"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "}",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_THIRDPARTY"],
+        "thirdParty": {
+          "source": "N2CALL",
+          "destination": "APRS",
+          "digipeaters": ["N0CALL"],
+          "dti": "A",
+          "hasFault": true,
+          "comment": "Invalid DTI",
+          "infoComment": "",
+          "types": []
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:}garbage",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f07d67617262616765"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "}",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:?APRS?",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f03f415052533f"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "?",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:T#005,199,000,255,073,123,01101001",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f054233030352c3139392c3030302c3235352c3037332c3132332c3031313031303031"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "T",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:T#1",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f0542331"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "T",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:Ainvalid DTI",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f041696e76616c696420445449"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "A",
+        "hasFault": true,
+        "comment": "Invalid DTI",
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:5invalid DTI",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f035696e76616c696420445449"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "5",
+        "hasFault": true,
+        "comment": "Invalid DTI",
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:{user defined",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f07b7573657220646566696e6564"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "{",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:xunknown",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f078756e6b6e6f776e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "x",
+        "hasFault": true,
+        "comment": null,
+        "infoComment": "",
+        "types": []
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W-Gr\u00fc\u00dfe",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735572d4772fcdf65"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "-",
+          "source": "Uncompressed",
+          "comment": "Gr\ufffd\ufffde",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:!4903.50N/07201.75W-Gr\u00c3\u00bc\u00c3\u009fe",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735572d4772c3bcc39f65"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "!",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_POSITION"],
+        "position": {
+          "latitude": 49.05833,
+          "longitude": -72.02917,
+          "ambiguity": 0,
+          "symbolTable": "/",
+          "symbolCode": "-",
+          "source": "Uncompressed",
+          "comment": "Gr\u00fc\u00dfe",
+          "hasFault": false
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS:_wx \u00ff t012",
+      "input": {
+        "frame": "82a0a4a64040e09c60868298986103f05f777820ff2074303132"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": "_",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_WX"],
+        "weather": {
+          "windDirection": null,
+          "windSpeed": null,
+          "windGust": null,
+          "temp": 12,
+          "rainLastHour": null,
+          "rainLast24Hours": null,
+          "rainSinceMidnight": null,
+          "humidity": null,
+          "pressure": null,
+          "luminosity": null,
+          "snowfallLast24Hours": null,
+          "comment": null
+        }
+      }
+    },
+    {
+      "name": "N0CALL>APRS,N1CALL*,WIDE2-1:>used path",
+      "input": {
+        "frame": "82a0a4a64040e09c6086829898609c6286829898e0ae92888a64406303f03e757365642070617468"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": ["N1CALL*", "WIDE2-1"],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": "used path"
+      }
+    },
+    {
+      "name": "82a0a4a640406060",
+      "input": {
+        "frame": "82a0a4a640406060"
+      },
+      "expected": {
+        "error": true
+      }
+    },
+    {
+      "name": "82a0a4a64040609c60868298986103f1",
+      "input": {
+        "frame": "82a0a4a64040609c60868298986103f1"
+      },
+      "expected": {
+        "error": true
+      }
+    },
+    {
+      "name": "82a0a4a64040609c608682989860ae92888a62406303f03e",
+      "input": {
+        "frame": "82a0a4a64040609c608682989860ae92888a62406303f03e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": ["WIDE1-1"],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": ""
+      }
+    },
+    {
+      "name": "82a0a4a64040609c60868298986003f0",
+      "input": {
+        "frame": "82a0a4a64040609c60868298986003f0"
+      },
+      "expected": {
+        "error": true
+      }
+    },
+    {
+      "name": "82a0a4a64040609c608682989861",
+      "input": {
+        "frame": "82a0a4a64040609c608682989861"
+      },
+      "expected": {
+        "error": true
+      }
+    },
+    {
+      "name": "82a0a4a64040609c60868298986103f0",
+      "input": {
+        "frame": "82a0a4a64040609c60868298986103f0"
+      },
+      "expected": {
+        "error": true
+      }
+    },
+    {
+      "name": "82a0a4a64040e19c60868298986103f03e",
+      "input": {
+        "frame": "82a0a4a64040e19c60868298986103f03e"
+      },
+      "expected": {
+        "source": "N0CALL",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": ""
+      }
+    },
+    {
+      "name": "82a0a4a64040609c6086829898fd03f03e",
+      "input": {
+        "frame": "82a0a4a64040609c6086829898fd03f03e"
+      },
+      "expected": {
+        "source": "N0CALL-14",
+        "destination": "APRS",
+        "digipeaters": [],
+        "dti": ">",
+        "hasFault": false,
+        "comment": null,
+        "infoComment": "",
+        "types": ["T_STATUS"],
+        "status": ""
+      }
+    }
+  ]
+}

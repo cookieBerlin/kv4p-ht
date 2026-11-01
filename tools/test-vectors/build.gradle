@@ -4,6 +4,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven { url = 'https://jitpack.io' }  // as android-src/KV4PHT/settings.gradle
 }
 
 // The Android sources are compiled unmodified, straight from android-src/.
@@ -33,6 +34,8 @@ dependencies {
     // Same Lombok version as android-src/KV4PHT/app/build.gradle.
     compileOnly 'org.projectlombok:lombok:1.18.46'
     annotationProcessor 'org.projectlombok:lombok:1.18.46'
+    // Same APRS library and version as android-src/KV4PHT/app/build.gradle (ADR-0006).
+    implementation 'io.github.dkaukov:java-aprs:0.2.5'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -42,6 +45,9 @@ tasks.withType(JavaCompile).configureEach {
 
 application {
     mainClass = 'io.github.kv4pht.vectors.Main'
+    // java-aprs formats coordinates with the default locale (Position.getLatitude); pin it so the vectors
+    // do not depend on the machine.
+    applicationDefaultJvmArgs = ['-Duser.language=en', '-Duser.country=US']
 }
 
 tasks.named('run') {
