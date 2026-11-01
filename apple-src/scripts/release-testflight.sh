@@ -20,6 +20,8 @@ out=.build/testflight
 rm -rf "$out"
 mkdir -p "$out"
 build="${BUILD_NUMBER:-$(date -u +%Y%m%d.%H%M)}"
+commit=$(git rev-parse --short=7 HEAD)
+[[ -z "$(git status --porcelain)" ]] || commit="$commit-dirty"
 
 # Generated here, because the team ID must not be committed.
 options="$out/ExportOptions.plist"
@@ -36,17 +38,17 @@ for platform in ${PLATFORMS:-iOS macOS}; do
   scripts/what-to-test.sh "$platform" >"$out/WhatToTest-$platform.txt"
   archive="$out/KV4PHT-$platform.xcarchive"
   archive_command=(xcodebuild archive -quiet -project App/KV4PHT.xcodeproj -scheme KV4PHT -configuration Release
-    -destination "generic/platform=$platform" -archivePath "$archive" CURRENT_PROJECT_VERSION="$build")
+    -destination "generic/platform=$platform" -archivePath "$archive" CURRENT_PROJECT_VERSION="$build" KV4P_COMMIT="$commit")
   if [[ -n "$dry_run" ]]; then
     "${archive_command[@]}" CODE_SIGNING_ALLOWED=NO
-    scripts/app-plist-check.sh "$archive/Products/Applications/KV4PHT.app"
+    scripts/app-plist-check.sh "$archive/Products/Applications/KV4PHT.app" "$commit"
     echo "testflight: dry run, unsigned and not uploaded: $archive"
     continue
   fi
   # The command line overrides the ad hoc identity Base.xcconfig sets for local Mac builds.
   "${archive_command[@]}" -allowProvisioningUpdates DEVELOPMENT_TEAM="$team" CODE_SIGN_STYLE=Automatic \
     CODE_SIGN_IDENTITY="Apple Development"
-  scripts/app-plist-check.sh "$archive/Products/Applications/KV4PHT.app"
+  scripts/app-plist-check.sh "$archive/Products/Applications/KV4PHT.app" "$commit"
   xcodebuild -exportArchive -quiet -archivePath "$archive" -exportOptionsPlist "$options" \
     -exportPath "$out/export-$platform" -allowProvisioningUpdates
   echo "testflight: uploaded the $platform build $build to App Store Connect"

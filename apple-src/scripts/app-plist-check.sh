@@ -2,8 +2,9 @@
 # Fails unless the built app meets what it needs at run time and in App Store Connect:
 # - iOS: background modes audio and bluetooth-central (ADR-0031);
 # - an app icon, a privacy manifest and the export compliance answer (ADR-0033);
-# - no nested resource bundles, because the App Store export does not sign them again (ADR-0033).
-# Usage: app-plist-check.sh <path to KV4PHT.app>
+# - no nested resource bundles, because the App Store export does not sign them again (ADR-0033);
+# - a version of three numbers and, for a release, its commit (ADR-0037).
+# Usage: app-plist-check.sh <path to KV4PHT.app> [<commit>]
 set -euo pipefail
 
 app="$1"
@@ -33,4 +34,9 @@ fi
 plutil -lint -s "$resources/PrivacyInfo.xcprivacy" || fail "the privacy manifest is not a valid property list"
 nested=$(find "$resources" -name '*.bundle')
 [[ -z "$nested" ]] || fail "$app has nested bundles: $nested"
+version=$(plutil -extract CFBundleShortVersionString raw -o - "$plist" 2>/dev/null)
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "$plist has the version \"$version\", not three numbers"
+if [[ -n "${2:-}" ]]; then
+  [[ "$(plutil -extract KV4PCommit raw -o - "$plist" 2>/dev/null)" == "$2" ]] || fail "$plist lacks the commit $2"
+fi
 echo "app-plist: ok"

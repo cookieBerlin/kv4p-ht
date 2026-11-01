@@ -3,8 +3,10 @@
 
 PRODUCT_BUNDLE_IDENTIFIER = io.github.cookieberlin.kv4pht
 PRODUCT_NAME = KV4PHT
-MARKETING_VERSION = 0.1
+#include "Version.xcconfig"
 CURRENT_PROJECT_VERSION = 1
+// Set by scripts/release-testflight.sh; empty in a local build (ADR-0037).
+KV4P_COMMIT =
 
 SDKROOT = auto
 SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator

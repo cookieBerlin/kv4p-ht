@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
 	<!-- The app uses no encryption beyond what the OS provides (HTTPS links open in the browser). -->
+	<key>KV4PCommit</key>
+	<string>$(KV4P_COMMIT)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIBackgroundModes</key>

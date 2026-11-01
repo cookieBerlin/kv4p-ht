@@ -53,10 +53,12 @@ public struct AboutInfo: Sendable {
 
     /// `info`: the bundle's info dictionary.
     public init(info: [String: Any]) {
-        switch (info["CFBundleShortVersionString"] as? String, info["CFBundleVersion"] as? String) {
-        case (let version?, let build?): self.version = "Version \(version) (\(build))"
-        case (let version?, nil): self.version = "Version \(version)"
-        default: version = "Version unknown"
+        guard let version = info["CFBundleShortVersionString"] as? String else {
+            self.version = "Version unknown"
+            return
         }
+        // Only release builds know their commit (ADR-0037).
+        let details = [info["CFBundleVersion"], info["KV4PCommit"]].compactMap { $0 as? String }.filter { !$0.isEmpty }
+        self.version = "Version \(version)" + (details.isEmpty ? "" : " (\(details.joined(separator: ", ")))")
     }
 }

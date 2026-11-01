@@ -7,9 +7,10 @@ IOS_DESTINATION ?= generic/platform=iOS
 JAVA17_HOME ?= $(shell /usr/libexec/java_home -F -v 17 2>/dev/null || echo "$$(brew --prefix openjdk@17 2>/dev/null)/libexec/openjdk.jdk/Contents/Home")
 GRADLEW := ../android-src/KV4PHT/gradlew
 VECTORS := Packages/*/Tests/*/Vectors/*
-# Generated sources: Codec2, vendored by tools/codec2-vectors (ADR-0027), and the flasher stub of esp32-flash-lib.
+# Generated sources: Codec2, vendored by tools/codec2-vectors (ADR-0027), the flasher stub of esp32-flash-lib and the
+# app version from the Android app (ADR-0037).
 VENDORED := Packages/KV4PDigital/Sources/CCodec2 Packages/KV4PDigital/COPYING-codec2 \
-	Packages/KV4PFlasher/Sources/KV4PFlasher/ESP32Stub.generated.swift
+	Packages/KV4PFlasher/Sources/KV4PFlasher/ESP32Stub.generated.swift Config/Version.xcconfig
 # SwiftPM names the scheme <package>-Package once there are several products.
 SCHEME ?= $(shell xcodebuild -list -json 2>/dev/null | jq -r '.workspace.schemes | (map(select(endswith("-Package")))[0] // .[0])')
 
@@ -49,6 +50,7 @@ changed:
 vectors:
 	JAVA_HOME="$(JAVA17_HOME)" $(GRADLEW) --quiet --project-dir ../tools/test-vectors run
 	../tools/codec2-vectors/generate.sh
+	scripts/app-version.sh
 
 # Fails if the committed vectors or vendored sources differ from the generator output.
 vectors-check: vectors

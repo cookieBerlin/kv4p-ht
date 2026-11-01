@@ -40,3 +40,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0034](0034-macos-release.md) | Signed and notarized macOS release | Superseded by 0036 |
 | [0035](0035-testflight.md) | TestFlight distribution | Proposed |
 | [0036](0036-no-distribution-outside-app-store.md) | No distribution outside the App Store | Proposed |
+| [0037](0037-version-and-build-id.md) | App version, build ID and commit | Proposed |
