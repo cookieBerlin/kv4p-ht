@@ -18,7 +18,7 @@ APP_PROJECT := App/KV4PHT.xcodeproj
 APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check ios-build app icon ci
+.PHONY: test coverage lint format privacy changed vectors vectors-check ios-build app icon release ci
 
 test:
 	$(SWIFT) test
@@ -66,6 +66,12 @@ app:
 	xcodebuild build -quiet -project $(APP_PROJECT) -scheme KV4PHT -destination '$(IOS_DESTINATION)' CODE_SIGNING_ALLOWED=NO \
 		-derivedDataPath $(APP_DERIVED_DATA)
 	scripts/app-plist-check.sh $(APP_DERIVED_DATA)/Build/Products/Debug-iphoneos/KV4PHT.app
+	SIGN_IDENTITY=- scripts/release-macos.sh
+
+# Signed, notarized macOS DMG in .build/release (ADR-0034). Needs TEAM_ID and NOTARY_PROFILE in the environment;
+# SIGN_IDENTITY=- makes an unsigned dry run. Not part of `ci`.
+release:
+	scripts/release-macos.sh
 
 # Renders the app icon from ../artwork/app-icon.svg (ADR-0033); commit the result.
 icon:

@@ -37,3 +37,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0031](0031-ios-background-operation.md) | Background operation on iOS | Proposed |
 | [0032](0032-ios-layouts.md) | iPhone and iPad layouts | Proposed |
 | [0033](0033-store-readiness.md) | App icon, privacy manifest and export compliance | Proposed |
+| [0034](0034-macos-release.md) | Signed and notarized macOS release | Proposed |
