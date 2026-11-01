@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 1.11 (FreeDV 2400B). The structure below is the target layout
+> Status: milestone 1.12 (firmware flashing on macOS). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -62,6 +62,7 @@ make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors (Android code, vendored Codec2)
 make vectors-check # make vectors, then fail if the committed vectors or Codec2 sources differ
 swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz>] [--listen <s>]  # hardware check
+swift run kv4p-probe --flash <directory> [<device>]  # flash bootloader/partitions/boot_app0/firmware.bin over USB
 swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]  # simulated radio over BLE
 ```
 

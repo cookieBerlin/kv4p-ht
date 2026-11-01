@@ -44,6 +44,10 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
   `microcontroller-src/test/` where applicable.
 - The included Android sources are listed once in
   `tools/test-vectors/oracle-sources.txt`.
+- Firmware flashing: the unmodified `FirmwareUtils.flashFirmware` flashes
+  synthetic images into a fake ESP32 bootloader; the transcript of every byte,
+  DTR/RTS change and callback pins `ESP32Flasher`
+  ([ADR-0028](adr/0028-firmware-flashing.md)).
 - Codec2 1300 has its own generator, `tools/codec2-vectors/`: it vendors the
   upstream commit codec2-android pins and encodes test signals with the pristine
   build. Frames must match exactly; decoded frames only in level, because the
