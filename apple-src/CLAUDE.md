@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 2.1 (iOS platform adapters). The structure below is the target layout
+> Status: milestone 2.2 (iOS background operation). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -57,7 +57,7 @@ make format     # swift format --in-place
 make privacy    # personal data check (files + commit e-mails), BASE=<ref> optional
 make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
 make ios-build  # compile all modules for iOS (no simulator)
-make app        # build the app (App/KV4PHT.xcodeproj) for macOS and iOS, unsigned
+make app        # build the app (App/KV4PHT.xcodeproj) for macOS and iOS, unsigned; checks the iOS background modes
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors (Android code, vendored Codec2)
 make vectors-check # make vectors, then fail if the committed vectors or Codec2 sources differ

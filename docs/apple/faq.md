@@ -44,6 +44,13 @@ That is the goal: receive, transmit, memories, scanning, APRS and FreeDV. Featur
 parity is tracked in the [feasibility analysis](01-feasibility.md#feature-inventory-android-app).
 Firmware flashing is available on macOS only.
 
+## Does the iPhone keep receiving with the screen locked?
+
+Yes, while the radio is connected: audio, APRS, digipeating and the iGate go on
+in the background. Position beacons wait until the app is on screen again,
+because the app only asks for your location while you use it. See
+[ADR-0031](adr/0031-ios-background-operation.md).
+
 ## Can I try the app without a radio?
 
 Yes: choose **Simulator** under **Radio** in the app. A Mac can also act as a
