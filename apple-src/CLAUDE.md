@@ -61,7 +61,7 @@ make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors from the unmodified Android code
 make vectors-check # make vectors, then fail if the committed vectors differ
 swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz>]  # hardware check
-swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--verbose]  # simulated radio over BLE
+swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]  # simulated radio over BLE
 ```
 
 Requires Xcode (with `swift format`) and `jq`; `make vectors` also needs JDK 17
