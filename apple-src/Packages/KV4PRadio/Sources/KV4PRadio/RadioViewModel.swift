@@ -262,7 +262,7 @@ public final class RadioViewModel {
     /// Frames that are not APRS are ignored, as on Android.
     private func receive(_ frame: [UInt8]) {
         guard let packet = try? APRSParser.parse(ax25: frame) else { return }
-        aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now())
+        aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now(), transmit: transmitAPRS)
         showAPRS()
     }
 

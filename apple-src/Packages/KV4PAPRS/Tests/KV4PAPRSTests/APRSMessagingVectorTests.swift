@@ -138,7 +138,8 @@ struct APRSMessagingVectorTests {
                     try APRSParser.parse(ax25: frame),
                     frame: frame,
                     frequencyHz: 144_390_000,
-                    atMs: step.atMs
+                    atMs: step.atMs,
+                    transmit: transmit
                 )
             case "post":
                 result = controller.post(
@@ -200,7 +201,8 @@ struct APRSMessagingVectorTests {
     func thirdPartyAcknowledgement() throws {
         var controller = APRSController(startMs: 0)
         let packet = try APRSParser.parse(tnc2: "N1CALL>APRS:}N2CALL>APRS,TCPIP,N1CALL*::N0CALL   :ack1")
-        #expect(controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 0) == nil)
+        let event = controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 0) { _ in .never }
+        #expect(event == nil)
         #expect(controller.packets.count == 1)
     }
 
