@@ -58,6 +58,17 @@ let package = Package(
             path: "Packages/KV4PAPRS/Tests/KV4PAPRSTests",
             resources: [.copy("Vectors")]
         ),
+        // Codec2 1.2.0, vendored unmodified by tools/codec2-vectors (ADR-0027); only the 1300 mode is compiled.
+        .target(
+            name: "CCodec2",
+            path: "Packages/KV4PDigital/Sources/CCodec2",
+            cSettings: [
+                .define("CODEC2_MODE_EN_DEFAULT", to: "0"),
+                .define("CODEC2_MODE_1300_EN", to: "1"),
+                // Third-party code stays unmodified, so its warnings are not ours to fix.
+                .unsafeFlags(["-w"]),
+            ]
+        ),
         .target(
             name: "KV4PTransport",
             dependencies: ["KV4PProtocol"],

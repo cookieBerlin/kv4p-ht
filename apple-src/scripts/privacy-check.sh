@@ -10,6 +10,9 @@ set -euo pipefail
 
 paths=()
 while IFS= read -r p; do paths+=("$p"); done < <("$(dirname "$0")/apple-paths.sh")
+# Vendored third-party code keeps its authors' notices unmodified (ADR-0027).
+while IFS= read -r p; do paths+=(":(exclude)$p"); done \
+  < <(grep -vE '^[[:space:]]*(#|$)' "$(dirname "$0")/../privacy-exclusions.txt")
 cd "$(git rev-parse --show-toplevel)"
 
 base="${1:-}"
@@ -25,7 +28,7 @@ email='[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
 status=0
 
 existing=()
-for p in "${paths[@]}"; do [[ -e "$p" ]] && existing+=("$p"); done
+for p in "${paths[@]}"; do [[ -e "$p" || "$p" == ":(exclude)"* ]] && existing+=("$p"); done
 
 # git grep -o prints "file:line:match"; keep only the location.
 hits=$(git grep -nIoE "$email" -- "${existing[@]}" | grep -vE "$allowed" | cut -d: -f1,2 | sort -u || true)

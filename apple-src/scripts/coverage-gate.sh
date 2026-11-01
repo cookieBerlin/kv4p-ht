@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Fails unless every source file under Packages/*/Sources has 100 % line
-# coverage, except files listed in coverage-exclusions.txt (ADR-0011), and
+# coverage, except files listed in coverage-exclusions.txt (ADR-0011; an entry
+# ending in / excludes a directory), and
 # unless every module has coverage data.
 # Usage: coverage-gate.sh <bin path from `swift build --show-bin-path`>
 #
@@ -25,7 +26,7 @@ report=$(jq -r --arg root "$root/" --arg excluded "$excluded" '
   | [.data[0].files[]
      | (.filename | ltrimstr($root)) as $f
      | select($f | test("^Packages/[^/]+/Sources/"))
-     | select(($ex | index($f)) | not)
+     | select(any($ex[]; . as $e | if ($e | endswith("/")) then ($f | startswith($e)) else $f == $e end) | not)
      | {file: $f, count: .summary.lines.count, covered: .summary.lines.covered}]
   | (map(.count) | add // 0) as $total
   | (map(.covered) | add // 0) as $covered

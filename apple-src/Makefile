@@ -7,6 +7,8 @@ IOS_DESTINATION ?= generic/platform=iOS
 JAVA17_HOME ?= $(shell /usr/libexec/java_home -F -v 17 2>/dev/null || echo "$$(brew --prefix openjdk@17 2>/dev/null)/libexec/openjdk.jdk/Contents/Home")
 GRADLEW := ../android-src/KV4PHT/gradlew
 VECTORS := Packages/*/Tests/*/Vectors/*
+# Codec2, vendored by tools/codec2-vectors together with its vectors (ADR-0027).
+VENDORED := Packages/KV4PDigital/Sources/CCodec2 Packages/KV4PDigital/COPYING-codec2
 # SwiftPM names the scheme <package>-Package once there are several products.
 SCHEME ?= $(shell xcodebuild -list -json 2>/dev/null | jq -r '.workspace.schemes | (map(select(endswith("-Package")))[0] // .[0])')
 
@@ -39,15 +41,17 @@ privacy:
 changed:
 	@scripts/apple-changed.sh '$(BASE)' '$(HEAD_REF)' $(ORACLE)
 
-# Regenerates the golden test vectors from the unmodified Android code (ADR-0004).
+# Regenerates the golden test vectors from the unmodified Android code (ADR-0004)
+# and the vendored Codec2 with its vectors from the pinned upstream commit (ADR-0027).
 vectors:
 	JAVA_HOME="$(JAVA17_HOME)" $(GRADLEW) --quiet --project-dir ../tools/test-vectors run
+	../tools/codec2-vectors/generate.sh
 
-# Fails if the committed vectors differ from the generator output.
+# Fails if the committed vectors or vendored sources differ from the generator output.
 vectors-check: vectors
-	@if [ -n "$$(git status --porcelain --untracked-files=all -- '$(VECTORS)')" ]; then \
+	@if [ -n "$$(git status --porcelain --untracked-files=all -- '$(VECTORS)' $(VENDORED))" ]; then \
 		echo "vectors: committed vectors are out of date, run 'make vectors' and commit:" >&2; \
-		git status --short --untracked-files=all -- '$(VECTORS)' >&2; exit 1; fi
+		git status --short --untracked-files=all -- '$(VECTORS)' $(VENDORED) >&2; exit 1; fi
 	@echo "vectors: ok"
 
 ios-build:
