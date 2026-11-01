@@ -1,4 +1,5 @@
 import Foundation
+import KV4PAudio
 import KV4PProtocol
 import KV4PTransport
 import Observation
@@ -61,19 +62,42 @@ public final class RadioViewModel {
         desired: DesiredStateController().desired,
         isInSync: false
     )
-    private let makeController: (Connection) -> any RadioControlling
+    /// Output gain of the RX audio, 0…1.
+    public var volume: Float = 1 {
+        didSet { rxAudio.volume = volume }
+    }
+    /// The simulator receives a signal (`canSimulateSignal`).
+    public var isSignalSimulated = false {
+        didSet {
+            guard isSignalSimulated != oldValue, let simulateSignal else { return }
+            let isOn = isSignalSimulated
+            Task { await simulateSignal(isOn) }
+        }
+    }
+
+    let rxAudio = RXAudioPlayer()
+    private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
+    private let audioOutput: (any AudioOutput)?
+    private let simulateSignal: (@Sendable (Bool) async -> Void)?
     private var controller: (any RadioControlling)?
+    private var connection: Connection?
     private var observer: Task<Void, Never>?
     /// The frequency shown when the field is reset.
     private var frequency: Float?
 
+    /// `makeController` connects the RX audio of the radio to the given sink; `simulateSignal` starts or ends a
+    /// carrier on the simulator.
     public init(
-        makeController: @escaping (Connection) -> any RadioControlling,
-        serialDevices: @escaping () -> [String]
+        makeController: @escaping (Connection, any RXAudioSink) -> any RadioControlling,
+        serialDevices: @escaping () -> [String],
+        audioOutput: (any AudioOutput)? = nil,
+        simulateSignal: (@Sendable (Bool) async -> Void)? = nil
     ) {
         self.makeController = makeController
         self.serialDevices = serialDevices
+        self.audioOutput = audioOutput
+        self.simulateSignal = simulateSignal
         refreshConnections()
     }
 
@@ -106,14 +130,28 @@ public final class RadioViewModel {
 
     public var sMeterText: String { Self.sMeterText(for: sMeter) }
 
+    /// The squelch is open: a signal is received and played.
+    public var isReceiving: Bool {
+        guard isReady, let flags = snapshot.deviceState?.radio.flags else { return false }
+        return !flags.contains(.squelched)
+    }
+
+    public var canSimulateSignal: Bool { isReady && connection == .simulator && simulateSignal != nil }
+
     // MARK: Connection
 
     public func connect() async {
         await disconnect()
-        let controller = makeController(selectedConnection)
+        let controller = makeController(selectedConnection, rxAudio)
         self.controller = controller
+        connection = selectedConnection
         message = nil
         frequency = nil
+        do {
+            try audioOutput?.start(rxAudio)
+        } catch {
+            message = "The audio output cannot be started."
+        }
         let snapshots = controller.snapshots
         observer = Task { [weak self] in
             for await snapshot in snapshots {
@@ -127,7 +165,10 @@ public final class RadioViewModel {
         observer?.cancel()
         observer = nil
         await controller?.disconnect()
+        audioOutput?.stop()
         controller = nil
+        connection = nil
+        isSignalSimulated = false
         snapshot = Self.disconnected
     }
 
