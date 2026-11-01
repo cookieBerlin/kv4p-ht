@@ -426,11 +426,223 @@ final class AprsVectors {
             return found;
         }
 
+        /** {@code AprsEventDao.getPendingOutgoingEvent}. */
         @Override public AprsEvent findPendingOutgoingEvent(String local, String remote, String identifier) {
-            return null;  // the receive path has no outgoing messages
+            for (int i = events.size() - 1; i >= 0; i--) {
+                AprsEvent event = events.get(i);
+                if (local.equals(event.getFromCallsign()) && remote.equals(event.getToCallsign())
+                    && identifier.equals(event.getMessageIdentifier())
+                    && event.getDeliveryState() == AprsEvent.DELIVERY_PENDING) {
+                    return event;
+                }
+            }
+            return null;
         }
 
-        @Override public AprsPacket findInitialRfTransmission(long eventId) { return null; }
+        /** {@code AprsPacketDao.getInitialRfTransmission}. */
+        @Override public AprsPacket findInitialRfTransmission(long eventId) {
+            for (AprsPacket packet : packets) {
+                if (packet.getEventId() != null && packet.getEventId() == eventId
+                    && AprsSource.TX_RF.equals(packet.getSource())) {
+                    return packet;
+                }
+            }
+            return null;
+        }
+    }
+
+    // MARK: Messaging
+
+    /** The transport of the generator: accepts, refuses for now, or refuses for good. */
+    private static final class Transmitter implements AprsController.Callbacks {
+        String mode = "accept";
+        final List<Object> transmissions = new ArrayList<>();
+        int step;
+
+        @Override public void onIncomingMessage(AprsEvent event, boolean forLocal) {}
+
+        @Override public AprsController.RfTransmission submitRf(APRSPacket packet, Long frequencyHz,
+                AprsController.RfTransmissionPurpose purpose) {
+            byte[] frame = packet.toAX25Frame();
+            transmissions.add(Json.obj().put("step", step).put("purpose", purpose.name())
+                .put("frequencyHz", frequencyHz).put("frame", Json.hex(frame)).put("mode", mode));
+            switch (mode) {
+                case "refuse": return null;
+                case "terminal": return AprsController.RfTransmission.builder().retryAllowed(false).build();
+                default:
+                    long hz = frequencyHz == null ? 144_390_000L : frequencyHz;
+                    return AprsController.RfTransmission.builder().transmission(AprsController.Transmission
+                        .builder().packet(packet).frequencyHz(hz).rawAx25(frame).build()).build();
+            }
+        }
+
+        @Override public BeaconData getBeaconData() { return null; }
+        @Override public boolean submitAprsIs(String line, Runnable onSent) { return false; }
+    }
+
+    /**
+     * Steps: {@code {at, "rx", tnc2}}, {@code {at, "post", to, text}}, {@code {at, "tick"}},
+     * {@code {at, "mode", accept|refuse|terminal}}. The local callsign is N0CALL.
+     */
+    private static final Object[][][] MESSAGING = {
+        {   // delivered after one retry
+            {0L, "post", "N1CALL", "hello there"},
+            {14_999L, "tick"},
+            {15_000L, "tick"},
+            {20_000L, "rx", "N1CALL>APRS::N0CALL   :ackW3V28"},
+            {50_000L, "tick"},
+        },
+        {   // rejected; acks for unknown messages are recorded only
+            {1_000L, "post", "n1call-7 ", "  padded  "},
+            {2_000L, "rx", "N1CALL-7>APRS::N0CALL   :rejW3V28"},
+            {3_000L, "rx", "N1CALL-7>APRS::N0CALL   :ackZZZZ"},
+            {4_000L, "rx", "N1CALL-7>APRS::N2CALL   :ackW3V28"},
+        },
+        {   // all retries, then failure after the grace period
+            {0L, "post", "N1CALL", "nobody home"},
+            {15_000L, "tick"}, {45_000L, "tick"}, {105_000L, "tick"}, {225_000L, "tick"}, {465_000L, "tick"},
+            {494_999L, "tick"}, {495_000L, "tick"}, {600_000L, "tick"},
+        },
+        {   // the transport refuses for now, then for good
+            {0L, "post", "N1CALL", "busy"},
+            {1L, "mode", "refuse"},
+            {15_000L, "tick"},
+            {30_000L, "tick"},
+            {30_001L, "mode", "terminal"},
+            {45_000L, "tick"},
+            {45_001L, "mode", "refuse"},
+            {50_000L, "post", "N1CALL", "not sent"},
+        },
+        {   // broadcasts need no acknowledgement; long text and identifiers
+            {0L, "post", "BLN1CQ", "bulletin"},
+            {1L, "post", "CQ", "anyone"},
+            {2L, "post", "ALL", "all"},
+            {3L, "post", "QST", "qst"},
+            {4L, "post", "N1CALL", "0123456789012345678901234567890123456789012345678901234567890123456789"},
+            {5L, "post", "N1CALL", "second"},
+            {6L, "post", "", "no destination"},
+            {20_000L, "tick"},
+        },
+        {   // numbered messages for us are acknowledged after a second, each copy; others are not
+            {0L, "rx", "N1CALL>APRS::N0CALL   :hi{42"},
+            {500L, "rx", "N1CALL>APRS,WIDE1*::N0CALL   :hi{42"},
+            {600L, "rx", "N1CALL>APRS::N0CALL   :hi{42"},
+            {999L, "tick"},
+            {1_000L, "tick"},
+            {1_600L, "tick"},
+            {2_000L, "rx", "N1CALL>APRS::N0CALL   :no number"},
+            {2_100L, "rx", "N1CALL>APRS::N2CALL   :not for us{7"},
+            {2_200L, "rx", "N1CALL>APRS::n0call   :lower case{8"},
+            {5_000L, "tick"},
+            {5_001L, "mode", "refuse"},
+            {5_002L, "rx", "N1CALL>APRS::N0CALL   :refused ack{9"},
+            {7_000L, "tick"},
+        },
+        {   // our own message heard back through a digipeater
+            {0L, "post", "N1CALL", "echo"},
+            {2_000L, "rx", "N0CALL>APKVPA,N2CALL*,WIDE2-1::N1CALL   :echo{W3V28"},
+        },
+    };
+
+    static List<Object> messaging() throws Exception {
+        List<Object> vectors = new ArrayList<>();
+        int index = 0;
+        for (Object[][] session : MESSAGING) {
+            MutableClock clock = new MutableClock();
+            clock.millis = 1_700_000_000_000L;
+            MemoryRepository repository = new MemoryRepository();
+            Transmitter transmitter = new Transmitter();
+            AprsController controller = new AprsController(repository, transmitter, clock);
+            controller.setCallsign("N0CALL");
+            controller.setTxDestination("APKVPA");
+            controller.setTxPath(List.of(new Digipeater("WIDE1-1"), new Digipeater("WIDE2-1")));
+            List<Object> steps = new ArrayList<>();
+            List<Object> results = new ArrayList<>();
+            for (Object[] step : session) {
+                long now = 1_700_000_000_000L + (Long) step[0];
+                clock.millis = now;
+                Json.Obj input = Json.obj().put("atMs", now).put("kind", step[1]);
+                Object result = null;
+                switch ((String) step[1]) {
+                    case "rx" -> {
+                        byte[] frame = frame((String) step[2]);
+                        input.put("frame", Json.hex(frame));
+                        controller.handle(Parser.parseAX25(frame, 0, frame.length), AprsSource.RX_RF,
+                            144_390_000L, frame);
+                    }
+                    case "post" -> {
+                        input.put("to", step[2]).put("text", step[3]);
+                        result = controller.postMessage((String) step[2], (String) step[3], 144_390_000L);
+                    }
+                    case "tick" -> controller.tick(now);
+                    default -> {
+                        transmitter.mode = (String) step[2];
+                        input.put("mode", step[2]);
+                    }
+                }
+                steps.add(input);
+                results.add(result);
+                transmitter.step++;
+            }
+            List<Object> events = new ArrayList<>();
+            for (AprsEvent event : repository.events) {
+                events.add(event(event).put("transmitAttempts", event.getTransmitAttempts())
+                    .put("nextRetryAtMs", event.getNextRetryAtMs()).put("digipeated", event.isDigipeated()));
+            }
+            List<Object> packets = new ArrayList<>();
+            for (AprsPacket packet : repository.packets) {
+                packets.add(Json.obj().put("source", packet.getSource()).put("eventId", packet.getEventId())
+                    .put("timestampMs", packet.getTimestampMs()).put("frequencyHz", packet.getFrequencyHz())
+                    .put("path", packet.getPath())
+                    .put("frame", packet.getRawAx25() == null ? null : Json.hex(packet.getRawAx25())));
+            }
+            vectors.add(Json.obj().put("name", "messaging " + ++index)
+                .put("input", Json.obj().put("callsign", "N0CALL").put("txDestination", "APKVPA")
+                    .put("txPath", Json.list("WIDE1-1", "WIDE2-1")).put("startMs", 1_700_000_000_000L)
+                    .put("steps", steps))
+                .put("expected", Json.obj().put("results", results).put("transmissions", transmitter.transmissions)
+                    .put("events", events).put("packets", packets)));
+        }
+        return vectors;
+    }
+
+    /** {@code MessagePacket.createMessagePayload} and {@code APRSPacket.toAX25Frame}. */
+    static List<Object> encoding() {
+        List<Object> vectors = new ArrayList<>();
+        String[][] payloads = {
+            {"N1CALL", "hello", "1"}, {"N1CALL-15", "text", "ABCDEFG"}, {"BLN1CQ", "x", null},
+            {"N1CALL", "x", "  "}, {"VERYLONGCALL", "x", "12"}, {"N1CALL", "ü€", null},
+            {"N1CALL", "0123456789012345678901234567890123456789012345678901234567890123456789", "AB"},
+            {"N1CALL", "0123456789012345678901234567890123456789012345678901234567890123456789", null},
+        };
+        for (String[] p : payloads) {
+            vectors.add(Json.obj().put("name", "payload " + p[0] + " " + p[2])
+                .put("input", Json.obj().put("kind", "payload").put("to", p[0]).put("text", p[1]).put("id", p[2]))
+                .put("expected", Json.obj().put("bytes", Json.hex(MessagePacket.createMessagePayload(p[0], p[1], p[2])))));
+        }
+        String[][] frames = {
+            {"N0CALL", "APKVPA", "WIDE1-1,WIDE2-1", ":N1CALL   :hi{1"},
+            {"N0CALL-9", "APKVPA", "", ">status"},
+            {"n0call-15", "apkvpa-3", "N1CALL*,WIDE2-2", "!x"},
+            {"N0CALL-x", "APKVPA", "WIDE1-16", ">ssid"},
+            {"N0CALLXX", "APKVPA", "", ">too long"},
+            {"N0CALL", "APKVPA", "TOOLONGCALL", ">too long path"},
+        };
+        for (String[] f : frames) {
+            Json.Obj expected;
+            try {
+                expected = Json.obj().put("bytes", Json.hex(new APRSPacket(f[0], f[1],
+                    f[2].isEmpty() ? null : Digipeater.parseList("X," + f[2], false),
+                    f[3].getBytes(StandardCharsets.ISO_8859_1)).toAX25Frame()));
+            } catch (IllegalArgumentException e) {
+                expected = Json.obj().put("error", true);
+            }
+            vectors.add(Json.obj().put("name", "frame " + f[0] + ">" + f[1] + "," + f[2])
+                .put("input", Json.obj().put("kind", "frame").put("source", f[0]).put("destination", f[1])
+                    .put("path", f[2]).put("payload", f[3]))
+                .put("expected", expected));
+        }
+        return vectors;
     }
 
     /** No callsign is configured, so nothing is transmitted or gated. */

@@ -1,0 +1,1324 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs AprsController messaging",
+  "vectors": [
+    {
+      "name": "messaging 1",
+      "input": {
+        "callsign": "N0CALL",
+        "txDestination": "APKVPA",
+        "txPath": ["WIDE1-1", "WIDE2-1"],
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "hello there"
+          },
+          {
+            "atMs": 1700000014999,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000015000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000020000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a61636b5733563238"
+          },
+          {
+            "atMs": 1700000050000,
+            "kind": "tick"
+          }
+        ]
+      },
+      "expected": {
+        "results": [true, null, null, null, null],
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a68656c6c6f2074686572657b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 2,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a68656c6c6f2074686572657b5733563238",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000020000,
+            "packetCount": 3,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTCAgIDpoZWxsbyB0aGVyZXtXM1YyOA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "W3V28",
+            "body": "hello there",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 2,
+            "transmitAttempts": 2,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a68656c6c6f2074686572657b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000015000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a68656c6c6f2074686572657b5733563238"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000020000,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a61636b5733563238"
+          }
+        ]
+      }
+    },
+    {
+      "name": "messaging 2",
+      "input": {
+        "callsign": "N0CALL",
+        "txDestination": "APKVPA",
+        "txPath": ["WIDE1-1", "WIDE2-1"],
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000001000,
+            "kind": "post",
+            "to": "n1call-7 ",
+            "text": "  padded  "
+          },
+          {
+            "atMs": 1700000002000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986f03f03a4e3043414c4c2020203a72656a5733563238"
+          },
+          {
+            "atMs": 1700000003000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986f03f03a4e3043414c4c2020203a61636b5a5a5a5a"
+          },
+          {
+            "atMs": 1700000004000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986f03f03a4e3243414c4c2020203a61636b5733563238"
+          }
+        ]
+      },
+      "expected": {
+        "results": [true, null, null, null],
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2d37203a7061646465647b5733563238",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000001000,
+            "lastSeenMs": 1700000002000,
+            "packetCount": 2,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTC03IDpwYWRkZWR7VzNWMjg=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL-7",
+            "messageIdentifier": "W3V28",
+            "body": "padded",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 3,
+            "transmitAttempts": 1,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000001000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2d37203a7061646465647b5733563238"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000002000,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986f03f03a4e3043414c4c2020203a72656a5733563238"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": null,
+            "timestampMs": 1700000003000,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986f03f03a4e3043414c4c2020203a61636b5a5a5a5a"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": null,
+            "timestampMs": 1700000004000,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986f03f03a4e3243414c4c2020203a61636b5733563238"
+          }
+        ]
+      }
+    },
+    {
+      "name": "messaging 3",
+      "input": {
+        "callsign": "N0CALL",
+        "txDestination": "APKVPA",
+        "txPath": ["WIDE1-1", "WIDE2-1"],
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "nobody home"
+          },
+          {
+            "atMs": 1700000015000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000045000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000105000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000225000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000465000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000494999,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000495000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000600000,
+            "kind": "tick"
+          }
+        ]
+      },
+      "expected": {
+        "results": [true, null, null, null, null, null, null, null, null],
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 1,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 2,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 3,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 4,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 5,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000465000,
+            "packetCount": 6,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTCAgIDpub2JvZHkgaG9tZXtXM1YyOA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "W3V28",
+            "body": "nobody home",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 4,
+            "transmitAttempts": 6,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000015000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000045000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000105000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000225000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000465000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f626f647920686f6d657b5733563238"
+          }
+        ]
+      }
+    },
+    {
+      "name": "messaging 4",
+      "input": {
+        "callsign": "N0CALL",
+        "txDestination": "APKVPA",
+        "txPath": ["WIDE1-1", "WIDE2-1"],
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "busy"
+          },
+          {
+            "atMs": 1700000000001,
+            "kind": "mode",
+            "mode": "refuse"
+          },
+          {
+            "atMs": 1700000015000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000030000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000030001,
+            "kind": "mode",
+            "mode": "terminal"
+          },
+          {
+            "atMs": 1700000045000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000045001,
+            "kind": "mode",
+            "mode": "refuse"
+          },
+          {
+            "atMs": 1700000050000,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "not sent"
+          }
+        ]
+      },
+      "expected": {
+        "results": [true, null, null, null, null, null, null, false],
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a627573797b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 2,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a627573797b5733563238",
+            "mode": "refuse"
+          },
+          {
+            "step": 3,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a627573797b5733563238",
+            "mode": "refuse"
+          },
+          {
+            "step": 5,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a627573797b5733563238",
+            "mode": "terminal"
+          },
+          {
+            "step": 7,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6e6f742073656e747b5733563239",
+            "mode": "refuse"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTCAgIDpidXN5e1czVjI4",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "W3V28",
+            "body": "busy",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 4,
+            "transmitAttempts": 1,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a627573797b5733563238"
+          }
+        ]
+      }
+    },
+    {
+      "name": "messaging 5",
+      "input": {
+        "callsign": "N0CALL",
+        "txDestination": "APKVPA",
+        "txPath": ["WIDE1-1", "WIDE2-1"],
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "post",
+            "to": "BLN1CQ",
+            "text": "bulletin"
+          },
+          {
+            "atMs": 1700000000001,
+            "kind": "post",
+            "to": "CQ",
+            "text": "anyone"
+          },
+          {
+            "atMs": 1700000000002,
+            "kind": "post",
+            "to": "ALL",
+            "text": "all"
+          },
+          {
+            "atMs": 1700000000003,
+            "kind": "post",
+            "to": "QST",
+            "text": "qst"
+          },
+          {
+            "atMs": 1700000000004,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "0123456789012345678901234567890123456789012345678901234567890123456789"
+          },
+          {
+            "atMs": 1700000000005,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "second"
+          },
+          {
+            "atMs": 1700000000006,
+            "kind": "post",
+            "to": "",
+            "text": "no destination"
+          },
+          {
+            "atMs": 1700000020000,
+            "kind": "tick"
+          }
+        ]
+      },
+      "expected": {
+        "results": [true, true, true, true, true, true, false, null],
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "BROADCAST",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a424c4e3143512020203a62756c6c6574696e",
+            "mode": "accept"
+          },
+          {
+            "step": 1,
+            "purpose": "BROADCAST",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4351202020202020203a616e796f6e65",
+            "mode": "accept"
+          },
+          {
+            "step": 2,
+            "purpose": "BROADCAST",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a414c4c2020202020203a616c6c",
+            "mode": "accept"
+          },
+          {
+            "step": 3,
+            "purpose": "BROADCAST",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a5153542020202020203a717374",
+            "mode": "accept"
+          },
+          {
+            "step": 4,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839307b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 5,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a7365636f6e647b5733563239",
+            "mode": "accept"
+          },
+          {
+            "step": 7,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839307b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 7,
+            "purpose": "RELIABLE_MESSAGE_RETRY",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a7365636f6e647b5733563239",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|OkJMTjFDUSAgIDpidWxsZXRpbg==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "BLN1CQ",
+            "messageIdentifier": null,
+            "body": "bulletin",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 2,
+            "type": 1,
+            "firstSeenMs": 1700000000001,
+            "lastSeenMs": 1700000000001,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|OkNRICAgICAgIDphbnlvbmU=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "CQ",
+            "messageIdentifier": null,
+            "body": "anyone",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 3,
+            "type": 1,
+            "firstSeenMs": 1700000000002,
+            "lastSeenMs": 1700000000002,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|OkFMTCAgICAgIDphbGw=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "ALL",
+            "messageIdentifier": null,
+            "body": "all",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 4,
+            "type": 1,
+            "firstSeenMs": 1700000000003,
+            "lastSeenMs": 1700000000003,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|OlFTVCAgICAgIDpxc3Q=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "QST",
+            "messageIdentifier": null,
+            "body": "qst",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 5,
+            "type": 1,
+            "firstSeenMs": 1700000000004,
+            "lastSeenMs": 1700000020000,
+            "packetCount": 2,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTCAgIDowMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwe1czVjI4",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "W3V28",
+            "body": "0123456789012345678901234567890123456789012345678901234567890",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 1,
+            "transmitAttempts": 2,
+            "nextRetryAtMs": 1700000050000,
+            "digipeated": false
+          },
+          {
+            "id": 6,
+            "type": 1,
+            "firstSeenMs": 1700000000005,
+            "lastSeenMs": 1700000020000,
+            "packetCount": 2,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTCAgIDpzZWNvbmR7VzNWMjk=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "W3V29",
+            "body": "second",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 1,
+            "transmitAttempts": 2,
+            "nextRetryAtMs": 1700000050000,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a424c4e3143512020203a62756c6c6574696e"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 2,
+            "timestampMs": 1700000000001,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4351202020202020203a616e796f6e65"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 3,
+            "timestampMs": 1700000000002,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a414c4c2020202020203a616c6c"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 4,
+            "timestampMs": 1700000000003,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a5153542020202020203a717374"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 5,
+            "timestampMs": 1700000000004,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839307b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 6,
+            "timestampMs": 1700000000005,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a7365636f6e647b5733563239"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 5,
+            "timestampMs": 1700000020000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839307b5733563238"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 6,
+            "timestampMs": 1700000020000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a7365636f6e647b5733563239"
+          }
+        ]
+      }
+    },
+    {
+      "name": "messaging 6",
+      "input": {
+        "callsign": "N0CALL",
+        "txDestination": "APKVPA",
+        "txPath": ["WIDE1-1", "WIDE2-1"],
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a68697b3432"
+          },
+          {
+            "atMs": 1700000000500,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a6240e103f03a4e3043414c4c2020203a68697b3432"
+          },
+          {
+            "atMs": 1700000000600,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a68697b3432"
+          },
+          {
+            "atMs": 1700000000999,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000001000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000001600,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000002000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a6e6f206e756d626572"
+          },
+          {
+            "atMs": 1700000002100,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3243414c4c2020203a6e6f7420666f722075737b37"
+          },
+          {
+            "atMs": 1700000002200,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03a6e3063616c6c2020203a6c6f77657220636173657b38"
+          },
+          {
+            "atMs": 1700000005000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000005001,
+            "kind": "mode",
+            "mode": "refuse"
+          },
+          {
+            "atMs": 1700000005002,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a726566757365642061636b7b39"
+          },
+          {
+            "atMs": 1700000007000,
+            "kind": "tick"
+          }
+        ]
+      },
+      "expected": {
+        "results": [null, null, null, null, null, null, null, null, null, null, null, null, null],
+        "transmissions": [
+          {
+            "step": 4,
+            "purpose": "ACKNOWLEDGEMENT",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b3432",
+            "mode": "accept"
+          },
+          {
+            "step": 5,
+            "purpose": "ACKNOWLEDGEMENT",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b3432",
+            "mode": "accept"
+          },
+          {
+            "step": 5,
+            "purpose": "ACKNOWLEDGEMENT",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b3432",
+            "mode": "accept"
+          },
+          {
+            "step": 9,
+            "purpose": "ACKNOWLEDGEMENT",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b38",
+            "mode": "accept"
+          },
+          {
+            "step": 12,
+            "purpose": "ACKNOWLEDGEMENT",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b39",
+            "mode": "refuse"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000600,
+            "packetCount": 3,
+            "dedupKey": "N1CALL|APRS|Ok4wQ0FMTCAgIDpoaXs0Mg==",
+            "fromCallsign": "N1CALL",
+            "toCallsign": "N0CALL",
+            "messageIdentifier": "42",
+            "body": "hi",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 2,
+            "type": 1,
+            "firstSeenMs": 1700000002000,
+            "lastSeenMs": 1700000002000,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Ok4wQ0FMTCAgIDpubyBudW1iZXI=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": "N0CALL",
+            "messageIdentifier": "",
+            "body": "no number",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 3,
+            "type": 1,
+            "firstSeenMs": 1700000002100,
+            "lastSeenMs": 1700000002100,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Ok4yQ0FMTCAgIDpub3QgZm9yIHVzezc=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": "N2CALL",
+            "messageIdentifier": "7",
+            "body": "not for us",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 4,
+            "type": 1,
+            "firstSeenMs": 1700000002200,
+            "lastSeenMs": 1700000002200,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Om4wY2FsbCAgIDpsb3dlciBjYXNlezg=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": "N0CALL",
+            "messageIdentifier": "8",
+            "body": "lower case",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          },
+          {
+            "id": 5,
+            "type": 1,
+            "firstSeenMs": 1700000005002,
+            "lastSeenMs": 1700000005002,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Ok4wQ0FMTCAgIDpyZWZ1c2VkIGFja3s5",
+            "fromCallsign": "N1CALL",
+            "toCallsign": "N0CALL",
+            "messageIdentifier": "9",
+            "body": "refused ack",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "transmitAttempts": 0,
+            "nextRetryAtMs": null,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "RX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a68697b3432"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000500,
+            "frequencyHz": 144390000,
+            "path": "WIDE1*",
+            "frame": "82a0a4a64040e09c628682989860ae92888a6240e103f03a4e3043414c4c2020203a68697b3432"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000600,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a68697b3432"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000001000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b3432"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000001600,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b3432"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000001600,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b3432"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 2,
+            "timestampMs": 1700000002000,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a6e6f206e756d626572"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 3,
+            "timestampMs": 1700000002100,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3243414c4c2020203a6e6f7420666f722075737b37"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 4,
+            "timestampMs": 1700000002200,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986103f03a6e3063616c6c2020203a6c6f77657220636173657b38"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 4,
+            "timestampMs": 1700000005000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a61636b38"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 5,
+            "timestampMs": 1700000005002,
+            "frequencyHz": 144390000,
+            "path": null,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a726566757365642061636b7b39"
+          }
+        ]
+      }
+    },
+    {
+      "name": "messaging 7",
+      "input": {
+        "callsign": "N0CALL",
+        "txDestination": "APKVPA",
+        "txPath": ["WIDE1-1", "WIDE2-1"],
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "echo"
+          },
+          {
+            "atMs": 1700000002000,
+            "kind": "rx",
+            "frame": "82a096aca082e09c6086829898609c6486829898e0ae92888a64406303f03a4e3143414c4c2020203a6563686f7b5733563238"
+          }
+        ]
+      },
+      "expected": {
+        "results": [true, null],
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6563686f7b5733563238",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000002000,
+            "packetCount": 2,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTCAgIDplY2hve1czVjI4",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "W3V28",
+            "body": "echo",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 1,
+            "transmitAttempts": 1,
+            "nextRetryAtMs": 1700000015000,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a6563686f7b5733563238"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000002000,
+            "frequencyHz": 144390000,
+            "path": "N2CALL*,WIDE2-1",
+            "frame": "82a096aca082e09c6086829898609c6486829898e0ae92888a64406303f03a4e3143414c4c2020203a6563686f7b5733563238"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import Testing
 
 @testable import KV4PAPRS
 
-/// Checks `APRSEventLog` against java-aprs `AprsController.handle` for packets received over RF.
+/// Checks `APRSController` against java-aprs `AprsController.handle` for packets received over RF.
 @Suite("APRS event vectors")
 struct APRSEventVectorTests {
     struct Step: Decodable, Sendable {
@@ -65,7 +65,7 @@ struct APRSEventVectorTests {
             windDirection = event.windDirection
             relayCallsign = event.relayCallsign
             internetOnly = false
-            deliveryState = 0
+            deliveryState = event.deliveryState.rawValue
         }
     }
 
@@ -83,12 +83,18 @@ struct APRSEventVectorTests {
 
     @Test("derives the events Android shows", arguments: vectors)
     func events(vector: VectorFile<Input, Expected>.Vector) throws {
-        var log = APRSEventLog()
+        var controller = APRSController(startMs: 0)
         for step in vector.input.steps {
-            log.receive(try APRSParser.parse(ax25: [UInt8](hex: step.frame)), atMs: step.timeMs)
+            let frame = try [UInt8](hex: step.frame)
+            controller.receive(
+                try APRSParser.parse(ax25: frame),
+                frame: frame,
+                frequencyHz: 144_390_000,
+                atMs: step.timeMs
+            )
         }
-        #expect(log.events.map(EventJSON.init) == vector.expected.events)
-        #expect(log.packetCount == vector.expected.packets)
+        #expect(controller.events.map(EventJSON.init) == vector.expected.events)
+        #expect(controller.packets.count == vector.expected.packets)
     }
 
     @Test(
@@ -98,6 +104,6 @@ struct APRSEventVectorTests {
         ]
     )
     func cardinal(degrees: Int, expected: String) {
-        #expect(APRSEventLog.cardinal(degrees) == expected)
+        #expect(APRSController.cardinal(degrees) == expected)
     }
 }

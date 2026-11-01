@@ -31,6 +31,10 @@ public enum RadioError: Error, Equatable, Sendable {
     case transmitNotAllowed
     /// No microphone, or access to it was denied.
     case microphoneUnavailable
+    /// The radio is transmitting or scanning.
+    case busy
+    /// Not an AX.25 frame the radio can send.
+    case invalidPacket
 }
 
 /// Everything the UI shows about the radio.
@@ -83,6 +87,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Numbers transmissions, so late microphone samples and timers of an earlier one are ignored.
     private var transmission = 0
     private var isCapturing = false
+    /// PTT is requested for the current transmission (after the microphone started).
+    private var isKeyed = false
     private var capture: Task<Void, Never>?
     private var runawayTimer: Task<Void, Never>?
     /// The memories being scanned; `nil` while not scanning.
@@ -153,7 +159,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         let timeout = helloTimeout
         let current = attempt
         helloTimer = Task { [weak self] in
-            try? await clock.sleep(for: timeout)
+            guard (try? await clock.sleep(for: timeout)) != nil else { return }  // cancelled
             await self?.helloTimedOut(attempt: current)
         }
     }
@@ -298,7 +304,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         let generation = scanTimerGeneration
         let clock = clock
         scanTimer = Task { [weak self] in
-            try? await clock.sleep(for: Self.scanAdvanceDelay)
+            guard (try? await clock.sleep(for: Self.scanAdvanceDelay)) != nil else { return }  // cancelled
             await self?.scanTimerFired(generation: generation)
         }
     }
@@ -324,6 +330,30 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         txEncoder.gain = gain
     }
 
+    // MARK: Packets
+
+    /// `txAX25PacketOnFrequency`: sends one AX.25 frame (without FCS) on `frequency` with the current bandwidth and
+    /// TX tone; the radio returns to its RX configuration afterwards. Only while receiving, as on Android.
+    public func transmitAX25(_ frame: [UInt8], frequency: Float) throws(RadioError) {
+        guard snapshot.status == .ready, let firmware = desiredState.firmware else { throw .notReady }
+        guard !isCapturing, scanList == nil else { throw .busy }
+        let desired = desiredState.desired
+        guard TXBand.default(for: firmware.moduleType).allows(frequency, bandwidth: desired.bandwidth) else {
+            throw .transmitNotAllowed
+        }
+        do {
+            let encoded = try FrameEncoder.ax25(
+                frame,
+                onFrequency: frequency,
+                bandwidth: desired.bandwidth,
+                ctcssTx: desired.ctcssTx
+            )
+            outbox.yield(encoded)
+        } catch {
+            throw .invalidPacket
+        }
+    }
+
     // MARK: Transmit
 
     /// `RadioAudioService.startPtt`: keys the radio and sends the microphone as TX audio until `stopTransmitting()`,
@@ -347,6 +377,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         guard current == transmission else { return microphone.stop() }  // ended while the microphone started
         txEncoder.reset()
         rxAudio?.reset()
+        isKeyed = true
         update { $0.setPTT(true) }
         capture = Task { [weak self] in
             for await chunk in samples {
@@ -355,7 +386,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
         let clock = clock
         runawayTimer = Task { [weak self] in
-            try? await clock.sleep(for: Self.runawayTXTimeout)
+            guard (try? await clock.sleep(for: Self.runawayTXTimeout)) != nil else { return }  // cancelled
             await self?.runawayTimedOut(transmission: current)
         }
     }
@@ -384,6 +415,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         guard isCapturing else { return }
         transmission += 1
         isCapturing = false
+        isKeyed = false
         capture?.cancel()
         runawayTimer?.cancel()
         microphone?.stop()
@@ -468,7 +500,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     /// Queues the pending desired states; the sender writes them in order within the flow-control window.
     private func flush() {
-        if isCapturing, !desiredState.desired.flags.contains(.pttRequested) {
+        if isKeyed, !desiredState.desired.flags.contains(.pttRequested) {
             endTransmission()  // the device released PTT
         }
         for state in desiredState.takeOutgoing() {

@@ -19,7 +19,8 @@ public struct APRSPacket: Equatable, Sendable {
     public var comment: String?
     var isFaulty = false
 
-    init(source: String, destination: String, digipeaters: [AX25Address], payload: [UInt8]) {
+    /// A packet to send; the payload is the information field (`APRSPacket(String, String, List, byte[])`).
+    public init(source: String, destination: String, digipeaters: [AX25Address], payload: [UInt8]) {
         self.source = source.uppercased()
         self.destination = destination.uppercased()
         self.digipeaters = digipeaters
@@ -30,6 +31,18 @@ public struct APRSPacket: Equatable, Sendable {
     public var dti: UInt8 { info.payload[0] }
 
     public var hasFault: Bool { isFaulty || info.hasFault }
+
+    /// `toAX25Frame`: an AX.25 UI frame without FCS; the destination carries the command bit.
+    public func ax25Frame() throws(APRSEncodeError) -> [UInt8] {
+        var addresses = [
+            try AX25Address(call: destination).used().ax25Bytes(), try AX25Address(call: source).ax25Bytes(),
+        ]
+        for digipeater in digipeaters {
+            addresses.append(try digipeater.ax25Bytes())
+        }
+        addresses[addresses.count - 1][6] |= 0x01
+        return addresses.flatMap { $0 } + [0x03, 0xF0] + info.payload
+    }
 }
 
 /// The information field and the data parsed from it (java-aprs `InformationField` and its `APRSData`).

@@ -154,13 +154,13 @@
         }
         let frames = controller.receivedFrames
         Task {
-            var feed = APRSEventLog()
+            var feed = APRSController(startMs: RadioViewModel.systemTimeMs())
             for await frame in frames {
                 guard let packet = try? APRSParser.parse(ax25: frame) else {
                     print("  frame   \(frame.count) bytes, not APRS")
                     continue
                 }
-                let event = feed.receive(packet, atMs: RadioViewModel.systemTimeMs())
+                let event = feed.receive(packet, frame: frame, frequencyHz: nil, atMs: RadioViewModel.systemTimeMs())
                 let path = packet.digipeaters.map(\.description).joined(separator: ",")
                 print(
                     "  APRS    \(packet.source)>\(packet.destination)\(path.isEmpty ? "" : "," + path)",

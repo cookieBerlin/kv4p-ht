@@ -27,6 +27,11 @@ enum Java {
         text.unicodeScalars.map { $0.value <= 0xFF ? UInt8($0.value) : UInt8(ascii: "?") }
     }
 
+    /// `String.getBytes(US_ASCII)`: characters beyond U+007F become `?`.
+    static func asciiBytes(_ text: String) -> [UInt8] {
+        text.unicodeScalars.map { $0.isASCII ? UInt8($0.value) : UInt8(ascii: "?") }
+    }
+
     /// `String.trim()`: drops leading and trailing characters up to U+0020.
     static func trim(_ text: String) -> String {
         let isTrimmed = { (scalar: Unicode.Scalar) in scalar.value <= 0x20 }

@@ -127,9 +127,24 @@ relayed by another station (third-party) show *via* that station. Tune to the
 APRS frequency of your region (e.g. 144.800 MHz in Europe, 144.390 MHz in North
 America). The list starts empty each time the app starts.
 
-*Planned:* sending messages, position beacons, digipeating and APRS-IS. Set your
-own callsign in Settings before transmitting; the app ships with no callsign
-configured.
+**Messages** (licence required): enter your callsign at the bottom of the APRS
+tab (the app ships with none and remembers yours), a recipient and the text,
+then press Return or **Send**. Without a recipient the message goes out as the
+bulletin BLN1CQ.
+
+- The message is sent on the current TX frequency, via WIDE1-1,WIDE2-1, only
+  while the radio receives (not during PTT or a scan) and inside the ham band.
+- Messages to a station are numbered and repeated after 15, 30, 60, 120 and
+  240 seconds until the station acknowledges them. The symbol next to the
+  message shows the state: waiting, delivered, rejected or not delivered.
+  Tuning to another frequency ends the repeats (*not delivered*), as in the
+  Android app.
+- Numbered messages to your callsign are acknowledged automatically after one
+  second.
+- `|`, `~` and `{` are sent as spaces; text and number together are limited to
+  67 characters.
+
+*Planned:* position beacons, digipeating and APRS-IS.
 
 ## FreeDV digital voice
 
@@ -160,6 +175,8 @@ The app warns when the radio's firmware is older than required.
 | *Bluetooth access is not allowed.* | System Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
 | *The microphone is not available.* | System Settings → Privacy & Security → Microphone, then press PTT again. |
+| *Set your callsign to send APRS messages.* | Enter your callsign in the APRS tab. |
+| *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
 | *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |
 | *Connect the radio first, …* | The import needs the radio's frequency range; connect, then import again. |
 | *The audio output cannot be started.* | Check the output device in System Settings → Sound, then connect again. The radio works without audio. |
@@ -187,6 +204,9 @@ Used by developers before merging a milestone that touches hardware behaviour:
 - [ ] APRS: tuned to the regional APRS frequency, packets appear in the APRS
       tab and match what the Android app shows for the same packets
       (`swift run kv4p-probe --ble --tune 144.8 --listen 600` prints them).
+- [ ] APRS message to a second station (or the Android app) into a dummy load
+      nearby: it arrives, the acknowledgement turns the message *delivered*;
+      a message to the Mac's callsign is acknowledged.
 - [ ] Tune a memory with offset and tone: a second radio hears the TX on the
       offset frequency with the tone; scan stops on a busy memory.
 - [ ] Tuning is applied and confirmed by the radio

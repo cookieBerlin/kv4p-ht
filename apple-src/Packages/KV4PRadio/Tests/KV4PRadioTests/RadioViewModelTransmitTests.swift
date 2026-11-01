@@ -126,5 +126,7 @@ struct RadioViewModelTransmitTests {
     func messages() {
         #expect(RadioViewModel.message(for: RadioError.notReady) == "The radio is not ready.")
         #expect(RadioViewModel.message(for: RadioError.frequencyOutOfRange(1)) == "The radio is not ready.")
+        #expect(RadioViewModel.message(for: RadioError.busy) == "The radio is busy transmitting or scanning.")
+        #expect(RadioViewModel.message(for: RadioError.invalidPacket) == "The packet cannot be sent.")
     }
 }
