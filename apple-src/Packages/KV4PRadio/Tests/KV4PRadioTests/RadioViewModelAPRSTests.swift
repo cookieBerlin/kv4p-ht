@@ -7,6 +7,17 @@ import Testing
 
 @testable import KV4PRadio
 
+/// Milliseconds under test control.
+final class TestTime: Sendable {
+    private let value = Mutex<Int64>(1_000_000)
+
+    var ms: Int64 { value.withLock { $0 } }
+
+    func advance(by ms: Int64) {
+        value.withLock { $0 += ms }
+    }
+}
+
 /// The APRS feed of the radio screen.
 @MainActor
 @Suite("Radio view model APRS")
@@ -57,7 +68,7 @@ struct RadioViewModelAPRSTests {
     @MainActor
     final class Messaging {
         let simulator = Box<SimulatorTransport<ManualClock>>()
-        let time = Mutex<Int64>(1_000_000)
+        let time = TestTime()
         let microphone = FakeMicrophone()
         let model: RadioViewModel
 
@@ -73,7 +84,7 @@ struct RadioViewModelAPRSTests {
                     return RadioController(transport: transport, clock: clock, rxAudio: rxAudio, microphone: microphone)
                 },
                 serialDevices: { [] },
-                now: { time.withLock { $0 } },
+                now: { time.ms },
                 aprsTickInterval: .milliseconds(5)
             )
         }
@@ -91,7 +102,7 @@ struct RadioViewModelAPRSTests {
         }
 
         func advance(by ms: Int64) {
-            time.withLock { $0 += ms }
+            time.advance(by: ms)
         }
 
         func hear(_ tnc2: String) async throws {
@@ -169,7 +180,9 @@ struct RadioViewModelAPRSTests {
         #expect(await eventually { await setup.sent.count == 1 })
         setup.model.frequencyText = "146.52"
         await setup.model.applyFrequency()
-        #expect(await RadioViewModelTests.eventually(setup.model) { $0.snapshot.isInSync && $0.frequencyText == "146.5200" })
+        #expect(
+            await RadioViewModelTests.eventually(setup.model) { $0.snapshot.isInSync && $0.frequencyText == "146.5200" }
+        )
         setup.advance(by: 15_000)
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.aprsEvents.first?.deliveryState == .failed })
         setup.model.frequencyText = "150"

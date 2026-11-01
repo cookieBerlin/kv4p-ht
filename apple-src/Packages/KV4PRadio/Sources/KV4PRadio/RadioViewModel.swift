@@ -19,6 +19,7 @@ public protocol RadioControlling: Actor {
     func startTransmitting() async throws(RadioError)
     func stopTransmitting()
     func tune(to memory: ChannelMemory) throws(RadioError)
+    func transmitAX25(_ frame: [UInt8], frequency: Float) throws(RadioError)
     func startScan(_ memories: [ChannelMemory]) throws(RadioError)
     func stopScan()
 }
@@ -98,8 +99,16 @@ public final class RadioViewModel {
     public private(set) var aprsEvents: [APRSEvent] = []
 
     let rxAudio = RXAudioPlayer()
+    /// The station's callsign for APRS; empty disables sending.
+    public var callsign: String {
+        get { aprs.callsign }
+        set { aprs.callsign = newValue }
+    }
+
     private var aprs: APRSController
     private var packetObserver: Task<Void, Never>?
+    private var aprsTicker: Task<Void, Never>?
+    private let aprsTickInterval: Duration
     private let now: () -> Int64
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
@@ -120,11 +129,16 @@ public final class RadioViewModel {
         audioOutput: (any AudioOutput)? = nil,
         simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
         memories: (any MemoryRepository)? = nil,
-        now: @escaping () -> Int64 = RadioViewModel.systemTimeMs
+        now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
+        aprsTickInterval: Duration = .milliseconds(500)
     ) {
         repository = memories
         self.now = now
-        aprs = APRSController(startMs: now())
+        self.aprsTickInterval = aprsTickInterval
+        var aprs = APRSController(startMs: now())
+        aprs.txDestination = Self.aprsDestination
+        aprs.txPath = ["WIDE1-1", "WIDE2-1"].compactMap(AX25Address.init)
+        self.aprs = aprs
         self.makeController = makeController
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
@@ -204,6 +218,12 @@ public final class RadioViewModel {
                 self?.receive(frame)
             }
         }
+        let interval = aprsTickInterval
+        aprsTicker = Task { [weak self] in
+            while (try? await Task.sleep(for: interval)) != nil {
+                self?.tickAPRS()
+            }
+        }
         await controller.connect()
     }
 
@@ -212,6 +232,8 @@ public final class RadioViewModel {
         observer = nil
         packetObserver?.cancel()
         packetObserver = nil
+        aprsTicker?.cancel()
+        aprsTicker = nil
         await controller?.disconnect()
         audioOutput?.stop()
         controller = nil
@@ -241,12 +263,69 @@ public final class RadioViewModel {
     private func receive(_ frame: [UInt8]) {
         guard let packet = try? APRSParser.parse(ax25: frame) else { return }
         aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now())
-        aprsEvents = aprs.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
+        showAPRS()
     }
+
+    /// The AX.25 destination of the Android app (`APRS_TOCALL`).
+    static let aprsDestination = "APKVPA"
 
     /// The frequency packets are received on, in Hz.
     private var rxFrequencyHz: Int64? {
-        snapshot.deviceState.map { Int64((Double($0.radio.freqRx) * 1_000_000).rounded()) }
+        snapshot.deviceState.map { Self.hertz($0.radio.freqRx) }
+    }
+
+    /// `AprsRfFrequencyPolicy.toHz`: via the decimal text of the `Float`, so 144.8 is 144 800 000 Hz.
+    static func hertz(_ megahertz: Float) -> Int64 {
+        Int64((strtod(megahertz.description, nil) * 1_000_000).rounded())
+    }
+
+    /// `sendChatMessage`: `|`, `~` and `{` become spaces; without a recipient the message is the bulletin BLN1CQ.
+    public func sendAPRSMessage(to recipient: String, text: String) {
+        guard !callsign.isEmpty else {
+            message = "Set your callsign to send APRS messages."
+            return
+        }
+        let cleaned = String(text.map { "|~{".contains($0) ? " " : $0 })
+        let to = recipient.trimmingCharacters(in: .whitespaces).isEmpty ? "BLN1CQ" : recipient
+        let frequency = Self.hertz(snapshot.desired.freqTx)
+        let posted = aprs.post(to: to, text: cleaned, frequencyHz: frequency, atMs: now(), transmit: transmitAPRS)
+        if !posted {
+            message = "The APRS message was not accepted for transmission."
+        }
+        showAPRS()
+    }
+
+    private func tickAPRS() {
+        aprs.tick(atMs: now(), transmit: transmitAPRS)
+        showAPRS()
+    }
+
+    private func showAPRS() {
+        aprsEvents = aprs.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
+    }
+
+    /// `ServiceAprsCallbacks.submitRf` with `AprsRfFrequencyPolicy`: only while receiving; a reliable message stays on
+    /// its frequency, everything else goes out on the requested or current TX frequency, within the ham band.
+    private func transmitAPRS(_ request: APRSTransmitRequest) -> APRSTransmitOutcome {
+        guard isReady, !isTransmitting, !isScanning, let controller, let firmware = snapshot.firmware else {
+            return .later
+        }
+        let selected = Self.hertz(snapshot.desired.freqTx)
+        let reliable = request.purpose == .outgoingMessage || request.purpose == .reliableMessageRetry
+        if reliable, let requested = request.frequencyHz, requested != selected {
+            return .never  // the app does not retune to the original frequency
+        }
+        let hertz: Int64
+        switch (reliable, request.frequencyHz) {
+        case (false, let requested?): hertz = requested
+        default: hertz = selected
+        }
+        let megahertz = Float(Double(hertz) / 1_000_000)
+        guard TXBand.default(for: firmware.moduleType).allows(megahertz, bandwidth: snapshot.desired.bandwidth),
+            let frame = try? request.packet.ax25Frame()
+        else { return .later }
+        Task { try? await controller.transmitAX25(frame, frequency: megahertz) }
+        return .accepted(frequencyHz: hertz, frame: frame)
     }
 
     // MARK: Transmit
