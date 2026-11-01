@@ -48,9 +48,17 @@ Firmware flashing is available on macOS only.
 Yes: choose **Simulator** under **Radio** in the app. A Mac can also act as a
 virtual radio over Bluetooth for another device: `cd apple-src && swift run
 kv4p-sim-peripheral` advertises as `kv4p-sim` until stopped (add `--signal` to
-receive a 1 kHz tone)
+receive a 1 kHz tone, or a FreeDV test sound in FreeDV 2400B mode)
 ([ADR-0014](adr/0014-radio-simulator.md)). The Mac running it cannot connect to
 itself; use a second Mac, iPhone/iPad or the Android app.
+
+## Which FreeDV modes does the app support?
+
+FreeDV 2400B only, the mode the firmware's modem implements, as in the Android
+app. The app uses Codec2 1.2.0 in mode 1300, built from the same upstream
+source as the Android app ([ADR-0027](adr/0027-freedv-voice-and-codec2-vendoring.md)).
+The firmware image shipped with the Android app has no FreeDV modem; firmware
+built from the current source has it ([Which firmware do I need?](#which-firmware-do-i-need)).
 
 ## Why do I hear audio a moment after the squelch opens?
 

@@ -1,0 +1,4 @@
+# Paths the personal data check skips (repository-relative, one per line).
+# Only vendored third-party code, kept byte-identical to upstream by
+# `make vectors-check`: its copyright notices stay unmodified (ADR-0027).
+apple-src/Packages/KV4PDigital/Sources/CCodec2

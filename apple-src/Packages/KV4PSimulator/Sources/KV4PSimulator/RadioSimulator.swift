@@ -16,9 +16,10 @@ public struct TransmittedPacket: Equatable, Sendable {
 /// Every call takes the time since power-on and returns the bytes the device writes to the host. Times
 /// must not decrease. Deadlines that pass between calls (status reports, watchdog) are processed in order.
 ///
-/// RX audio follows `carrier`: without one the squelch is closed and the audio muted.
+/// RX audio follows `carrier`: without one the squelch is closed and the audio muted. In FreeDV 2400B mode the
+/// carrier's voice frames replace the RX audio, and a signal without them keeps the squelch closed.
 ///
-/// Not simulated yet: the squelch level, FreeDV, the AX.25 TX scheduler (accepted
+/// Not simulated yet: the squelch level, the FreeDV modem itself, the AX.25 TX scheduler (accepted
 /// packets are recorded in `transmittedPackets`) and the physical PTT button.
 public struct RadioSimulator: Sendable {
     public let scenario: Scenario
@@ -32,6 +33,9 @@ public struct RadioSimulator: Sendable {
     /// `HOST_TX_AUDIO` blocks accepted while transmitting, and the latest one.
     public private(set) var transmittedAudioBlocks = 0
     public private(set) var lastTransmittedAudio: [UInt8]?
+    /// `HOST_TX_DIGITAL` frames accepted while transmitting in FreeDV mode, and the latest one.
+    public private(set) var transmittedDigitalFrames = 0
+    public private(set) var lastTransmittedDigital: [UInt8]?
 
     private var parser = HostFrameParser()
     private var desired: RadioState
@@ -50,6 +54,8 @@ public struct RadioSimulator: Sendable {
     private var rxEncoder = ImaAdpcm.Encoder()
     /// Position in the tone, 0 ..< `KV4P.audioSampleRate`.
     private var toneIndex = 0
+    /// The next of the carrier's voice frames.
+    private var voiceFrameIndex = 0
 
     /// Boots the device at time zero.
     public init(scenario: Scenario = Scenario()) {
@@ -69,7 +75,7 @@ public struct RadioSimulator: Sendable {
         var radio = applied
         radio.sequence = desired.sequence
         radio.flags = desired.flags.union(sessionFlags)
-        if carrier == nil {
+        if !isSignalOpen {
             radio.flags.insert(.squelched)
         }
         if mode == .tx {
@@ -167,7 +173,7 @@ public struct RadioSimulator: Sendable {
             deadlines.append(lastReport + Firmware.statusReportInterval)
         }
         if streamsAudio {
-            deadlines.append(lastRXAudio + Firmware.audioBlockPeriod)
+            deadlines.append(lastRXAudio + rxPeriod)
         }
         if mode == .tx {
             deadlines.append(lastTXAudio + Firmware.txAudioTimeout)
@@ -197,11 +203,29 @@ public struct RadioSimulator: Sendable {
             lastRXAudio = now
         }
         var output: [UInt8] = []
-        while now - lastRXAudio >= Firmware.audioBlockPeriod {
-            lastRXAudio += Firmware.audioBlockPeriod
-            output += DeviceFrameEncoder.rxAudio(rxEncoder.encodeBlock(nextRXSamples()))
+        while now - lastRXAudio >= rxPeriod {
+            lastRXAudio += rxPeriod
+            output += isFreeDV ? nextVoiceFrame() : DeviceFrameEncoder.rxAudio(rxEncoder.encodeBlock(nextRXSamples()))
         }
         return output
+    }
+
+    private var isFreeDV: Bool { desired.flags.contains(.freeDV2400B) }
+
+    /// The squelch: any carrier opens it, in FreeDV mode only one with voice frames (`freeDvSquelch.open()`).
+    private var isSignalOpen: Bool {
+        guard let carrier else { return false }
+        return !isFreeDV || !carrier.voiceFrames.isEmpty
+    }
+
+    /// An `RX_AUDIO` block, or in FreeDV mode one decoded frame.
+    private var rxPeriod: Duration { isFreeDV ? Firmware.freeDVFramePeriod : Firmware.audioBlockPeriod }
+
+    /// `sendDigitalFrame()`: only frames the modem decoded; nothing while squelched.
+    private mutating func nextVoiceFrame() -> [UInt8] {
+        guard isSignalOpen, let frames = carrier?.voiceFrames else { return [] }
+        defer { voiceFrameIndex = (voiceFrameIndex + 1) % frames.count }
+        return DeviceFrameEncoder.rxDigital(frames[voiceFrameIndex % frames.count])
     }
 
     /// The tone of the carrier; silence while squelched (`mute.setActive(squelched)`).
@@ -259,7 +283,14 @@ public struct RadioSimulator: Sendable {
             }
         case .command(.txAX25, let payload):
             transmit(payload)
-        case .command(.txDigital, _), nil:
+        case .command(.txDigital, let payload):
+            // `processTxDigital`: one Codec2 frame, which also feeds the TX watchdog.
+            if mode == .tx, isFreeDV, payload.count == 7 {
+                lastTXAudio = now
+                transmittedDigitalFrames += 1
+                lastTransmittedDigital = payload
+            }
+        case nil:
             break
         }
     }

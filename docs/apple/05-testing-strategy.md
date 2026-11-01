@@ -44,8 +44,13 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
   `microcontroller-src/test/` where applicable.
 - The included Android sources are listed once in
   `tools/test-vectors/oracle-sources.txt`.
+- Codec2 1300 has its own generator, `tools/codec2-vectors/`: it vendors the
+  upstream commit codec2-android pins and encodes test signals with the pristine
+  build. Frames must match exactly; decoded frames only in level, because the
+  decoder draws random phases from a process-wide generator
+  ([ADR-0027](adr/0027-freedv-voice-and-codec2-vendoring.md)).
 - `make vectors` regenerates (JDK 17); `make vectors-check` fails if the output
-  differs from the committed files. The CI `vectors` job runs it whenever Apple
+  or the vendored Codec2 sources differ from the committed files. The CI `vectors` job runs it whenever Apple
   paths or the listed Android sources change, so upstream changes to the Android
   reference code surface as a failing check.
 

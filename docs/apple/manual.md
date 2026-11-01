@@ -171,7 +171,19 @@ digipeater is useful.
 
 ## FreeDV digital voice
 
-*Planned.* FreeDV 2400B mode, if the firmware reports support.
+FreeDV 2400B is digital voice on FM radios: the radio's firmware runs the
+modem, the app encodes and decodes the speech with Codec2.
+
+- Set **Voice mode** to *FreeDV 2400B* in the Radio tab. The setting needs
+  firmware with the FreeDV modem; otherwise the app says so and stays analog.
+- Receiving: the squelch opens only for FreeDV signals; analog stations are not
+  heard in this mode. The S-meter shows the signal quality.
+- Transmitting (licence required) works like analog voice: PTT, mic gain and the
+  same TX limits. Stations need FreeDV 2400B to understand you.
+- The radio keeps the setting while it is on, also when the app reconnects;
+  after a restart it is analog again. Switch back to *Analog* for normal FM.
+- Try it without a second radio: connect the **Simulator**, choose FreeDV 2400B
+  and turn on *Simulate a received signal*; you hear a vowel-like test sound.
 
 ## Settings
 
@@ -238,5 +250,8 @@ Used by developers before merging a milestone that touches hardware behaviour:
       and symbol; with digipeating on, a WIDE1-1 packet is repeated once.
 - [ ] Tune a memory with offset and tone: a second radio hears the TX on the
       offset frequency with the tone; scan stops on a busy memory.
+- [ ] FreeDV 2400B with a second FreeDV station (another kv4p HT with the
+      Android app) into a dummy load: voice is understood in both directions;
+      analog signals keep the squelch closed in FreeDV mode.
 - [ ] Tuning is applied and confirmed by the radio
       (`swift run kv4p-probe --serial --reset --tune 145.525`, then back).

@@ -12,6 +12,8 @@ enum Firmware {
     static let audioBlockPeriod = Duration.nanoseconds(
         Int64(KV4P.audioBlockSamples) * 1_000_000_000 / Int64(KV4P.audioSampleRate)
     )
+    /// One FreeDV 2400B frame: 320 Codec2 samples at 8 kHz.
+    static let freeDVFramePeriod = Duration.milliseconds(40)
     /// `RUNAWAY_TX_SEC`; TX stops once it is exceeded.
     static let runawayTX = Duration.seconds(200)
     /// `USB_BUFFER_SIZE`, the window of USB and Bluetooth Classic sessions.

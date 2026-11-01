@@ -45,6 +45,14 @@ struct RadioView: View {
                     ForEach(CTCSS.labels, id: \.self) { Text($0) }
                 }
                 Toggle("High power", isOn: $model.isHighPower)
+                Picker("Voice mode", selection: $model.isFreeDV) {
+                    Text("Analog").tag(false)
+                    Text("FreeDV 2400B").tag(true)
+                }
+                .disabled(!model.supportsFreeDV)
+                if model.isReady, !model.supportsFreeDV {
+                    Text("The firmware of this radio has no FreeDV 2400B modem.").foregroundStyle(.secondary)
+                }
             }
             .disabled(!model.isReady)
 

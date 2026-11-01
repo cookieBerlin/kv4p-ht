@@ -8,6 +8,7 @@ enum Event: Equatable {
     case window(UInt32)
     case ax25([UInt8])
     case audio([UInt8])
+    case digital([UInt8])
 }
 
 func events(_ bytes: [UInt8]) throws -> [Event] {
@@ -19,6 +20,7 @@ func events(_ bytes: [UInt8]) throws -> [Event] {
         case .command(.deviceState, let payload): .state(try DeviceState(decoding: payload))
         case .command(.windowUpdate, let payload): .window(try WindowUpdate(decoding: payload).size)
         case .command(.rxAudio, let payload): .audio(payload)
+        case .command(.rxDigital, let payload): .digital(payload)
         case .command(let command, _): throw UnexpectedCommand(command: command)
         }
     }
@@ -35,6 +37,10 @@ extension [Event] {
 
     var audioBlocks: [[UInt8]] {
         compactMap { if case .audio(let block) = $0 { block } else { nil } }
+    }
+
+    var digitalFrames: [[UInt8]] {
+        compactMap { if case .digital(let frame) = $0 { frame } else { nil } }
     }
 
     var windowUpdates: [UInt32] {

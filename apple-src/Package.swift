@@ -16,6 +16,7 @@ let package = Package(
         .library(name: "KV4PAudio", targets: ["KV4PAudio"]),
         .library(name: "KV4PPersistence", targets: ["KV4PPersistence"]),
         .library(name: "KV4PAPRS", targets: ["KV4PAPRS"]),
+        .library(name: "KV4PDigital", targets: ["KV4PDigital"]),
     ],
     targets: [
         .target(
@@ -58,6 +59,28 @@ let package = Package(
             path: "Packages/KV4PAPRS/Tests/KV4PAPRSTests",
             resources: [.copy("Vectors")]
         ),
+        // Codec2 1.2.0, vendored unmodified by tools/codec2-vectors (ADR-0027); only the 1300 mode is compiled.
+        .target(
+            name: "CCodec2",
+            path: "Packages/KV4PDigital/Sources/CCodec2",
+            cSettings: [
+                .define("CODEC2_MODE_EN_DEFAULT", to: "0"),
+                .define("CODEC2_MODE_1300_EN", to: "1"),
+                // Third-party code stays unmodified, so its warnings are not ours to fix.
+                .unsafeFlags(["-w"]),
+            ]
+        ),
+        .target(
+            name: "KV4PDigital",
+            dependencies: ["CCodec2", "KV4PAudio"],
+            path: "Packages/KV4PDigital/Sources/KV4PDigital"
+        ),
+        .testTarget(
+            name: "KV4PDigitalTests",
+            dependencies: ["KV4PDigital", "CCodec2", "KV4PAudio", "KV4PSimulator", "KV4PTestSupport"],
+            path: "Packages/KV4PDigital/Tests/KV4PDigitalTests",
+            resources: [.copy("Vectors")]
+        ),
         .target(
             name: "KV4PTransport",
             dependencies: ["KV4PProtocol"],
@@ -80,13 +103,14 @@ let package = Package(
         ),
         .target(
             name: "KV4PRadio",
-            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS"],
+            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital"],
             path: "Packages/KV4PRadio/Sources/KV4PRadio"
         ),
         .testTarget(
             name: "KV4PRadioTests",
             dependencies: [
-                "KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PSimulator", "KV4PTestSupport",
+                "KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital", "KV4PSimulator",
+                "KV4PTestSupport",
             ],
             path: "Packages/KV4PRadio/Tests/KV4PRadioTests",
             resources: [.copy("Vectors")]

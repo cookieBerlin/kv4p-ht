@@ -119,9 +119,30 @@ struct RadioViewModelTests {
         #expect(await eventually(model) { $0.snapshot.deviceState?.radio.bandwidth == 1 && $0.isWideBandwidth })
     }
 
+    @Test("FreeDV 2400B is offered and switched only if the firmware supports it")
+    func freeDV() async {
+        let analog = await connected()
+        #expect(!analog.supportsFreeDV)
+        var scenario = Scenario.ble
+        scenario.features.insert(.freeDV2400B)
+        let model = await connected(scenario)
+        #expect(model.supportsFreeDV)
+        #expect(!model.isFreeDV)
+        model.isFreeDV = true
+        #expect(
+            await eventually(model) {
+                $0.isFreeDV && $0.snapshot.deviceState?.radio.flags.contains(.freeDV2400B) == true
+            }
+        )
+        model.isFreeDV = false
+        #expect(await eventually(model) { !$0.isFreeDV && $0.snapshot.isInSync })
+    }
+
     @Test("settings before connecting are ignored")
     func settingsWhileDisconnected() async {
         let model = Self.model()
+        model.isFreeDV = true
+        #expect(!model.isFreeDV)
         model.squelch = 3
         model.frequencyText = "146.52"
         await model.applyFrequency()

@@ -19,6 +19,8 @@ public struct Scenario: Equatable, Sendable {
     public static let uhf = Scenario().with { $0.moduleType = .sa818UHF }
     public static let ble = Scenario().with { $0.windowSize = Firmware.bleWindowSize }
     public static let noRadioModule = Scenario().with { $0.radioModuleStatus = .notFound }
+    /// The current firmware source, which has the FreeDV 2400B modem (`getFirmwareFeatures`), over BLE.
+    public static let freeDV = ble.with { $0.features.insert(.freeDV2400B) }
 
     /// `moduleMinRadioFreq()` … `moduleMaxRadioFreq()`, MHz.
     var frequencyRange: ClosedRange<Float> { moduleType == .sa818UHF ? 400...480 : 134...174 }
@@ -33,18 +35,37 @@ public struct Scenario: Equatable, Sendable {
     }
 }
 
-/// A received signal: it opens the squelch and plays a tone (the squelch level is not simulated).
+/// A received signal: it opens the squelch and plays a tone (the squelch level is not simulated). A FreeDV 2400B
+/// signal carries `voiceFrames`, which the modem decodes in FreeDV mode; analog, it still sounds like the tone.
 public struct Carrier: Equatable, Sendable {
     public var toneHz: Int
     public var amplitude: Int16
     /// Raw SA818 RSSI, reported with `RSSI_ENABLED`.
     public var rssi: UInt8
+    /// Codec2 1300 frames, repeated; empty for an analog signal.
+    public var voiceFrames: [[UInt8]]
 
-    public init(toneHz: Int = 1000, amplitude: Int16 = 8000, rssi: UInt8 = 100) {
+    public init(toneHz: Int = 1000, amplitude: Int16 = 8000, rssi: UInt8 = 100, voiceFrames: [[UInt8]] = []) {
         self.toneHz = toneHz
         self.amplitude = amplitude
         self.rssi = rssi
+        self.voiceFrames = voiceFrames
     }
+
+    /// A FreeDV 2400B signal: in FreeDV mode a voiced sound with rising pitch, analog the tone. The frames are the
+    /// "voiced" vector of `tools/codec2-vectors`, which pins them.
+    public static let freeDVVoice = Carrier(
+        voiceFrames: [
+            [0xF3, 0x9B, 0x06, 0x57, 0x5C, 0xDD, 0x20], [0xF2, 0xF4, 0x06, 0x57, 0x5C, 0xDD, 0x20],
+            [0xF2, 0x56, 0x06, 0x57, 0x5C, 0xDD, 0x20], [0xF2, 0x13, 0x06, 0x47, 0x5D, 0xDD, 0x20],
+            [0xF6, 0x31, 0x06, 0x47, 0x5C, 0xDD, 0x20], [0xF6, 0xD0, 0x06, 0x47, 0x5C, 0xDD, 0x20],
+            [0xF6, 0xB0, 0x06, 0x47, 0x5C, 0xDD, 0x20], [0xF7, 0xB0, 0x06, 0x47, 0x5C, 0xDD, 0x20],
+            [0xF7, 0xD0, 0x06, 0x47, 0x5C, 0xDD, 0x20], [0xF7, 0x30, 0x06, 0x47, 0x5C, 0xDD, 0x20],
+            [0xF5, 0x10, 0x06, 0x47, 0x5C, 0xDD, 0x20], [0xF5, 0x50, 0x17, 0x47, 0x5D, 0xDD, 0x20],
+            [0xF5, 0xF1, 0x17, 0x47, 0x5D, 0xDD, 0x20], [0xF4, 0x92, 0x17, 0x47, 0x5C, 0xDD, 0x20],
+            [0xF4, 0xF5, 0x17, 0x47, 0x4D, 0xDD, 0x20], [0xF4, 0x7E, 0x17, 0x47, 0x4D, 0xDD, 0x20],
+        ]
+    )
 
     /// Sample `index` of the tone; `index` counts from 0 to `KV4P.audioSampleRate`, so the phase never drifts.
     func sample(_ index: Int) -> Int16 {

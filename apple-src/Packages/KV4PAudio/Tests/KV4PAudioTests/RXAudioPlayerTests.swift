@@ -28,6 +28,21 @@ struct RXAudioPlayerTests {
         #expect(player.render(Self.samples.count) == Self.decoded)
     }
 
+    /// FreeDV 2400B: decoded Codec2 audio arrives as samples and fades in like blocks (`decodeAndPlayFreeDvFrame`).
+    @Test("plays samples, which fade in like blocks")
+    func playsSamples() {
+        let plain = RXAudioPlayer(buffer: JitterBuffer(prefill: Self.samples.count, capacity: 16), fadesIn: false)
+        plain.receive(samples: Self.samples)
+        #expect(plain.render(Self.samples.count) == Self.samples.map { Float($0) / 32768 })
+        let fading = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 4096))
+        for _ in 0..<59 {
+            fading.receive(samples: [16384])
+        }
+        #expect(fading.render(59).allSatisfy { $0 == 0 })
+        fading.receive(samples: [16384])
+        #expect(fading.render(1).first ?? 0 > 0.35)
+    }
+
     @Test("scales the samples by the volume")
     func volume() {
         let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 16), fadesIn: false)

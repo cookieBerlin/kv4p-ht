@@ -26,7 +26,10 @@
         private var peak: Int16 = 0
 
         func receive(block: [UInt8]) {
-            let decoded = ImaAdpcm.decodeBlock(block, maxSamples: KV4P.audioBlockSamples)
+            receive(samples: ImaAdpcm.decodeBlock(block, maxSamples: KV4P.audioBlockSamples))
+        }
+
+        func receive(samples decoded: [Int16]) {
             lock.withLock {
                 arrivals.append(.now)
                 samples += decoded.count

@@ -45,7 +45,8 @@ jobs:
     needs: changes
     # Also runs when the Android sources the vectors are generated from change.
     if: needs.changes.outputs.vectors == 'true'
-    runs-on: ubuntu-latest
+    # macOS: the Codec2 vectors are built with Apple clang on arm64, like the tests (ADR-0027).
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
