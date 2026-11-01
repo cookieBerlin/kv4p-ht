@@ -34,6 +34,20 @@ public struct MessageField: Equatable, Sendable {
     }
 }
 
+extension MessageField {
+    /// `MessagePacket.createMessagePayload`: recipient padded to nine characters, at most 67 characters of text and
+    /// identifier, and an identifier of at most five characters.
+    public static func payload(to recipient: String, text: String, identifier: String?) -> [UInt8] {
+        let padded = recipient.count < 9 ? recipient + String(repeating: " ", count: 9 - recipient.count) : recipient
+        var suffix = ""
+        if let identifier, !Java.trim(identifier).isEmpty {
+            suffix = "{" + String(Java.trim(identifier).prefix(5))
+        }
+        let body = String(text.prefix(67 - suffix.count))
+        return Java.asciiBytes(":" + padded + ":" + body + suffix)
+    }
+}
+
 /// `>` status text (java-aprs `StatusField`), without a leading `DDHHMMz` timestamp.
 public struct StatusField: Equatable, Sendable {
     public let text: String

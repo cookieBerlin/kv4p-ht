@@ -98,7 +98,7 @@ public final class RadioViewModel {
     public private(set) var aprsEvents: [APRSEvent] = []
 
     let rxAudio = RXAudioPlayer()
-    private var aprsLog = APRSEventLog()
+    private var aprs: APRSController
     private var packetObserver: Task<Void, Never>?
     private let now: () -> Int64
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
@@ -124,6 +124,7 @@ public final class RadioViewModel {
     ) {
         repository = memories
         self.now = now
+        aprs = APRSController(startMs: now())
         self.makeController = makeController
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
@@ -239,8 +240,13 @@ public final class RadioViewModel {
     /// Frames that are not APRS are ignored, as on Android.
     private func receive(_ frame: [UInt8]) {
         guard let packet = try? APRSParser.parse(ax25: frame) else { return }
-        aprsLog.receive(packet, atMs: now())
-        aprsEvents = aprsLog.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
+        aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now())
+        aprsEvents = aprs.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
+    }
+
+    /// The frequency packets are received on, in Hz.
+    private var rxFrequencyHz: Int64? {
+        snapshot.deviceState.map { Int64((Double($0.radio.freqRx) * 1_000_000).rounded()) }
     }
 
     // MARK: Transmit
