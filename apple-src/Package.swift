@@ -15,6 +15,7 @@ let package = Package(
         .library(name: "KV4PRadio", targets: ["KV4PRadio"]),
         .library(name: "KV4PAudio", targets: ["KV4PAudio"]),
         .library(name: "KV4PPersistence", targets: ["KV4PPersistence"]),
+        .library(name: "KV4PAPRS", targets: ["KV4PAPRS"]),
     ],
     targets: [
         .target(
@@ -46,6 +47,16 @@ let package = Package(
             name: "KV4PPersistenceTests",
             dependencies: ["KV4PPersistence"],
             path: "Packages/KV4PPersistence/Tests/KV4PPersistenceTests"
+        ),
+        .target(
+            name: "KV4PAPRS",
+            path: "Packages/KV4PAPRS/Sources/KV4PAPRS"
+        ),
+        .testTarget(
+            name: "KV4PAPRSTests",
+            dependencies: ["KV4PAPRS", "KV4PTestSupport"],
+            path: "Packages/KV4PAPRS/Tests/KV4PAPRSTests",
+            resources: [.copy("Vectors")]
         ),
         .target(
             name: "KV4PTransport",
