@@ -114,7 +114,9 @@ struct RadioViewModelSettingsTests {
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady && $0.snapshot.isInSync })
         model.frequencyText = "147.5"
         await model.applyFrequency()
-        #expect(await RadioViewModelTests.eventually(model) { $0.snapshot.isInSync && $0.frequencyText == "147.5000" })
+        #expect(
+            await RadioViewModelTests.eventually(model) { $0.snapshot.isInSync && $0.snapshot.desired.freqTx == 147.5 }
+        )
         #expect(!model.canTransmit)
         model.txLimits.max2m = 148
         #expect(await RadioViewModelTests.eventually(model) { $0.canTransmit })
