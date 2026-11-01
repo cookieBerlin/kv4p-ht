@@ -15,22 +15,26 @@ struct RadioViewModelTests {
     /// Every connection is served by a simulator with `scenario`.
     static func model(_ scenario: Scenario = .ble) -> RadioViewModel {
         RadioViewModel(
-            makeController: { _ in
+            makeController: { _, rxAudio in
                 let clock = ManualClock()
                 let transport = SimulatorTransport(simulator: RadioSimulator(scenario: scenario), clock: clock)
-                return RadioController(transport: transport, clock: clock)
+                return RadioController(transport: transport, clock: clock, rxAudio: rxAudio)
             },
             serialDevices: { [serialDevice] }
         )
     }
 
     /// Waits until the model reaches `condition` (snapshots arrive asynchronously).
-    func eventually(_ model: RadioViewModel, _ condition: (RadioViewModel) -> Bool) async -> Bool {
+    static func eventually(_ model: RadioViewModel, _ condition: (RadioViewModel) -> Bool) async -> Bool {
         for _ in 0..<100_000 {
             if condition(model) { return true }
             await Task.yield()
         }
         return condition(model)
+    }
+
+    func eventually(_ model: RadioViewModel, _ condition: (RadioViewModel) -> Bool) async -> Bool {
+        await Self.eventually(model, condition)
     }
 
     func connected(_ scenario: Scenario = .ble) async -> RadioViewModel {
