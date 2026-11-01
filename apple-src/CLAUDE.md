@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 1.10d (APRS-IS and iGate). The structure below is the target layout
+> Status: milestone 1.11 (FreeDV 2400B). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -27,7 +27,7 @@ apple-src/
 │   ├── KV4PProtocol/    # KISS framing, KV4P vendor frames, HELLO/DeviceState codecs
 │   ├── KV4PTransport/   # Transport abstraction; BLE (CoreBluetooth) + USB serial (macOS) adapters
 │   ├── KV4PAudio/       # IMA ADPCM, resampling, audio pipeline, AVAudioEngine adapter
-│   ├── KV4PDigital/     # Codec2 / FreeDV wrapper (C library)
+│   ├── KV4PDigital/     # FreeDV voice; CCodec2: Codec2 1.2.0 vendored by tools/codec2-vectors
 │   ├── KV4PAPRS/        # AX.25 / APRS encode + decode
 │   ├── KV4PRadio/       # Radio controller, state machine, use cases, view models
 │   ├── KV4PPersistence/ # Memories, settings, APRS history
@@ -41,6 +41,7 @@ apple-src/
 ├── scripts/             # coverage gate, privacy check, change detection
 ├── apple-paths.txt      # Apple port paths (CI change detection, privacy check)
 ├── coverage-exclusions.txt
+├── privacy-exclusions.txt   # vendored third-party code the privacy check skips
 └── Makefile             # single entry point, used locally and in CI
 ```
 
@@ -58,8 +59,8 @@ make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
 make ios-build  # compile all modules for iOS (no simulator)
 make app        # build the app (App/KV4PHT.xcodeproj) for macOS and iOS, unsigned
 make ci         # everything CI runs, in the same order
-make vectors    # regenerate golden test vectors from the unmodified Android code
-make vectors-check # make vectors, then fail if the committed vectors differ
+make vectors    # regenerate golden test vectors (Android code, vendored Codec2)
+make vectors-check # make vectors, then fail if the committed vectors or Codec2 sources differ
 swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz>] [--listen <s>]  # hardware check
 swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]  # simulated radio over BLE
 ```

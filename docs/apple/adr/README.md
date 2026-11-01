@@ -30,3 +30,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0024](0024-aprs-messaging.md) | APRS messaging | Proposed |
 | [0025](0025-aprs-beacons-and-digipeating.md) | APRS position beacons and digipeating | Proposed |
 | [0026](0026-aprs-is-and-igate.md) | APRS-IS and iGate | Proposed |
+| [0027](0027-freedv-voice-and-codec2-vendoring.md) | FreeDV 2400B voice and vendored Codec2 | Proposed |
