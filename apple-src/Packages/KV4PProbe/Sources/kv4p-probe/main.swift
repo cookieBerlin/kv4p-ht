@@ -4,6 +4,7 @@
     import Foundation
     import KV4PAPRS
     import KV4PAudio
+    import KV4PFlasher
     import KV4PProtocol
     import KV4PRadio
     import KV4PTransport
@@ -12,7 +13,10 @@
         usage: kv4p-probe [--ble [<peripheral UUID>]] [--verbose] [--tune <MHz> | --listen <seconds>]
                kv4p-probe --serial [<device>] [--reset] [--verbose] [--tune <MHz> | --listen <seconds>]
                kv4p-probe --list
+               kv4p-probe --flash <directory> [<device>]
         Connects, waits up to 10 s for HELLO and prints it.
+        With --flash, writes bootloader.bin, partitions.bin, boot_app0.bin and firmware.bin from <directory> over USB,
+        as the app does, and verifies them.
         With --tune <MHz>, the RadioController handshakes, tunes RX and TX and waits until the radio confirms.
         With --listen <seconds>, it receives RX audio and prints the block rate and the largest gap, and every APRS
         packet; with --tune as well, it tunes first.
@@ -118,6 +122,49 @@
     case "--list":
         print(POSIXSerialPort.devices().joined(separator: "\n"))
         exit(0)
+    case "--flash":
+        guard arguments.count >= 2 else { fail(usage) }
+        let directory = URL(fileURLWithPath: arguments[1])
+        guard let path = arguments.dropFirst(2).first ?? POSIXSerialPort.devices().first else {
+            fail("no USB serial device found")
+        }
+        func image(_ name: String) -> [UInt8] {
+            guard let data = FileManager.default.contents(atPath: directory.appending(path: name).path) else {
+                fail("\(name) not found in \(directory.path)")
+            }
+            return Array(data)
+        }
+        let images = FirmwareImages(
+            bootloader: image("bootloader.bin"),
+            partitions: image("partitions.bin"),
+            bootApp0: image("boot_app0.bin"),
+            app: image("firmware.bin")
+        )
+        print(
+            "flashing \(path): \([images.bootloader, images.partitions, images.bootApp0, images.app].map(\.count)) bytes"
+        )
+        let port = SerialBootloaderPort(port: POSIXSerialPort(path: path), clock: ContinuousClock())
+        let start = ContinuousClock.now
+        do {
+            try await port.open()
+            let flasher = ESP32Flasher(port: port, clock: ContinuousClock(), stub: try FlasherStub.esp32())
+            var last = -1
+            try await flasher.flash(images) { event in
+                switch event {
+                case .connected: print("bootloader answered")
+                case .progress(let percent) where percent != last:
+                    last = percent
+                    print("\(percent) %")
+                case .progress: break
+                }
+            }
+            await port.close()
+            print("flashed and verified in \(ContinuousClock.now - start)")
+            exit(0)
+        } catch {
+            await port.close()
+            fail("flashing failed: \(error)")
+        }
     case "--serial":
         guard let path = operand ?? POSIXSerialPort.devices().first else { fail("no USB serial device found") }
         print("serial \(path)")
