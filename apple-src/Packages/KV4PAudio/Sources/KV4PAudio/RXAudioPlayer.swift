@@ -1,9 +1,11 @@
 import KV4PProtocol
 import Synchronization
 
-/// Takes the `RX_AUDIO` blocks of the radio.
+/// Takes the `RX_AUDIO` blocks of the radio, or in FreeDV 2400B mode the decoded voice.
 public protocol RXAudioSink: Sendable {
     func receive(block: [UInt8])
+    /// 16 kHz samples, e.g. decoded Codec2 frames.
+    func receive(samples: [Int16])
     /// Discards buffered audio, e.g. when the connection ends.
     func reset()
 }
@@ -58,7 +60,11 @@ public final class RXAudioPlayer: RXAudioSink {
     }
 
     public func receive(block: [UInt8]) {
-        let samples = ImaAdpcm.decodeBlock(block, maxSamples: KV4P.audioBlockSamples)
+        receive(samples: ImaAdpcm.decodeBlock(block, maxSamples: KV4P.audioBlockSamples))
+    }
+
+    /// Like a block, every call moves the fade-in on (`decodeAndPlayFreeDvFrame` calls `ensureAudioPlaying`, too).
+    public func receive(samples: [Int16]) {
         state.withLock { state in
             state.buffer.push(samples)
             state.fade = Self.fadeStep + (1 - Self.fadeStep) * state.fade

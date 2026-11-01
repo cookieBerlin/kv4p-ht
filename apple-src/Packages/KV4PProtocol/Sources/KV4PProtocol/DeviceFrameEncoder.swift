@@ -17,6 +17,11 @@ public enum DeviceFrameEncoder {
         vendor(.rxAudio, block)
     }
 
+    /// One Codec2 1300 frame received in FreeDV 2400B mode.
+    public static func rxDigital(_ frame: [UInt8]) -> [UInt8] {
+        vendor(.rxDigital, frame)
+    }
+
     /// KISS DATA frame carrying a received AX.25 packet without FCS.
     public static func ax25(_ packet: [UInt8]) -> [UInt8] {
         KISS.frame(command: KISS.Command.data, payload: packet)

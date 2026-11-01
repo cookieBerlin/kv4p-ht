@@ -11,6 +11,7 @@ import Testing
 final class RecordingSink: RXAudioSink {
     enum Event: Equatable {
         case block([UInt8])
+        case samples([Int16])
         case reset
     }
 
@@ -23,6 +24,10 @@ final class RecordingSink: RXAudioSink {
 
     func receive(block: [UInt8]) {
         continuation.yield(.block(block))
+    }
+
+    func receive(samples: [Int16]) {
+        continuation.yield(.samples(samples))
     }
 
     func reset() {

@@ -33,17 +33,21 @@ public struct Scenario: Equatable, Sendable {
     }
 }
 
-/// A received signal: it opens the squelch and plays a tone (the squelch level is not simulated).
+/// A received signal: it opens the squelch and plays a tone (the squelch level is not simulated). A FreeDV 2400B
+/// signal carries `voiceFrames`, which the modem decodes in FreeDV mode; analog, it still sounds like the tone.
 public struct Carrier: Equatable, Sendable {
     public var toneHz: Int
     public var amplitude: Int16
     /// Raw SA818 RSSI, reported with `RSSI_ENABLED`.
     public var rssi: UInt8
+    /// Codec2 1300 frames, repeated; empty for an analog signal.
+    public var voiceFrames: [[UInt8]]
 
-    public init(toneHz: Int = 1000, amplitude: Int16 = 8000, rssi: UInt8 = 100) {
+    public init(toneHz: Int = 1000, amplitude: Int16 = 8000, rssi: UInt8 = 100, voiceFrames: [[UInt8]] = []) {
         self.toneHz = toneHz
         self.amplitude = amplitude
         self.rssi = rssi
+        self.voiceFrames = voiceFrames
     }
 
     /// Sample `index` of the tone; `index` counts from 0 to `KV4P.audioSampleRate`, so the phase never drifts.
