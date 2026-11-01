@@ -1,4 +1,5 @@
 import Foundation
+import KV4PAPRS
 import KV4PAudio
 import KV4PPersistence
 import KV4PRadio
@@ -20,8 +21,14 @@ enum Composition {
             audioOutput: AVAudioEngineOutput(),
             simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? Carrier() : nil) },
             memories: memoryRepository(),
-            location: CoreLocationProvider()
+            location: CoreLocationProvider(),
+            internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector())
         )
+    }
+
+    /// `CFBundleShortVersionString`, sent in the APRS-IS login.
+    private static var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
     }
 
     /// The memories live in the app's Application Support folder; without it the app runs without memories.

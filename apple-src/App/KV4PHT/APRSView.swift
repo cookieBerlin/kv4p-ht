@@ -32,6 +32,18 @@ struct APRSView: View {
                 Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
                     .disabled(storedCallsign.isEmpty)
             }
+            HStack {
+                Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
+                Toggle("Show nearby APRS-IS packets", isOn: $model.isInternetFeedEnabled)
+                if model.isIGateEnabled || model.isInternetFeedEnabled {
+                    Label(
+                        model.isInternetConnected ? "APRS-IS connected" : "Connecting to APRS-IS…",
+                        systemImage: model.isInternetConnected ? "network" : "network.slash"
+                    )
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!model.canUseInternet || storedCallsign.isEmpty)
             messageLine
         }
     }
