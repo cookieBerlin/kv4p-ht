@@ -1,10 +1,12 @@
 package io.github.kv4pht.vectors;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.dkaukov.esp32.chip.Esp32ChipId;
 
 /**
  * Writes golden test vectors produced by the unmodified Android code to
@@ -37,6 +39,21 @@ public final class Main {
         write(packages, "KV4PAPRS", "aprs-is-login.json", "java-aprs AprsIsClient login", AprsVectors.login());
         write(packages, "KV4PAPRS", "aprs-encoding.json", "java-aprs MessagePacket and APRSPacket.toAX25Frame",
             AprsVectors.encoding());
+        write(packages, "KV4PFlasher", "flasher.json", "FirmwareUtils.flashFirmware (esp32-flash-lib)",
+            FlasherVectors.all());
+        write(packages, "KV4PFlasher", "packaged-firmware.json", "FirmwareUtils.PACKAGED_FIRMWARE_VER",
+            FlasherVectors.packaged());
+        writeStub(packages);
+    }
+
+    /** The esptool flasher stub esp32-flash-lib loads into an ESP32, copied unchanged as a resource. */
+    private static void writeStub(Path packages) throws IOException {
+        String name = Esp32ChipId.ESP32.getStubName();
+        Path dir = packages.resolve("KV4PFlasher").resolve("Sources").resolve("KV4PFlasher").resolve("Resources");
+        Files.createDirectories(dir);
+        try (InputStream stub = Main.class.getClassLoader().getResourceAsStream(name)) {
+            Files.write(dir.resolve("esp32-stub.json"), stub.readAllBytes());
+        }
     }
 
     private static void write(Path packages, String module, String file, String source, List<Object> vectors)

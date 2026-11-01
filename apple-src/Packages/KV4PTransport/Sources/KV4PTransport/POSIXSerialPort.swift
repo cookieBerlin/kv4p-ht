@@ -51,6 +51,17 @@
             return stream
         }
 
+        public func setBaudRate(_ rate: Int) throws(TransportError) {
+            let fd = descriptor.withLock { $0 }
+            var options = termios()
+            guard tcgetattr(fd, &options) == 0 else { throw .ioFailed(errno: errno) }
+            cfsetspeed(&options, speed_t(rate))
+            guard tcsetattr(fd, TCSADRAIN, &options) != 0 else { return }
+            // Rates termios does not know, e.g. 921600, need IOSSIOSPEED (`_IOW('T', 2, speed_t)`, IOKit/serial/ioss.h).
+            var speed = speed_t(rate)
+            guard ioctl(fd, 0x8008_5402, &speed) == 0 else { throw .ioFailed(errno: errno) }
+        }
+
         public func setModemLines(dtr: Bool, rts: Bool) throws(TransportError) {
             let fd = descriptor.withLock { $0 }
             var lines: Int32 = 0

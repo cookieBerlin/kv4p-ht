@@ -17,6 +17,7 @@ let package = Package(
         .library(name: "KV4PPersistence", targets: ["KV4PPersistence"]),
         .library(name: "KV4PAPRS", targets: ["KV4PAPRS"]),
         .library(name: "KV4PDigital", targets: ["KV4PDigital"]),
+        .library(name: "KV4PFlasher", targets: ["KV4PFlasher"]),
     ],
     targets: [
         .target(
@@ -81,6 +82,19 @@ let package = Package(
             path: "Packages/KV4PDigital/Tests/KV4PDigitalTests",
             resources: [.copy("Vectors")]
         ),
+        // ESP32 ROM bootloader flashing like esp32-flash-lib (ADR-0009, ADR-0028).
+        .target(
+            name: "KV4PFlasher",
+            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            path: "Packages/KV4PFlasher/Sources/KV4PFlasher",
+            resources: [.copy("Resources")]
+        ),
+        .testTarget(
+            name: "KV4PFlasherTests",
+            dependencies: ["KV4PFlasher", "KV4PProtocol", "KV4PTransport", "KV4PTestSupport"],
+            path: "Packages/KV4PFlasher/Tests/KV4PFlasherTests",
+            resources: [.copy("Vectors")]
+        ),
         .target(
             name: "KV4PTransport",
             dependencies: ["KV4PProtocol"],
@@ -103,14 +117,17 @@ let package = Package(
         ),
         .target(
             name: "KV4PRadio",
-            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital"],
+            dependencies: [
+                "KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital",
+                "KV4PFlasher",
+            ],
             path: "Packages/KV4PRadio/Sources/KV4PRadio"
         ),
         .testTarget(
             name: "KV4PRadioTests",
             dependencies: [
-                "KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital", "KV4PSimulator",
-                "KV4PTestSupport",
+                "KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital", "KV4PFlasher",
+                "KV4PSimulator", "KV4PTestSupport",
             ],
             path: "Packages/KV4PRadio/Tests/KV4PRadioTests",
             resources: [.copy("Vectors")]
@@ -118,7 +135,7 @@ let package = Package(
         // Development tool for the hardware checklist (macOS).
         .executableTarget(
             name: "kv4p-probe",
-            dependencies: ["KV4PProtocol", "KV4PRadio", "KV4PTransport", "KV4PAudio", "KV4PAPRS"],
+            dependencies: ["KV4PProtocol", "KV4PRadio", "KV4PTransport", "KV4PAudio", "KV4PAPRS", "KV4PFlasher"],
             path: "Packages/KV4PProbe/Sources/kv4p-probe"
         ),
         // Simulated kv4p HT over real BLE (macOS), ADR-0014 B.
@@ -130,6 +147,7 @@ let package = Package(
         // Test doubles shared by the test targets (manual clock); not part of any product.
         .target(
             name: "KV4PTestSupport",
+            dependencies: ["KV4PTransport"],
             path: "Packages/KV4PTestSupport/Sources/KV4PTestSupport"
         ),
         .testTarget(

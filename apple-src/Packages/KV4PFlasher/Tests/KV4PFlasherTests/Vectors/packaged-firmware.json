@@ -1,0 +1,13 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "FirmwareUtils.PACKAGED_FIRMWARE_VER",
+  "vectors": [
+    {
+      "name": "packaged firmware",
+      "input": {},
+      "expected": {
+        "version": 17
+      }
+    }
+  ]
+}

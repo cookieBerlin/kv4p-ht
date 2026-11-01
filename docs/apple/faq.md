@@ -27,8 +27,9 @@ current source sets the FreeDV feature flag, which the older image lacks.
 
 ## Can I update the firmware from the Apple app?
 
-On a Mac, yes: connect the radio by USB and use the firmware update function
-*(planned)*. On iPhone and iPad this is not possible because iOS does not allow
+On a Mac, yes: connect the radio by USB and choose **Update firmware…**
+([Firmware updates](manual.md#firmware-updates)). It writes the firmware the
+Android app ships, which has no Bluetooth LE. On iPhone and iPad this is not possible because iOS does not allow
 access to the radio's USB port; use the web flasher on the project website with
 desktop Chrome or Edge, the Android app, or a Mac. See
 [Firmware updates](manual.md#firmware-updates).

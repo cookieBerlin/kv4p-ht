@@ -14,6 +14,11 @@
 		A10000000000000000000005 /* KV4PAudio in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000005 /* KV4PAudio */; };
 		A10000000000000000000006 /* KV4PPersistence in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000006 /* KV4PPersistence */; };
 		A10000000000000000000007 /* KV4PAPRS in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000007 /* KV4PAPRS */; };
+		A10000000000000000000008 /* KV4PFlasher in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000008 /* KV4PFlasher */; };
+		A1000000000000000000000A /* bootloader.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000006 /* bootloader.bin */; platformFilters = (macos, ); };
+		A1000000000000000000000B /* partitions.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* partitions.bin */; platformFilters = (macos, ); };
+		A1000000000000000000000C /* boot_app0.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* boot_app0.bin */; platformFilters = (macos, ); };
+		A1000000000000000000000D /* firmware_v17.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000009 /* firmware_v17.bin */; platformFilters = (macos, ); };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +27,10 @@
 		A30000000000000000000003 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../Config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000004 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../Config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000005 /* KV4PHT.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KV4PHT.entitlements; sourceTree = "<group>"; };
+		A30000000000000000000006 /* bootloader.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = bootloader.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/bootloader.bin; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000007 /* partitions.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = partitions.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/partitions.bin; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000008 /* boot_app0.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = boot_app0.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/boot_app0.bin; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000009 /* firmware_v17.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = firmware_v17.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/firmware_v17.bin; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -40,6 +49,7 @@
 				A10000000000000000000005 /* KV4PAudio in Frameworks */,
 				A10000000000000000000006 /* KV4PPersistence in Frameworks */,
 				A10000000000000000000007 /* KV4PAPRS in Frameworks */,
+				A10000000000000000000008 /* KV4PFlasher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,6 +62,7 @@
 				A40000000000000000000001 /* KV4PHT */,
 				A30000000000000000000005 /* KV4PHT.entitlements */,
 				A60000000000000000000002 /* Config */,
+				A60000000000000000000004 /* Firmware */,
 				A60000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -72,6 +83,17 @@
 				A30000000000000000000001 /* KV4PHT.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A60000000000000000000004 /* Firmware */ = {
+			isa = PBXGroup;
+			children = (
+				A30000000000000000000006 /* bootloader.bin */,
+				A30000000000000000000007 /* partitions.bin */,
+				A30000000000000000000008 /* boot_app0.bin */,
+				A30000000000000000000009 /* firmware_v17.bin */,
+			);
+			name = Firmware;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -101,6 +123,7 @@
 				A20000000000000000000005 /* KV4PAudio */,
 				A20000000000000000000006 /* KV4PPersistence */,
 				A20000000000000000000007 /* KV4PAPRS */,
+				A20000000000000000000008 /* KV4PFlasher */,
 			);
 			productName = KV4PHT;
 			productReference = A30000000000000000000001 /* KV4PHT.app */;
@@ -148,6 +171,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1000000000000000000000A /* bootloader.bin in Resources */,
+				A1000000000000000000000B /* partitions.bin in Resources */,
+				A1000000000000000000000C /* boot_app0.bin in Resources */,
+				A1000000000000000000000D /* firmware_v17.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -248,6 +275,10 @@
 		A20000000000000000000007 /* KV4PAPRS */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KV4PAPRS;
+		};
+		A20000000000000000000008 /* KV4PFlasher */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KV4PFlasher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -191,11 +191,17 @@ modem, the app encodes and decodes the speech with Codec2.
 
 ## Firmware updates
 
-The app warns when the radio's firmware is older than required.
+The app warns when the radio's firmware is older than required or missing
+(*The radio needs a firmware update.*).
 
-- 🖥 *Planned:* connect the radio by USB and start the update from the notice or
-  from Settings. Do not disconnect the cable until the update has finished and
-  been verified. If an update fails, simply start it again.
+- 🖥 Connect the radio by USB, select it under **Radio** and choose **Update
+  firmware…**, then **Flash**. The app writes firmware 17, the version the
+  Android app ships, verifies it and reconnects, in less than a minute. Do
+  not disconnect the cable until *Firmware updated and verified.* appears. If an
+  update fails, simply start it again: the radio's bootloader is always there.
+- Firmware built from the current source has Bluetooth LE; the version the app
+  ships does not ([FAQ](faq.md#which-firmware-do-i-need)). Updating such a radio
+  removes Bluetooth LE, so update only if the radio needs it.
 - 📱 Updating from iPhone or iPad is not possible. Use the web flasher on the
   project website (desktop Chrome or Edge), the Android app or a Mac.
 
@@ -215,6 +221,8 @@ The app warns when the radio's firmware is older than required.
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
 | *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |
 | *Connect the radio first, …* | The import needs the radio's frequency range; connect, then import again. |
+| *The radio did not start its bootloader.* | Check the USB cable (it must carry data) and close other apps that use the port, then update again. |
+| *The radio stopped answering during the update.* / *The firmware could not be verified.* | Start the update again; it can always be repeated. |
 | *The audio output cannot be started.* | Check the output device in System Settings → Sound, then connect again. The radio works without audio. |
 
 See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
@@ -250,6 +258,9 @@ Used by developers before merging a milestone that touches hardware behaviour:
       and symbol; with digipeating on, a WIDE1-1 packet is repeated once.
 - [ ] Tune a memory with offset and tone: a second radio hears the TX on the
       offset frequency with the tone; scan stops on a busy memory.
+- [ ] 🖥 Firmware update over USB: *Update firmware…* (or `swift run kv4p-probe
+      --flash <directory>` with images built from `microcontroller-src`)
+      flashes and verifies; the radio answers over USB and BLE afterwards.
 - [ ] FreeDV 2400B with a second FreeDV station (another kv4p HT with the
       Android app) into a dummy load: voice is understood in both directions;
       analog signals keep the squelch closed in FreeDV mode.

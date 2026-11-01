@@ -1,6 +1,7 @@
 import Foundation
 import KV4PAPRS
 import KV4PAudio
+import KV4PFlasher
 import KV4PPersistence
 import KV4PRadio
 import KV4PSimulator
@@ -22,7 +23,8 @@ enum Composition {
             simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? .freeDVVoice : nil) },
             memories: memoryRepository(),
             location: CoreLocationProvider(),
-            internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector())
+            internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
+            firmware: firmwareFlasher()
         )
     }
 
@@ -52,6 +54,17 @@ enum Composition {
     }
 
     #if os(macOS)
+        /// The firmware images the build copies from the Android app (ADR-0009); flashing keeps the Mac awake.
+        private static func firmwareFlasher() -> (any FirmwareFlashing)? {
+            guard let resources = Bundle.main.resourceURL, let images = FirmwareImages.packaged(in: resources),
+                let stub = try? FlasherStub.esp32()
+            else { return nil }
+            let flasher = FirmwareFlasher(images: images, stub: stub, clock: ContinuousClock()) {
+                SerialBootloaderPort(port: POSIXSerialPort(path: $0), clock: ContinuousClock())
+            }
+            return AwakeFirmwareFlasher(flasher: flasher)
+        }
+
         /// The radio restarts on connect so that it sends HELLO.
         private static func serialTransport(_ path: String) -> any RadioTransport {
             SerialTransport(port: POSIXSerialPort(path: path), resetOnConnect: true)
@@ -61,6 +74,10 @@ enum Composition {
             POSIXSerialPort.devices()
         }
     #else
+        private static func firmwareFlasher() -> (any FirmwareFlashing)? {
+            nil
+        }
+
         private static func serialTransport(_ path: String) -> any RadioTransport {
             SimulatorTransport()
         }
@@ -69,6 +86,20 @@ enum Composition {
             []
         }
     #endif
+}
+
+/// Keeps the Mac from sleeping while the firmware is written.
+private struct AwakeFirmwareFlasher: FirmwareFlashing {
+    let flasher: any FirmwareFlashing
+
+    func flash(serialPath: String, events: @Sendable (FlashEvent) -> Void) async throws(FlashError) {
+        let activity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiated, .idleSystemSleepDisabled],
+            reason: "Updating the radio's firmware"
+        )
+        defer { ProcessInfo.processInfo.endActivity(activity) }
+        try await flasher.flash(serialPath: serialPath, events: events)
+    }
 }
 
 @MainActor

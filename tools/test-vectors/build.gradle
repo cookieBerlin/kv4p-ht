@@ -27,6 +27,9 @@ sourceSets {
             include 'io/github/dkaukov/aprs/AprsIsAccess.java'
             include 'android/**'
             include 'androidx/**'
+            include 'com/hoho/android/usbserial/driver/UsbSerialPort.java'
+            include 'com/vagell/kv4pht/R.java'
+            include 'pl/brightinventions/slf4android/**'
         }
     }
 }
@@ -37,6 +40,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.46'
     // Same APRS library and version as android-src/KV4PHT/app/build.gradle (ADR-0006).
     implementation 'io.github.dkaukov:java-aprs:0.2.5'
+    // Same flasher library and version as android-src/KV4PHT/app/build.gradle (ADR-0009).
+    implementation 'io.github.dkaukov:esp32-flash-lib:1.1.17'
 }
 
 tasks.withType(JavaCompile).configureEach {

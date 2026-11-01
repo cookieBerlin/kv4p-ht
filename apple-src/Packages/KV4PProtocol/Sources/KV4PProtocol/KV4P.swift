@@ -3,6 +3,8 @@
 /// Specification: `docs/apple/03-protocol-spec.md` §3.
 public enum KV4P {
     public static let protocolVersion: UInt8 = 0x01
+    /// The firmware the Android app ships (`FirmwareUtils.PACKAGED_FIRMWARE_VER`); older firmware needs an update.
+    public static let packagedFirmwareVersion: UInt16 = 17
     public static let vendorPrefix: [UInt8] = Array("KV4P".utf8)
     /// `"KV4P"` + version + command.
     public static let vendorHeaderLength = vendorPrefix.count + 2

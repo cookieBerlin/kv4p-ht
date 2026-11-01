@@ -13,7 +13,7 @@ struct RadioView: View {
                 Picker("Radio", selection: $model.selectedConnection) {
                     ForEach(model.connections) { Text($0.label).tag($0) }
                 }
-                .disabled(!model.canConnect)
+                .disabled(!model.canConnect || model.firmwareUpdate.isRunning)
                 HStack {
                     Text(model.statusText)
                         .foregroundStyle(model.message == nil ? Color.secondary : Color.red)
@@ -21,12 +21,16 @@ struct RadioView: View {
                     if model.canConnect {
                         Button("Connect") { Task { await model.connect() } }
                             .keyboardShortcut(.defaultAction)
+                            .disabled(model.firmwareUpdate.isRunning)
                     } else {
                         Button("Disconnect") { Task { await model.disconnect() } }
                     }
                 }
                 if let firmware = model.firmwareText {
                     Text(firmware).foregroundStyle(.secondary)
+                }
+                if model.canUpdateFirmware || model.firmwareUpdate != .idle {
+                    FirmwareUpdateRow(model: model)
                 }
             }
 
@@ -106,6 +110,39 @@ struct RadioView: View {
         .formStyle(.grouped)
         .frame(minWidth: 420)
         .onAppear { model.refreshConnections() }
+    }
+}
+
+/// `FirmwareActivity`: flashes the packaged firmware after a confirmation, with progress and the result.
+private struct FirmwareUpdateRow: View {
+    let model: RadioViewModel
+    @State private var isConfirming = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if model.isFirmwareOutdated {
+                Text("The radio needs a firmware update.").foregroundStyle(.orange)
+            }
+            switch model.firmwareUpdate {
+            case .idle: EmptyView()
+            case .connecting: ProgressView("Starting the bootloader…")
+            case .flashing(let percent):
+                ProgressView(value: Double(percent), total: 100) { Text("Updating firmware… \(percent) %") }
+            case .finished: Label("Firmware updated and verified.", systemImage: "checkmark.circle")
+            case .failed(let message): Text(message).foregroundStyle(.red)
+            }
+            Button("Update firmware…") { isConfirming = true }
+                .disabled(!model.canUpdateFirmware)
+        }
+        .confirmationDialog("Flash firmware?", isPresented: $isConfirming) {
+            Button("Flash") { Task { await model.updateFirmware() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(
+                "This replaces the firmware on your kv4p HT with the version the app ships. Keep the USB cable "
+                    + "connected until the update is finished."
+            )
+        }
     }
 }
 
