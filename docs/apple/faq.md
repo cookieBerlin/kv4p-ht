@@ -4,11 +4,11 @@ For general questions about the radio, see the main [FAQ](../../FAQ.md).
 
 ## Is there an app for iPhone, iPad and Mac?
 
-Yes. The Mac app (Apple Silicon) comes as a signed DMG, the iPhone and iPad app
-as a test build through TestFlight. See the [roadmap](04-roadmap.md) for the
+Yes. All three, on the Mac with Apple Silicon, get test builds through TestFlight.
+A release in the App Store is planned. See the [roadmap](04-roadmap.md) for the
 current status.
 
-## How do I get the iPhone and iPad app?
+## How do I get the test builds?
 
 Through Apple's TestFlight app, with an invitation from the maintainer. The app
 is not in the App Store yet. See the [manual](manual.md#installation).
