@@ -10,7 +10,10 @@ struct KV4PHTApp: App {
             NavigationSplitView {
                 MemoriesView(model: model)
             } detail: {
-                RadioView(model: model)
+                TabView {
+                    Tab("Radio", systemImage: "dot.radiowaves.left.and.right") { RadioView(model: model) }
+                    Tab("APRS", systemImage: "point.3.connected.trianglepath.dotted") { APRSView(model: model) }
+                }
             }
         }
         #if os(macOS)

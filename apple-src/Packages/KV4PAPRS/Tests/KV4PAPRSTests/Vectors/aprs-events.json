@@ -1,0 +1,614 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs AprsController.handle",
+  "vectors": [
+    {
+      "name": "session 1",
+      "input": {
+        "steps": [
+          {
+            "timeMs": 0,
+            "frame": "82a0a4a64040e09c608682989860ae92888a64406303f021343930332e35304e2f30373230312e3735572d706f736974696f6e"
+          },
+          {
+            "timeMs": 10000,
+            "frame": "82a0a4a64040e09c6086829898609c6286829898e0ae92888a6440e103f021343930332e35304e2f30373230312e3735572d706f736974696f6e"
+          },
+          {
+            "timeMs": 41000,
+            "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735572d706f736974696f6e"
+          },
+          {
+            "timeMs": 41500,
+            "frame": "82a0a4a64040e09c60868298986103f021343930332e35314e2f30373230312e3735572d6d6f766564"
+          }
+        ]
+      },
+      "expected": {
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 0,
+            "lastSeenMs": 10000,
+            "packetCount": 2,
+            "dedupKey": "N0CALL|APRS|ITQ5MDMuNTBOLzA3MjAxLjc1Vy1wb3NpdGlvbg==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.05833,
+            "positionLong": -72.02917,
+            "comment": "position",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 2,
+            "type": 3,
+            "firstSeenMs": 41000,
+            "lastSeenMs": 41000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|ITQ5MDMuNTBOLzA3MjAxLjc1Vy1wb3NpdGlvbg==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.05833,
+            "positionLong": -72.02917,
+            "comment": "position",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 3,
+            "type": 3,
+            "firstSeenMs": 41500,
+            "lastSeenMs": 41500,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|ITQ5MDMuNTFOLzA3MjAxLjc1Vy1tb3ZlZA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.0585,
+            "positionLong": -72.02917,
+            "comment": "moved",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 4
+      }
+    },
+    {
+      "name": "session 2",
+      "input": {
+        "steps": [
+          {
+            "timeMs": 0,
+            "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a68656c6c6f7b303031"
+          },
+          {
+            "timeMs": 600000,
+            "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a68656c6c6f7b303031"
+          },
+          {
+            "timeMs": 2000000,
+            "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a68656c6c6f7b303031"
+          },
+          {
+            "timeMs": 2000100,
+            "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a6e6f206e756d626572"
+          },
+          {
+            "timeMs": 2040000,
+            "frame": "82a0a4a64040e09c60868298986103f03a4e3143414c4c2020203a6e6f206e756d626572"
+          },
+          {
+            "timeMs": 2041000,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a61636b303031"
+          },
+          {
+            "timeMs": 2042000,
+            "frame": "82a0a4a64040e09c62868298986103f03a4e3043414c4c2020203a72656a303031"
+          }
+        ]
+      },
+      "expected": {
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 0,
+            "lastSeenMs": 2000000,
+            "packetCount": 3,
+            "dedupKey": "N0CALL|APRS|Ok4xQ0FMTCAgIDpoZWxsb3swMDE=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "001",
+            "body": "hello",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 2,
+            "type": 1,
+            "firstSeenMs": 2000100,
+            "lastSeenMs": 2000100,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|Ok4xQ0FMTCAgIDpubyBudW1iZXI=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "",
+            "body": "no number",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 3,
+            "type": 1,
+            "firstSeenMs": 2040000,
+            "lastSeenMs": 2040000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|Ok4xQ0FMTCAgIDpubyBudW1iZXI=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "",
+            "body": "no number",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 7
+      }
+    },
+    {
+      "name": "session 3",
+      "input": {
+        "steps": [
+          {
+            "timeMs": 0,
+            "frame": "82a0a4a64040e09c60868298986103f05f31303039303535366332323073303034673030357430373772303030703030305030303068353062303939303077525357"
+          },
+          {
+            "timeMs": 1,
+            "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e2f30373230312e3735575f3232302f30303467303035742d303572303031703030325030303368303062303939303073303034"
+          },
+          {
+            "timeMs": 2,
+            "frame": "82a0a4a64040e09c60868298986103f03e7374617475732074657874"
+          },
+          {
+            "timeMs": 3,
+            "frame": "82a0a4a64040e09c60868298986103f03b4c45414445522020202a3039323334357a343930332e35304e2f30373230312e3735573e6f626a656374"
+          },
+          {
+            "timeMs": 4,
+            "frame": "82a0a4a64040e09c60868298986103f03c49474154452c4d53475f434e543d31302c4c4f435f434e543d31"
+          },
+          {
+            "timeMs": 5,
+            "frame": "82a0a4a64040e09c60868298986103f03f415052533f"
+          },
+          {
+            "timeMs": 6,
+            "frame": "82a0a4a64040e09c60868298986103f041696e76616c6964"
+          },
+          {
+            "timeMs": 7,
+            "frame": "82a0a4a64040e09c60868298986103f07d4e3243414c4c3e415052532c54435049502c4e3043414c4c2a3a3e72656c6179656420737461747573"
+          },
+          {
+            "timeMs": 8,
+            "frame": "82a0a4a64040e09c60868298986103f07d4e3243414c4c3e415052533a41696e76616c696420696e6e6572"
+          },
+          {
+            "timeMs": 9,
+            "frame": "82a0a4a64040e09c60868298986103f03d343930332e35304e2f30373230312e3735573e2020"
+          },
+          {
+            "timeMs": 10,
+            "frame": "a864a6a060aee09c60868298986103f060285f666e224f6a2f4d69632d45"
+          },
+          {
+            "timeMs": 11,
+            "frame": "82a0a4a64040e09c60868298986103f03d2f354c21213c2a65373e37505b636f6d70726573736564"
+          },
+          {
+            "timeMs": 12,
+            "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e"
+          },
+          {
+            "timeMs": 13,
+            "frame": "82a0a4a64040e09c60868298986103f023776561746865722074303530"
+          },
+          {
+            "timeMs": 14,
+            "frame": "82a0a4a64040e09c60868298986103f05f7778206c313233"
+          }
+        ]
+      },
+      "expected": {
+        "events": [
+          {
+            "id": 1,
+            "type": 4,
+            "firstSeenMs": 0,
+            "lastSeenMs": 0,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|XzEwMDkwNTU2YzIyMHMwMDRnMDA1dDA3N3IwMDBwMDAwUDAwMGg1MGIwOTkwMHdSU1c=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 77.0,
+            "humidity": 50.0,
+            "pressure": 990.0,
+            "rain": 0.0,
+            "snow": 4.0,
+            "windForce": 0,
+            "windDirection": "",
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 2,
+            "type": 4,
+            "firstSeenMs": 1,
+            "lastSeenMs": 1,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|ITQ5MDMuNTBOLzA3MjAxLjc1V18yMjAvMDA0ZzAwNXQtMDVyMDAxcDAwMlAwMDNoMDBiMDk5MDBzMDA0",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.05833,
+            "positionLong": -72.02917,
+            "comment": null,
+            "objectName": null,
+            "temperature": -5.0,
+            "humidity": 100.0,
+            "pressure": 990.0,
+            "rain": 0.02,
+            "snow": 4.0,
+            "windForce": 4,
+            "windDirection": "SW",
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 3,
+            "type": 5,
+            "firstSeenMs": 2,
+            "lastSeenMs": 2,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|PnN0YXR1cyB0ZXh0",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "status text",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 4,
+            "type": 2,
+            "firstSeenMs": 3,
+            "lastSeenMs": 3,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|O0xFQURFUiAgICowOTIzNDV6NDkwMy41ME4vMDcyMDEuNzVXPm9iamVjdA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.05833,
+            "positionLong": -72.02917,
+            "comment": "object",
+            "objectName": "LEADER",
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 5,
+            "type": 6,
+            "firstSeenMs": 4,
+            "lastSeenMs": 4,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|PElHQVRFLE1TR19DTlQ9MTAsTE9DX0NOVD0x",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "IGate \u00b7 10 messages \u00b7 1 local station",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 6,
+            "type": 0,
+            "firstSeenMs": 5,
+            "lastSeenMs": 5,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|P0FQUlM/",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "Raw: ?APRS?",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 7,
+            "type": 5,
+            "firstSeenMs": 7,
+            "lastSeenMs": 7,
+            "packetCount": 1,
+            "dedupKey": "N2CALL|APRS|PnJlbGF5ZWQgc3RhdHVz",
+            "fromCallsign": "N2CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "relayed status",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": "N0CALL",
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 8,
+            "type": 3,
+            "firstSeenMs": 9,
+            "lastSeenMs": 9,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|PTQ5MDMuNTBOLzA3MjAxLjc1Vz4gIA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.05833,
+            "positionLong": -72.02917,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 9,
+            "type": 3,
+            "firstSeenMs": 10,
+            "lastSeenMs": 10,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|T2SP0W|YChfZm4iT2ovTWljLUU=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 42.50117,
+            "positionLong": -12.129,
+            "comment": "ic-E",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 10,
+            "type": 3,
+            "firstSeenMs": 11,
+            "lastSeenMs": 11,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|PS81TCEhPCplNz43UFtjb21wcmVzc2Vk",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.5,
+            "positionLong": -72.75001,
+            "comment": "compressed",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 11,
+            "type": 4,
+            "firstSeenMs": 13,
+            "lastSeenMs": 13,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|I3dlYXRoZXIgdDA1MA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 50.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": "",
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 12,
+            "type": 4,
+            "firstSeenMs": 14,
+            "lastSeenMs": 14,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|X3d4IGwxMjM=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": "",
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 15
+      }
+    }
+  ]
+}

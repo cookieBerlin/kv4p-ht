@@ -2,6 +2,7 @@
 // Entry point only, excluded from coverage (ADR-0011).
 #if os(macOS)
     import Foundation
+    import KV4PAPRS
     import KV4PAudio
     import KV4PProtocol
     import KV4PRadio
@@ -13,7 +14,8 @@
                kv4p-probe --list
         Connects, waits up to 10 s for HELLO and prints it.
         With --tune <MHz>, the RadioController handshakes, tunes RX and TX and waits until the radio confirms.
-        With --listen <seconds>, it receives RX audio and prints the block rate and the largest gap.
+        With --listen <seconds>, it receives RX audio and prints the block rate and the largest gap, and every APRS
+        packet; with --tune as well, it tunes first.
         """
 
     /// Records when `RX_AUDIO` blocks arrive (`--listen`).
@@ -128,6 +130,11 @@
         fail(usage)
     }
 
+    let helloDeadline = Task {
+        try? await Task.sleep(for: .seconds(10))
+        if !Task.isCancelled { fail("no HELLO within 10 s") }
+    }
+
     if let listen {
         let log = ArrivalLog()
         let controller = RadioController(transport: transport, rxAudio: log)
@@ -137,6 +144,31 @@
             if case .failed(let failure) = snapshot.status { fail("failed: \(failure)") }
             if snapshot.status == .ready { break }
         }
+        helloDeadline.cancel()
+        if let tune {
+            do {
+                try await controller.tune(rx: tune, tx: tune)
+            } catch {
+                fail("tune failed: \(error)")
+            }
+        }
+        let frames = controller.receivedFrames
+        Task {
+            var feed = APRSEventLog()
+            for await frame in frames {
+                guard let packet = try? APRSParser.parse(ax25: frame) else {
+                    print("  frame   \(frame.count) bytes, not APRS")
+                    continue
+                }
+                let event = feed.receive(packet, atMs: RadioViewModel.systemTimeMs())
+                let path = packet.digipeaters.map(\.description).joined(separator: ",")
+                print(
+                    "  APRS    \(packet.source)>\(packet.destination)\(path.isEmpty ? "" : "," + path)",
+                    terminator: ""
+                )
+                print(event.map { " → \($0.kind) \($0.comment ?? $0.body ?? "")" } ?? " (no event)")
+            }
+        }
         print("listening for \(listen) s")
         try? await Task.sleep(for: .seconds(Double(listen)))
         let squelched = await controller.snapshot.deviceState?.radio.flags.contains(.squelched) ?? true
@@ -145,12 +177,7 @@
         exit(0)
     }
 
-    Task {
-        try? await Task.sleep(for: .seconds(10))
-        fail("no HELLO within 10 s")
-    }
-
-    if let tune {
+    if let tune, listen == nil {
         let controller = RadioController(transport: transport)
         var snapshots = controller.snapshots.makeAsyncIterator()
         var tuning = false

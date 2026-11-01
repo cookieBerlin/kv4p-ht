@@ -1,4 +1,5 @@
 import Foundation
+import KV4PAPRS
 import KV4PAudio
 import KV4PPersistence
 import KV4PProtocol
@@ -8,6 +9,7 @@ import Observation
 /// What the view model needs from `RadioController`, independent of its clock.
 public protocol RadioControlling: Actor {
     nonisolated var snapshots: AsyncStream<RadioSnapshot> { get }
+    nonisolated var receivedFrames: AsyncStream<[UInt8]> { get }
     func connect() async
     func disconnect() async
     func tune(rx: Float, tx: Float, memoryId: Int32) throws(RadioError)
@@ -92,7 +94,13 @@ public final class RadioViewModel {
     /// The group shown; `nil` for all memories.
     public var selectedGroup: String?
 
+    /// APRS packets heard on air, newest first.
+    public private(set) var aprsEvents: [APRSEvent] = []
+
     let rxAudio = RXAudioPlayer()
+    private var aprsLog = APRSEventLog()
+    private var packetObserver: Task<Void, Never>?
+    private let now: () -> Int64
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
     private let audioOutput: (any AudioOutput)?
@@ -111,9 +119,11 @@ public final class RadioViewModel {
         serialDevices: @escaping () -> [String],
         audioOutput: (any AudioOutput)? = nil,
         simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
-        memories: (any MemoryRepository)? = nil
+        memories: (any MemoryRepository)? = nil,
+        now: @escaping () -> Int64 = RadioViewModel.systemTimeMs
     ) {
         repository = memories
+        self.now = now
         self.makeController = makeController
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
@@ -187,12 +197,20 @@ public final class RadioViewModel {
                 self?.show(snapshot)
             }
         }
+        let frames = controller.receivedFrames
+        packetObserver = Task { [weak self] in
+            for await frame in frames {
+                self?.receive(frame)
+            }
+        }
         await controller.connect()
     }
 
     public func disconnect() async {
         observer?.cancel()
         observer = nil
+        packetObserver?.cancel()
+        packetObserver = nil
         await controller?.disconnect()
         audioOutput?.stop()
         controller = nil
@@ -211,6 +229,18 @@ public final class RadioViewModel {
             frequency = reported
             frequencyText = HamFrequency.format(reported)
         }
+    }
+
+    // MARK: APRS
+
+    /// Milliseconds since 1970, the time base of APRS events.
+    public nonisolated static let systemTimeMs: @Sendable () -> Int64 = { Int64(Date().timeIntervalSince1970 * 1000) }
+
+    /// Frames that are not APRS are ignored, as on Android.
+    private func receive(_ frame: [UInt8]) {
+        guard let packet = try? APRSParser.parse(ax25: frame) else { return }
+        aprsLog.receive(packet, atMs: now())
+        aprsEvents = aprsLog.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
     }
 
     // MARK: Transmit

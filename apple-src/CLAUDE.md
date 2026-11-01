@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 1.9 (memories and scan). The structure below is the target layout
+> Status: milestone 1.10a (APRS receive). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -60,7 +60,7 @@ make app        # build the app (App/KV4PHT.xcodeproj) for macOS and iOS, unsign
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors from the unmodified Android code
 make vectors-check # make vectors, then fail if the committed vectors differ
-swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz> | --listen <s>]  # hardware check
+swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz>] [--listen <s>]  # hardware check
 swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]  # simulated radio over BLE
 ```
 

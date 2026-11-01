@@ -14,7 +14,7 @@ import java.util.List;
 public final class Main {
     private Main() {}
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         Path packages = Path.of(args[0]);
         write(packages, "KV4PProtocol", "kiss-sender.json", "Protocol.Sender", ProtocolVectors.sender());
         write(packages, "KV4PProtocol", "kiss-parser.json", "Protocol.KissParser", ProtocolVectors.parser());
@@ -24,6 +24,8 @@ public final class Main {
         write(packages, "KV4PProtocol", "ctcss.json", "ToneHelper", ToneVectors.all());
         write(packages, "KV4PAudio", "ima-adpcm.json", "ImaAdpcm", AdpcmVectors.all());
         write(packages, "KV4PAPRS", "ax25-packets.json", "javAX25 Packet", Ax25Vectors.all());
+        write(packages, "KV4PAPRS", "aprs-parser.json", "java-aprs Parser.parseAX25", AprsVectors.parser());
+        write(packages, "KV4PAPRS", "aprs-events.json", "java-aprs AprsController.handle", AprsVectors.events());
     }
 
     private static void write(Path packages, String module, String file, String source, List<Object> vectors)

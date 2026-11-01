@@ -15,6 +15,7 @@ let package = Package(
         .library(name: "KV4PRadio", targets: ["KV4PRadio"]),
         .library(name: "KV4PAudio", targets: ["KV4PAudio"]),
         .library(name: "KV4PPersistence", targets: ["KV4PPersistence"]),
+        .library(name: "KV4PAPRS", targets: ["KV4PAPRS"]),
     ],
     targets: [
         .target(
@@ -48,6 +49,16 @@ let package = Package(
             path: "Packages/KV4PPersistence/Tests/KV4PPersistenceTests"
         ),
         .target(
+            name: "KV4PAPRS",
+            path: "Packages/KV4PAPRS/Sources/KV4PAPRS"
+        ),
+        .testTarget(
+            name: "KV4PAPRSTests",
+            dependencies: ["KV4PAPRS", "KV4PTestSupport"],
+            path: "Packages/KV4PAPRS/Tests/KV4PAPRSTests",
+            resources: [.copy("Vectors")]
+        ),
+        .target(
             name: "KV4PTransport",
             dependencies: ["KV4PProtocol"],
             path: "Packages/KV4PTransport/Sources/KV4PTransport"
@@ -69,19 +80,21 @@ let package = Package(
         ),
         .target(
             name: "KV4PRadio",
-            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence"],
+            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS"],
             path: "Packages/KV4PRadio/Sources/KV4PRadio"
         ),
         .testTarget(
             name: "KV4PRadioTests",
-            dependencies: ["KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PSimulator", "KV4PTestSupport"],
+            dependencies: [
+                "KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PSimulator", "KV4PTestSupport",
+            ],
             path: "Packages/KV4PRadio/Tests/KV4PRadioTests",
             resources: [.copy("Vectors")]
         ),
         // Development tool for the hardware checklist (macOS).
         .executableTarget(
             name: "kv4p-probe",
-            dependencies: ["KV4PProtocol", "KV4PRadio", "KV4PTransport"],
+            dependencies: ["KV4PProtocol", "KV4PRadio", "KV4PTransport", "KV4PAudio", "KV4PAPRS"],
             path: "Packages/KV4PProbe/Sources/kv4p-probe"
         ),
         // Simulated kv4p HT over real BLE (macOS), ADR-0014 B.
