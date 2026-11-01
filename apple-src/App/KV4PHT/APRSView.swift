@@ -5,8 +5,8 @@ import SwiftUI
 /// The APRS packets heard on air, newest first, and a line to send messages.
 struct APRSView: View {
     @Bindable var model: RadioViewModel
-    /// Kept between launches; the app ships without a callsign.
-    @AppStorage("aprsCallsign") private var storedCallsign = ""
+    /// The callsign as typed; the model keeps it normalised in the settings.
+    @State private var callsign = ""
     @State private var recipient = ""
     @State private var text = ""
 
@@ -16,21 +16,28 @@ struct APRSView: View {
             Divider()
             composer.padding(8)
         }
-        .onAppear { model.callsign = storedCallsign }
+        .onAppear { callsign = model.callsign }
     }
 
     private var composer: some View {
         VStack(alignment: .leading) {
             HStack {
                 Toggle("Position beacon", isOn: $model.isBeaconEnabled)
-                    .disabled(!model.canBeacon || storedCallsign.isEmpty)
+                    .disabled(!model.canBeacon || model.callsign.isEmpty)
                 Picker("Symbol", selection: $model.beaconSymbol) {
                     ForEach(APRSSymbol.allCases, id: \.self) { Text($0.name) }
                 }
                 .frame(width: 200)
                 Toggle("Approximate position", isOn: $model.isBeaconApproximate)
+                Picker("on", selection: $model.beaconFrequency) {
+                    Text("Current frequency").tag(Float?.none)
+                    ForEach(AppSettings.beaconFrequencyOptions, id: \.self) { frequency in
+                        Text(HamFrequency.format(frequency) + " MHz").tag(Float?.some(frequency))
+                    }
+                }
+                .frame(width: 220)
                 Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
-                    .disabled(storedCallsign.isEmpty)
+                    .disabled(model.callsign.isEmpty)
             }
             HStack {
                 Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
@@ -43,22 +50,22 @@ struct APRSView: View {
                     .foregroundStyle(.secondary)
                 }
             }
-            .disabled(!model.canUseInternet || storedCallsign.isEmpty)
+            .disabled(!model.canUseInternet || model.callsign.isEmpty)
             messageLine
         }
     }
 
     private var messageLine: some View {
         HStack {
-            TextField("Your callsign", text: $storedCallsign)
+            TextField("Your callsign", text: $callsign)
                 .frame(width: 110)
-                .onChange(of: storedCallsign) { model.callsign = storedCallsign }
+                .onChange(of: callsign) { model.callsign = callsign }
             TextField("To (empty: bulletin)", text: $recipient)
                 .frame(width: 140)
             TextField("Message", text: $text)
                 .onSubmit(send)
             Button("Send", systemImage: "paperplane", action: send)
-                .disabled(!model.isReady || text.isEmpty || storedCallsign.isEmpty)
+                .disabled(!model.isReady || text.isEmpty || model.callsign.isEmpty)
         }
         .textFieldStyle(.roundedBorder)
     }
@@ -70,35 +77,15 @@ struct APRSView: View {
     }
 
     private var feed: some View {
-        List(model.aprsEvents) { event in
-            HStack(alignment: .top) {
-                Image(systemName: Self.symbol(event.kind))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24)
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text(Self.title(event)).font(.headline)
-                        Spacer()
-                        if let state = Self.delivery(event.deliveryState) {
-                            Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
-                        }
-                        if event.packetCount > 1 {
-                            Text("×\(event.packetCount)").foregroundStyle(.secondary)
-                        }
-                        Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: .time)
-                            .foregroundStyle(.secondary)
-                    }
-                    if let text = Self.text(event), !text.isEmpty {
-                        Text(text)
-                    }
-                    if event.kind == .position || event.kind == .weather, event.latitude != 0 || event.longitude != 0 {
-                        Text(String(format: "%.5f, %.5f", event.latitude, event.longitude))
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                }
+        List {
+            Picker("Show", selection: $model.aprsDestinationFilter) {
+                Text("All packets").tag(APRSDestinationFilter.all)
+                Text("Only messages for me").tag(APRSDestinationFilter.mine)
             }
-            .textSelection(.enabled)
+            .pickerStyle(.segmented)
+            ForEach(model.aprsEvents) { event in
+                row(event)
+            }
         }
         .overlay {
             if model.aprsEvents.isEmpty {
@@ -110,6 +97,37 @@ struct APRSView: View {
             }
         }
         .navigationTitle("APRS")
+    }
+
+    private func row(_ event: APRSEvent) -> some View {
+        HStack(alignment: .top) {
+            Image(systemName: Self.symbol(event.kind))
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text(Self.title(event)).font(.headline)
+                    Spacer()
+                    if let state = Self.delivery(event.deliveryState) {
+                        Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
+                    }
+                    if event.packetCount > 1 {
+                        Text("×\(event.packetCount)").foregroundStyle(.secondary)
+                    }
+                    Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: .time)
+                        .foregroundStyle(.secondary)
+                }
+                if let text = Self.text(event), !text.isEmpty {
+                    Text(text)
+                }
+                if event.kind == .position || event.kind == .weather, event.latitude != 0 || event.longitude != 0 {
+                    Text(String(format: "%.5f, %.5f", event.latitude, event.longitude))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .textSelection(.enabled)
     }
 
     private static func delivery(_ state: APRSEvent.DeliveryState) -> (String, String)? {
