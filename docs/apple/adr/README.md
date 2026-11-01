@@ -35,3 +35,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0029](0029-app-settings.md) | App settings in the user defaults | Proposed |
 | [0030](0030-ios-audio-session.md) | The iOS audio session | Proposed |
 | [0031](0031-ios-background-operation.md) | Background operation on iOS | Proposed |
+| [0032](0032-ios-layouts.md) | iPhone and iPad layouts | Proposed |
