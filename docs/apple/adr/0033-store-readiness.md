@@ -35,6 +35,12 @@ icon. The project artwork has `artwork/app-icon.svg` (512 × 512).
 - **Check:** `scripts/app-plist-check.sh`, run by `make app`, now also requires
   the icon, a compiled asset catalog, the manifest and the export key.
 
+- **No resource bundles in the app:** the App Store export signs the app again but
+  keeps the development signature of a nested SwiftPM resource bundle, and App
+  Store Connect rejects the build (ITMS-90284). So packages embed their data in
+  code. The ESP32 flasher stub is generated into `ESP32Stub.generated.swift`, and
+  `scripts/app-plist-check.sh` fails on any nested bundle.
+
 ## Consequences
 
 - **Artwork changes:** when the artwork changes, run `make icon` and commit the
