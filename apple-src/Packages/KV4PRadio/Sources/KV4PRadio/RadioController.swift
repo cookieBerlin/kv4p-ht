@@ -87,6 +87,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Numbers transmissions, so late microphone samples and timers of an earlier one are ignored.
     private var transmission = 0
     private var isCapturing = false
+    /// PTT is requested for the current transmission (after the microphone started).
+    private var isKeyed = false
     private var capture: Task<Void, Never>?
     private var runawayTimer: Task<Void, Never>?
     /// The memories being scanned; `nil` while not scanning.
@@ -375,6 +377,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         guard current == transmission else { return microphone.stop() }  // ended while the microphone started
         txEncoder.reset()
         rxAudio?.reset()
+        isKeyed = true
         update { $0.setPTT(true) }
         capture = Task { [weak self] in
             for await chunk in samples {
@@ -412,6 +415,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         guard isCapturing else { return }
         transmission += 1
         isCapturing = false
+        isKeyed = false
         capture?.cancel()
         runawayTimer?.cancel()
         microphone?.stop()
@@ -496,7 +500,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     /// Queues the pending desired states; the sender writes them in order within the flow-control window.
     private func flush() {
-        if isCapturing, !desiredState.desired.flags.contains(.pttRequested) {
+        if isKeyed, !desiredState.desired.flags.contains(.pttRequested) {
             endTransmission()  // the device released PTT
         }
         for state in desiredState.takeOutgoing() {
