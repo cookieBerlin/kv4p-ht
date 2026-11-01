@@ -7,26 +7,42 @@ import Testing
 @testable import KV4PProtocol
 @testable import KV4PRadio
 
+/// The calls of audio test doubles, in order.
+final class CallLog: Sendable {
+    private let entries = Mutex<[String]>([])
+
+    var calls: [String] { entries.withLock { $0 } }
+
+    func append(_ call: String) {
+        entries.withLock { $0.append(call) }
+    }
+
+    func removeAll() {
+        entries.withLock { $0.removeAll() }
+    }
+}
+
 /// Records start and stop of the audio output.
 final class RecordingOutput: AudioOutput {
     struct Failure: Error {}
 
-    private let calls = Mutex<[String]>([])
+    private let calls: CallLog
     private let fails: Bool
 
-    init(fails: Bool = false) {
+    init(log: CallLog = CallLog(), fails: Bool = false) {
+        calls = log
         self.fails = fails
     }
 
-    var log: [String] { calls.withLock { $0 } }
+    var log: [String] { calls.calls }
 
     func start(_ player: RXAudioPlayer) throws {
-        calls.withLock { $0.append("start") }
+        calls.append("start")
         if fails { throw Failure() }
     }
 
     func stop() {
-        calls.withLock { $0.append("stop") }
+        calls.append("stop")
     }
 }
 

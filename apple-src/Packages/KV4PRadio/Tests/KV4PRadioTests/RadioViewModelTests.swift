@@ -170,7 +170,7 @@ struct RadioViewModelTests {
             (.radioModuleNotFound, "The SA818 radio module did not respond. Restart the radio."),
             (
                 .transport(.bluetoothUnavailable(.unauthorized)),
-                "Bluetooth access is not allowed. Allow it in System Settings → Privacy & Security → Bluetooth."
+                "Bluetooth access is not allowed. Allow it under Privacy & Security → Bluetooth in the settings."
             ),
             (.transport(.bluetoothUnavailable(.poweredOff)), "Bluetooth is off."),
             (.transport(.bluetoothUnavailable(.unsupported)), "Bluetooth is not available."),

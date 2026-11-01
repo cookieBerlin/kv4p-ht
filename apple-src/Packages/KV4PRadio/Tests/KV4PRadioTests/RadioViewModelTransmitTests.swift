@@ -93,7 +93,7 @@ struct RadioViewModelTransmitTests {
         await setup.model.pressPTT()
         #expect(
             setup.model.message
-                == "The microphone is not available. Allow access in System Settings → Privacy & Security → Microphone."
+                == "The microphone is not available. Allow access under Privacy & Security → Microphone in the settings."
         )
     }
 

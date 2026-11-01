@@ -69,6 +69,9 @@ settings.
 - **Volume:** the slider under **Audio** sets the playback volume in the app; the
   Mac's own volume applies on top. The audio plays on the current output device
   and moves along when you plug in headphones.
+- 📱 On iPhone and iPad the audio plays on the speaker, or on a connected headset
+  (wired or Bluetooth). Other apps keep playing. A phone call pauses the radio's
+  audio; it continues when the call ends.
 - **Simulator:** *Simulate a received signal* plays a 1 kHz tone with the squelch
   open.
 
@@ -88,6 +91,8 @@ Transmitting requires a license and an antenna or dummy load.
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
   Narrower limits can be chosen under **TX limits**. Otherwise the screen shows
   *Can't transmit outside the ham band.*
+- 📱 A phone call, or a headset that is unplugged or switched off, ends the
+  transmission.
 - Safety stops: the app ends a transmission after 3 minutes; the radio itself
   ends it when no audio arrives for about 0.8 s (e.g. when the connection drops)
   and after 200 s.
@@ -234,9 +239,9 @@ The app warns when the radio's firmware is older than required or missing
 | *Firmware … is too old.* | Update the firmware (see [Firmware updates](#firmware-updates)). |
 | *The SA818 radio module did not respond.* | Restart the radio. The app sends no settings in this state, because the firmware would stop responding. |
 | *This device is not a kv4p HT, or its firmware has no Bluetooth LE service.* | Use USB, or update to firmware with Bluetooth LE ([FAQ](faq.md#which-firmware-do-i-need)). |
-| *Bluetooth access is not allowed.* | System Settings → Privacy & Security → Bluetooth. |
+| *Bluetooth access is not allowed.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
-| *The microphone is not available.* | System Settings → Privacy & Security → Microphone, then press PTT again. |
+| *The microphone is not available.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
 | *Set your callsign to send APRS messages.* | Enter your callsign in the APRS tab. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
@@ -245,6 +250,7 @@ The app warns when the radio's firmware is older than required or missing
 | *The radio did not start its bootloader.* | Check the USB cable (it must carry data) and close other apps that use the port, then update again. |
 | *The radio stopped answering during the update.* / *The firmware could not be verified.* | Start the update again; it can always be repeated. |
 | *The audio output cannot be started.* | Check the output device in System Settings → Sound, then connect again. The radio works without audio. |
+| 📱 *The audio was interrupted. Connect again to listen.* | Another app took the audio and iOS did not hand it back. Connect again. |
 
 See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
 
@@ -285,5 +291,8 @@ Used by developers before merging a milestone that touches hardware behaviour:
 - [ ] FreeDV 2400B with a second FreeDV station (another kv4p HT with the
       Android app) into a dummy load: voice is understood in both directions;
       analog signals keep the squelch closed in FreeDV mode.
+- [ ] 📱 Audio session: RX plays on the speaker and on a Bluetooth headset; a
+      phone call during reception pauses the audio and it resumes afterwards; a
+      call or an unplugged headset during a transmission ends it.
 - [ ] Tuning is applied and confirmed by the radio
       (`swift run kv4p-probe --serial --reset --tune 145.525`, then back).

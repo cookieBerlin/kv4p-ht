@@ -33,3 +33,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0027](0027-freedv-voice-and-codec2-vendoring.md) | FreeDV 2400B voice and vendored Codec2 | Proposed |
 | [0028](0028-firmware-flashing.md) | Firmware flashing as a port of FirmwareUtils | Proposed |
 | [0029](0029-app-settings.md) | App settings in the user defaults | Proposed |
+| [0030](0030-ios-audio-session.md) | The iOS audio session | Proposed |
