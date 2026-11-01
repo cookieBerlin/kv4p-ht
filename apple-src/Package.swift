@@ -77,7 +77,7 @@ let package = Package(
         ),
         .testTarget(
             name: "KV4PDigitalTests",
-            dependencies: ["KV4PDigital", "CCodec2", "KV4PAudio", "KV4PTestSupport"],
+            dependencies: ["KV4PDigital", "CCodec2", "KV4PAudio", "KV4PSimulator", "KV4PTestSupport"],
             path: "Packages/KV4PDigital/Tests/KV4PDigitalTests",
             resources: [.copy("Vectors")]
         ),

@@ -73,3 +73,20 @@ struct FreeDVTests {
         #expect(simulator.lastTransmittedDigital == nil)
     }
 }
+
+@Suite("Simulator FreeDV scenario")
+struct FreeDVScenarioTests {
+    @Test("the FreeDV scenario is a BLE radio with the FreeDV modem, like the current firmware")
+    func scenario() {
+        #expect(Scenario.freeDV.features == [.highLowPower, .esp32AFSK, .freeDV2400B])
+        #expect(Scenario.freeDV.windowSize == Scenario.ble.windowSize)
+    }
+
+    @Test("the FreeDV voice signal is a tone that carries voice frames")
+    func voice() {
+        let carrier = Carrier.freeDVVoice
+        #expect(carrier.voiceFrames.count == 16)
+        #expect(carrier.voiceFrames.allSatisfy { $0.count == 7 })
+        #expect(carrier.toneHz == Carrier().toneHz)
+    }
+}

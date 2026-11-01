@@ -1,4 +1,5 @@
 import KV4PAudio
+import KV4PSimulator
 import KV4PTestSupport
 import Testing
 
@@ -55,6 +56,12 @@ struct FreeDVVoiceTests {
         let expected = MicGain.high.apply(to: [1001, 1001])
         let sample = Int16((Int(expected[0]) + Int(expected[1])) / 2)
         #expect(frames == [try #require(reference.encode([Int16](repeating: sample, count: 320)))])
+    }
+
+    @Test("the simulator's FreeDV signal carries the frames of the voiced vector")
+    func simulatorSignal() throws {
+        let vector = try #require(Codec2Tests.vectors.first { $0.name == "voiced" })
+        #expect(Carrier.freeDVVoice.voiceFrames == (try vector.expected.frames.map { try [UInt8](hex: $0) }))
     }
 
     @Test("frames of another length are not decoded")
