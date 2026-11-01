@@ -15,6 +15,20 @@ struct AboutInfoTests {
         #expect(AboutInfo(info: ["CFBundleShortVersionString": "0.1"]).version == "Version 0.1")
     }
 
+    @Test("a release build also shows its commit")
+    func commit() {
+        let info = ["CFBundleShortVersionString": "2.0.0", "CFBundleVersion": "20261102.1200", "KV4PCommit": "abc1234"]
+        #expect(AboutInfo(info: info).version == "Version 2.0.0 (20261102.1200, abc1234)")
+        #expect(
+            AboutInfo(info: ["CFBundleShortVersionString": "2.0.0", "CFBundleVersion": "7", "KV4PCommit": ""]).version
+                == "Version 2.0.0 (7)"
+        )
+        #expect(
+            AboutInfo(info: ["CFBundleShortVersionString": "2.0.0", "KV4PCommit": "abc1234"]).version
+                == "Version 2.0.0 (abc1234)"
+        )
+    }
+
     @Test("the components name their licences; bundled licence texts are named once")
     func components() {
         let components = AboutInfo.components
