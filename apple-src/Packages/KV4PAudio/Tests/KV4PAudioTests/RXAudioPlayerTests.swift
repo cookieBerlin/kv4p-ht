@@ -22,7 +22,7 @@ struct RXAudioPlayerTests {
 
     @Test("plays decoded blocks once the jitter buffer is filled")
     func playsDecodedBlocks() {
-        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: Self.samples.count, capacity: 16))
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: Self.samples.count, capacity: 16), fadesIn: false)
         #expect(player.render(2) == [0, 0])
         player.receive(block: Self.block)
         #expect(player.render(Self.samples.count) == Self.decoded)
@@ -30,7 +30,7 @@ struct RXAudioPlayerTests {
 
     @Test("scales the samples by the volume")
     func volume() {
-        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 16))
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 16), fadesIn: false)
         #expect(player.volume == 1)
         player.volume = 0.5
         player.receive(block: Self.block)
@@ -64,7 +64,7 @@ struct RXAudioPlayerTests {
 
     @Test("reset discards the buffered audio")
     func reset() {
-        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 16))
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 16), fadesIn: false)
         player.receive(block: Self.block)
         player.reset()
         #expect(player.statistics.buffered == 0)
@@ -73,10 +73,30 @@ struct RXAudioPlayerTests {
 
     @Test("renders more frames than one block in one call")
     func largeRender() {
-        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 16))
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 16), fadesIn: false)
         player.receive(block: Self.block)
         let output = player.render(4096)
         #expect(Array(output.prefix(Self.samples.count)) == Self.decoded)
         #expect(output.dropFirst(Self.samples.count).allSatisfy { $0 == 0 })
+    }
+
+    /// `RadioAudioService.ensureAudioPlaying`: muted until the volume ramp passes 0.7, which hides the
+    /// transient the radio sends after it starts.
+    @Test("fades in like Android: muted for 59 blocks, then 70 % rising to full volume")
+    func fadeIn() {
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 4096))
+        let block = ImaAdpcm.encodeBlock([Int16](repeating: 16384, count: 3))
+        var ramp: Float = 0
+        for count in 1...61 {
+            player.receive(block: block)
+            ramp = 0.02 + 0.98 * ramp
+            let output = player.render(3)
+            let expected: Float = ramp > 0.7 ? ramp * 16384 / 32768 : 0
+            #expect(output.first == expected, "block \(count)")
+            #expect((count < 60) == (output.first == 0), "block \(count)")
+        }
+        player.reset()
+        player.receive(block: block)
+        #expect(player.render(1) == [0])
     }
 }
