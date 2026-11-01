@@ -179,4 +179,16 @@ struct APRSBeaconVectorTests {
         controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 2, transmit: transmitter.transmit)
         #expect(transmitter.transmissions.count == 2)
     }
+
+    @Test("an acknowledgement for another station is repeated without an event")
+    func digipeatWithoutEvent() throws {
+        var controller = Self.controller(startMs: 0)
+        controller.isDigipeatingEnabled = true
+        let transmitter = Transmitter()
+        let packet = try APRSParser.parse(tnc2: "N1CALL>APRS,WIDE1-1::N2CALL   :ack1")
+        let event = controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 0, transmit: transmitter.transmit)
+        #expect(event == nil)
+        #expect(transmitter.transmissions.count == 1)
+        #expect(controller.packets.map(\.source) == [.rxRF, .txRF])
+    }
 }

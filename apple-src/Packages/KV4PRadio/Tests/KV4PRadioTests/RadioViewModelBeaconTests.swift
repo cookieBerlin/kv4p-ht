@@ -58,7 +58,9 @@ struct RadioViewModelBeaconTests {
 
         var sent: [APRSPacket] {
             get async {
-                await (simulator.value?.simulator.transmittedPackets ?? []).compactMap { try? APRSParser.parse(ax25: $0.packet) }
+                await (simulator.value?.simulator.transmittedPackets ?? []).compactMap {
+                    try? APRSParser.parse(ax25: $0.packet)
+                }
             }
         }
     }
@@ -73,7 +75,7 @@ struct RadioViewModelBeaconTests {
         #expect(await eventually { await setup.sent.count == 1 })
         let beacon = await setup.sent.first
         #expect(beacon?.info.position?.source == "Compressed")
-        #expect(beacon?.info.position?.position.symbolCode == UInt16(ascii: ">"))
+        #expect(beacon?.info.position?.position.symbolCode == UInt16(UInt8(ascii: ">")))
         #expect(beacon?.dti == UInt8(ascii: "="))
         #expect(setup.model.aprsEvents.first?.fromCallsign == "N0CALL")
         setup.time.advance(by: 299_999)
