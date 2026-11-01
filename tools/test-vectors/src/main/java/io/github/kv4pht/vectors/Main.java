@@ -28,6 +28,10 @@ public final class Main {
         write(packages, "KV4PAPRS", "aprs-events.json", "java-aprs AprsController.handle", AprsVectors.events());
         write(packages, "KV4PAPRS", "aprs-messaging.json", "java-aprs AprsController messaging",
             AprsVectors.messaging());
+        write(packages, "KV4PAPRS", "aprs-beacons.json", "java-aprs AprsController.submitPositionBeacon",
+            AprsVectors.beacons());
+        write(packages, "KV4PAPRS", "aprs-digipeating.json", "java-aprs AprsController digipeating",
+            AprsVectors.digipeating());
         write(packages, "KV4PAPRS", "aprs-encoding.json", "java-aprs MessagePacket and APRSPacket.toAX25Frame",
             AprsVectors.encoding());
     }

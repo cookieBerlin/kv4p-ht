@@ -1,0 +1,596 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs AprsController.submitPositionBeacon",
+  "vectors": [
+    {
+      "name": "beacon 1",
+      "input": {
+        "latitude": 49.0583,
+        "longitudeIsNaN": false,
+        "longitude": -72.0292,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": true,
+        "altitudeMeters": null,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": true,
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03d2f35603d783c3b3e7124207354",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|PS81YD14PDs+cSQgc1Q=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.0583,
+            "positionLong": -72.02921,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 1
+      }
+    },
+    {
+      "name": "beacon 2",
+      "input": {
+        "latitude": 49.0583,
+        "longitudeIsNaN": false,
+        "longitude": -72.0292,
+        "symbolTable": "/",
+        "symbolCode": ">",
+        "messagingCapable": false,
+        "compressed": false,
+        "altitudeMeters": null,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": true,
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f021343930332e35304e2f30373230312e3735573e",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|ITQ5MDMuNTBOLzA3MjAxLjc1Vz4=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.05833,
+            "positionLong": -72.02917,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 1
+      }
+    },
+    {
+      "name": "beacon 3",
+      "input": {
+        "latitude": -33.8688,
+        "longitudeIsNaN": false,
+        "longitude": 151.2093,
+        "symbolTable": "\\",
+        "symbolCode": "#",
+        "messagingCapable": true,
+        "compressed": false,
+        "altitudeMeters": 120.5,
+        "speedKnots": 12.4,
+        "courseDegrees": 90,
+        "comment": "comment",
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": true,
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03d333335322e3133535c31353131322e353645233039302f3031322f413d303030333935636f6d6d656e74",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|PTMzNTIuMTNTXDE1MTEyLjU2RSMwOTAvMDEyL0E9MDAwMzk1Y29tbWVudA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": -33.86883,
+            "positionLong": 151.20933,
+            "comment": "090/012/A=000395comment",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 1
+      }
+    },
+    {
+      "name": "beacon 4",
+      "input": {
+        "latitude": 0.0,
+        "longitudeIsNaN": false,
+        "longitude": 0.0,
+        "symbolTable": null,
+        "symbolCode": null,
+        "messagingCapable": false,
+        "compressed": false,
+        "altitudeMeters": null,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": true,
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f021303030302e30304e2f30303030302e3030453e",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|ITAwMDAuMDBOLzAwMDAwLjAwRT4=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 1
+      }
+    },
+    {
+      "name": "beacon 5",
+      "input": {
+        "latitude": 90.0,
+        "longitudeIsNaN": false,
+        "longitude": 180.0,
+        "symbolTable": "/",
+        "symbolCode": "[",
+        "messagingCapable": true,
+        "compressed": true,
+        "altitudeMeters": null,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": true,
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03d2f212121217b7b21215b207354",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|PS8hISEhe3shIVsgc1Q=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 90.0,
+            "positionLong": 180.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 1
+      }
+    },
+    {
+      "name": "beacon 6",
+      "input": {
+        "latitude": -90.0,
+        "longitudeIsNaN": false,
+        "longitude": -180.0,
+        "symbolTable": "/",
+        "symbolCode": "-",
+        "messagingCapable": true,
+        "compressed": false,
+        "altitudeMeters": 0.0,
+        "speedKnots": 0.0,
+        "courseDegrees": 0,
+        "comment": "",
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": true,
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03d393030302e3030532f31383030302e3030572d3030302f3030302f413d303030303030",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|PTkwMDAuMDBTLzE4MDAwLjAwVy0wMDAvMDAwL0E9MDAwMDAw",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": -90.0,
+            "positionLong": -180.0,
+            "comment": "000/000/A=000000",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 1
+      }
+    },
+    {
+      "name": "beacon 7",
+      "input": {
+        "latitude": 51.4999,
+        "longitudeIsNaN": false,
+        "longitude": 7.4999,
+        "symbolTable": "/",
+        "symbolCode": "b",
+        "messagingCapable": true,
+        "compressed": true,
+        "altitudeMeters": null,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": " cycling",
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": true,
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03d2f344b214750444e3b62207354206379636c696e67",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 3,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APKVPA|PS80SyFHUEROO2Igc1QgY3ljbGluZw==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 51.4999,
+            "positionLong": 7.49989,
+            "comment": " cycling",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          }
+        ],
+        "packets": 1
+      }
+    },
+    {
+      "name": "beacon 8",
+      "input": {
+        "latitude": 91.0,
+        "longitudeIsNaN": false,
+        "longitude": 0.0,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": true,
+        "altitudeMeters": null,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    },
+    {
+      "name": "beacon 9",
+      "input": {
+        "latitude": 0.0,
+        "longitudeIsNaN": true,
+        "longitude": null,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": true,
+        "altitudeMeters": null,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    },
+    {
+      "name": "beacon 10",
+      "input": {
+        "latitude": 10.0,
+        "longitudeIsNaN": false,
+        "longitude": 10.0,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": false,
+        "altitudeMeters": null,
+        "speedKnots": 5.0,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    },
+    {
+      "name": "beacon 11",
+      "input": {
+        "latitude": 10.0,
+        "longitudeIsNaN": false,
+        "longitude": 10.0,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": true,
+        "altitudeMeters": 100.0,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    },
+    {
+      "name": "beacon 12",
+      "input": {
+        "latitude": 10.0,
+        "longitudeIsNaN": false,
+        "longitude": 10.0,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": false,
+        "altitudeMeters": null,
+        "speedKnots": 5.0,
+        "courseDegrees": 361,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    },
+    {
+      "name": "beacon 13",
+      "input": {
+        "latitude": 10.0,
+        "longitudeIsNaN": false,
+        "longitude": 10.0,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": false,
+        "altitudeMeters": null,
+        "speedKnots": 999.6,
+        "courseDegrees": 10,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    },
+    {
+      "name": "beacon 14",
+      "input": {
+        "latitude": 10.0,
+        "longitudeIsNaN": false,
+        "longitude": 10.0,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": false,
+        "altitudeMeters": -1.0,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    },
+    {
+      "name": "beacon 15",
+      "input": {
+        "latitude": 10.0,
+        "longitudeIsNaN": false,
+        "longitude": 10.0,
+        "symbolTable": "/",
+        "symbolCode": "$",
+        "messagingCapable": true,
+        "compressed": false,
+        "altitudeMeters": 304801.0,
+        "speedKnots": null,
+        "courseDegrees": null,
+        "comment": null,
+        "startMs": 1700000000000
+      },
+      "expected": {
+        "accepted": false,
+        "transmissions": [],
+        "events": [],
+        "packets": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,514 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs AprsController digipeating",
+  "vectors": [
+    {
+      "name": "digipeating 1",
+      "input": {
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a624062ae92888a64406303f03e66696c6c2d696e"
+          },
+          {
+            "atMs": 1700000001000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e0ae92888a64406303f03e66696c6c2d696e"
+          },
+          {
+            "atMs": 1700000002000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c6486829898e0ae92888a64406303f03e66696c6c2d696e"
+          },
+          {
+            "atMs": 1700000005000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a624062ae92888a64406303f03e66696c6c2d696e"
+          },
+          {
+            "atMs": 1700000030000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a624062ae92888a64406303f03e66696c6c2d696e"
+          },
+          {
+            "atMs": 1700000031000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e0ae92888a64406303f03e66696c6c2d696e"
+          }
+        ]
+      },
+      "expected": {
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "DIGIPEATED_PACKET",
+            "frequencyHz": 144390000,
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e0ae92888a64406303f03e66696c6c2d696e",
+            "mode": "accept"
+          },
+          {
+            "step": 4,
+            "purpose": "DIGIPEATED_PACKET",
+            "frequencyHz": 144390000,
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e0ae92888a64406303f03e66696c6c2d696e",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 5,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000030000,
+            "packetCount": 6,
+            "dedupKey": "N1CALL|APRS|PmZpbGwtaW4=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "fill-in",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": true
+          }
+        ],
+        "packets": 6
+      }
+    },
+    {
+      "name": "digipeating 2",
+      "input": {
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c608682989860ae92888a64406303f03e646972656374"
+          },
+          {
+            "atMs": 1700000000001,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c608682989860ae92888a64406303f03e646972656374207a65726f"
+          },
+          {
+            "atMs": 1700000000002,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c60868298986303f03e6f746865722073736964"
+          },
+          {
+            "atMs": 1700000000003,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a64406303f03e7769646532"
+          },
+          {
+            "atMs": 1700000000004,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a62406503f03e77696465312d32"
+          },
+          {
+            "atMs": 1700000000005,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a6240e0ae92888a64406303f03e75736564207769646531"
+          },
+          {
+            "atMs": 1700000000006,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03e6e6f2070617468"
+          },
+          {
+            "atMs": 1700000000007,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c6486829898e103f03e616c6c2075736564"
+          },
+          {
+            "atMs": 1700000000008,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a62406303f04162726f6b656e"
+          },
+          {
+            "atMs": 1700000000009,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a62406303f03e6c6f7765722063617365"
+          },
+          {
+            "atMs": 1700000000010,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a62406103f03e6261642073736964"
+          },
+          {
+            "atMs": 1700000000011,
+            "kind": "mode",
+            "mode": "refuse"
+          },
+          {
+            "atMs": 1700000000012,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a62406303f03e72656675736564"
+          },
+          {
+            "atMs": 1700000000013,
+            "kind": "mode",
+            "mode": "accept"
+          },
+          {
+            "atMs": 1700000000014,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a62406303f03e72656675736564"
+          }
+        ]
+      },
+      "expected": {
+        "transmissions": [
+          {
+            "step": 0,
+            "purpose": "DIGIPEATED_PACKET",
+            "frequencyHz": 144390000,
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e0ae92888a64406303f03e646972656374",
+            "mode": "accept"
+          },
+          {
+            "step": 1,
+            "purpose": "DIGIPEATED_PACKET",
+            "frequencyHz": 144390000,
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e0ae92888a64406303f03e646972656374207a65726f",
+            "mode": "accept"
+          },
+          {
+            "step": 9,
+            "purpose": "DIGIPEATED_PACKET",
+            "frequencyHz": 144390000,
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e103f03e6c6f7765722063617365",
+            "mode": "accept"
+          },
+          {
+            "step": 12,
+            "purpose": "DIGIPEATED_PACKET",
+            "frequencyHz": 144390000,
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e103f03e72656675736564",
+            "mode": "refuse"
+          },
+          {
+            "step": 14,
+            "purpose": "DIGIPEATED_PACKET",
+            "frequencyHz": 144390000,
+            "frame": "82a0a4a64040e09c6286829898609c6086829898e103f03e72656675736564",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 5,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 2,
+            "dedupKey": "N1CALL|APRS|PmRpcmVjdA==",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "direct",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": true
+          },
+          {
+            "id": 2,
+            "type": 5,
+            "firstSeenMs": 1700000000001,
+            "lastSeenMs": 1700000000001,
+            "packetCount": 2,
+            "dedupKey": "N1CALL|APRS|PmRpcmVjdCB6ZXJv",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "direct zero",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": true
+          },
+          {
+            "id": 3,
+            "type": 5,
+            "firstSeenMs": 1700000000002,
+            "lastSeenMs": 1700000000002,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Pm90aGVyIHNzaWQ=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "other ssid",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 4,
+            "type": 5,
+            "firstSeenMs": 1700000000003,
+            "lastSeenMs": 1700000000003,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PndpZGUy",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "wide2",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 5,
+            "type": 5,
+            "firstSeenMs": 1700000000004,
+            "lastSeenMs": 1700000000004,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PndpZGUxLTI=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "wide1-2",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 6,
+            "type": 5,
+            "firstSeenMs": 1700000000005,
+            "lastSeenMs": 1700000000005,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PnVzZWQgd2lkZTE=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "used wide1",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 7,
+            "type": 5,
+            "firstSeenMs": 1700000000006,
+            "lastSeenMs": 1700000000006,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Pm5vIHBhdGg=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "no path",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 8,
+            "type": 5,
+            "firstSeenMs": 1700000000007,
+            "lastSeenMs": 1700000000007,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PmFsbCB1c2Vk",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "all used",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 9,
+            "type": 5,
+            "firstSeenMs": 1700000000009,
+            "lastSeenMs": 1700000000009,
+            "packetCount": 2,
+            "dedupKey": "N1CALL|APRS|Pmxvd2VyIGNhc2U=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "lower case",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": true
+          },
+          {
+            "id": 10,
+            "type": 5,
+            "firstSeenMs": 1700000000010,
+            "lastSeenMs": 1700000000010,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PmJhZCBzc2lk",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "bad ssid",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 11,
+            "type": 5,
+            "firstSeenMs": 1700000000012,
+            "lastSeenMs": 1700000000014,
+            "packetCount": 3,
+            "dedupKey": "N1CALL|APRS|PnJlZnVzZWQ=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "refused",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": true
+          }
+        ],
+        "packets": 17
+      }
+    }
+  ]
+}

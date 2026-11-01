@@ -606,6 +606,133 @@ final class AprsVectors {
         return vectors;
     }
 
+    // MARK: Beacons and digipeating
+
+    /** {@code submitPositionBeacon} for the beacon fields the Android app and the library support. */
+    static List<Object> beacons() {
+        Object[][] cases = {
+            // latitude, longitude, table, code, messaging, compressed, altitude m, speed kn, course, comment
+            {49.0583, -72.0292, '/', '$', true, true, null, null, null, null},
+            {49.0583, -72.0292, '/', '>', false, false, null, null, null, null},
+            {-33.8688, 151.2093, '\\', '#', true, false, 120.5, 12.4, 90, "comment"},
+            {0.0, 0.0, null, null, false, false, null, null, null, null},
+            {90.0, 180.0, '/', '[', true, true, null, null, null, null},
+            {-90.0, -180.0, '/', '-', true, false, 0.0, 0.0, 0, ""},
+            {51.4999, 7.4999, '/', 'b', true, true, null, null, null, " cycling"},
+            {91.0, 0.0, '/', '$', true, true, null, null, null, null},
+            {0.0, Double.NaN, '/', '$', true, true, null, null, null, null},
+            {10.0, 10.0, '/', '$', true, false, null, 5.0, null, null},
+            {10.0, 10.0, '/', '$', true, true, 100.0, null, null, null},
+            {10.0, 10.0, '/', '$', true, false, null, 5.0, 361, null},
+            {10.0, 10.0, '/', '$', true, false, null, 999.6, 10, null},
+            {10.0, 10.0, '/', '$', true, false, -1.0, null, null, null},
+            {10.0, 10.0, '/', '$', true, false, 304_801.0, null, null, null},
+        };
+        List<Object> vectors = new ArrayList<>();
+        int index = 0;
+        for (Object[] c : cases) {
+            MutableClock clock = new MutableClock();
+            clock.millis = 1_700_000_000_000L;
+            MemoryRepository repository = new MemoryRepository();
+            Transmitter transmitter = new Transmitter();
+            AprsController controller = new AprsController(repository, transmitter, clock);
+            controller.setCallsign("N0CALL");
+            controller.setTxDestination("APKVPA");
+            controller.setTxPath(List.of(new Digipeater("WIDE1-1"), new Digipeater("WIDE2-1")));
+            BeaconData beacon = BeaconData.builder().latitude((Double) c[0]).longitude((Double) c[1])
+                .symbolTable((Character) c[2]).symbolCode((Character) c[3]).messagingCapable((Boolean) c[4])
+                .compressed((Boolean) c[5]).altitudeMeters((Double) c[6]).speedKnots((Double) c[7])
+                .courseDegrees((Integer) c[8]).comment((String) c[9]).build();
+            boolean accepted = controller.submitPositionBeacon(beacon);
+            List<Object> events = new ArrayList<>();
+            for (AprsEvent event : repository.events) {
+                events.add(event(event));
+            }
+            vectors.add(Json.obj().put("name", "beacon " + ++index)
+                .put("input", Json.obj().put("latitude", c[0] instanceof Double d && d.isNaN() ? null : c[0])
+                    .put("longitudeIsNaN", c[1] instanceof Double d && d.isNaN())
+                    .put("longitude", c[1] instanceof Double d && d.isNaN() ? null : c[1])
+                    .put("symbolTable", c[2] == null ? null : String.valueOf(c[2]))
+                    .put("symbolCode", c[3] == null ? null : String.valueOf(c[3]))
+                    .put("messagingCapable", c[4]).put("compressed", c[5]).put("altitudeMeters", c[6])
+                    .put("speedKnots", c[7]).put("courseDegrees", c[8]).put("comment", c[9])
+                    .put("startMs", 1_700_000_000_000L))
+                .put("expected", Json.obj().put("accepted", accepted)
+                    .put("transmissions", transmitter.transmissions).put("events", events)
+                    .put("packets", repository.packets.size())));
+        }
+        return vectors;
+    }
+
+    /** Steps {@code {at, "rx", tnc2}} with digipeating enabled for N0CALL; transmissions are accepted. */
+    private static final Object[][][] DIGIPEATING = {
+        {
+            {0L, "rx", "N1CALL>APRS,WIDE1-1,WIDE2-1:>fill-in"},
+            {1_000L, "rx", "N1CALL>APRS,N0CALL*,WIDE2-1:>fill-in"},
+            {2_000L, "rx", "N1CALL>APRS,N2CALL*,WIDE2-1:>fill-in"},
+            {5_000L, "rx", "N1CALL>APRS,WIDE1-1,WIDE2-1:>fill-in"},
+            {30_000L, "rx", "N1CALL>APRS,WIDE1-1,WIDE2-1:>fill-in"},
+            {31_000L, "rx", "N1CALL>APRS,N0CALL*,WIDE2-1:>fill-in"},
+        },
+        {
+            {0L, "rx", "N1CALL>APRS,N0CALL,WIDE2-1:>direct"},
+            {1L, "rx", "N1CALL>APRS,N0CALL-0,WIDE2-1:>direct zero"},
+            {2L, "rx", "N1CALL>APRS,N0CALL-1:>other ssid"},
+            {3L, "rx", "N1CALL>APRS,WIDE2-1:>wide2"},
+            {4L, "rx", "N1CALL>APRS,WIDE1-2:>wide1-2"},
+            {5L, "rx", "N1CALL>APRS,WIDE1*,WIDE2-1:>used wide1"},
+            {6L, "rx", "N1CALL>APRS:>no path"},
+            {7L, "rx", "N1CALL>APRS,N2CALL*:>all used"},
+            {8L, "rx", "N1CALL>APRS,WIDE1-1:Abroken"},
+            {9L, "rx", "N1CALL>APRS,wide1-1:>lower case"},
+            {10L, "rx", "N1CALL>APRS,WIDE1-X:>bad ssid"},
+            {11L, "mode", "refuse"},
+            {12L, "rx", "N1CALL>APRS,WIDE1-1:>refused"},
+            {13L, "mode", "accept"},
+            {14L, "rx", "N1CALL>APRS,WIDE1-1:>refused"},
+        },
+    };
+
+    static List<Object> digipeating() throws Exception {
+        List<Object> vectors = new ArrayList<>();
+        int index = 0;
+        for (Object[][] session : DIGIPEATING) {
+            MutableClock clock = new MutableClock();
+            clock.millis = 1_700_000_000_000L;
+            MemoryRepository repository = new MemoryRepository();
+            Transmitter transmitter = new Transmitter();
+            AprsController controller = new AprsController(repository, transmitter, clock);
+            controller.setCallsign("N0CALL");
+            controller.setTxDestination("APKVPA");
+            controller.setDigipeatingEnabled(true);
+            List<Object> steps = new ArrayList<>();
+            for (Object[] step : session) {
+                long now = 1_700_000_000_000L + (Long) step[0];
+                clock.millis = now;
+                Json.Obj input = Json.obj().put("atMs", now).put("kind", step[1]);
+                if ("rx".equals(step[1])) {
+                    byte[] frame = frame((String) step[2]);
+                    input.put("frame", Json.hex(frame));
+                    controller.handle(Parser.parseAX25(frame, 0, frame.length), AprsSource.RX_RF, 144_390_000L, frame);
+                } else {
+                    transmitter.mode = (String) step[2];
+                    input.put("mode", step[2]);
+                }
+                steps.add(input);
+                transmitter.step++;
+            }
+            List<Object> events = new ArrayList<>();
+            for (AprsEvent event : repository.events) {
+                events.add(event(event).put("digipeated", event.isDigipeated()));
+            }
+            vectors.add(Json.obj().put("name", "digipeating " + ++index)
+                .put("input", Json.obj().put("startMs", 1_700_000_000_000L).put("steps", steps))
+                .put("expected", Json.obj().put("transmissions", transmitter.transmissions)
+                    .put("events", events).put("packets", repository.packets.size())));
+        }
+        return vectors;
+    }
+
     /** {@code MessagePacket.createMessagePayload} and {@code APRSPacket.toAX25Frame}. */
     static List<Object> encoding() {
         List<Object> vectors = new ArrayList<>();
