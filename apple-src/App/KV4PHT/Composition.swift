@@ -19,7 +19,8 @@ enum Composition {
             serialDevices: serialDevices,
             audioOutput: AVAudioEngineOutput(),
             simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? Carrier() : nil) },
-            memories: memoryRepository()
+            memories: memoryRepository(),
+            location: CoreLocationProvider()
         )
     }
 
