@@ -52,6 +52,18 @@ struct TransmitTests {
         #expect(!state.radio.flags.contains(.txActive))
     }
 
+    @Test("TX audio is recorded while transmitting, and only then")
+    func audioRecorded() {
+        var simulator = transmitting()
+        _ = simulator.receive(Self.audioBlock + FrameEncoder.txAudio([0x22, 0x00, 0x00, 0x00]), at: .ms(20))
+        #expect(simulator.transmittedAudioBlocks == 2)
+        #expect(simulator.lastTransmittedAudio == [0x22, 0x00, 0x00, 0x00])
+        var idle = RadioSimulator()
+        _ = idle.receive(Self.audioBlock, at: .ms(20))
+        #expect(idle.transmittedAudioBlocks == 0)
+        #expect(idle.lastTransmittedAudio == nil)
+    }
+
     @Test("TX audio keeps the watchdog from firing")
     func audioFeedsWatchdog() {
         var simulator = transmitting()
