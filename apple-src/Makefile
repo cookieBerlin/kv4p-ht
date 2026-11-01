@@ -56,7 +56,8 @@ vectors:
 vectors-check: vectors
 	@if [ -n "$$(git status --porcelain --untracked-files=all -- '$(VECTORS)' $(VENDORED))" ]; then \
 		echo "vectors: committed vectors are out of date, run 'make vectors' and commit:" >&2; \
-		git status --short --untracked-files=all -- '$(VECTORS)' $(VENDORED) >&2; exit 1; fi
+		git status --short --untracked-files=all -- '$(VECTORS)' $(VENDORED) >&2; \
+		git diff --unified=0 -- '$(VECTORS)' $(VENDORED) | cut -c1-200 | head -60 >&2; exit 1; fi
 	@echo "vectors: ok"
 
 ios-build:
