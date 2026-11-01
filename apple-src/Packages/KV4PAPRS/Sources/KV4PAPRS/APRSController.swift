@@ -47,7 +47,7 @@ public struct APRSPacketRecord: Equatable, Sendable {
 /// outgoing messages with retries until acknowledged, and acknowledgements for messages to `callsign`.
 ///
 /// Transmissions go through the `transmit` closure, which answers synchronously like `Callbacks.submitRf`.
-/// Digipeating, beacons and APRS-IS are not implemented yet.
+/// It also sends position beacons and digipeats (`WIDE1-1` and its own callsign). APRS-IS is not implemented yet.
 public struct APRSController: Sendable {
     static let duplicateWindowMs: Int64 = 30_000
     static let numberedMessageDuplicateWindowMs: Int64 = 30 * 60_000
@@ -55,12 +55,22 @@ public struct APRSController: Sendable {
     static let finalAcknowledgementGraceMs: Int64 = 30_000
     static let acknowledgementDelayMs: Int64 = 1_000
     static let messageIdentifierSpace: Int64 = 60_466_176  // 36^5
+    static let digipeatDedupMs: Int64 = 28_000
 
     /// The local callsign; empty disables messaging and acknowledgements.
     public var callsign: String {
         get { storedCallsign }
-        set { storedCallsign = Java.trim(newValue).uppercased() }
+        set {
+            let normalized = Java.trim(newValue).uppercased()
+            if normalized != storedCallsign {
+                storedCallsign = normalized
+                digipeatInput = [:]
+                digipeatOutput = [:]
+            }
+        }
     }
+    /// Repeat packets addressed to `WIDE1-1` or to `callsign` (fill-in digipeater).
+    public var isDigipeatingEnabled = false
     /// The AX.25 destination of transmitted packets (the Android app uses `APKVPA`).
     public var txDestination: String {
         get { storedDestination }
@@ -75,6 +85,9 @@ public struct APRSController: Sendable {
     private var pendingAcknowledgements: [(dueAtMs: Int64, eventId: Int64, packet: APRSPacket, frequencyHz: Int64?)] =
         []
     var nextMessageIdentifier: Int64
+    /// When a packet was digipeated, by its logical key and by the repeated frame.
+    private var digipeatInput: [String: Int64] = [:]
+    private var digipeatOutput: [String: Int64] = [:]
 
     /// `startMs` seeds the message identifiers, as java-aprs does with the clock.
     public init(startMs: Int64) {
@@ -83,24 +96,112 @@ public struct APRSController: Sendable {
 
     // MARK: Receive
 
-    /// `handle(packet, RX_RF, frequencyHz, frame)`; returns the new or updated event.
+    /// `handle(packet, RX_RF, frequencyHz, frame)`; returns the new or updated event. Our own digipeated packets
+    /// heard back are ignored.
     @discardableResult
-    public mutating func receive(_ packet: APRSPacket, frame: [UInt8]?, frequencyHz: Int64?, atMs now: Int64)
-        -> APRSEvent?
-    {
+    public mutating func receive(
+        _ packet: APRSPacket,
+        frame: [UInt8]?,
+        frequencyHz: Int64?,
+        atMs now: Int64,
+        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome
+    ) -> APRSEvent? {
+        digipeatOutput = digipeatOutput.filter { now - $0.value < Self.digipeatDedupMs }
+        guard digipeatOutput[Self.digipeatKey(packet)] == nil else { return nil }
+        let digipeated = digipeat(packet, frequencyHz: frequencyHz, at: now, transmit: transmit)
         let record = Self.record(packet, source: .rxRF, frequencyHz: frequencyHz, frame: frame, at: now)
+        var event: APRSEvent?
         if let message = packet.info.thirdParty == nil ? packet.info.message : nil, message.isAck || message.isRej {
-            return deliver(message, from: packet.source, record: record)
-        }
-        guard let candidate = Self.event(for: packet, at: now) else {
+            event = deliver(message, from: packet.source, record: record)
+        } else if let candidate = Self.event(for: packet, at: now) {
+            let persisted = persist(candidate, record: record, at: now)
+            if persisted.kind == .message {
+                acknowledge(persisted, frequencyHz: frequencyHz, at: now)
+            }
+            event = persisted
+        } else {
             packets.append(record)
+        }
+        guard let digipeated else { return event }
+        guard let index = events.firstIndex(where: { $0.id == event?.id }) else {
+            packets.append(digipeated)
+            return event
+        }
+        events[index].isDigipeated = true
+        associate(digipeated, with: index)
+        return events[index]
+    }
+
+    /// `maybeDigipeat`: the first unused path element is `WIDE1-1` or our callsign; it becomes our used callsign.
+    private mutating func digipeat(
+        _ packet: APRSPacket,
+        frequencyHz: Int64?,
+        at now: Int64,
+        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome
+    ) -> APRSPacketRecord? {
+        guard isDigipeatingEnabled, !callsign.isEmpty, !packet.hasFault else { return nil }
+        let key = Self.dedupKey(packet)
+        digipeatInput = digipeatInput.filter { now - $0.value < Self.digipeatDedupMs }
+        guard digipeatInput[key] == nil, let index = packet.digipeaters.firstIndex(where: { !$0.isUsed }) else {
             return nil
         }
-        let event = persist(candidate, record: record, at: now)
-        if event.kind == .message {
-            acknowledge(event, frequencyHz: frequencyHz, at: now)
+        let next = packet.digipeaters[index]
+        let isOurs = Self.address(next.description) == Self.address(callsign)
+        let isWide1 = next.callsign.uppercased() == "WIDE1" && Java.parseInt(next.ssid.isEmpty ? "0" : next.ssid) == 1
+        guard isOurs || isWide1 else { return nil }
+        var path = packet.digipeaters
+        path[index] = AX25Address(call: isOurs ? next.description : callsign).used()
+        let retransmit = APRSPacket(
+            source: packet.source,
+            destination: packet.destination,
+            digipeaters: path,
+            payload: packet.info.payload
+        )
+        let request = APRSTransmitRequest(packet: retransmit, frequencyHz: frequencyHz, purpose: .digipeatedPacket)
+        guard case .accepted(let sentHz, let frame) = transmit(request) else { return nil }
+        digipeatInput[key] = now
+        digipeatOutput[Self.digipeatKey(retransmit)] = now
+        return Self.record(retransmit, source: .txRF, frequencyHz: sentHz, frame: frame, at: now)
+    }
+
+    /// `digipeatOutputKey`: like the logical key, with the path.
+    private static func digipeatKey(_ packet: APRSPacket) -> String {
+        let path = packet.digipeaters.map(\.description).joined(separator: ",")
+        return "\(packet.source)|\(packet.destination)|\(path)|" + Data(packet.info.payload).base64EncodedString()
+    }
+
+    // MARK: Beacons
+
+    /// `submitPositionBeacon`: a valid beacon is sent on the current frequency and recorded as our position.
+    public mutating func submitBeacon(
+        _ beacon: APRSBeacon,
+        atMs now: Int64,
+        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome
+    ) -> Bool {
+        guard !callsign.isEmpty, !txDestination.isEmpty, beacon.isValid else { return false }
+        let packet = APRSPacket(
+            source: callsign,
+            destination: txDestination,
+            digipeaters: txPath,
+            payload: Java.asciiBytes(beacon.payload)
+        )
+        let request = APRSTransmitRequest(packet: packet, frequencyHz: nil, purpose: .positionBeacon)
+        guard case .accepted(let sentHz, let frame) = transmit(request) else { return false }
+        // `outgoingPositionEvent`: the event the packet makes when received; the coordinates otherwise.
+        var event = APRSEvent(
+            kind: .position,
+            firstSeenMs: now,
+            lastSeenMs: now,
+            fromCallsign: callsign,
+            latitude: beacon.latitude,
+            longitude: beacon.longitude
+        )
+        if let decoded = try? APRSParser.parse(ax25: frame), let parsed = Self.event(for: decoded, at: now) {
+            event = parsed
         }
-        return event
+        event.dedupKey = Self.dedupKey(packet)
+        _ = insert(event, record: Self.record(packet, source: .txRF, frequencyHz: sentHz, frame: frame, at: now))
+        return true
     }
 
     /// An acknowledgement or rejection of one of our pending messages; others are only recorded.

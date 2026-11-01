@@ -91,7 +91,7 @@ struct APRSEventVectorTests {
                 frame: frame,
                 frequencyHz: 144_390_000,
                 atMs: step.timeMs
-            )
+            ) { _ in .never }
         }
         #expect(controller.events.map(EventJSON.init) == vector.expected.events)
         #expect(controller.packets.count == vector.expected.packets)

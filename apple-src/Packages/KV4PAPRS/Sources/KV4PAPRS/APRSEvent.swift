@@ -38,6 +38,8 @@ public struct APRSEvent: Equatable, Identifiable, Sendable {
     public internal(set) var windDirection: String?
     /// The station that relayed a third-party packet.
     public internal(set) var relayCallsign: String?
+    /// This station digipeated the packet.
+    public internal(set) var isDigipeated = false
     /// Outgoing numbered messages wait for an acknowledgement.
     public internal(set) var deliveryState = DeliveryState.none
     public internal(set) var transmitAttempts = 0

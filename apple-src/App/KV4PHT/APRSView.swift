@@ -20,6 +20,23 @@ struct APRSView: View {
     }
 
     private var composer: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                Toggle("Position beacon", isOn: $model.isBeaconEnabled)
+                    .disabled(!model.canBeacon || storedCallsign.isEmpty)
+                Picker("Symbol", selection: $model.beaconSymbol) {
+                    ForEach(APRSSymbol.allCases, id: \.self) { Text($0.name) }
+                }
+                .frame(width: 200)
+                Toggle("Approximate position", isOn: $model.isBeaconApproximate)
+                Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
+                    .disabled(storedCallsign.isEmpty)
+            }
+            messageLine
+        }
+    }
+
+    private var messageLine: some View {
         HStack {
             TextField("Your callsign", text: $storedCallsign)
                 .frame(width: 110)

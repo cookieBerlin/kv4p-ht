@@ -76,6 +76,11 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
   --show-codecov-path` covers only the first one), removes files listed in
   `apple-src/coverage-exclusions.txt`, and fails if line coverage is below
   100.00 % or a module has no coverage data. The same script runs in CI.
+- Tests run in parallel, so the coverage build uses atomic profile counters
+  (`-instrprof-atomic-counter-update-all`). With the default counters, concurrent
+  executions of the same code (for example, a timer that many tests cancel) lose
+  increments. Regions whose counts are derived from them then read as uncovered,
+  and the gate fails at random.
 - The coverage report is uploaded as a CI artifact.
 
 ## Hardware test checklist (per milestone)

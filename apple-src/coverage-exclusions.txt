@@ -16,3 +16,5 @@ Packages/KV4PSimulatorPeripheral/Sources/kv4p-sim-peripheral/main.swift
 Packages/KV4PAudio/Sources/KV4PAudio/AVAudioEngineOutput.swift
 # AVAudioEngine input adapter: forwards converted microphone samples only (ADR-0018).
 Packages/KV4PAudio/Sources/KV4PAudio/AVAudioEngineInput.swift
+# CoreLocation adapter: forwards the first location update only (ADR-0018).
+Packages/KV4PRadio/Sources/KV4PRadio/CoreLocationProvider.swift

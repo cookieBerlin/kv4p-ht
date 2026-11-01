@@ -105,6 +105,28 @@ public final class RadioViewModel {
         set { aprs.callsign = newValue }
     }
 
+    /// Send a position beacon now and every five minutes (`AprsBeaconSchedule`).
+    public var isBeaconEnabled = false {
+        didSet {
+            if isBeaconEnabled != oldValue {
+                nextBeaconAtMs = 0
+            }
+        }
+    }
+    public var beaconSymbol = APRSSymbol.phone
+    /// Round the position to 0.01° (about 1 km), Android's approximate accuracy.
+    public var isBeaconApproximate = false
+    /// Repeat packets for WIDE1-1 and our callsign.
+    public var isDigipeatingEnabled: Bool {
+        get { aprs.isDigipeatingEnabled }
+        set { aprs.isDigipeatingEnabled = newValue }
+    }
+    /// A location is available for beacons.
+    public var canBeacon: Bool { location != nil }
+
+    static let beaconIntervalMs: Int64 = 5 * 60_000
+    private var nextBeaconAtMs: Int64 = 0
+    private let location: (any LocationProvider)?
     private var aprs: APRSController
     private var packetObserver: Task<Void, Never>?
     private var aprsTicker: Task<Void, Never>?
@@ -129,10 +151,12 @@ public final class RadioViewModel {
         audioOutput: (any AudioOutput)? = nil,
         simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
         memories: (any MemoryRepository)? = nil,
+        location: (any LocationProvider)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
         repository = memories
+        self.location = location
         self.now = now
         self.aprsTickInterval = aprsTickInterval
         var aprs = APRSController(startMs: now())
@@ -262,7 +286,7 @@ public final class RadioViewModel {
     /// Frames that are not APRS are ignored, as on Android.
     private func receive(_ frame: [UInt8]) {
         guard let packet = try? APRSParser.parse(ax25: frame) else { return }
-        aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now())
+        aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now(), transmit: transmitAPRS)
         showAPRS()
     }
 
@@ -296,7 +320,29 @@ public final class RadioViewModel {
     }
 
     private func tickAPRS() {
-        aprs.tick(atMs: now(), transmit: transmitAPRS)
+        let time = now()
+        aprs.tick(atMs: time, transmit: transmitAPRS)
+        if isBeaconEnabled, time >= nextBeaconAtMs, let location {
+            nextBeaconAtMs = time + Self.beaconIntervalMs
+            Task { await beacon(from: location) }
+        }
+        showAPRS()
+    }
+
+    /// `sendPositionBeacon`: compressed, messaging capable, primary table, on the current TX frequency.
+    private func beacon(from location: any LocationProvider) async {
+        guard let point = await location.currentLocation() else {
+            message = "Your location is unknown."
+            return
+        }
+        let round = { (value: Double) in self.isBeaconApproximate ? (value * 100 + 0.5).rounded(.down) / 100 : value }
+        let beacon = APRSBeacon(
+            latitude: round(point.latitude),
+            longitude: round(point.longitude),
+            symbolTable: "/",
+            symbolCode: beaconSymbol.code
+        )
+        _ = aprs.submitBeacon(beacon, atMs: now(), transmit: transmitAPRS)
         showAPRS()
     }
 
