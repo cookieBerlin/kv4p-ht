@@ -24,3 +24,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0018](0018-transport-adapters.md) | Transport logic as state machines behind thin adapters | Proposed |
 | [0019](0019-xcode-app-project.md) | Xcode project for the app target | Accepted |
 | [0020](0020-rx-audio-pipeline.md) | RX audio pipeline | Proposed |
+| [0021](0021-tx-audio-and-ptt.md) | TX audio and PTT | Proposed |
