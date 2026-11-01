@@ -31,7 +31,7 @@ public struct AboutInfo: Sendable {
     }
 
     /// The project, where the source code of every version is published.
-    public static let sourceAddress = "https://github.com/VanceVagell/kv4p-ht"
+    public static let sourceAddress = "https://github.com/cookieBerlin/kv4p-ht"
 
     /// The app first; then what it contains, then what it ports.
     public static let components = [
