@@ -1,4 +1,6 @@
+import Foundation
 import KV4PAudio
+import KV4PPersistence
 import KV4PRadio
 import KV4PSimulator
 import KV4PTransport
@@ -16,8 +18,16 @@ enum Composition {
             },
             serialDevices: serialDevices,
             audioOutput: AVAudioEngineOutput(),
-            simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? Carrier() : nil) }
+            simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? Carrier() : nil) },
+            memories: memoryRepository()
         )
+    }
+
+    /// The memories live in the app's Application Support folder; without it the app runs without memories.
+    private static func memoryRepository() -> (any MemoryRepository)? {
+        let folder = URL.applicationSupportDirectory
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return try? SwiftDataMemoryRepository(storeURL: folder.appending(path: "Memories.store"))
     }
 
     private static func transport(for connection: RadioViewModel.Connection) -> any RadioTransport {

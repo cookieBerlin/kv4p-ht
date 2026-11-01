@@ -95,7 +95,27 @@ Transmitting requires a license and an antenna or dummy load.
 
 ## Memories and scanning
 
-*Planned.* Memories, groups, scan, RepeaterBook import.
+The memory list is in the sidebar.
+
+- **Tune:** click a memory. The radio switches to its frequency, repeater
+  offset (TX = RX ± offset) and tones. Frequencies outside the module range are
+  set to the nearest limit, as in the Android app.
+- **Add:** **+** creates a memory from the current frequency. **Edit…** and
+  **Delete** are in the context menu (right-click). A memory has a name,
+  frequency, offset (none, down or up, in kHz, default 600), TX and RX tone, an
+  optional group and *Skip during scan*.
+- **Groups:** the **Group** picker shows one group or all memories.
+- **Scan:** steps through the memories shown, in order, and stays on a memory
+  while a signal opens the squelch. It moves on 250 ms after the squelch closes.
+  It skips memories marked *Skip during scan* and those outside the module
+  range. With squelch 0 it scans with squelch 7, as in the Android app; **Stop
+  scan** restores your squelch. Transmitting or tuning by hand ends the scan.
+- **RepeaterBook import:** download a CSV export from
+  [RepeaterBook](https://www.repeaterbook.com) in your browser (US or
+  international format), then choose **Import RepeaterBook CSV…** and enter a
+  group name. The app adds the repeaters the connected radio can receive, with
+  offset and uplink tone. Connect the radio first.
+- Memories are stored on this device.
 
 ## APRS
 
@@ -131,6 +151,8 @@ The app warns when the radio's firmware is older than required.
 | *Bluetooth access is not allowed.* | System Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
 | *The microphone is not available.* | System Settings → Privacy & Security → Microphone, then press PTT again. |
+| *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |
+| *Connect the radio first, …* | The import needs the radio's frequency range; connect, then import again. |
 | *The audio output cannot be started.* | Check the output device in System Settings → Sound, then connect again. The radio works without audio. |
 
 See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
@@ -153,5 +175,7 @@ Used by developers before merging a milestone that touches hardware behaviour:
       the link drops (switch off Bluetooth / pull the cable while transmitting).
 - [ ] Reconnect after radio power cycle.
 - [ ] Out-of-range frequency is rejected.
+- [ ] Tune a memory with offset and tone: a second radio hears the TX on the
+      offset frequency with the tone; scan stops on a busy memory.
 - [ ] Tuning is applied and confirmed by the radio
       (`swift run kv4p-probe --serial --reset --tune 145.525`, then back).

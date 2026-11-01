@@ -14,6 +14,7 @@ let package = Package(
         .library(name: "KV4PSimulator", targets: ["KV4PSimulator"]),
         .library(name: "KV4PRadio", targets: ["KV4PRadio"]),
         .library(name: "KV4PAudio", targets: ["KV4PAudio"]),
+        .library(name: "KV4PPersistence", targets: ["KV4PPersistence"]),
     ],
     targets: [
         .target(
@@ -38,6 +39,15 @@ let package = Package(
             resources: [.copy("Vectors")]
         ),
         .target(
+            name: "KV4PPersistence",
+            path: "Packages/KV4PPersistence/Sources/KV4PPersistence"
+        ),
+        .testTarget(
+            name: "KV4PPersistenceTests",
+            dependencies: ["KV4PPersistence"],
+            path: "Packages/KV4PPersistence/Tests/KV4PPersistenceTests"
+        ),
+        .target(
             name: "KV4PTransport",
             dependencies: ["KV4PProtocol"],
             path: "Packages/KV4PTransport/Sources/KV4PTransport"
@@ -59,12 +69,12 @@ let package = Package(
         ),
         .target(
             name: "KV4PRadio",
-            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio"],
+            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence"],
             path: "Packages/KV4PRadio/Sources/KV4PRadio"
         ),
         .testTarget(
             name: "KV4PRadioTests",
-            dependencies: ["KV4PRadio", "KV4PAudio", "KV4PSimulator", "KV4PTestSupport"],
+            dependencies: ["KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PSimulator", "KV4PTestSupport"],
             path: "Packages/KV4PRadio/Tests/KV4PRadioTests",
             resources: [.copy("Vectors")]
         ),
