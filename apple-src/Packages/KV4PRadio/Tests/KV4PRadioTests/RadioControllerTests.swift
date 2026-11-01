@@ -28,6 +28,17 @@ struct RadioControllerTests {
         }
     }
 
+    @Test("the controller runs on the continuous clock by default, with FreeDV available")
+    func continuousClock() async throws {
+        let controller = RadioController(transport: SimulatorTransport(simulator: RadioSimulator(scenario: .freeDV)))
+        var snapshots = controller.snapshots.makeAsyncIterator()
+        await controller.connect()
+        _ = try #require(await snapshots.next { $0.status == .ready })
+        await controller.setFreeDV(true)
+        #expect(await controller.snapshot.isFreeDV)
+        await controller.disconnect()
+    }
+
     @Test("connect: HELLO is checked, the state seeded, audio and status reports opened")
     func connect() async throws {
         var setup = Setup()
