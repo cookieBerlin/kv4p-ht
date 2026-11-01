@@ -18,7 +18,7 @@ APP_PROJECT := App/KV4PHT.xcodeproj
 APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check ios-build app ci
+.PHONY: test coverage lint format privacy changed vectors vectors-check ios-build app icon ci
 
 test:
 	$(SWIFT) test
@@ -66,5 +66,9 @@ app:
 	xcodebuild build -quiet -project $(APP_PROJECT) -scheme KV4PHT -destination '$(IOS_DESTINATION)' CODE_SIGNING_ALLOWED=NO \
 		-derivedDataPath $(APP_DERIVED_DATA)
 	scripts/app-plist-check.sh $(APP_DERIVED_DATA)/Build/Products/Debug-iphoneos/KV4PHT.app
+
+# Renders the app icon from ../artwork/app-icon.svg (ADR-0033); commit the result.
+icon:
+	scripts/app-icon.sh
 
 ci: lint privacy coverage ios-build app
