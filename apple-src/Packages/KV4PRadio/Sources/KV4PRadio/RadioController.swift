@@ -1,4 +1,5 @@
 import KV4PAudio
+import KV4PPersistence
 import KV4PProtocol
 import KV4PTransport
 
@@ -185,6 +186,25 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             state.setRxFrequency(rx)
             state.setTxFrequency(tx)
             state.setMemoryId(memoryId)
+            state.setTXAllowed(band.allows(tx, bandwidth: state.desired.bandwidth))
+        }
+    }
+
+    /// `RadioAudioService.tuneToMemory`: RX and TX (with the offset) are made safe instead of refused.
+    public func tune(to memory: ChannelMemory) throws(RadioError) {
+        guard snapshot.status == .ready, let firmware = desiredState.firmware else { throw .notReady }
+        let range = firmware.minRadioFreq...firmware.maxRadioFreq
+        let rx = HamFrequency.safe(memory.frequency, in: range)
+        let tx = memory.txFrequency(in: range)
+        let txTone = CTCSS.index(of: memory.txTone)
+        let rxTone = CTCSS.index(of: memory.rxTone)
+        let band = TXBand.default(for: firmware.moduleType)
+        update { state in
+            state.setMemoryId(memory.id)
+            state.setTxFrequency(tx)
+            state.setRxFrequency(rx)
+            state.setTxTone(txTone)
+            state.setRxTone(rxTone)
             state.setTXAllowed(band.allows(tx, bandwidth: state.desired.bandwidth))
         }
     }

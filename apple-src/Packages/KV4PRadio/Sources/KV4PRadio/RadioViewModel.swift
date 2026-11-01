@@ -197,7 +197,7 @@ public final class RadioViewModel {
         }
         if snapshot.status == .ready, let reported = snapshot.deviceState?.radio.freqRx, reported != frequency {
             frequency = reported
-            frequencyText = Self.format(reported)
+            frequencyText = HamFrequency.format(reported)
         }
     }
 
@@ -231,14 +231,14 @@ public final class RadioViewModel {
     /// Tunes RX and TX to the entered frequency, normalised and clamped like the Android app.
     public func applyFrequency() async {
         guard isReady, let controller, let firmware = snapshot.firmware, let current = frequency else { return }
-        guard let entered = Self.frequency(frequencyText, in: firmware.minRadioFreq...firmware.maxRadioFreq) else {
+        guard let entered = HamFrequency.safe(frequencyText, in: firmware.minRadioFreq...firmware.maxRadioFreq) else {
             message = "\"\(frequencyText)\" is not a frequency."
-            frequencyText = Self.format(current)
+            frequencyText = HamFrequency.format(current)
             return
         }
         message = nil
         frequency = entered
-        frequencyText = Self.format(entered)
+        frequencyText = HamFrequency.format(entered)
         try? await controller.tune(rx: entered, tx: entered, memoryId: -1)
     }
 
@@ -348,20 +348,6 @@ public final class RadioViewModel {
         case 10...: "S9+\((value - 9) * 20)"
         default: "S\(value)"
         }
-    }
-
-    /// `RadioAudioService.makeSafeHamFreq`: `1467` → `146.7`, then clamped to the module range.
-    static func frequency(_ text: String, in range: ClosedRange<Float>) -> Float? {
-        guard var frequency = Float(text.trimmingCharacters(in: .whitespaces)), frequency.isFinite else { return nil }
-        while frequency > 500 {
-            frequency /= 10
-        }
-        return min(max(frequency, range.lowerBound), range.upperBound)
-    }
-
-    /// Four decimals, as in the Android app.
-    static func format(_ frequency: Float) -> String {
-        String(format: "%.4f", locale: Locale(identifier: "en_US_POSIX"), Double(frequency))
     }
 
     private static func label(_ tone: UInt8) -> String {
