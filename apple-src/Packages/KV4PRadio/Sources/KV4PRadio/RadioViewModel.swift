@@ -1,6 +1,7 @@
 import Foundation
 import KV4PAPRS
 import KV4PAudio
+import KV4PFlasher
 import KV4PPersistence
 import KV4PProtocol
 import KV4PTransport
@@ -61,7 +62,26 @@ public final class RadioViewModel {
         }
     }
 
+    /// An update of the radio's firmware over USB (`FirmwareActivity`).
+    public enum FirmwareUpdate: Equatable, Sendable {
+        case idle
+        /// Waiting for the bootloader.
+        case connecting
+        case flashing(percent: Int)
+        /// Flashed and verified; the app reconnects.
+        case finished
+        case failed(String)
+
+        public var isRunning: Bool {
+            switch self {
+            case .connecting, .flashing: true
+            case .idle, .finished, .failed: false
+            }
+        }
+    }
+
     public private(set) var connections: [Connection] = []
+    public private(set) var firmwareUpdate = FirmwareUpdate.idle
     public var selectedConnection = Connection.bluetooth
     public private(set) var snapshot = RadioViewModel.disconnected
     /// The frequency field, in MHz.
@@ -168,6 +188,7 @@ public final class RadioViewModel {
     private let audioOutput: (any AudioOutput)?
     private let simulateSignal: (@Sendable (Bool) async -> Void)?
     private let repository: (any MemoryRepository)?
+    private let firmware: (any FirmwareFlashing)?
     private var controller: (any RadioControlling)?
     private var connection: Connection?
     private var observer: Task<Void, Never>?
@@ -184,10 +205,12 @@ public final class RadioViewModel {
         memories: (any MemoryRepository)? = nil,
         location: (any LocationProvider)? = nil,
         internet: (any APRSInternetLink)? = nil,
+        firmware: (any FirmwareFlashing)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
         repository = memories
+        self.firmware = firmware
         self.location = location
         self.internet = internet
         self.now = now
@@ -249,6 +272,48 @@ public final class RadioViewModel {
     public var canTransmit: Bool { isReady && snapshot.desired.flags.contains(.txAllowed) }
 
     public var canSimulateSignal: Bool { isReady && connection == .simulator && simulateSignal != nil }
+
+    // MARK: Firmware
+
+    /// Flashing needs USB (macOS) and the packaged firmware.
+    public var canUpdateFirmware: Bool {
+        guard case .serial = selectedConnection, firmware != nil else { return false }
+        return !firmwareUpdate.isRunning && !isTransmitting
+    }
+
+    /// `outdatedFirmware` / `missingFirmware`: the radio's firmware is older than required, or it did not answer.
+    public var isFirmwareOutdated: Bool {
+        switch snapshot.status {
+        case .failed(.firmwareTooOld), .failed(.invalidHello), .failed(.helloTimeout): true
+        default: false
+        }
+    }
+
+    /// `startFirmwareActivity`: disconnects, flashes the packaged firmware into the radio on the selected USB
+    /// device, and reconnects once it is verified (`renegotiateAfterFlashing`).
+    public func updateFirmware() async {
+        guard canUpdateFirmware, case .serial(let path) = selectedConnection, let firmware else { return }
+        await disconnect()
+        firmwareUpdate = .connecting
+        let (events, reporter) = AsyncStream.makeStream(of: FlashEvent.self)
+        let progress = Task { [weak self] in
+            for await event in events {
+                guard case .progress(let percent) = event else { continue }
+                self?.firmwareUpdate = .flashing(percent: percent)
+            }
+        }
+        do throws(FlashError) {
+            try await firmware.flash(serialPath: path) { reporter.yield($0) }
+            reporter.finish()
+            await progress.value
+            firmwareUpdate = .finished
+            await connect()
+        } catch {
+            reporter.finish()
+            await progress.value
+            firmwareUpdate = .failed(Self.message(for: error))
+        }
+    }
 
     // MARK: Connection
 
@@ -693,6 +758,17 @@ public final class RadioViewModel {
         case .firmwareTooOld(let version): "Firmware \(version) is too old. Update the radio to version 17 or later."
         case .radioModuleNotFound: "The SA818 radio module did not respond. Restart the radio."
         case .transport(let error): message(for: error)
+        }
+    }
+
+    static func message(for error: FlashError) -> String {
+        switch error {
+        case .noAnswer: "The radio did not start its bootloader. Check the USB cable and try again."
+        case .unsupportedChip: "This device is not a kv4p HT."
+        case .verifyFailed: "The firmware could not be verified. Start the update again."
+        case .port(let error): message(for: error)
+        case .timeout, .commandFailed, .stubNotStarted:
+            "The radio stopped answering during the update. Start the update again; it can always be repeated."
         }
     }
 

@@ -2,6 +2,7 @@ import Foundation
 import KV4PProtocol
 import KV4PTestSupport
 import KV4PTransport
+import Synchronization
 import Testing
 
 @testable import KV4PFlasher
@@ -37,11 +38,11 @@ struct FirmwareFlasherTests {
             #expect(path == "/dev/cu.usbserial-0001")
             return port
         }
-        var percent = 0
+        let percent = Mutex(0)
         try await flasher.flash(serialPath: "/dev/cu.usbserial-0001") { event in
-            if case .progress(let value) = event { percent = value }
+            if case .progress(let value) = event { percent.withLock { $0 = value } }
         }
-        #expect(percent == 100)
+        #expect(percent.withLock { $0 } == 100)
     }
 
     @Test("a radio that does not answer: the port is opened, reset into the bootloader and closed again")

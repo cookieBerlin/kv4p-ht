@@ -18,8 +18,13 @@ extension FirmwareImages {
     }
 }
 
+/// Updates the firmware of the radio on a USB serial device.
+public protocol FirmwareFlashing: Sendable {
+    func flash(serialPath: String, events: @Sendable (FlashEvent) -> Void) async throws(FlashError)
+}
+
 /// Flashes `images` into the radio on a USB serial device; the port is open only while flashing.
-public struct FirmwareFlasher<C: Clock>: Sendable where C.Duration == Duration {
+public struct FirmwareFlasher<C: Clock>: FirmwareFlashing where C.Duration == Duration {
     private let images: FirmwareImages
     private let stub: FlasherStub
     private let clock: C
@@ -38,7 +43,7 @@ public struct FirmwareFlasher<C: Clock>: Sendable where C.Duration == Duration {
         makePort = port
     }
 
-    public func flash(serialPath: String, events: (FlashEvent) -> Void) async throws(FlashError) {
+    public func flash(serialPath: String, events: @Sendable (FlashEvent) -> Void) async throws(FlashError) {
         let port = makePort(serialPath)
         do throws(TransportError) { try await port.open() } catch { throw .port(error) }
         let result: Result<Void, FlashError>
