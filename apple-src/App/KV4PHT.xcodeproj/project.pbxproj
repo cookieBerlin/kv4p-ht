@@ -29,16 +29,20 @@
 		A30000000000000000000003 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../Config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000004 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../Config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000005 /* KV4PHT.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KV4PHT.entitlements; sourceTree = "<group>"; };
-		A30000000000000000000006 /* bootloader.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = bootloader.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/bootloader.bin; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000007 /* partitions.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = partitions.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/partitions.bin; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000008 /* boot_app0.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = boot_app0.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/boot_app0.bin; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000009 /* firmware_v17.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = firmware_v17.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/firmware_v17.bin; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000006 /* bootloader.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = bootloader.bin; path = "../../android-src/KV4PHT/app/src/main/res/raw/bootloader.bin"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000007 /* partitions.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = partitions.bin; path = "../../android-src/KV4PHT/app/src/main/res/raw/partitions.bin"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000008 /* boot_app0.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = boot_app0.bin; path = "../../android-src/KV4PHT/app/src/main/res/raw/boot_app0.bin"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000009 /* firmware_v17.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = firmware_v17.bin; path = "../../android-src/KV4PHT/app/src/main/res/raw/firmware_v17.bin"; sourceTree = SOURCE_ROOT; };
 		A3000000000000000000000A /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../../LICENSE; sourceTree = SOURCE_ROOT; };
-		A3000000000000000000000B /* COPYING-codec2 */ = {isa = PBXFileReference; lastKnownFileType = text; name = COPYING-codec2; path = ../Packages/KV4PDigital/COPYING-codec2; sourceTree = SOURCE_ROOT; };
+		A3000000000000000000000B /* COPYING-codec2 */ = {isa = PBXFileReference; lastKnownFileType = text; name = "COPYING-codec2"; path = "../Packages/KV4PDigital/COPYING-codec2"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A40000000000000000000001 /* KV4PHT */ = {isa = PBXFileSystemSynchronizedRootGroup; path = KV4PHT; sourceTree = "<group>"; };
+		A40000000000000000000001 /* KV4PHT */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KV4PHT;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
