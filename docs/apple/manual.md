@@ -64,8 +64,13 @@ settings.
 - **TX/RX tone (CTCSS):** one of the 38 standard tones or *None*.
 - **High power** and the **audio filters** (pre-emphasis, high-pass, low-pass).
 - **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*.
-
-*Planned:* RX audio playback.
+- **Squelch indicator:** *Open* while a signal is received and played, *Closed*
+  otherwise. The radio mutes the audio itself while the squelch is closed.
+- **Volume:** the slider under **Audio** sets the playback volume in the app; the
+  Mac's own volume applies on top. The audio plays on the current output device
+  and moves along when you plug in headphones.
+- **Simulator:** *Simulate a received signal* plays a 1 kHz tone with the squelch
+  open.
 
 ## Transmitting
 
@@ -109,6 +114,7 @@ The app warns when the radio's firmware is older than required.
 | *This device is not a kv4p HT, or its firmware has no Bluetooth LE service.* | Use USB, or update to firmware with Bluetooth LE ([FAQ](faq.md#which-firmware-do-i-need)). |
 | *Bluetooth access is not allowed.* | System Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
+| *The audio output cannot be started.* | Check the output device in System Settings → Sound, then connect again. The radio works without audio. |
 
 See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
 
@@ -120,7 +126,11 @@ Used by developers before merging a milestone that touches hardware behaviour:
       (until the app exists: `cd apple-src && swift run kv4p-probe --ble`).
 - [ ] 🖥 Connect via USB (`swift run kv4p-probe --serial`; add `--reset` if the
       radio was already running, so it restarts and sends `HELLO`).
-- [ ] RX audio continuous for 10 minutes without drop-outs.
+- [ ] RX audio continuous for 10 minutes without drop-outs, over BLE and USB
+      (with a signal on the frequency, or `swift run kv4p-sim-peripheral
+      --signal` on a second Mac). `swift run kv4p-probe --ble --listen 600`
+      reports the block rate, the largest gap and the underruns the jitter
+      buffer would have.
 - [ ] PTT into a dummy load; TX stops when PTT is released and when the link drops.
 - [ ] Reconnect after radio power cycle.
 - [ ] Out-of-range frequency is rejected.

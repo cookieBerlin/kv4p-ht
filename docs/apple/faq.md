@@ -47,9 +47,18 @@ Firmware flashing is available on macOS only.
 
 Yes: choose **Simulator** under **Radio** in the app. A Mac can also act as a
 virtual radio over Bluetooth for another device: `cd apple-src && swift run
-kv4p-sim-peripheral` advertises as `kv4p-sim` until stopped
+kv4p-sim-peripheral` advertises as `kv4p-sim` until stopped (add `--signal` to
+receive a 1 kHz tone)
 ([ADR-0014](adr/0014-radio-simulator.md)). The Mac running it cannot connect to
 itself; use a second Mac, iPhone/iPad or the Android app.
+
+## Why do I hear audio a moment after the squelch opens?
+
+The app buffers about 60 ms of audio before playing, so that Bluetooth timing
+gaps do not cause drop-outs. If the link stalls longer, the app waits for the
+buffer to fill again; it never lags behind by more than about a quarter of a
+second. Right after connecting, the app stays silent for about one second, as
+the Android app does: the radio sends a loud click while it starts.
 
 ## Does the app collect personal data?
 
