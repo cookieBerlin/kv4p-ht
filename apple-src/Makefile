@@ -18,9 +18,12 @@ SWIFT_SOURCES := Package.swift Packages App
 test:
 	$(SWIFT) test
 
+# Tests run in parallel; atomic profile counters keep concurrent executions of the same code from losing counts.
+COVERAGE_FLAGS := -Xswiftc -Xllvm -Xswiftc -instrprof-atomic-counter-update-all
+
 coverage:
-	$(SWIFT) test --enable-code-coverage
-	scripts/coverage-gate.sh "$$($(SWIFT) build --show-bin-path)"
+	$(SWIFT) test --enable-code-coverage $(COVERAGE_FLAGS)
+	scripts/coverage-gate.sh "$$($(SWIFT) build --show-bin-path $(COVERAGE_FLAGS))"
 
 lint:
 	$(SWIFT) format lint --strict --recursive --parallel $(SWIFT_SOURCES)
