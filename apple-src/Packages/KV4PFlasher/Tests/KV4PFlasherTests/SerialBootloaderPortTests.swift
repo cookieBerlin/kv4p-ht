@@ -65,12 +65,3 @@ struct SerialBootloaderPortTests {
         await #expect(throws: TransportError.portUnavailable(path: "/dev/x", errno: 2)) { try await missing.open() }
     }
 }
-
-/// Waits until `condition` holds (actors deliver asynchronously).
-func eventually(_ condition: () async -> Bool) async -> Bool {
-    for _ in 0..<100_000 {
-        if await condition() { return true }
-        await Task.yield()
-    }
-    return await condition()
-}

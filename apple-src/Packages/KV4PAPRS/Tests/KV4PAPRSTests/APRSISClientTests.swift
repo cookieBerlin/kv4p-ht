@@ -210,7 +210,8 @@ struct APRSISClientTests {
         #expect(await eventually { refused.connector.attempts.withLock { $0 } == 2 })
         let silent = Setup()
         silent.client.update(Self.receiveOnly)
-        #expect(await eventually { silent.connector.connections.count == 1 })
+        // The connect timeout is replaced by the greeting timeout once the connection is open.
+        #expect(await eventually { silent.clock.sleepCount == 2 })
         await silent.clock.waitForSleepers(1)
         silent.clock.advance(by: .seconds(10))
         await silent.reconnect(after: 1)
@@ -283,14 +284,4 @@ struct APRSISClientClockTests {
         client.close()
         #expect(APRSISClient<ContinuousClock>.singleWord("") == "unknown")
     }
-}
-
-/// Waits until `condition` holds, for up to five seconds (parallel tests share the cooperative pool).
-func eventually(_ condition: () async -> Bool) async -> Bool {
-    let deadline = ContinuousClock.now + .seconds(5)
-    while ContinuousClock.now < deadline {
-        if await condition() { return true }
-        await Task.yield()
-    }
-    return await condition()
 }
