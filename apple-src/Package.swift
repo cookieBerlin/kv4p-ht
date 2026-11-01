@@ -16,6 +16,7 @@ let package = Package(
         .library(name: "KV4PAudio", targets: ["KV4PAudio"]),
         .library(name: "KV4PPersistence", targets: ["KV4PPersistence"]),
         .library(name: "KV4PAPRS", targets: ["KV4PAPRS"]),
+        .library(name: "KV4PDigital", targets: ["KV4PDigital"]),
     ],
     targets: [
         .target(
@@ -68,6 +69,17 @@ let package = Package(
                 // Third-party code stays unmodified, so its warnings are not ours to fix.
                 .unsafeFlags(["-w"]),
             ]
+        ),
+        .target(
+            name: "KV4PDigital",
+            dependencies: ["CCodec2", "KV4PAudio"],
+            path: "Packages/KV4PDigital/Sources/KV4PDigital"
+        ),
+        .testTarget(
+            name: "KV4PDigitalTests",
+            dependencies: ["KV4PDigital", "CCodec2", "KV4PAudio", "KV4PTestSupport"],
+            path: "Packages/KV4PDigital/Tests/KV4PDigitalTests",
+            resources: [.copy("Vectors")]
         ),
         .target(
             name: "KV4PTransport",
