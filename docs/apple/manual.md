@@ -144,7 +144,19 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
-*Planned:* position beacons, digipeating and APRS-IS.
+**Position beacon** (licence required): turn on *Position beacon* at the bottom
+of the APRS tab. The app sends your position right away and then every five
+minutes, as long as the radio is connected and receiving. Choose the symbol
+others see (phone, car, house, …) and, with *Approximate position*, round the
+position to about 1 km. macOS asks for location access the first time; your
+own beacons appear in the list. Beacons go out on the current TX frequency.
+
+**Digipeat** turns the Mac into a fill-in digipeater: packets whose next hop is
+`WIDE1-1` or your callsign are repeated once, with your callsign in the path.
+This transmits without you pressing anything; only turn it on where a
+digipeater is useful.
+
+*Planned:* a separate beacon frequency and APRS-IS.
 
 ## FreeDV digital voice
 
@@ -176,6 +188,7 @@ The app warns when the radio's firmware is older than required.
 | *… cannot be opened.* | Close other apps that use the USB port. |
 | *The microphone is not available.* | System Settings → Privacy & Security → Microphone, then press PTT again. |
 | *Set your callsign to send APRS messages.* | Enter your callsign in the APRS tab. |
+| *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
 | *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |
 | *Connect the radio first, …* | The import needs the radio's frequency range; connect, then import again. |
@@ -207,6 +220,8 @@ Used by developers before merging a milestone that touches hardware behaviour:
 - [ ] APRS message to a second station (or the Android app) into a dummy load
       nearby: it arrives, the acknowledgement turns the message *delivered*;
       a message to the Mac's callsign is acknowledged.
+- [ ] Position beacon into a dummy load: a second receiver decodes the position
+      and symbol; with digipeating on, a WIDE1-1 packet is repeated once.
 - [ ] Tune a memory with offset and tone: a second radio hears the TX on the
       offset frequency with the tone; scan stops on a busy memory.
 - [ ] Tuning is applied and confirmed by the radio
