@@ -459,6 +459,8 @@ public final class RadioViewModel {
         case .microphoneUnavailable:
             "The microphone is not available. Allow access in System Settings → Privacy & Security → Microphone."
         case .notReady, .frequencyOutOfRange: "The radio is not ready."
+        case .busy: "The radio is busy transmitting or scanning."
+        case .invalidPacket: "The packet cannot be sent."
         }
     }
 

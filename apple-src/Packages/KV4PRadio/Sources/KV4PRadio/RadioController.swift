@@ -31,6 +31,10 @@ public enum RadioError: Error, Equatable, Sendable {
     case transmitNotAllowed
     /// No microphone, or access to it was denied.
     case microphoneUnavailable
+    /// The radio is transmitting or scanning.
+    case busy
+    /// Not an AX.25 frame the radio can send.
+    case invalidPacket
 }
 
 /// Everything the UI shows about the radio.
@@ -322,6 +326,30 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     public func setMicGain(_ gain: MicGain) {
         txEncoder.gain = gain
+    }
+
+    // MARK: Packets
+
+    /// `txAX25PacketOnFrequency`: sends one AX.25 frame (without FCS) on `frequency` with the current bandwidth and
+    /// TX tone; the radio returns to its RX configuration afterwards. Only while receiving, as on Android.
+    public func transmitAX25(_ frame: [UInt8], frequency: Float) throws(RadioError) {
+        guard snapshot.status == .ready, let firmware = desiredState.firmware else { throw .notReady }
+        guard !isCapturing, scanList == nil else { throw .busy }
+        let desired = desiredState.desired
+        guard TXBand.default(for: firmware.moduleType).allows(frequency, bandwidth: desired.bandwidth) else {
+            throw .transmitNotAllowed
+        }
+        do {
+            let encoded = try FrameEncoder.ax25(
+                frame,
+                onFrequency: frequency,
+                bandwidth: desired.bandwidth,
+                ctcssTx: desired.ctcssTx
+            )
+            outbox.yield(encoded)
+        } catch {
+            throw .invalidPacket
+        }
     }
 
     // MARK: Transmit
