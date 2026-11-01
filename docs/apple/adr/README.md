@@ -27,3 +27,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0021](0021-tx-audio-and-ptt.md) | TX audio and PTT | Proposed |
 | [0022](0022-memories-and-scan.md) | Memories, scan and RepeaterBook import | Proposed |
 | [0023](0023-aprs-receive-path.md) | APRS receive path as a port of java-aprs | Proposed |
+| [0024](0024-aprs-messaging.md) | APRS messaging | Proposed |
