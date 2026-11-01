@@ -70,6 +70,8 @@
             rssi RSSI: NSNumber
         ) {
             discovered[peripheral.identifier] = peripheral
+            let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? peripheral.name
+            emit(.advertised(BLEDevice(id: peripheral.identifier, name: name ?? "kv4p HT")))
             emit(.discovered(peripheral.identifier))
         }
 
