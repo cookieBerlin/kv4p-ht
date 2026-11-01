@@ -67,17 +67,17 @@ app:
 		-derivedDataPath $(APP_DERIVED_DATA)
 	scripts/app-plist-check.sh $(APP_DERIVED_DATA)/Build/Products/Debug-iphoneos/KV4PHT.app
 	SIGN_IDENTITY=- scripts/release-macos.sh
-	DRY_RUN=1 scripts/release-ios.sh
+	DRY_RUN=1 scripts/release-testflight.sh
 
 # Signed, notarized macOS DMG in .build/release (ADR-0034). Needs TEAM_ID and NOTARY_PROFILE in the environment;
 # SIGN_IDENTITY=- makes an unsigned dry run. Not part of `ci`.
 release:
 	scripts/release-macos.sh
 
-# Signed iOS build, uploaded to App Store Connect for TestFlight (ADR-0035). Needs TEAM_ID in the environment and the
+# Signed iOS and macOS builds, uploaded to App Store Connect for TestFlight (ADR-0035). Needs TEAM_ID in the environment and the
 # account in Xcode; DRY_RUN=1 makes an unsigned dry run. Not part of `ci`.
 testflight:
-	scripts/release-ios.sh
+	scripts/release-testflight.sh
 
 # Renders the app icon from ../artwork/app-icon.svg (ADR-0033); commit the result.
 icon:
