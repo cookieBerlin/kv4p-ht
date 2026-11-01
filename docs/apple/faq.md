@@ -4,8 +4,14 @@ For general questions about the radio, see the main [FAQ](../../FAQ.md).
 
 ## Is there an app for iPhone, iPad and Mac?
 
-It is in development. macOS (Apple Silicon) comes first, iOS and iPadOS follow.
-See the [roadmap](04-roadmap.md) for the current status.
+Yes. The Mac app (Apple Silicon) comes as a signed DMG, the iPhone and iPad app
+as a test build through TestFlight. See the [roadmap](04-roadmap.md) for the
+current status.
+
+## How do I get the iPhone and iPad app?
+
+Through Apple's TestFlight app, with an invitation from the maintainer. The app
+is not in the App Store yet. See the [manual](manual.md#installation).
 
 ## Why Bluetooth instead of USB on iPhone and iPad?
 
