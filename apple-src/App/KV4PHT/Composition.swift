@@ -20,6 +20,7 @@ enum Composition {
             },
             serialDevices: serialDevices,
             audioOutput: AVAudioEngineOutput(),
+            audioSession: audioSession(),
             simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? .freeDVVoice : nil) },
             memories: memoryRepository(),
             location: CoreLocationProvider(),
@@ -27,6 +28,15 @@ enum Composition {
             firmware: firmwareFlasher(),
             settings: settingsStore()
         )
+    }
+
+    /// iOS shares the audio hardware between apps through a session; macOS has none.
+    private static func audioSession() -> (any AudioSession)? {
+        #if os(iOS)
+            AVAudioSessionAdapter()
+        #else
+            nil
+        #endif
     }
 
     /// The app settings in the user defaults; the callsign, kept on its own before, moves into them once.
