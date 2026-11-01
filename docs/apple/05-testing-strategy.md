@@ -92,11 +92,10 @@ CI: [ADR-0013](adr/0013-ci-pr-gate.md) · Simulator: [ADR-0014](adr/0014-radio-s
   and the gate fails at random.
 - The coverage report is uploaded as a CI artifact.
 
-## Hardware test checklist (per milestone)
+## Hardware tests
 
-Kept in [manual.md](manual.md#hardware-test-checklist); includes:
-connect via BLE and USB, HELLO/version shown, RX audio continuous for 10 minutes,
-PTT into a dummy load, reconnect after power cycle, out-of-range frequency rejected.
+The tests that need real hardware have IDs and a status per platform in
+[hardware-tests.md](hardware-tests.md).
 
 ## Privacy in tests
 

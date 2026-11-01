@@ -13,8 +13,9 @@ maintainer wants to avoid that effort.
 
 ## Decision
 
-- The app reaches users through App Store Connect only: TestFlight now, the App
-  Store later (milestone 2.6). This applies to macOS as well.
+- The app reaches users through App Store Connect only: TestFlight now, and the
+  App Store when the maintainer decides on it (phase 99, deferred). This applies
+  to macOS as well.
 - The DMG, `make release` and `scripts/release-macos.sh` are removed. This
   supersedes ADR-0034.
 - Building from source with Xcode stays possible.

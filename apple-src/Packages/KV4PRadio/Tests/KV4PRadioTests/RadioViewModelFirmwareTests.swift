@@ -136,7 +136,7 @@ struct RadioViewModelFirmwareTests {
         #expect(FirmwareHelp.webFlasherAddress == "https://kv4p.com/firmware.html")
         #expect(
             FirmwareHelp.manualAddress
-                == "https://github.com/VanceVagell/kv4p-ht/blob/main/docs/apple/manual.md#firmware-updates"
+                == "https://github.com/cookieBerlin/kv4p-ht/blob/main/docs/apple/manual.md#firmware-updates"
         )
     }
 

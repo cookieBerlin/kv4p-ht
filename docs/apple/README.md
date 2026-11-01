@@ -16,6 +16,7 @@ No changes to the firmware or the Android app are required.
 | [03-protocol-spec.md](03-protocol-spec.md) | BLE GATT, KISS framing, vendor commands, structures, flow control |
 | [04-roadmap.md](04-roadmap.md) | Phases, milestones, acceptance criteria |
 | [05-testing-strategy.md](05-testing-strategy.md) | TDD, 100 % coverage, golden vectors, simulator, CI |
+| [hardware-tests.md](hardware-tests.md) | Hardware tests with IDs and their status |
 | [adr/](adr/README.md) | Architecture Decision Records |
 | [manual.md](manual.md) | User manual |
 | [faq.md](faq.md) | Apple FAQ |
