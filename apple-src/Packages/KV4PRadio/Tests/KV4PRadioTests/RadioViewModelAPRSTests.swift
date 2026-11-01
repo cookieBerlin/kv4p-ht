@@ -181,7 +181,9 @@ struct RadioViewModelAPRSTests {
         setup.model.frequencyText = "146.52"
         await setup.model.applyFrequency()
         #expect(
-            await RadioViewModelTests.eventually(setup.model) { $0.snapshot.isInSync && $0.frequencyText == "146.5200" }
+            await RadioViewModelTests.eventually(setup.model) {
+                $0.snapshot.isInSync && $0.snapshot.desired.freqTx == 146.52
+            }
         )
         setup.advance(by: 15_000)
         // This wait failed now and then on CI only; the comment shows the state to find out why.
