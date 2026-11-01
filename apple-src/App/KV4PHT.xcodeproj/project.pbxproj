@@ -19,6 +19,8 @@
 		A1000000000000000000000B /* partitions.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* partitions.bin */; platformFilters = (macos, ); };
 		A1000000000000000000000C /* boot_app0.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* boot_app0.bin */; platformFilters = (macos, ); };
 		A1000000000000000000000D /* firmware_v17.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000009 /* firmware_v17.bin */; platformFilters = (macos, ); };
+		A1000000000000000000000E /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000000A /* LICENSE */; };
+		A1000000000000000000000F /* COPYING-codec2 in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000000B /* COPYING-codec2 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +33,8 @@
 		A30000000000000000000007 /* partitions.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = partitions.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/partitions.bin; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000008 /* boot_app0.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = boot_app0.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/boot_app0.bin; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000009 /* firmware_v17.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = firmware_v17.bin; path = ../../android-src/KV4PHT/app/src/main/res/raw/firmware_v17.bin; sourceTree = SOURCE_ROOT; };
+		A3000000000000000000000A /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../../LICENSE; sourceTree = SOURCE_ROOT; };
+		A3000000000000000000000B /* COPYING-codec2 */ = {isa = PBXFileReference; lastKnownFileType = text; name = COPYING-codec2; path = ../Packages/KV4PDigital/COPYING-codec2; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -63,6 +67,7 @@
 				A30000000000000000000005 /* KV4PHT.entitlements */,
 				A60000000000000000000002 /* Config */,
 				A60000000000000000000004 /* Firmware */,
+				A60000000000000000000005 /* Licences */,
 				A60000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +99,15 @@
 				A30000000000000000000009 /* firmware_v17.bin */,
 			);
 			name = Firmware;
+			sourceTree = "<group>";
+		};
+		A60000000000000000000005 /* Licences */ = {
+			isa = PBXGroup;
+			children = (
+				A3000000000000000000000A /* LICENSE */,
+				A3000000000000000000000B /* COPYING-codec2 */,
+			);
+			name = Licences;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -175,6 +189,8 @@
 				A1000000000000000000000B /* partitions.bin in Resources */,
 				A1000000000000000000000C /* boot_app0.bin in Resources */,
 				A1000000000000000000000D /* firmware_v17.bin in Resources */,
+				A1000000000000000000000E /* LICENSE in Resources */,
+				A1000000000000000000000F /* COPYING-codec2 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
