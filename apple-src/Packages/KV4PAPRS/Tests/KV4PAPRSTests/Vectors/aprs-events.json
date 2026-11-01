@@ -281,6 +281,14 @@
           {
             "timeMs": 12,
             "frame": "82a0a4a64040e09c60868298986103f021343930332e35304e"
+          },
+          {
+            "timeMs": 13,
+            "frame": "82a0a4a64040e09c60868298986103f023776561746865722074303530"
+          },
+          {
+            "timeMs": 14,
+            "frame": "82a0a4a64040e09c60868298986103f05f7778206c313233"
           }
         ]
       },
@@ -545,9 +553,61 @@
             "relayCallsign": null,
             "internetOnly": false,
             "deliveryState": 0
+          },
+          {
+            "id": 11,
+            "type": 4,
+            "firstSeenMs": 13,
+            "lastSeenMs": 13,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|I3dlYXRoZXIgdDA1MA==",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 50.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": "",
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
+          },
+          {
+            "id": 12,
+            "type": 4,
+            "firstSeenMs": 14,
+            "lastSeenMs": 14,
+            "packetCount": 1,
+            "dedupKey": "N0CALL|APRS|X3d4IGwxMjM=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": "",
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0
           }
         ],
-        "packets": 13
+        "packets": 15
       }
     }
   ]

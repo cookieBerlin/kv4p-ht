@@ -133,6 +133,45 @@ final class AprsVectors {
         "N0CALL>APRS:!4903.50N/07201.75W-GrÃ¼Ã\u009fe",
         "N0CALL>APRS:_wx ÿ t012",
         "N0CALL>APRS,N1CALL*,WIDE2-1:>used path",
+        "N0CALL>APRS:@0923",
+        "N0CALL>APRS:@0923456",
+        "N0CALL>APRS:/092345674903.50N/07201.75W>digit time",
+        "N0CALL>APRS:@092345z4903",
+        "N0CALL>APRS:!x903.50N/07201.75W-who knows",
+        "N0CALL>APRS:!",
+        "N0CALL>APRS:!UL",
+        "N0CALL>APRS:=/5L!!<*e7>",
+        "N0CALL>T2SP0W:`(_fn\"Oj/>\"4T}altitude",
+        "N0CALL>T2SP0W:`(_fn\"Oj/x]comment",
+        "N0CALL>T2SPLZ:`(_fn\"Oj/amb3",
+        "N0CALL>T2SLLZ:`(_fn\"Oj/amb2",
+        "N0CALL>T2LLLZ:`(_fn\"Oj/amb1",
+        "N0CALL>T2SP0Z:`(_fn\"Oj/amb4",
+        "N0CALL>TZSP0W:`(_fn\"Oj/bad ambiguity",
+        "N0CALL>T2SPPW:`l_fn\"Oj/east 100",
+        "N0CALL>T2SPPW:`v_fn\"Oj/zero",
+        "N0CALL>T2SP0W:`(afn\"Oj/minutes",
+        "N0CALL>APRS:$GPGLL,4916.45,N,12311.12,W,225444,V,A*5C",
+        "N0CALL>APRS:$GPGLL,4916.45,N,12311.12,W,225444,A,,",
+        "N0CALL>APRS:$PNTS,1,0,11,01,2002,231932,3539.687,N,13944.480,E,0,000,5,Name,000,1*35",
+        "N0CALL>APRS:$GPWPL,9000.300,N,00607.754,E,4",
+        "N0CALL>APRS:$GPWPL,4610.586,N,18000.600,E,4",
+        "N0CALL>APRS:$GPWPL,9510.586,N,00607.754,E,4",
+        "N0CALL>APRS:$GPWPL,4610.586,N,18100.000,E,4",
+        "N0CALL>APRS:$GPWPL,4610.586,X,00607.754,E,4",
+        "N0CALL>APRS:$GPWPL,4610.586,N,00607.754,X,4",
+        "N0CALL>APRS:$GPWPL,4,N,00607.754,E,4",
+        "N0CALL>APRS:$GPWPL,4a10.586,N,00607.754,E,4",
+        "N0CALL>APRS:$GPWPL,46x0.586,N,00607.754,E,4",
+        "N0CALL>APRS:$GPGGA,1,2,3",
+        "N0CALL>APRS:_wx l123 L045",
+        "N0CALL>APRS:<MSG_CNT=1,LOC_CNT=3",
+        "N0CALL>APRS:}N2CALL>,:>no destination",
+        "N0CALL>APRS:}N2CALL>APRS,-:>bad path",
+        "N0CALL>APRS:}N2CALL>APRS,-X,*:>odd path",
+        "N0CALL-5>APRS:}N2CALL>APRS:>relay with SSID",
+        "N0CALL>APRS:@092345",
+        "N0CALL>TBSP0W:`(_fn\"Oj/A to J",
     };
 
     /** AX.25 frames the RF parser refuses or reads specially. */
@@ -150,8 +189,7 @@ final class AprsVectors {
     static List<Object> parser() throws Exception {
         List<Object> vectors = new ArrayList<>();
         for (String tnc2 : PACKETS) {
-            byte[] frame = Parser.parse(tnc2).toAX25Frame();
-            vectors.add(parse(tnc2, frame));
+            vectors.add(parse(tnc2, frame(tnc2)));
         }
         for (String hex : FRAMES) {
             vectors.add(parse(hex, bytes(hex)));
@@ -281,6 +319,8 @@ final class AprsVectors {
             {10L, "N0CALL>T2SP0W:`(_fn\"Oj/Mic-E"},
             {11L, "N0CALL>APRS:=/5L!!<*e7>7P[compressed"},
             {12L, "N0CALL>APRS:!4903.50N"},
+            {13L, "N0CALL>APRS:#weather t050"},
+            {14L, "N0CALL>APRS:_wx l123"},
         },
     };
 
@@ -294,7 +334,7 @@ final class AprsVectors {
             List<Object> steps = new ArrayList<>();
             for (Object[] step : session) {
                 clock.millis = (Long) step[0];
-                byte[] frame = Parser.parse((String) step[1]).toAX25Frame();
+                byte[] frame = frame((String) step[1]);
                 controller.handle(Parser.parseAX25(frame, 0, frame.length), AprsSource.RX_RF, 144_390_000L, frame);
                 steps.add(Json.obj().put("timeMs", step[0]).put("frame", Json.hex(frame)));
             }
@@ -322,6 +362,15 @@ final class AprsVectors {
             .put("windForce", event.getWindForce()).put("windDirection", event.getWindDirection())
             .put("relayCallsign", event.getRelayCallsign()).put("internetOnly", event.isInternetOnly())
             .put("deliveryState", event.getDeliveryState());
+    }
+
+    /** Encodes a TNC2 line without parsing its information field, so unparsable packets get a frame too. */
+    private static byte[] frame(String tnc2) {
+        int arrow = tnc2.indexOf('>');
+        int colon = tnc2.indexOf(':');
+        String path = tnc2.substring(arrow + 1, colon);
+        return new APRSPacket(tnc2.substring(0, arrow), path.split(",")[0], Digipeater.parseList(path, false),
+            tnc2.substring(colon + 1).getBytes(StandardCharsets.ISO_8859_1)).toAX25Frame();
     }
 
     private static byte[] bytes(String hex) {
