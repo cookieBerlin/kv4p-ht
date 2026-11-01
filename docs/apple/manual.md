@@ -72,6 +72,11 @@ settings.
 - 📱 On iPhone and iPad the audio plays on the speaker, or on a connected headset
   (wired or Bluetooth). Other apps keep playing. A phone call pauses the radio's
   audio; it continues when the call ends.
+- 📱 **In the background:** while the radio is connected, reception goes on
+  when you lock the screen or switch to another app. This includes the audio,
+  APRS, digipeating and the iGate. Disconnect to save the battery. Position
+  beacons wait until the app is on screen again, because iOS only gives the app
+  your location while you use it.
 - **Simulator:** *Simulate a received signal* plays a 1 kHz tone with the squelch
   open.
 
@@ -294,5 +299,8 @@ Used by developers before merging a milestone that touches hardware behaviour:
 - [ ] 📱 Audio session: RX plays on the speaker and on a Bluetooth headset; a
       phone call during reception pauses the audio and it resumes afterwards; a
       call or an unplugged headset during a transmission ends it.
+- [ ] 📱 Background: with the screen locked for 10 minutes, RX audio plays
+      without drop-outs over BLE and APRS packets keep arriving; switching off
+      the radio while locked shows the lost connection when the app is opened.
 - [ ] Tuning is applied and confirmed by the radio
       (`swift run kv4p-probe --serial --reset --tune 145.525`, then back).

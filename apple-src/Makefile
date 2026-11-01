@@ -14,6 +14,8 @@ VENDORED := Packages/KV4PDigital/Sources/CCodec2 Packages/KV4PDigital/COPYING-co
 SCHEME ?= $(shell xcodebuild -list -json 2>/dev/null | jq -r '.workspace.schemes | (map(select(endswith("-Package")))[0] // .[0])')
 
 APP_PROJECT := App/KV4PHT.xcodeproj
+# Where `make app` builds the app, so its Info.plist can be checked.
+APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
 .PHONY: test coverage lint format privacy changed vectors vectors-check ios-build app ci
@@ -61,6 +63,8 @@ ios-build:
 # Builds the app (ADR-0019) for macOS and iOS without code signing.
 app:
 	xcodebuild build -quiet -project $(APP_PROJECT) -scheme KV4PHT -destination 'generic/platform=macOS' CODE_SIGNING_ALLOWED=NO
-	xcodebuild build -quiet -project $(APP_PROJECT) -scheme KV4PHT -destination '$(IOS_DESTINATION)' CODE_SIGNING_ALLOWED=NO
+	xcodebuild build -quiet -project $(APP_PROJECT) -scheme KV4PHT -destination '$(IOS_DESTINATION)' CODE_SIGNING_ALLOWED=NO \
+		-derivedDataPath $(APP_DERIVED_DATA)
+	scripts/app-plist-check.sh $(APP_DERIVED_DATA)/Build/Products/Debug-iphoneos/KV4PHT.app
 
 ci: lint privacy coverage ios-build app
