@@ -117,14 +117,17 @@ let package = Package(
         ),
         .target(
             name: "KV4PRadio",
-            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital"],
+            dependencies: [
+                "KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital",
+                "KV4PFlasher",
+            ],
             path: "Packages/KV4PRadio/Sources/KV4PRadio"
         ),
         .testTarget(
             name: "KV4PRadioTests",
             dependencies: [
-                "KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital", "KV4PSimulator",
-                "KV4PTestSupport",
+                "KV4PRadio", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital", "KV4PFlasher",
+                "KV4PSimulator", "KV4PTestSupport",
             ],
             path: "Packages/KV4PRadio/Tests/KV4PRadioTests",
             resources: [.copy("Vectors")]
