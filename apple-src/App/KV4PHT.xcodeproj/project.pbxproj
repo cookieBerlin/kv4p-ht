@@ -12,6 +12,7 @@
 		A10000000000000000000003 /* KV4PSimulator in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000003 /* KV4PSimulator */; };
 		A10000000000000000000004 /* KV4PProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000004 /* KV4PProtocol */; };
 		A10000000000000000000005 /* KV4PAudio in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000005 /* KV4PAudio */; };
+		A10000000000000000000006 /* KV4PPersistence in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000006 /* KV4PPersistence */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 				A10000000000000000000003 /* KV4PSimulator in Frameworks */,
 				A10000000000000000000004 /* KV4PProtocol in Frameworks */,
 				A10000000000000000000005 /* KV4PAudio in Frameworks */,
+				A10000000000000000000006 /* KV4PPersistence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -95,6 +97,7 @@
 				A20000000000000000000003 /* KV4PSimulator */,
 				A20000000000000000000004 /* KV4PProtocol */,
 				A20000000000000000000005 /* KV4PAudio */,
+				A20000000000000000000006 /* KV4PPersistence */,
 			);
 			productName = KV4PHT;
 			productReference = A30000000000000000000001 /* KV4PHT.app */;
@@ -234,6 +237,10 @@
 		A20000000000000000000005 /* KV4PAudio */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KV4PAudio;
+		};
+		A20000000000000000000006 /* KV4PPersistence */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KV4PPersistence;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

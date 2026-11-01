@@ -7,10 +7,14 @@ struct KV4PHTApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RadioView(model: model)
+            NavigationSplitView {
+                MemoriesView(model: model)
+            } detail: {
+                RadioView(model: model)
+            }
         }
         #if os(macOS)
-            .windowResizability(.contentSize)
+            .defaultSize(width: 900, height: 720)
         #endif
     }
 }
