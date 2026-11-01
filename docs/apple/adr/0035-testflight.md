@@ -9,8 +9,7 @@ Milestone 2.5 brings the app to testers through TestFlight
 ([roadmap](../04-roadmap.md)), on iPhone, iPad and Mac. TestFlight needs an App
 Store signature, an
 app record in App Store Connect and a new build number for every upload. The team
-ID and the account must stay out of the repository, as for the macOS release
-([ADR-0034](0034-macos-release.md)).
+ID and the account must stay out of the repository.
 
 ## Decision
 
@@ -22,8 +21,8 @@ ID and the account must stay out of the repository, as for the macOS release
      generated in `.build/testflight`, because they hold the team ID.
 - **One app record:** iOS and macOS share the bundle identifier, so they are two
   platforms of one record in App Store Connect.
-- **The Mac DMG stays:** the Developer ID build ([ADR-0034](0034-macos-release.md))
-  remains the way to get the app without TestFlight.
+- **Only way to testers:** there is no build outside App Store Connect
+  ([ADR-0036](0036-no-distribution-outside-app-store.md)).
 - **Signing data:** `TEAM_ID` comes from the environment. The account comes from
   Xcode. `-allowProvisioningUpdates` lets Xcode create the certificate and the
   provisioning profile.

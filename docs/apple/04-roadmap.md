@@ -28,7 +28,7 @@ Every milestone that changes user-visible behaviour updates the
 | 1.10 | **APRS** | AX.25 + APRS parsing/formatting, message list, beacons (CoreLocation), digipeat setting, APRS-IS client/iGate. |
 | 1.11 | **FreeDV 2400B** | Codec2 XCFramework, RX/TX digital voice. |
 | 1.12 | **Firmware flashing (macOS)** | `KV4PFlasher` against fake ROM bootloader and vectors from `esp32-flash-lib`; firmware images taken from `android-src` at build time; flashes real hardware and verifies MD5; outdated-firmware notice offers the update. |
-| 1.13 | **Release candidate macOS** | Settings parity, manual + FAQ complete for macOS, signed and notarised build. |
+| 1.13 | **Release candidate macOS** | Settings parity, manual + FAQ complete for macOS. Signed builds come through TestFlight (2.5, [ADR-0036](adr/0036-no-distribution-outside-app-store.md)). |
 
 ## Phase 2 — iOS and iPadOS
 
@@ -39,6 +39,7 @@ Every milestone that changes user-visible behaviour updates the
 | 2.3 | **Layouts** | iPhone (compact) and iPad (regular, multitasking) layouts; PTT ergonomics on touch. |
 | 2.4 | **Firmware notice** | Outdated firmware on iOS/iPadOS links to the web flasher and the manual. |
 | 2.5 | **Distribution** | TestFlight builds for iOS, iPadOS and macOS, App Store review notes, manual + FAQ. |
+| 2.6 | **App Store release** | Store listing, screenshots, privacy policy, App Review for iOS, iPadOS and macOS. |
 
 ## Later (candidates)
 

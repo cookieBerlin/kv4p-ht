@@ -1,6 +1,6 @@
 # ADR-0034: Signed and notarized macOS release
 
-- **Status:** Proposed
+- **Status:** Superseded by [ADR-0036](0036-no-distribution-outside-app-store.md)
 - **Date:** 2026-11-01
 
 ## Context

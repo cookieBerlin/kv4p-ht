@@ -13,7 +13,7 @@ App Store Connect rejects an upload, or asks at each upload, unless the app has:
   `UserDefaults`.
 - an answer on export compliance (`ITSAppUsesNonExemptEncryption`).
 
-Developer ID distribution on macOS (milestone 1.13c) also wants a proper app
+TestFlight on macOS also wants a proper app
 icon. The project artwork has `artwork/app-icon.svg` (512 × 512).
 
 ## Decision
