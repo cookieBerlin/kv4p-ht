@@ -18,7 +18,6 @@
 10. [Settings](#settings)
 11. [Firmware updates](#firmware-updates)
 12. [Troubleshooting](#troubleshooting)
-13. [Hardware test checklist](#hardware-test-checklist)
 
 ## Requirements
 
@@ -276,49 +275,3 @@ The app warns when the radio's firmware is older than required or missing
 | 📱 *The audio was interrupted. Connect again to listen.* | Another app took the audio and iOS did not hand it back. Connect again. |
 
 See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
-
-## Hardware test checklist
-
-Used by developers before merging a milestone that touches hardware behaviour:
-
-- [ ] Connect via BLE; firmware version and module type shown correctly
-      (until the app exists: `cd apple-src && swift run kv4p-probe --ble`).
-- [ ] 🖥 Connect via USB (`swift run kv4p-probe --serial`; add `--reset` if the
-      radio was already running, so it restarts and sends `HELLO`).
-- [ ] RX audio continuous for 10 minutes without drop-outs, over BLE and USB
-      (with a signal on the frequency, or `swift run kv4p-sim-peripheral
-      --signal` on a second Mac). `swift run kv4p-probe --ble --listen 600`
-      reports the block rate, the largest gap and the underruns the jitter
-      buffer would have.
-- [ ] PTT into a dummy load, over BLE and USB: *On air* is shown, a second
-      receiver hears the voice clearly, TX stops when PTT is released and when
-      the link drops (switch off Bluetooth / pull the cable while transmitting).
-- [ ] Reconnect after radio power cycle.
-- [ ] Out-of-range frequency is rejected.
-- [ ] APRS: tuned to the regional APRS frequency, packets appear in the APRS
-      tab and match what the Android app shows for the same packets
-      (`swift run kv4p-probe --ble --tune 144.8 --listen 600` prints them).
-- [ ] APRS message to a second station (or the Android app) into a dummy load
-      nearby: it arrives, the acknowledgement turns the message *delivered*;
-      a message to the Mac's callsign is acknowledged.
-- [ ] APRS-IS: with *Show nearby APRS-IS packets* on, internet packets appear;
-      with the iGate on, a received RF packet shows up on aprs.fi as gated by
-      your callsign.
-- [ ] Position beacon into a dummy load: a second receiver decodes the position
-      and symbol; with digipeating on, a WIDE1-1 packet is repeated once.
-- [ ] Tune a memory with offset and tone: a second radio hears the TX on the
-      offset frequency with the tone; scan stops on a busy memory.
-- [ ] 🖥 Firmware update over USB: *Update firmware…* (or `swift run kv4p-probe
-      --flash <directory>` with images built from `microcontroller-src`)
-      flashes and verifies; the radio answers over USB and BLE afterwards.
-- [ ] FreeDV 2400B with a second FreeDV station (another kv4p HT with the
-      Android app) into a dummy load: voice is understood in both directions;
-      analog signals keep the squelch closed in FreeDV mode.
-- [ ] 📱 Audio session: RX plays on the speaker and on a Bluetooth headset; a
-      phone call during reception pauses the audio and it resumes afterwards; a
-      call or an unplugged headset during a transmission ends it.
-- [ ] 📱 Background: with the screen locked for 10 minutes, RX audio plays
-      without drop-outs over BLE and APRS packets keep arriving; switching off
-      the radio while locked shows the lost connection when the app is opened.
-- [ ] Tuning is applied and confirmed by the radio
-      (`swift run kv4p-probe --serial --reset --tune 145.525`, then back).
