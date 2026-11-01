@@ -19,21 +19,35 @@ final class FakeMicrophone: AudioInput {
 
     private let state = Mutex(State())
     private let fails: Bool
+    /// With `holdsStart`, `start()` returns only after `release()`.
+    private let gate: AsyncStream<Void>?
+    private let opener: AsyncStream<Void>.Continuation?
 
-    init(fails: Bool = false) {
+    init(fails: Bool = false, holdsStart: Bool = false) {
         self.fails = fails
+        if holdsStart {
+            let (gate, opener) = AsyncStream.makeStream(of: Void.self)
+            self.gate = gate
+            self.opener = opener
+        } else {
+            gate = nil
+            opener = nil
+        }
+    }
+
+    func release() {
+        opener?.finish()
     }
 
     var starts: Int { state.withLock { $0.starts } }
     var stops: Int { state.withLock { $0.stops } }
 
     func start() async throws -> AsyncStream<[Int16]> {
+        state.withLock { $0.starts += 1 }
+        for await _ in gate ?? AsyncStream { $0.finish() } {}
         if fails { throw Failure() }
         let (stream, continuation) = AsyncStream.makeStream(of: [Int16].self)
-        state.withLock {
-            $0.continuation = continuation
-            $0.starts += 1
-        }
+        state.withLock { $0.continuation = continuation }
         return stream
     }
 
@@ -249,6 +263,21 @@ struct TransmitControllerTests {
         try await setup.controller.startTransmitting()
         setup.transport.streams.publish(.failed(.connectionLost))
         #expect(await eventually { microphone.stops == 2 })
+    }
+
+    @Test("a connection that ends while the microphone starts does not transmit")
+    func endsWhileStarting() async throws {
+        let microphone = FakeMicrophone(holdsStart: true)
+        var setup = Scripted(microphone: microphone)
+        try await setup.ready()
+        let controller = setup.controller
+        let pressed = Task { try await controller.startTransmitting() }
+        #expect(await eventually { microphone.starts == 1 })
+        await controller.disconnect()
+        microphone.release()
+        try await pressed.value
+        #expect(microphone.stops == 2)
+        #expect(await !controller.snapshot.isTransmitting)
     }
 
     @Test("RX audio restarts its fade-in when TX starts and ends")
