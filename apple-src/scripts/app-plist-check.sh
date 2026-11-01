@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Fails unless the built app meets what it needs at run time and in App Store Connect:
 # - iOS: background modes audio and bluetooth-central (ADR-0031);
-# - an app icon, a privacy manifest and the export compliance answer (ADR-0033).
+# - an app icon, a privacy manifest and the export compliance answer (ADR-0033);
+# - no nested resource bundles, because the App Store export does not sign them again (ADR-0033).
 # Usage: app-plist-check.sh <path to KV4PHT.app>
 set -euo pipefail
 
@@ -30,4 +31,6 @@ fi
   fail "$plist does not declare ITSAppUsesNonExemptEncryption = NO"
 [[ -f "$resources/PrivacyInfo.xcprivacy" ]] || fail "$app has no privacy manifest"
 plutil -lint -s "$resources/PrivacyInfo.xcprivacy" || fail "the privacy manifest is not a valid property list"
+nested=$(find "$resources" -name '*.bundle')
+[[ -z "$nested" ]] || fail "$app has nested bundles: $nested"
 echo "app-plist: ok"
