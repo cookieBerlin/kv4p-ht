@@ -79,10 +79,8 @@ public struct PositionField: Equatable, Sendable {
             } else {
                 cursor = try parseReport(body, cursor: cursor)
             }
-        case UInt8(ascii: "$"):
+        default:  // `$`, the only other type the parser hands over
             try parseNMEA(body)
-        default:
-            hasFault = true
         }
         if position.symbolCode != UInt16(ascii: "_"), cursor > 0, cursor < body.count {
             comment = Java.utf8(body[cursor...])

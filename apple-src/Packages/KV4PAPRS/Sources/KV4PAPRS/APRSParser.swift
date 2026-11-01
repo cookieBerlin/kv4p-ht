@@ -21,7 +21,7 @@ public enum APRSParser {
         guard frame.count - position >= 3, frame[position] == 0x03, frame[position + 1] == 0xF0 else {
             throw .invalidFrame
         }
-        return parseBody(
+        return try parseBody(
             source: address(source),
             destination: address(destination),
             digipeaters: digipeaters,
@@ -37,18 +37,30 @@ public enum APRSParser {
         else { throw .invalidLine }
         let path = Java.split(Java.latin1(bytes[(arrow + 1)..<colon]), ",")
         guard let destination = path.first else { throw .invalidLine }
-        let digipeaters = path.dropFirst().map(Java.trim).filter { !$0.isEmpty }.map(AX25Address.init)
-        return parseBody(
-            source: Java.latin1(bytes[..<arrow]),
-            destination: destination,
-            digipeaters: digipeaters,
-            body: Array(bytes[(colon + 1)...])
-        )
+        var digipeaters: [AX25Address] = []
+        for text in path.dropFirst().map(Java.trim) where !text.isEmpty {
+            guard let address = AX25Address(text) else { throw .invalidLine }
+            digipeaters.append(address)
+        }
+        do {
+            return try parseBody(
+                source: Java.latin1(bytes[..<arrow]),
+                destination: destination,
+                digipeaters: digipeaters,
+                body: Array(bytes[(colon + 1)...])
+            )
+        } catch {
+            throw .invalidLine
+        }
     }
 
     /// `Parser.parseBody`: the information field by its data type identifier.
-    static func parseBody(source: String, destination: String, digipeaters: [AX25Address], body: [UInt8]) -> APRSPacket
-    {
+    static func parseBody(
+        source: String,
+        destination: String,
+        digipeaters: [AX25Address],
+        body: [UInt8]
+    ) throws(APRSParseError) -> APRSPacket {
         var packet = APRSPacket(source: source, destination: destination, digipeaters: digipeaters, payload: body)
         let dti = body[0]
         if (UInt8(ascii: "A")...UInt8(ascii: "S")).contains(dti)
@@ -61,7 +73,7 @@ public enum APRSParser {
         }
         switch Unicode.Scalar(dti) {
         case "/", "@":
-            let timestamp = TimeField(body)
+            let timestamp = try TimeField(body)
             packet.info.timestampHasFault = timestamp.hasFault
             let position = PositionField(body, destination: packet.destination, cursor: timestamp.cursor + 1)
             packet.info.position = position
@@ -93,7 +105,7 @@ public enum APRSParser {
             packet.info.weather = WeatherParser.parse(body, cursor: 0)
         case "}":
             if var inner = try? parse(tnc2: Java.latin1(body.dropFirst())) {
-                inner.digipeaters.append(AX25Address(packet.source))
+                inner.digipeaters.append(AX25Address(call: packet.source))
                 packet.info.thirdPartyStorage = [inner]
             } else {
                 packet.isFaulty = true

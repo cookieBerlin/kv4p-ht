@@ -6,12 +6,21 @@ public struct AX25Address: Equatable, Sendable, CustomStringConvertible {
     /// The digipeater repeated the packet (H bit, `*` in TNC2).
     public var isUsed: Bool
 
-    /// `Digipeater(String)`: `N0CALL-9*`.
-    public init(_ text: String) {
+    /// `Digipeater(String)`: `N0CALL-9*`; `nil` where java-aprs throws (only `-` characters).
+    public init?(_ text: String) {
         let parts = Java.split(text.replacing("*", with: ""), "-")
-        callsign = (parts.first ?? "").uppercased()
+        guard let call = parts.first else { return nil }
+        callsign = call.uppercased()
         ssid = parts.count > 1 ? parts[1] : ""
         isUsed = text.contains("*")
+    }
+
+    /// The source of a received packet as a path element.
+    init(call: String) {
+        let parts = call.split(separator: "-", maxSplits: 1).map(String.init)
+        callsign = parts[0]
+        ssid = parts.count > 1 ? parts[1] : ""
+        isUsed = false
     }
 
     /// `Callsign(byte[], int)` and `Digipeater(byte[], int)`: seven address bytes.

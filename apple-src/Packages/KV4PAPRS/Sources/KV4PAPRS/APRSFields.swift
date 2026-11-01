@@ -108,8 +108,10 @@ struct TimeField {
     /// The packet is too short to hold a timestamp.
     let hasFault: Bool
 
-    init(_ payload: [UInt8]) {
-        hasFault = payload.count <= 7
+    /// Throws when java-aprs reads past the end: a missing indicator counts as `z`, which reads six digits.
+    init(_ payload: [UInt8]) throws(APRSParseError) {
+        guard payload.count >= 7 else { throw .invalidFrame }
+        hasFault = payload.count == 7
         let indicator = hasFault ? UInt8(ascii: "z") : payload[7]
         cursor = (UInt8(ascii: "0")...UInt8(ascii: "9")).contains(indicator) ? 8 : 7
     }
