@@ -36,11 +36,32 @@ final class FlasherVectors {
         SILENT
     }
 
+    /** Attempts to get two equal transcripts in a row. */
+    private static final int ATTEMPTS = 5;
+
     static List<Object> all() throws Exception {
+        // The first flash loads the library's classes, which can take longer than its 100 ms reply timeout.
+        vector("warm-up", Device.WORKING);
         return Json.list(
-            vector("flash", Device.WORKING),
-            vector("wrong md5", Device.WRONG_MD5),
-            vector("no answer", Device.SILENT));
+            stable("flash", Device.WORKING),
+            stable("wrong md5", Device.WRONG_MD5),
+            stable("no answer", Device.SILENT));
+    }
+
+    /**
+     * The library waits for replies in real time, so a stalled runner can make it miss one and retry. Only a transcript
+     * that two flashes in a row produce is kept.
+     */
+    private static Object stable(String name, Device device) throws Exception {
+        String previous = Json.write(vector(name, device));
+        for (int attempt = 1; attempt < ATTEMPTS; attempt++) {
+            Object next = vector(name, device);
+            if (Json.write(next).equals(previous)) {
+                return next;
+            }
+            previous = Json.write(next);
+        }
+        throw new IllegalStateException("flasher vector '" + name + "' differs between runs");
     }
 
     static List<Object> packaged() {
