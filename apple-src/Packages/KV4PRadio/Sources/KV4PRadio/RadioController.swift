@@ -41,6 +41,8 @@ public struct RadioSnapshot: Equatable, Sendable {
     public var desired: HostDesiredState
     /// The device applied the last desired state.
     public var isInSync: Bool
+    /// Counts the snapshots of one controller, so a reader can drop stale ones.
+    public var revision = 0
 
     /// S-meter bars, see `SMeter`.
     public var sMeter: Int { SMeter.value(rssi: deviceState?.latestRssi ?? 0) }
@@ -362,11 +364,13 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             firmware: desiredState.firmware,
             deviceState: desiredState.deviceState,
             desired: desiredState.desired,
-            isInSync: desiredState.isAppliedStateInSync
+            isInSync: desiredState.isAppliedStateInSync,
+            revision: snapshot.revision
         )
         guard next != snapshot else { return }
         snapshot = next
-        snapshotContinuation.yield(next)
+        snapshot.revision += 1
+        snapshotContinuation.yield(snapshot)
     }
 }
 
