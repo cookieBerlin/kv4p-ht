@@ -27,6 +27,6 @@ struct AboutInfoTests {
         #expect(AboutInfo.Licence.lgpl21.textFile == "COPYING-codec2")
         #expect(AboutInfo.Licence.gpl2OrLater.textFile == "LICENSE")  // GPL-2.0 or later, used under GPL-3.0
         #expect(AboutInfo.Licence.allCases.allSatisfy { !$0.title.isEmpty })
-        #expect(AboutInfo.sourceURL.absoluteString == "https://github.com/VanceVagell/kv4p-ht")
+        #expect(AboutInfo.sourceAddress == "https://github.com/VanceVagell/kv4p-ht")
     }
 }
