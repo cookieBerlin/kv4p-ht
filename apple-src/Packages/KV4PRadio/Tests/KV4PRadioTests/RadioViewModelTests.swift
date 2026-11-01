@@ -45,7 +45,9 @@ struct RadioViewModelTests {
         let model = Self.model()
         #expect(model.connections == [.bluetooth, .serial(Self.serialDevice), .simulator])
         #expect(model.selectedConnection == .bluetooth)
-        #expect(model.connections.map(\.label) == ["Bluetooth", "USB cu.usbserial-0001", "Simulator"])
+        #expect(
+            model.connections.map(\.label) == ["Bluetooth (first radio found)", "USB cu.usbserial-0001", "Simulator"]
+        )
         #expect(Set(model.connections.map(\.id)).count == 3)
         #expect(model.statusText == "Not connected")
         #expect(model.canConnect)
