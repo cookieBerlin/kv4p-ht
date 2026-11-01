@@ -23,7 +23,7 @@
 ## Requirements
 
 - 🖥 Mac with Apple Silicon, macOS 26 or later.
-- 📱 iPhone or iPad with iOS/iPadOS 26 or later *(phase 2)*.
+- 📱 iPhone or iPad with iOS/iPadOS 26 or later.
 - A kv4p HT radio with firmware version 17 or later. Bluetooth LE needs a build
   that includes the BLE service; the version 17 image of the Android app does not
   (see [FAQ](faq.md#which-firmware-do-i-need)). USB works with both.
@@ -35,7 +35,9 @@
 *Applications*. Releases are signed with a Developer ID and notarized by Apple,
 so macOS opens them without a warning.
 
-📱 *Planned:* TestFlight builds for iPhone and iPad will be linked here.
+📱 **iPhone and iPad:** test builds come through Apple's TestFlight app. Install
+TestFlight from the App Store and open the invitation you received. A build
+expires after 90 days; TestFlight then offers the current one.
 
 🖥 To build from source, open `apple-src/App/KV4PHT.xcodeproj` in Xcode and run
 the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
