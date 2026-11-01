@@ -66,6 +66,17 @@ Like the Android app, the Apple app only transmits inside the 2 m (144–148 MHz
 or 70 cm (420–450 MHz) ham band, depending on the RF module. Receiving works on
 the whole range of the module.
 
+## Can I import my memories from the Android app?
+
+Not yet; the Android app has no export. RepeaterBook CSV exports can be
+imported (see the [manual](manual.md#memories-and-scanning)).
+
+## Why does the app not download repeaters from RepeaterBook itself?
+
+RepeaterBook requires signing in. The Android app embeds the RepeaterBook web
+page for that; on the Mac you download the CSV export in your browser and import
+the file, which needs no password in the app.
+
 ## Does the app collect personal data?
 
 No data is sent anywhere except what you configure: APRS packets you transmit or
