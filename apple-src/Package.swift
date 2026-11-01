@@ -17,6 +17,7 @@ let package = Package(
         .library(name: "KV4PPersistence", targets: ["KV4PPersistence"]),
         .library(name: "KV4PAPRS", targets: ["KV4PAPRS"]),
         .library(name: "KV4PDigital", targets: ["KV4PDigital"]),
+        .library(name: "KV4PFlasher", targets: ["KV4PFlasher"]),
     ],
     targets: [
         .target(
@@ -79,6 +80,19 @@ let package = Package(
             name: "KV4PDigitalTests",
             dependencies: ["KV4PDigital", "CCodec2", "KV4PAudio", "KV4PSimulator", "KV4PTestSupport"],
             path: "Packages/KV4PDigital/Tests/KV4PDigitalTests",
+            resources: [.copy("Vectors")]
+        ),
+        // ESP32 ROM bootloader flashing like esp32-flash-lib (ADR-0009, ADR-0028).
+        .target(
+            name: "KV4PFlasher",
+            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            path: "Packages/KV4PFlasher/Sources/KV4PFlasher",
+            resources: [.copy("Resources")]
+        ),
+        .testTarget(
+            name: "KV4PFlasherTests",
+            dependencies: ["KV4PFlasher", "KV4PProtocol", "KV4PTransport", "KV4PTestSupport"],
+            path: "Packages/KV4PFlasher/Tests/KV4PFlasherTests",
             resources: [.copy("Vectors")]
         ),
         .target(
