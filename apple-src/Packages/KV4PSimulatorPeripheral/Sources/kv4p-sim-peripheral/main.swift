@@ -7,8 +7,8 @@
 
     let usage = """
         usage: kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]
-        Advertises as kv4p-sim until stopped with Ctrl-C.
-        With --signal, the radio receives a 1 kHz tone with the squelch open.
+        Advertises as kv4p-sim until stopped with Ctrl-C. The radio has the FreeDV 2400B modem.
+        With --signal, the radio receives a 1 kHz tone with the squelch open; in FreeDV mode a voiced sound.
         """
 
     /// Prints every event and command (`--verbose`); notifications and writes as byte counts.
@@ -50,7 +50,7 @@
         print(usage)
         exit(1)
     }
-    var scenario = Scenario.ble
+    var scenario = Scenario.freeDV
     if arguments.contains("--uhf") {
         scenario.moduleType = .sa818UHF
     }
@@ -58,7 +58,7 @@
         scenario.radioModuleStatus = .notFound
     }
     if arguments.contains("--signal") {
-        scenario.carrier = Carrier()
+        scenario.carrier = .freeDVVoice
     }
     let central = CoreBluetoothPeripheralManager()
     let manager: any BLEPeripheralManager =
