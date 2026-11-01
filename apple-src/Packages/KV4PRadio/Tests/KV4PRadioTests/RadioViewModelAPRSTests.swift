@@ -184,7 +184,21 @@ struct RadioViewModelAPRSTests {
             await RadioViewModelTests.eventually(setup.model) { $0.snapshot.isInSync && $0.frequencyText == "146.5200" }
         )
         setup.advance(by: 15_000)
-        #expect(await RadioViewModelTests.eventually(setup.model) { $0.aprsEvents.first?.deliveryState == .failed })
+        // This wait failed now and then on CI only; the comment shows the state to find out why.
+        let failed = await RadioViewModelTests.eventually(setup.model) { $0.aprsEvents.first?.deliveryState == .failed }
+        let model = setup.model
+        let events = model.aprsEvents.map { "\($0.kind) \($0.deliveryState) \($0.fromCallsign)>\($0.toCallsign ?? "")" }
+        let packets =
+            await setup.simulator.value?.simulator.transmittedPackets.map { "\($0.channel?.freqTx ?? 0)" } ?? []
+        #expect(
+            failed,
+            """
+            events=\(events) status=\(model.snapshot.status) tx=\(model.isTransmitting) \
+            scan=\(model.isScanning) desiredTx=\(model.snapshot.desired.freqTx) \
+            inSync=\(model.snapshot.isInSync) firmware=\(model.snapshot.firmware != nil) sent=\(packets) \
+            message=\(model.message ?? "-") now=\(setup.time.ms)
+            """
+        )
         setup.model.frequencyText = "150"
         await setup.model.applyFrequency()
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.snapshot.isInSync && !$0.canTransmit })
