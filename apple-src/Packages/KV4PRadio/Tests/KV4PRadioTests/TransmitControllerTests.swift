@@ -280,6 +280,22 @@ struct TransmitControllerTests {
         #expect(await !controller.snapshot.isTransmitting)
     }
 
+    @Test("a device report while the microphone starts does not end the transmission")
+    func reportWhileStarting() async throws {
+        let microphone = FakeMicrophone(holdsStart: true)
+        var setup = Scripted(microphone: microphone)
+        try await setup.ready()
+        let controller = setup.controller
+        let pressed = Task { try await controller.startTransmitting() }
+        #expect(await eventually { microphone.starts == 1 })
+        setup.transport.streams.deliver(DeviceFrameEncoder.deviceState(setup.simulator.deviceState))
+        #expect(await eventually { await controller.snapshot.deviceState != nil })
+        microphone.release()
+        try await pressed.value
+        #expect(await controller.snapshot.isTransmitting)
+        #expect(microphone.stops == 0)
+    }
+
     @Test("RX audio restarts its fade-in when TX starts and ends")
     func rxAudioReset() async throws {
         let sink = RecordingSink()
