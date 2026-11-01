@@ -36,7 +36,7 @@ struct AppSettingsTests {
         settings.aprsDestinationFilter = .mine
         settings.txLimits.max2m = 146
         settings.selectedGroup = "Repeaters"
-        #expect(AppSettings(data: settings.data) == settings)
+        #expect(AppSettings(data: try settings.encoded()) == settings)
         let partial = Data(#"{"callsign": "N1CALL", "micGain": "loud"}"#.utf8)
         var expected = AppSettings()
         expected.callsign = "N1CALL"

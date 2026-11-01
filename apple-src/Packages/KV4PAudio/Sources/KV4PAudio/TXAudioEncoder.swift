@@ -1,7 +1,7 @@
 import KV4PProtocol
 
 /// Microphone gain boost (Android `MicGainBoost`).
-public enum MicGain: CaseIterable, Sendable {
+public enum MicGain: String, CaseIterable, Codable, Sendable {
     case none, low, med, high
 
     public var factor: Float {

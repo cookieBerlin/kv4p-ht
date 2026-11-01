@@ -17,6 +17,7 @@ public protocol RadioControlling: Actor {
     func update(_ changes: @Sendable (inout DesiredStateController) -> Void)
     var snapshot: RadioSnapshot { get }
     func setMicGain(_ gain: MicGain)
+    func setTXLimits(_ limits: TXLimits)
     func setFreeDV(_ on: Bool)
     func startTransmitting() async throws(RadioError)
     func stopTransmitting()
@@ -107,17 +108,37 @@ public final class RadioViewModel {
         }
     }
 
-    public var micGain = MicGain.none
+    public var micGain = MicGain.none {
+        didSet { saveSettings() }
+    }
     /// A PTT press starts transmitting, the next one ends it (Android "Sticky PTT").
-    public var isStickyPTT = false
+    public var isStickyPTT = false {
+        didSet { saveSettings() }
+    }
+    /// The frequencies the app may transmit on, per band.
+    public var txLimits = TXLimits() {
+        didSet {
+            saveSettings()
+            let limits = txLimits
+            Task { await controller?.setTXLimits(limits) }
+        }
+    }
 
     /// All stored memories, in the order they were added.
     public private(set) var memories: [ChannelMemory] = []
     /// The group shown; `nil` for all memories.
-    public var selectedGroup: String?
+    public var selectedGroup: String? {
+        didSet { saveSettings() }
+    }
 
-    /// APRS packets heard on air, newest first.
+    /// APRS packets heard on air, newest first, as `aprsDestinationFilter` lets through.
     public private(set) var aprsEvents: [APRSEvent] = []
+    public var aprsDestinationFilter = APRSDestinationFilter.all {
+        didSet {
+            saveSettings()
+            showAPRS()
+        }
+    }
 
     let rxAudio = RXAudioPlayer()
     /// The station's callsign for APRS, normalised; empty disables sending. Kept apart from `aprs`, which is still
@@ -129,6 +150,7 @@ public final class RadioViewModel {
                 callsign = aprs.callsign
             }
             updateInternet()
+            saveSettings()
         }
     }
     /// iGate: pass received RF packets and our own packets to APRS-IS.
@@ -136,6 +158,7 @@ public final class RadioViewModel {
         didSet {
             aprs.isIGateEnabled = isIGateEnabled
             updateInternet()
+            saveSettings()
         }
     }
     /// Show APRS-IS packets near our position in the feed.
@@ -143,6 +166,7 @@ public final class RadioViewModel {
         didSet {
             internetLocation = nil
             updateInternet()
+            saveSettings()
             if isInternetFeedEnabled, let location {
                 Task { await locateInternetFilter(with: location) }
             }
@@ -159,16 +183,30 @@ public final class RadioViewModel {
             if isBeaconEnabled != oldValue {
                 nextBeaconAtMs = 0
             }
+            saveSettings()
         }
     }
-    public var beaconSymbol = APRSSymbol.phone
+    public var beaconSymbol = APRSSymbol.phone {
+        didSet { saveSettings() }
+    }
     /// Round the position to 0.01° (about 1 km), Android's approximate accuracy.
-    public var isBeaconApproximate = false
+    public var isBeaconApproximate = false {
+        didSet { saveSettings() }
+    }
+    /// MHz, one of `AppSettings.beaconFrequencyOptions`; `nil` beacons on the current TX frequency.
+    public var beaconFrequency: Float? {
+        didSet { saveSettings() }
+    }
     /// Repeat packets for WIDE1-1 and our callsign.
     public var isDigipeatingEnabled: Bool {
         get { aprs.isDigipeatingEnabled }
-        set { aprs.isDigipeatingEnabled = newValue }
+        set {
+            aprs.isDigipeatingEnabled = newValue
+            saveSettings()
+        }
     }
+    /// `aprsBeaconTxOverrideMhz`: set while a beacon is submitted.
+    private var beaconOverride: Float?
     /// A location is available for beacons.
     public var canBeacon: Bool { location != nil }
 
@@ -189,6 +227,9 @@ public final class RadioViewModel {
     private let simulateSignal: (@Sendable (Bool) async -> Void)?
     private let repository: (any MemoryRepository)?
     private let firmware: (any FirmwareFlashing)?
+    private let settingsStore: (any SettingsStore)?
+    /// Restoring the settings, which must not save them again.
+    private var isRestoring = false
     private var controller: (any RadioControlling)?
     private var connection: Connection?
     private var observer: Task<Void, Never>?
@@ -206,11 +247,13 @@ public final class RadioViewModel {
         location: (any LocationProvider)? = nil,
         internet: (any APRSInternetLink)? = nil,
         firmware: (any FirmwareFlashing)? = nil,
+        settings: (any SettingsStore)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
         repository = memories
         self.firmware = firmware
+        settingsStore = settings
         self.location = location
         self.internet = internet
         self.now = now
@@ -225,6 +268,52 @@ public final class RadioViewModel {
         self.simulateSignal = simulateSignal
         refreshConnections()
         observeInternet()
+        restore(AppSettings(data: settings?.load()))
+    }
+
+    // MARK: Settings
+
+    /// The app settings as they are now.
+    public var settings: AppSettings {
+        var settings = AppSettings()
+        settings.callsign = callsign
+        settings.micGain = micGain
+        settings.isStickyPTT = isStickyPTT
+        settings.isBeaconEnabled = isBeaconEnabled
+        settings.beaconSymbol = beaconSymbol
+        settings.isBeaconApproximate = isBeaconApproximate
+        settings.beaconFrequency = beaconFrequency
+        settings.isDigipeatingEnabled = isDigipeatingEnabled
+        settings.isIGateEnabled = isIGateEnabled
+        settings.isInternetFeedEnabled = isInternetFeedEnabled
+        settings.aprsDestinationFilter = aprsDestinationFilter
+        settings.txLimits = txLimits
+        settings.selectedGroup = selectedGroup
+        return settings
+    }
+
+    /// `MainActivity.applySettings`.
+    private func restore(_ settings: AppSettings) {
+        isRestoring = true
+        defer { isRestoring = false }
+        callsign = settings.callsign
+        micGain = settings.micGain
+        isStickyPTT = settings.isStickyPTT
+        isBeaconEnabled = settings.isBeaconEnabled
+        beaconSymbol = settings.beaconSymbol
+        isBeaconApproximate = settings.isBeaconApproximate
+        beaconFrequency = settings.beaconFrequency
+        isDigipeatingEnabled = settings.isDigipeatingEnabled
+        isIGateEnabled = settings.isIGateEnabled
+        isInternetFeedEnabled = settings.isInternetFeedEnabled
+        aprsDestinationFilter = settings.aprsDestinationFilter
+        txLimits = settings.txLimits
+        selectedGroup = settings.selectedGroup
+    }
+
+    private func saveSettings() {
+        guard !isRestoring, let settingsStore, let data = try? settings.encoded() else { return }
+        settingsStore.save(data)
     }
 
     /// Bluetooth, the USB serial devices present, and the built-in simulator.
@@ -321,6 +410,7 @@ public final class RadioViewModel {
         await disconnect()
         let controller = makeController(selectedConnection, rxAudio)
         self.controller = controller
+        await controller.setTXLimits(txLimits)
         connection = selectedConnection
         message = nil
         frequency = nil
@@ -456,12 +546,15 @@ public final class RadioViewModel {
             symbolTable: "/",
             symbolCode: beaconSymbol.code
         )
+        beaconOverride = beaconFrequency
         _ = aprs.submitBeacon(beacon, atMs: now(), transmit: transmitAPRS, gate: gateAPRS)
+        beaconOverride = nil
         showAPRS()
     }
 
     private func showAPRS() {
-        aprsEvents = aprs.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
+        aprsEvents = aprs.events.filter { aprsDestinationFilter.shows($0, callsign: callsign) }
+            .sorted { $0.lastSeenMs > $1.lastSeenMs }
     }
 
     /// `ServiceAprsCallbacks.submitAprsIs`.
@@ -532,13 +625,14 @@ public final class RadioViewModel {
         if reliable, let requested = request.frequencyHz, requested != selected {
             return .never  // the app does not retune to the original frequency
         }
+        let requested = request.purpose == .positionBeacon ? beaconOverride.map(Self.hertz) : request.frequencyHz
         let hertz: Int64
-        switch (reliable, request.frequencyHz) {
+        switch (reliable, requested ?? request.frequencyHz) {
         case (false, let requested?): hertz = requested
         default: hertz = selected
         }
         let megahertz = Float(Double(hertz) / 1_000_000)
-        guard TXBand.default(for: firmware.moduleType).allows(megahertz, bandwidth: snapshot.desired.bandwidth),
+        guard txLimits.band(for: firmware.moduleType).allows(megahertz, bandwidth: snapshot.desired.bandwidth),
             let frame = try? request.packet.ax25Frame()
         else { return .later }
         Task { try? await controller.transmitAX25(frame, frequency: megahertz) }

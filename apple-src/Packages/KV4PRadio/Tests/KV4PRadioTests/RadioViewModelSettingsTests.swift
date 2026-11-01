@@ -14,7 +14,7 @@ final class MemorySettingsStore: SettingsStore {
     private let stored = Mutex<Data?>(nil)
 
     init(_ settings: AppSettings? = nil) {
-        stored.withLock { $0 = settings?.data }
+        stored.withLock { $0 = try? settings?.encoded() }
     }
 
     var settings: AppSettings { AppSettings(data: load()) }

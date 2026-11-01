@@ -1,5 +1,5 @@
 /// The beacon symbols the Android app offers (`APRSIconType`), all in the primary table `/`.
-public enum APRSSymbol: CaseIterable, Sendable {
+public enum APRSSymbol: String, CaseIterable, Codable, Sendable {
     case phone, person, house, bicycle, car, jeep, truck, motorcycle, van, rv, eighteenWheeler, glider
     case smallAircraft, helicopter, sailboat, motorboat
 
