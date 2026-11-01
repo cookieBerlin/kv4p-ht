@@ -11,7 +11,9 @@ enum Composition {
 
     static func makeViewModel() -> RadioViewModel {
         RadioViewModel(
-            makeController: { RadioController(transport: transport(for: $0), rxAudio: $1) },
+            makeController: {
+                RadioController(transport: transport(for: $0), rxAudio: $1, microphone: AVAudioEngineInput())
+            },
             serialDevices: serialDevices,
             audioOutput: AVAudioEngineOutput(),
             simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? Carrier() : nil) }

@@ -60,7 +60,14 @@ buffer to fill again; it never lags behind by more than about a quarter of a
 second. Right after connecting, the app stays silent for about one second, as
 the Android app does: the radio sends a loud click while it starts.
 
+## Why can't I transmit on some frequencies?
+
+Like the Android app, the Apple app only transmits inside the 2 m (144–148 MHz)
+or 70 cm (420–450 MHz) ham band, depending on the RF module. Receiving works on
+the whole range of the module.
+
 ## Does the app collect personal data?
 
 No data is sent anywhere except what you configure: APRS packets you transmit or
-send to APRS-IS contain your callsign and, if enabled, your position.
+send to APRS-IS contain your callsign and, if enabled, your position. The
+microphone is only on while PTT is pressed, and its audio goes only to the radio.

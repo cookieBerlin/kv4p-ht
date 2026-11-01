@@ -74,8 +74,24 @@ settings.
 
 ## Transmitting
 
-*Planned.* Push-to-talk (hold or sticky), microphone gain, high/low power.
 Transmitting requires a license and an antenna or dummy load.
+
+- **Push to talk:** hold the button under **Transmit** while you speak; release it
+  to return to receive. It turns red while PTT is pressed and shows *On air* once
+  the radio transmits. The first time, macOS asks for microphone access.
+- **Sticky PTT:** each click starts or ends the transmission, as in the Android
+  app.
+- **Mic gain boost:** *None*, *Low* (×1.5), *Med* (×2) or *High* (×2.5); use it
+  if others hear you too quietly.
+- **High power** is under **Channel**.
+- The app only transmits inside the ham band: 144–148 MHz with a VHF module,
+  420–450 MHz with a UHF module, including half the bandwidth at both edges.
+  Otherwise the screen shows *Can't transmit outside the ham band.*
+- Safety stops: the app ends a transmission after 3 minutes; the radio itself
+  ends it when no audio arrives for about 0.8 s (e.g. when the connection drops)
+  and after 200 s.
+- After a transmission the received audio fades in again over about one second,
+  as in the Android app.
 
 ## Memories and scanning
 
@@ -114,6 +130,7 @@ The app warns when the radio's firmware is older than required.
 | *This device is not a kv4p HT, or its firmware has no Bluetooth LE service.* | Use USB, or update to firmware with Bluetooth LE ([FAQ](faq.md#which-firmware-do-i-need)). |
 | *Bluetooth access is not allowed.* | System Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
+| *The microphone is not available.* | System Settings → Privacy & Security → Microphone, then press PTT again. |
 | *The audio output cannot be started.* | Check the output device in System Settings → Sound, then connect again. The radio works without audio. |
 
 See also the [Apple FAQ](faq.md) and the general [FAQ](../../FAQ.md).
@@ -131,7 +148,9 @@ Used by developers before merging a milestone that touches hardware behaviour:
       --signal` on a second Mac). `swift run kv4p-probe --ble --listen 600`
       reports the block rate, the largest gap and the underruns the jitter
       buffer would have.
-- [ ] PTT into a dummy load; TX stops when PTT is released and when the link drops.
+- [ ] PTT into a dummy load, over BLE and USB: *On air* is shown, a second
+      receiver hears the voice clearly, TX stops when PTT is released and when
+      the link drops (switch off Bluetooth / pull the cable while transmitting).
 - [ ] Reconnect after radio power cycle.
 - [ ] Out-of-range frequency is rejected.
 - [ ] Tuning is applied and confirmed by the radio

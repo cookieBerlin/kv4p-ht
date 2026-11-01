@@ -26,6 +26,10 @@ public enum RadioFailure: Error, Equatable, Sendable {
 public enum RadioError: Error, Equatable, Sendable {
     case notReady
     case frequencyOutOfRange(Float)
+    /// The TX frequency is outside the ham band (`TXBand`).
+    case transmitNotAllowed
+    /// No microphone, or access to it was denied.
+    case microphoneUnavailable
 }
 
 /// Everything the UI shows about the radio.
@@ -37,17 +41,25 @@ public struct RadioSnapshot: Equatable, Sendable {
     public var desired: HostDesiredState
     /// The device applied the last desired state.
     public var isInSync: Bool
+    /// Counts the snapshots of one controller, so a reader can drop stale ones.
+    public var revision = 0
 
     /// S-meter bars, see `SMeter`.
     public var sMeter: Int { SMeter.value(rssi: deviceState?.latestRssi ?? 0) }
+
+    /// PTT is requested; the device reports `TX_ACTIVE` once it transmits.
+    public var isTransmitting: Bool { desired.flags.contains(.pttRequested) }
 }
 
 /// Connects to the radio, runs the handshake and keeps the device in the desired state (as the Android
-/// `RadioAudioService` does): HELLO validation, flow control, desired-state sync, RX audio to `rxAudio`.
+/// `RadioAudioService` does): HELLO validation, flow control, desired-state sync, RX audio to `rxAudio`, and PTT with
+/// the `microphone` as TX audio.
 public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Firmware the Android app ships; older firmware is refused.
     public static var minimumFirmwareVersion: UInt16 { 17 }
     public static var defaultHelloTimeout: Duration { .seconds(10) }
+    /// `RUNAWAY_TX_TIMEOUT_SEC`: the app ends PTT after this time, before the firmware's own limit.
+    public static var runawayTXTimeout: Duration { .seconds(180) }
 
     public nonisolated let snapshots: AsyncStream<RadioSnapshot>
     public private(set) var snapshot: RadioSnapshot
@@ -56,6 +68,13 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private let clock: C
     private let helloTimeout: Duration
     private let rxAudio: (any RXAudioSink)?
+    private let microphone: (any AudioInput)?
+    private var txEncoder = TXAudioEncoder()
+    /// Numbers transmissions, so late microphone samples and timers of an earlier one are ignored.
+    private var transmission = 0
+    private var isCapturing = false
+    private var capture: Task<Void, Never>?
+    private var runawayTimer: Task<Void, Never>?
     private let window = FlowControlWindow()
     private let frames: AsyncStream<[UInt8]>
     private let outbox: AsyncStream<[UInt8]>.Continuation
@@ -70,12 +89,14 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         transport: any RadioTransport,
         clock: C,
         helloTimeout: Duration = defaultHelloTimeout,
-        rxAudio: (any RXAudioSink)? = nil
+        rxAudio: (any RXAudioSink)? = nil,
+        microphone: (any AudioInput)? = nil
     ) {
         self.transport = transport
         self.clock = clock
         self.helloTimeout = helloTimeout
         self.rxAudio = rxAudio
+        self.microphone = microphone
         snapshot = RadioSnapshot(status: .disconnected, desired: DesiredStateController().desired, isInSync: false)
         (snapshots, snapshotContinuation) = AsyncStream.makeStream()
         (frames, outbox) = AsyncStream.makeStream()
@@ -84,6 +105,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     deinit {
         tasks.forEach { $0.cancel() }
         helloTimer?.cancel()
+        capture?.cancel()
+        runawayTimer?.cancel()
         outbox.finish()
         snapshotContinuation.finish()
     }
@@ -117,6 +140,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         helloTimer?.cancel()
         await transport.disconnect()
         rxAudio?.reset()
+        endTransmission()
+        desiredState.setPTT(false)
         desiredState.detach()
         publish(.disconnected)
     }
@@ -155,11 +180,82 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         for frequency in [rx, tx] where !range.contains(frequency) {
             throw .frequencyOutOfRange(frequency)
         }
+        let band = TXBand.default(for: firmware.moduleType)
         update { state in
             state.setRxFrequency(rx)
             state.setTxFrequency(tx)
             state.setMemoryId(memoryId)
+            state.setTXAllowed(band.allows(tx, bandwidth: state.desired.bandwidth))
         }
+    }
+
+    public func setMicGain(_ gain: MicGain) {
+        txEncoder.gain = gain
+    }
+
+    // MARK: Transmit
+
+    /// `RadioAudioService.startPtt`: keys the radio and sends the microphone as TX audio until `stopTransmitting()`,
+    /// the device releases PTT (TX watchdog) or `runawayTXTimeout` passes.
+    public func startTransmitting() async throws(RadioError) {
+        guard snapshot.status == .ready else { throw .notReady }
+        guard !isCapturing else { return }
+        guard desiredState.desired.flags.contains(.txAllowed) else { throw .transmitNotAllowed }
+        guard let microphone else { throw .microphoneUnavailable }
+        transmission += 1
+        let current = transmission
+        isCapturing = true
+        let samples: AsyncStream<[Int16]>
+        do {
+            samples = try await microphone.start()
+        } catch {
+            isCapturing = false
+            throw .microphoneUnavailable
+        }
+        guard current == transmission else { return microphone.stop() }  // ended while the microphone started
+        txEncoder.reset()
+        rxAudio?.reset()
+        update { $0.setPTT(true) }
+        capture = Task { [weak self] in
+            for await chunk in samples {
+                await self?.send(chunk, transmission: current)
+            }
+        }
+        let clock = clock
+        runawayTimer = Task { [weak self] in
+            try? await clock.sleep(for: Self.runawayTXTimeout)
+            await self?.runawayTimedOut(transmission: current)
+        }
+    }
+
+    /// `RadioAudioService.endPtt`.
+    public func stopTransmitting() {
+        guard isCapturing else { return }
+        endTransmission()
+        update { $0.setPTT(false) }
+    }
+
+    private func send(_ chunk: [Int16], transmission sending: Int) {
+        guard sending == transmission, isCapturing else { return }
+        for block in txEncoder.encode(chunk) {
+            outbox.yield(FrameEncoder.txAudio(block))
+        }
+    }
+
+    private func runawayTimedOut(transmission timedOut: Int) {
+        guard timedOut == transmission else { return }
+        stopTransmitting()
+    }
+
+    /// Stops the microphone and timer; the RX audio fades in again, as on Android.
+    private func endTransmission() {
+        guard isCapturing else { return }
+        transmission += 1
+        isCapturing = false
+        capture?.cancel()
+        runawayTimer?.cancel()
+        microphone?.stop()
+        rxAudio?.reset()
     }
 
     /// Applies several changes as one desired state, e.g. `update { $0.setSquelch(4) }`.
@@ -180,6 +276,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             case .command(.deviceState, let payload):
                 if let state = try? DeviceState(decoding: payload) {
                     desiredState.update(state)
+                    applyTXRule()
                     flush()
                 }
             case .command(.rxAudio, let payload) where snapshot.status == .ready:
@@ -211,6 +308,16 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         flush()
     }
 
+    /// `updateTxAllowed` on every in-sync state: the TX frequency decides whether PTT is allowed.
+    private func applyTXRule() {
+        let desired = desiredState.desired
+        guard desiredState.isAppliedStateInSync, desired.freqTx > 0, let firmware = desiredState.firmware else {
+            return
+        }
+        let allowed = TXBand.default(for: firmware.moduleType).allows(desired.freqTx, bandwidth: desired.bandwidth)
+        desiredState.setTXAllowed(allowed)
+    }
+
     private func helloTimedOut(attempt timedOut: Int) {
         guard timedOut == attempt, snapshot.status == .waitingForHello else { return }
         fail(.helloTimeout)
@@ -226,6 +333,9 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     /// Queues the pending desired states; the sender writes them in order within the flow-control window.
     private func flush() {
+        if isCapturing, !desiredState.desired.flags.contains(.pttRequested) {
+            endTransmission()  // the device released PTT
+        }
         for state in desiredState.takeOutgoing() {
             outbox.yield(FrameEncoder.desiredState(state))
         }
@@ -242,6 +352,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private func fail(_ failure: RadioFailure) {
         helloTimer?.cancel()
         rxAudio?.reset()
+        endTransmission()
+        desiredState.setPTT(false)
         desiredState.detach()
         publish(.failed(failure))
     }
@@ -252,11 +364,13 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             firmware: desiredState.firmware,
             deviceState: desiredState.deviceState,
             desired: desiredState.desired,
-            isInSync: desiredState.isAppliedStateInSync
+            isInSync: desiredState.isAppliedStateInSync,
+            revision: snapshot.revision
         )
         guard next != snapshot else { return }
         snapshot = next
-        snapshotContinuation.yield(next)
+        snapshot.revision += 1
+        snapshotContinuation.yield(snapshot)
     }
 }
 
@@ -264,8 +378,15 @@ extension RadioController where C == ContinuousClock {
     public init(
         transport: any RadioTransport,
         helloTimeout: Duration = defaultHelloTimeout,
-        rxAudio: (any RXAudioSink)? = nil
+        rxAudio: (any RXAudioSink)? = nil,
+        microphone: (any AudioInput)? = nil
     ) {
-        self.init(transport: transport, clock: ContinuousClock(), helloTimeout: helloTimeout, rxAudio: rxAudio)
+        self.init(
+            transport: transport,
+            clock: ContinuousClock(),
+            helloTimeout: helloTimeout,
+            rxAudio: rxAudio,
+            microphone: microphone
+        )
     }
 }

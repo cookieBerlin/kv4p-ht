@@ -29,6 +29,9 @@ public struct RadioSimulator: Sendable {
     public private(set) var transmittedPackets: [TransmittedPacket] = []
     public private(set) var kissParameters: [KISS.Parameter: UInt8] = [:]
     public private(set) var carrier: Carrier?
+    /// `HOST_TX_AUDIO` blocks accepted while transmitting, and the latest one.
+    public private(set) var transmittedAudioBlocks = 0
+    public private(set) var lastTransmittedAudio: [UInt8]?
 
     private var parser = HostFrameParser()
     private var desired: RadioState
@@ -251,6 +254,8 @@ public struct RadioSimulator: Sendable {
         case .command(.txAudio, let payload):
             if mode == .tx, !desired.flags.contains(.freeDV2400B), !payload.isEmpty {
                 lastTXAudio = now
+                transmittedAudioBlocks += 1
+                lastTransmittedAudio = payload
             }
         case .command(.txAX25, let payload):
             transmit(payload)

@@ -1,3 +1,4 @@
+import KV4PAudio
 import KV4PProtocol
 import KV4PRadio
 import SwiftUI
@@ -72,6 +73,18 @@ struct RadioView: View {
                 }
             }
 
+            Section("Transmit") {
+                PTTButton(model: model)
+                Toggle("Sticky PTT", isOn: $model.isStickyPTT)
+                Picker("Mic gain boost", selection: $model.micGain) {
+                    ForEach(MicGain.allCases, id: \.self) { Text($0.label) }
+                }
+                if model.isReady, !model.canTransmit {
+                    Text("Can't transmit outside the ham band.").foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!model.isReady)
+
             Section("Audio") {
                 Slider(value: $model.volume, in: 0...1) {
                     Text("Volume")
@@ -85,5 +98,34 @@ struct RadioView: View {
         .formStyle(.grouped)
         .frame(minWidth: 420)
         .onAppear { model.refreshConnections() }
+    }
+}
+
+/// Press and hold to transmit; with sticky PTT, each press toggles.
+private struct PTTButton: View {
+    let model: RadioViewModel
+    @State private var isPressed = false
+
+    var body: some View {
+        Label(model.isOnAir ? "On air" : "Push to talk", systemImage: model.isTransmitting ? "mic.fill" : "mic")
+            .font(.headline)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .foregroundStyle(model.isTransmitting ? Color.white : Color.primary)
+            .background(model.isTransmitting ? Color.red : Color.secondary.opacity(0.2), in: .rect(cornerRadius: 8))
+            .contentShape(.rect)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard !isPressed else { return }
+                        isPressed = true
+                        Task { await model.pressPTT() }
+                    }
+                    .onEnded { _ in
+                        isPressed = false
+                        Task { await model.releasePTT() }
+                    }
+            )
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
     }
 }

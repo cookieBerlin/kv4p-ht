@@ -11,6 +11,10 @@ public protocol RadioControlling: Actor {
     func disconnect() async
     func tune(rx: Float, tx: Float, memoryId: Int32) throws(RadioError)
     func update(_ changes: @Sendable (inout DesiredStateController) -> Void)
+    var snapshot: RadioSnapshot { get }
+    func setMicGain(_ gain: MicGain)
+    func startTransmitting() async throws(RadioError)
+    func stopTransmitting()
 }
 
 extension RadioController: RadioControlling {}
@@ -75,6 +79,10 @@ public final class RadioViewModel {
         }
     }
 
+    public var micGain = MicGain.none
+    /// A PTT press starts transmitting, the next one ends it (Android "Sticky PTT").
+    public var isStickyPTT = false
+
     let rxAudio = RXAudioPlayer()
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
@@ -136,6 +144,15 @@ public final class RadioViewModel {
         return !flags.contains(.squelched)
     }
 
+    /// PTT is pressed (the radio may not have keyed up yet).
+    public var isTransmitting: Bool { snapshot.isTransmitting }
+
+    /// The radio reports that it transmits.
+    public var isOnAir: Bool { isReady && snapshot.deviceState?.radio.flags.contains(.txActive) == true }
+
+    /// The TX frequency is inside the ham band.
+    public var canTransmit: Bool { isReady && snapshot.desired.flags.contains(.txAllowed) }
+
     public var canSimulateSignal: Bool { isReady && connection == .simulator && simulateSignal != nil }
 
     // MARK: Connection
@@ -173,6 +190,7 @@ public final class RadioViewModel {
     }
 
     private func show(_ snapshot: RadioSnapshot) {
+        guard snapshot.revision >= self.snapshot.revision else { return }  // already showing a newer one
         self.snapshot = snapshot
         if case .failed(let failure) = snapshot.status {
             message = Self.message(for: failure)
@@ -181,6 +199,31 @@ public final class RadioViewModel {
             frequency = reported
             frequencyText = Self.format(reported)
         }
+    }
+
+    // MARK: Transmit
+
+    /// `MainActivity.handlePttPress`: starts transmitting, or with sticky PTT toggles.
+    public func pressPTT() async {
+        guard isReady, let controller else { return }
+        if isStickyPTT, isTransmitting {
+            await controller.stopTransmitting()
+        } else {
+            await controller.setMicGain(micGain)
+            do {
+                try await controller.startTransmitting()
+            } catch {
+                message = Self.message(for: error)
+            }
+        }
+        show(await controller.snapshot)
+    }
+
+    /// `MainActivity.handlePttRelease`: ends the transmission unless PTT is sticky.
+    public func releasePTT() async {
+        guard !isStickyPTT, let controller else { return }
+        await controller.stopTransmitting()
+        show(await controller.snapshot)
     }
 
     // MARK: Settings
@@ -273,6 +316,15 @@ public final class RadioViewModel {
         case .firmwareTooOld(let version): "Firmware \(version) is too old. Update the radio to version 17 or later."
         case .radioModuleNotFound: "The SA818 radio module did not respond. Restart the radio."
         case .transport(let error): message(for: error)
+        }
+    }
+
+    static func message(for error: RadioError) -> String {
+        switch error {
+        case .transmitNotAllowed: "Can't transmit outside the ham band."
+        case .microphoneUnavailable:
+            "The microphone is not available. Allow access in System Settings → Privacy & Security → Microphone."
+        case .notReady, .frequencyOutOfRange: "The radio is not ready."
         }
     }
 
