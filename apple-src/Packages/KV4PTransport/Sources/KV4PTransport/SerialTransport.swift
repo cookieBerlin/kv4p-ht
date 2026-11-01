@@ -3,6 +3,8 @@ public protocol SerialPort: Sendable {
     /// Opens the port raw at 115200 8N1. The stream yields received bytes and finishes when the port closes or
     /// fails.
     func open() throws(TransportError) -> AsyncStream<[UInt8]>
+    /// Changes the speed of an open port, e.g. for the ESP32 bootloader.
+    func setBaudRate(_ rate: Int) throws(TransportError)
     /// Sets DTR and RTS together.
     func setModemLines(dtr: Bool, rts: Bool) throws(TransportError)
     func write(_ bytes: [UInt8]) throws(TransportError)

@@ -144,6 +144,7 @@ let package = Package(
         // Test doubles shared by the test targets (manual clock); not part of any product.
         .target(
             name: "KV4PTestSupport",
+            dependencies: ["KV4PTransport"],
             path: "Packages/KV4PTestSupport/Sources/KV4PTestSupport"
         ),
         .testTarget(
