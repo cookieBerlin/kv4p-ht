@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 2.5 (TestFlight). The structure below is the target layout
+> Status: milestone 3.1 (version and build ID). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 
@@ -61,7 +61,7 @@ make app        # build the app for macOS and iOS, check the iOS bundle, release
 make testflight # signed iOS and macOS builds, uploaded to App Store Connect; needs TEAM_ID (PLATFORMS=macOS for one platform, DRY_RUN=1 for a dry run); writes the What to Test texts
 make icon       # render the app icon from ../artwork/app-icon.svg (commit the result)
 make ci         # everything CI runs, in the same order
-make vectors    # regenerate golden test vectors (Android code, vendored Codec2)
+make vectors    # regenerate golden test vectors (Android code, vendored Codec2) and the app version
 make vectors-check # make vectors, then fail if the committed vectors or Codec2 sources differ
 swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz>] [--listen <s>]  # hardware check
 swift run kv4p-probe --flash <directory> [<device>]  # flash bootloader/partitions/boot_app0/firmware.bin over USB

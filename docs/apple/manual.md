@@ -227,7 +227,7 @@ its settings between launches:
   frequency, digipeating, iGate, the APRS-IS feed and the list filter.
 - **Memories tab:** the group shown.
 
-**kv4p HT → About kv4p HT** (📱 ⓘ on the radio tab) shows the version and build of the app, the
+**kv4p HT → About kv4p HT** (📱 ⓘ on the radio tab) shows the version, build and commit of the app, the
 firmware it ships for USB updates, and the licences of everything it contains
 or is ported from, with the licence texts.
 
