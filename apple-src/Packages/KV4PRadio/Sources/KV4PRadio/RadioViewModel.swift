@@ -224,6 +224,8 @@ public final class RadioViewModel {
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
     private let audioOutput: (any AudioOutput)?
+    private let audioSession: (any AudioSession)?
+    private var audioSessionObserver: Task<Void, Never>?
     private let simulateSignal: (@Sendable (Bool) async -> Void)?
     private let repository: (any MemoryRepository)?
     private let firmware: (any FirmwareFlashing)?
@@ -242,6 +244,7 @@ public final class RadioViewModel {
         makeController: @escaping (Connection, any RXAudioSink) -> any RadioControlling,
         serialDevices: @escaping () -> [String],
         audioOutput: (any AudioOutput)? = nil,
+        audioSession: (any AudioSession)? = nil,
         simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
         memories: (any MemoryRepository)? = nil,
         location: (any LocationProvider)? = nil,
@@ -265,9 +268,11 @@ public final class RadioViewModel {
         self.makeController = makeController
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
+        self.audioSession = audioSession
         self.simulateSignal = simulateSignal
         refreshConnections()
         observeInternet()
+        observeAudioSession()
         restore(AppSettings(data: settings?.load()))
     }
 
@@ -414,11 +419,7 @@ public final class RadioViewModel {
         connection = selectedConnection
         message = nil
         frequency = nil
-        do {
-            try audioOutput?.start(rxAudio)
-        } catch {
-            message = "The audio output cannot be started."
-        }
+        startAudio()
         let snapshots = controller.snapshots
         observer = Task { [weak self] in
             for await snapshot in snapshots {
@@ -449,6 +450,7 @@ public final class RadioViewModel {
         aprsTicker = nil
         await controller?.disconnect()
         audioOutput?.stop()
+        audioSession?.deactivate()
         controller = nil
         connection = nil
         isSignalSimulated = false
@@ -465,6 +467,50 @@ public final class RadioViewModel {
             frequency = reported
             frequencyText = HamFrequency.format(reported)
         }
+    }
+
+    // MARK: Audio session
+
+    private func startAudio() {
+        do {
+            try audioSession?.activate()
+            try audioOutput?.start(rxAudio)
+        } catch {
+            message = "The audio output cannot be started."
+        }
+    }
+
+    private func observeAudioSession() {
+        guard let events = audioSession?.events else { return }
+        audioSessionObserver = Task { [weak self] in
+            for await event in events {
+                await self?.handle(event)
+            }
+        }
+    }
+
+    /// A call or another app ends the transmission and the audio until the system allows it again; a lost device
+    /// ends the transmission, so it does not go on with another microphone.
+    func handle(_ event: AudioSessionEvent) async {
+        guard let controller else { return }
+        switch event {
+        case .interruptionBegan:
+            await controller.stopTransmitting()
+            audioOutput?.stop()
+        case .interruptionEnded(let shouldResume):
+            if shouldResume {
+                startAudio()
+            } else {
+                message = "The audio was interrupted. Connect again to listen."
+            }
+        case .deviceUnavailable:
+            await controller.stopTransmitting()
+        case .mediaServicesReset:
+            await controller.stopTransmitting()
+            audioOutput?.stop()
+            startAudio()
+        }
+        show(await controller.snapshot)
     }
 
     // MARK: APRS
@@ -870,7 +916,7 @@ public final class RadioViewModel {
         switch error {
         case .transmitNotAllowed: "Can't transmit outside the ham band."
         case .microphoneUnavailable:
-            "The microphone is not available. Allow access in System Settings → Privacy & Security → Microphone."
+            "The microphone is not available. Allow access under Privacy & Security → Microphone in the settings."
         case .notReady, .frequencyOutOfRange: "The radio is not ready."
         case .busy: "The radio is busy transmitting or scanning."
         case .invalidPacket: "The packet cannot be sent."
@@ -880,7 +926,7 @@ public final class RadioViewModel {
     private static func message(for error: TransportError) -> String {
         switch error {
         case .bluetoothUnavailable(.unauthorized):
-            "Bluetooth access is not allowed. Allow it in System Settings → Privacy & Security → Bluetooth."
+            "Bluetooth access is not allowed. Allow it under Privacy & Security → Bluetooth in the settings."
         case .bluetoothUnavailable(.poweredOff): "Bluetooth is off."
         case .bluetoothUnavailable: "Bluetooth is not available."
         case .serviceNotFound: "This device is not a kv4p HT, or its firmware has no Bluetooth LE service."
