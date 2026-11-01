@@ -54,6 +54,24 @@ Every milestone that changes user-visible behaviour updates the
 | 3.8 | **Settings sync** | Settings (callsign, APRS options, PTT settings, TX limits) changed on one device reach the user's other iPhones, iPads and Macs through iCloud. The chosen radio stays local to each device. ADR. |
 | 3.9 | **Memory sync** | Memories and groups sync between the user's devices through iCloud (CloudKit). Concurrent changes and deletions do not lose data, and a device without iCloud keeps working locally. ADR. |
 
+## Phase 4 — Firmware selection and APRS
+
+| # | Milestone | Acceptance criteria |
+|---|---|---|
+| 4.1 | **Firmware selection (macOS)** | Besides the version the app ships, the user can choose a firmware from the releases of the original project. The app shows the version and whether it has Bluetooth LE, if known, checks a published checksum, and warns before flashing a version without Bluetooth LE or one older than the app requires. Flashing stays on the Mac. ADR. |
+| 4.2 | **APRS position** | A position opens in Apple Maps through a link. The list shows distance and direction from the user's position, once it is known. |
+| 4.3 | **APRS symbols** | A received symbol is shown as what it means, not as raw characters. The display of `_3` is analysed and fixed. It is reproduced by sending and decoding beacons with the app's own symbols, in tests first and on the radio if needed. |
+| 4.4 | **APRS packet types** | Messages, positions, objects, weather, status, capabilities and unknown packets each have a clear display of their own, at least as readable as in the Android app. |
+| 4.5 | **Background GPS** | While the radio is connected and the beacon is on, position beacons keep going with the screen locked, using the *when in use* permission and the system's location indicator. Errors that stop the beacon, such as a missing location permission or no position, are reported through 3.3. ADR, superseding the beacon part of [ADR-0031](adr/0031-ios-background-operation.md). |
+
+## Phase 5 — RepeaterBook and SSTV
+
+| # | Milestone | Acceptance criteria |
+|---|---|---|
+| 5.1 | **RepeaterBook download** | The options are evaluated first: embedded web page as in the Android app, official API, stored login. The evaluation covers RepeaterBook's terms. The chosen option replaces the manual CSV download where possible, and the password does not enter the repository. ADR. |
+| 5.2 | **SSTV receive** | The milestone starts with two decisions: which modes the app supports, and whether an existing library can be reused or the decoder is written from scratch (including its licence). The app then decodes SSTV images from the received audio and shows and saves them. The decoder is tested with generated test signals, as the Android app has no SSTV to serve as an oracle. ADR. |
+| 5.3 | **SSTV transmit** | The user chooses an image, and the app sends it as it is in the chosen modes; the callsign is part of the image. The app's own TX time limit does not apply to it, and the transmission can be stopped at any time. Listen-only mode blocks it, and the frequency limits stay in force. Encoder and decoder pass a round trip in the tests. The firmware ends a transmission after 200 s: longer modes wait until the firmware allows them, as a separate step later. ADR, or part of the ADR of 5.2. |
+
 ## Phase 99 — App Store release
 
 Deferred: the maintainer plans it later. Until then, the app is distributed through
