@@ -15,6 +15,11 @@ public struct APRSInternetRequest: Equatable, Sendable {
     public let line: String
     /// The event the line belongs to.
     public let eventId: Int64?
+
+    public init(line: String, eventId: Int64?) {
+        self.line = line
+        self.eventId = eventId
+    }
 }
 
 /// A packet the controller wants sent over RF; `frequencyHz` is `nil` for the current TX frequency.
