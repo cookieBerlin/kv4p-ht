@@ -1,5 +1,6 @@
 import Foundation
 import KV4PAudio
+import KV4PPersistence
 import KV4PProtocol
 import KV4PTransport
 import Observation
@@ -15,6 +16,9 @@ public protocol RadioControlling: Actor {
     func setMicGain(_ gain: MicGain)
     func startTransmitting() async throws(RadioError)
     func stopTransmitting()
+    func tune(to memory: ChannelMemory) throws(RadioError)
+    func startScan(_ memories: [ChannelMemory]) throws(RadioError)
+    func stopScan()
 }
 
 extension RadioController: RadioControlling {}
@@ -83,11 +87,17 @@ public final class RadioViewModel {
     /// A PTT press starts transmitting, the next one ends it (Android "Sticky PTT").
     public var isStickyPTT = false
 
+    /// All stored memories, in the order they were added.
+    public private(set) var memories: [ChannelMemory] = []
+    /// The group shown; `nil` for all memories.
+    public var selectedGroup: String?
+
     let rxAudio = RXAudioPlayer()
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
     private let audioOutput: (any AudioOutput)?
     private let simulateSignal: (@Sendable (Bool) async -> Void)?
+    private let repository: (any MemoryRepository)?
     private var controller: (any RadioControlling)?
     private var connection: Connection?
     private var observer: Task<Void, Never>?
@@ -100,8 +110,10 @@ public final class RadioViewModel {
         makeController: @escaping (Connection, any RXAudioSink) -> any RadioControlling,
         serialDevices: @escaping () -> [String],
         audioOutput: (any AudioOutput)? = nil,
-        simulateSignal: (@Sendable (Bool) async -> Void)? = nil
+        simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
+        memories: (any MemoryRepository)? = nil
     ) {
+        repository = memories
         self.makeController = makeController
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
@@ -224,6 +236,92 @@ public final class RadioViewModel {
         guard !isStickyPTT, let controller else { return }
         await controller.stopTransmitting()
         show(await controller.snapshot)
+    }
+
+    // MARK: Memories
+
+    public var groups: [String] { ChannelMemory.groups(in: memories) }
+
+    public var visibleMemories: [ChannelMemory] {
+        guard let selectedGroup else { return memories }
+        return memories.filter { $0.group == selectedGroup }
+    }
+
+    /// The memory the radio is tuned to.
+    public var activeMemoryId: Int32? {
+        let id = snapshot.desired.memoryId
+        return isReady && id >= 0 ? id : nil
+    }
+
+    public var isScanning: Bool { snapshot.isScanning }
+
+    public func loadMemories() async {
+        await store { repository in
+            memories = try await repository.all()
+        }
+    }
+
+    /// Adds a new memory (id 0) or replaces the one with the same id.
+    public func save(_ memory: ChannelMemory) async {
+        await store { repository in
+            if memory.id == 0 {
+                _ = try await repository.insert([memory])
+            } else {
+                try await repository.update(memory)
+            }
+            memories = try await repository.all()
+        }
+    }
+
+    public func delete(_ memory: ChannelMemory) async {
+        await store { repository in
+            try await repository.delete(id: memory.id)
+            memories = try await repository.all()
+        }
+    }
+
+    public func tune(to memory: ChannelMemory) async {
+        guard let controller else { return }
+        try? await controller.tune(to: memory)
+        show(await controller.snapshot)
+    }
+
+    /// Starts scanning the visible memories, or stops.
+    public func toggleScan() async {
+        guard let controller else { return }
+        if isScanning {
+            await controller.stopScan()
+        } else {
+            try? await controller.startScan(visibleMemories)
+        }
+        show(await controller.snapshot)
+    }
+
+    /// Adds the repeaters of a RepeaterBook CSV export that the radio can receive as memories of `group`.
+    public func importRepeaterBook(_ csv: String, group: String) async {
+        guard let firmware = snapshot.firmware else {
+            message = "Connect the radio first, so that only repeaters it can receive are imported."
+            return
+        }
+        let range = firmware.minRadioFreq...firmware.maxRadioFreq
+        guard let imported = RepeaterBookImport.memories(fromCSV: csv, group: group, range: range) else {
+            message = "This file is not a RepeaterBook CSV export."
+            return
+        }
+        await store { repository in
+            _ = try await repository.insert(imported)
+            memories = try await repository.all()
+            message = "Imported \(imported.count) repeater\(imported.count == 1 ? "" : "s")."
+        }
+    }
+
+    private func store(_ change: (any MemoryRepository) async throws -> Void) async {
+        guard let repository else { return }
+        do {
+            try await change(repository)
+        } catch {
+            message = "The memories could not be loaded or saved."
+        }
     }
 
     // MARK: Settings

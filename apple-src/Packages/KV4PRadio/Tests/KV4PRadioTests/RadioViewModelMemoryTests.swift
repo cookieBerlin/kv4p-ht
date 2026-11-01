@@ -132,7 +132,11 @@ struct RadioViewModelMemoryTests {
 
     @Test("storage failures are reported")
     func storageFails() async {
-        let model = RadioViewModel(makeController: { _, _ in RadioController(transport: ScriptedTransport()) }, serialDevices: { [] }, memories: FailingRepository())
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            memories: FailingRepository()
+        )
         await model.loadMemories()
         #expect(model.message == "The memories could not be loaded or saved.")
         await model.save(Self.simplex)
