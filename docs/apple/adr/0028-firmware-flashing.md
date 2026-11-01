@@ -38,6 +38,10 @@ any time; the snackbar offers it when `HELLO` is missing, invalid or older than
   - `flasher.json` records the transcript in order: serial parameters, DTR/RTS,
     every written and answered byte, and the callbacks. It covers a full flash, a
     wrong MD5 and a silent device.
+  - The library's reply timeouts (100 ms) run in real time, so a stalled CI
+    runner can make it miss a reply and retry. The generator therefore flashes
+    once to warm up and keeps a transcript only when two flashes in a row produce
+    it (at most five attempts).
   - `packaged-firmware.json` pins `PACKAGED_FIRMWARE_VER` against
     `KV4P.packagedFirmwareVersion`.
   - The generator copies the stub unchanged into `KV4PFlasher`'s resources;
