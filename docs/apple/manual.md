@@ -86,7 +86,8 @@ Transmitting requires a license and an antenna or dummy load.
 - **High power** is under **Channel**.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
-  Otherwise the screen shows *Can't transmit outside the ham band.*
+  Narrower limits can be chosen under **TX limits**. Otherwise the screen shows
+  *Can't transmit outside the ham band.*
 - Safety stops: the app ends a transmission after 3 minutes; the radio itself
   ends it when no audio arrives for about 0.8 s (e.g. when the connection drops)
   and after 200 s.
@@ -125,7 +126,10 @@ station capabilities. Repeats of the same packet within 30 seconds (numbered
 messages: 30 minutes) are counted (×2, ×3, …) instead of listed again. Packets
 relayed by another station (third-party) show *via* that station. Tune to the
 APRS frequency of your region (e.g. 144.800 MHz in Europe, 144.390 MHz in North
-America). The list starts empty each time the app starts.
+America). The list starts empty each time the app starts. *Only messages for
+me* hides messages between other stations; messages from or to you, to `ALL`,
+`QST`, `CQ` and bulletins stay, as do all positions, weather reports and
+objects.
 
 **Messages** (licence required): enter your callsign at the bottom of the APRS
 tab (the app ships with none and remembers yours), a recipient and the text,
@@ -149,7 +153,9 @@ of the APRS tab. The app sends your position right away and then every five
 minutes, as long as the radio is connected and receiving. Choose the symbol
 others see (phone, car, house, …) and, with *Approximate position*, round the
 position to about 1 km. macOS asks for location access the first time; your
-own beacons appear in the list. Beacons go out on the current TX frequency.
+own beacons appear in the list. Beacons go out on the current TX frequency, or
+on the APRS frequency chosen next to the symbol (144.390 … 145.825 MHz); the
+radio returns to its frequency afterwards.
 
 **Digipeat** turns the Mac into a fill-in digipeater: packets whose next hop is
 `WIDE1-1` or your callsign are repeated once, with your callsign in the path.
@@ -166,8 +172,6 @@ digipeater is useful.
   internet, marked NOGATE or RFONLY, and queries are not passed on.
 - Both use `rotate.aprs2.net` and reconnect by themselves; the label next to the
   switches shows whether the app is connected. The feed works without a radio.
-
-*Planned:* a separate beacon frequency.
 
 ## FreeDV digital voice
 
@@ -187,7 +191,20 @@ modem, the app encodes and decodes the speech with Codec2.
 
 ## Settings
 
-*Planned.*
+The radio keeps its own settings (frequency, bandwidth, squelch, tones, power,
+filters, voice mode) and reports them when the app connects. The app remembers
+its settings between launches:
+
+- **Radio tab:** sticky PTT, mic gain boost and the **TX limits**: 2 m from
+  144 MHz to 148 or 146 MHz, 70 cm from 420 or 430 MHz to 450 or 440 MHz, as in
+  the Android app. The app transmits only inside the band of the radio module.
+- **APRS tab:** your callsign, position beacon with symbol, accuracy and
+  frequency, digipeating, iGate, the APRS-IS feed and the list filter.
+- **Memories tab:** the group shown.
+
+For reduced motion and live captions use the system settings (System Settings →
+Accessibility); the Android app's own switches for them are not needed on the
+Mac.
 
 ## Firmware updates
 

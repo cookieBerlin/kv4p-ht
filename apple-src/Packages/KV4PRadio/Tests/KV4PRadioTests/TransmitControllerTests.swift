@@ -160,6 +160,24 @@ struct TransmitControllerTests {
         #expect(await !setup.controller.snapshot.desired.flags.contains(.txAllowed))
     }
 
+    @Test("narrower TX limits forbid TX and AX.25 above them, also on the tuned frequency")
+    func limits() async throws {
+        var setup = Simulated()
+        try await setup.tuned()
+        try await setup.controller.tune(rx: 147, tx: 147)
+        _ = try #require(await setup.snapshots.next { $0.isInSync && $0.desired.flags.contains(.txAllowed) })
+        var limits = TXLimits()
+        limits.max2m = 146
+        await RadioController(transport: ScriptedTransport(), clock: ManualClock()).setTXLimits(limits)  // no radio yet
+        await setup.controller.setTXLimits(limits)
+        #expect(await !setup.controller.snapshot.desired.flags.contains(.txAllowed))
+        await #expect(throws: RadioError.transmitNotAllowed) {
+            try await setup.controller.transmitAX25([0x01], frequency: 147)
+        }
+        try await setup.controller.tune(rx: 145, tx: 145)
+        #expect(await setup.controller.snapshot.desired.flags.contains(.txAllowed))
+    }
+
     @Test("TX needs a ready radio and a microphone")
     func preconditions() async throws {
         let microphone = FakeMicrophone()

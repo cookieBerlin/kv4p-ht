@@ -24,8 +24,20 @@ enum Composition {
             memories: memoryRepository(),
             location: CoreLocationProvider(),
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
-            firmware: firmwareFlasher()
+            firmware: firmwareFlasher(),
+            settings: settingsStore()
         )
+    }
+
+    /// The app settings in the user defaults; the callsign, kept on its own before, moves into them once.
+    private static func settingsStore() -> any SettingsStore {
+        let store = UserDefaultsSettingsStore()
+        if store.load() == nil, let callsign = UserDefaults.standard.string(forKey: "aprsCallsign") {
+            var settings = AppSettings()
+            settings.callsign = callsign
+            if let data = try? settings.encoded() { store.save(data) }
+        }
+        return store
     }
 
     /// `CFBundleShortVersionString`, sent in the APRS-IS login.

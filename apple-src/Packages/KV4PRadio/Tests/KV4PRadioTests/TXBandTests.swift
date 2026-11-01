@@ -29,6 +29,23 @@ struct TXBandTests {
         #expect(TXBand.default(for: .sa818VHF).allows(frequency, bandwidth: bandwidth) == allowed)
     }
 
+    /// `SettingsActivity.populateMinFrequencies` / `populateMaxFrequencies` and `updateTxLimitsForBand`.
+    @Test("the TX limits of the settings choose the band of the module")
+    func limits() {
+        var limits = TXLimits()
+        #expect(limits.band(for: .sa818VHF) == TXBand.default(for: .sa818VHF))
+        #expect(limits.band(for: .sa818UHF) == TXBand.default(for: .sa818UHF))
+        limits.max2m = 146
+        limits.min70cm = 430
+        limits.max70cm = 440
+        #expect(limits.band(for: .sa818VHF).range == 144...146)
+        #expect(limits.band(for: .sa818UHF).range == 430...440)
+        #expect(TXLimits.min2mOptions == [144])
+        #expect(TXLimits.max2mOptions == [148, 146])
+        #expect(TXLimits.min70cmOptions == [420, 430])
+        #expect(TXLimits.max70cmOptions == [450, 440])
+    }
+
     @Test("UHF")
     func uhf() {
         let band = TXBand.default(for: .sa818UHF)

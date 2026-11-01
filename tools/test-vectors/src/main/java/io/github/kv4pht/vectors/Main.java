@@ -39,6 +39,7 @@ public final class Main {
         write(packages, "KV4PAPRS", "aprs-is-login.json", "java-aprs AprsIsClient login", AprsVectors.login());
         write(packages, "KV4PAPRS", "aprs-encoding.json", "java-aprs MessagePacket and APRSPacket.toAX25Frame",
             AprsVectors.encoding());
+        write(packages, "KV4PAPRS", "aprs-feed-filter.json", "AprsFeedPolicy.isVisibleToMine", FeedVectors.mine());
         write(packages, "KV4PFlasher", "flasher.json", "FirmwareUtils.flashFirmware (esp32-flash-lib)",
             FlasherVectors.all());
         write(packages, "KV4PFlasher", "packaged-firmware.json", "FirmwareUtils.PACKAGED_FIRMWARE_VER",

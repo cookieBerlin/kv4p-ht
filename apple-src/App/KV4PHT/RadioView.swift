@@ -97,6 +97,13 @@ struct RadioView: View {
             }
             .disabled(!model.isReady)
 
+            Section("TX limits") {
+                limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
+                limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
+                limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
+                limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
+            }
+
             Section("Audio") {
                 Slider(value: $model.volume, in: 0...1) {
                     Text("Volume")
@@ -110,6 +117,13 @@ struct RadioView: View {
         .formStyle(.grouped)
         .frame(minWidth: 420)
         .onAppear { model.refreshConnections() }
+    }
+
+    /// `SettingsActivity`'s TX frequency limits, in whole MHz.
+    private func limitPicker(_ title: String, _ value: Binding<Float>, _ options: [Float]) -> some View {
+        Picker(title, selection: value) {
+            ForEach(options, id: \.self) { Text("\(Int($0)) MHz").tag($0) }
+        }
     }
 }
 
