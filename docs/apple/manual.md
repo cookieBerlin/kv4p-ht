@@ -119,8 +119,17 @@ The memory list is in the sidebar.
 
 ## APRS
 
-*Planned.* Messages, position beacons, digipeating, APRS-IS. Set your own callsign
-in Settings before transmitting; the app ships with no callsign configured.
+The **APRS** tab lists the APRS packets the radio decodes on air, newest
+first: positions, messages, weather reports, objects, status reports and
+station capabilities. Repeats of the same packet within 30 seconds (numbered
+messages: 30 minutes) are counted (×2, ×3, …) instead of listed again. Packets
+relayed by another station (third-party) show *via* that station. Tune to the
+APRS frequency of your region (e.g. 144.800 MHz in Europe, 144.390 MHz in North
+America). The list starts empty each time the app starts.
+
+*Planned:* sending messages, position beacons, digipeating and APRS-IS. Set your
+own callsign in Settings before transmitting; the app ships with no callsign
+configured.
 
 ## FreeDV digital voice
 
@@ -175,6 +184,8 @@ Used by developers before merging a milestone that touches hardware behaviour:
       the link drops (switch off Bluetooth / pull the cable while transmitting).
 - [ ] Reconnect after radio power cycle.
 - [ ] Out-of-range frequency is rejected.
+- [ ] APRS: tuned to the regional APRS frequency, packets appear in the APRS
+      tab and match what the Android app shows for the same packets.
 - [ ] Tune a memory with offset and tone: a second radio hears the TX on the
       offset frequency with the tone; scan stops on a busy memory.
 - [ ] Tuning is applied and confirmed by the radio

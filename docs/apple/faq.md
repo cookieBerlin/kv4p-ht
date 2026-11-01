@@ -77,6 +77,12 @@ RepeaterBook requires signing in. The Android app embeds the RepeaterBook web
 page for that; on the Mac you download the CSV export in your browser and import
 the file, which needs no password in the app.
 
+## Why does a packet show a strange comment such as "null INVALID position format."?
+
+The Apple app decodes APRS exactly like the Android app, which uses the
+java-aprs library. Packets that library cannot decode, or decodes oddly, look the
+same in both apps.
+
 ## Does the app collect personal data?
 
 No data is sent anywhere except what you configure: APRS packets you transmit or
