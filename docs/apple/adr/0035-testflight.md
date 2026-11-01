@@ -31,6 +31,12 @@ ID and the account must stay out of the repository.
   stays in `Config/Base.xcconfig`.
 - **Dry run:** `DRY_RUN=1` archives without signing and checks the bundles. `make
   app`, and so CI, runs it in every pull request.
+- **What to Test:** `scripts/what-to-test.sh` generates the text per platform from
+  [`docs/apple/hardware-tests.md`](../hardware-tests.md), and `make testflight`
+  writes it to `.build/testflight/WhatToTest-<platform>.txt`. The maintainer pastes
+  it into App Store Connect, because the upload cannot set this field. The App
+  Store Connect API could, but it needs a key and more code, which is not worth it
+  for now.
 - **App Review:** the notes for reviewers live in
   [`docs/apple/app-review-notes.md`](../app-review-notes.md).
 

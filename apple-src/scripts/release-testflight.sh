@@ -33,6 +33,7 @@ if [[ -z "$dry_run" ]]; then
 fi
 
 for platform in ${PLATFORMS:-iOS macOS}; do
+  scripts/what-to-test.sh "$platform" >"$out/WhatToTest-$platform.txt"
   archive="$out/KV4PHT-$platform.xcarchive"
   archive_command=(xcodebuild archive -quiet -project App/KV4PHT.xcodeproj -scheme KV4PHT -configuration Release
     -destination "generic/platform=$platform" -archivePath "$archive" CURRENT_PROJECT_VERSION="$build")
@@ -49,4 +50,5 @@ for platform in ${PLATFORMS:-iOS macOS}; do
   xcodebuild -exportArchive -quiet -archivePath "$archive" -exportOptionsPlist "$options" \
     -exportPath "$out/export-$platform" -allowProvisioningUpdates
   echo "testflight: uploaded the $platform build $build to App Store Connect"
+  echo "testflight: paste $out/WhatToTest-$platform.txt into What to Test of that build"
 done

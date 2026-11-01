@@ -58,7 +58,7 @@ make privacy    # personal data check (files + commit e-mails), BASE=<ref> optio
 make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
 make ios-build  # compile all modules for iOS (no simulator)
 make app        # build the app for macOS and iOS, check the iOS bundle, release dry runs
-make testflight # signed iOS and macOS builds, uploaded to App Store Connect; needs TEAM_ID (PLATFORMS=macOS for one platform, DRY_RUN=1 for a dry run)
+make testflight # signed iOS and macOS builds, uploaded to App Store Connect; needs TEAM_ID (PLATFORMS=macOS for one platform, DRY_RUN=1 for a dry run); writes the What to Test texts
 make icon       # render the app icon from ../artwork/app-icon.svg (commit the result)
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors (Android code, vendored Codec2)
