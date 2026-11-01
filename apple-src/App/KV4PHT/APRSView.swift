@@ -2,11 +2,45 @@ import KV4PAPRS
 import KV4PRadio
 import SwiftUI
 
-/// The APRS packets heard on air, newest first.
+/// The APRS packets heard on air, newest first, and a line to send messages.
 struct APRSView: View {
-    let model: RadioViewModel
+    @Bindable var model: RadioViewModel
+    /// Kept between launches; the app ships without a callsign.
+    @AppStorage("aprsCallsign") private var storedCallsign = ""
+    @State private var recipient = ""
+    @State private var text = ""
 
     var body: some View {
+        VStack(spacing: 0) {
+            feed
+            Divider()
+            composer.padding(8)
+        }
+        .onAppear { model.callsign = storedCallsign }
+    }
+
+    private var composer: some View {
+        HStack {
+            TextField("Your callsign", text: $storedCallsign)
+                .frame(width: 110)
+                .onChange(of: storedCallsign) { model.callsign = storedCallsign }
+            TextField("To (empty: bulletin)", text: $recipient)
+                .frame(width: 140)
+            TextField("Message", text: $text)
+                .onSubmit(send)
+            Button("Send", systemImage: "paperplane", action: send)
+                .disabled(!model.isReady || text.isEmpty || storedCallsign.isEmpty)
+        }
+        .textFieldStyle(.roundedBorder)
+    }
+
+    private func send() {
+        guard !text.isEmpty else { return }
+        model.sendAPRSMessage(to: recipient, text: text)
+        text = ""
+    }
+
+    private var feed: some View {
         List(model.aprsEvents) { event in
             HStack(alignment: .top) {
                 Image(systemName: Self.symbol(event.kind))
@@ -16,6 +50,9 @@ struct APRSView: View {
                     HStack {
                         Text(Self.title(event)).font(.headline)
                         Spacer()
+                        if let state = Self.delivery(event.deliveryState) {
+                            Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
+                        }
                         if event.packetCount > 1 {
                             Text("×\(event.packetCount)").foregroundStyle(.secondary)
                         }
@@ -46,6 +83,16 @@ struct APRSView: View {
         .navigationTitle("APRS")
     }
 
+    private static func delivery(_ state: APRSEvent.DeliveryState) -> (String, String)? {
+        switch state {
+        case .none: nil
+        case .pending: ("Waiting for acknowledgement", "clock")
+        case .delivered: ("Delivered", "checkmark.circle")
+        case .rejected: ("Rejected", "xmark.circle")
+        case .failed: ("Not delivered", "exclamationmark.triangle")
+        }
+    }
+
     private static func symbol(_ kind: APRSEvent.Kind) -> String {
         switch kind {
         case .message: "envelope"
@@ -59,7 +106,7 @@ struct APRSView: View {
     }
 
     private static func title(_ event: APRSEvent) -> String {
-        let from = event.fromCallsign ?? "?"
+        let from = event.fromCallsign
         switch event.kind {
         case .message: return "\(from) → \(event.toCallsign ?? "?")"
         case .object: return "\(event.objectName ?? "?") (\(from))"
