@@ -22,7 +22,7 @@ struct AboutInfoTests {
         #expect(components.first?.licence == .gpl3)
         #expect(components.contains { $0.name == "Codec2 1.2.0" && $0.licence == .lgpl21 })
         #expect(components.contains { $0.name.hasPrefix("esptool flasher stub") && $0.licence == .gpl2OrLater })
-        #expect(Set(components.map(\.name)).count == components.count)
+        #expect(Set(components.map(\.id)).count == components.count)
         #expect(AboutInfo.Licence.gpl3.textFile == "LICENSE")
         #expect(AboutInfo.Licence.lgpl21.textFile == "COPYING-codec2")
         #expect(AboutInfo.Licence.gpl2OrLater.textFile == "LICENSE")  // GPL-2.0 or later, used under GPL-3.0
