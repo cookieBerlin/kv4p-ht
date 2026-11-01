@@ -168,6 +168,7 @@ struct TransmitControllerTests {
         _ = try #require(await setup.snapshots.next { $0.isInSync && $0.desired.flags.contains(.txAllowed) })
         var limits = TXLimits()
         limits.max2m = 146
+        await RadioController(transport: ScriptedTransport(), clock: ManualClock()).setTXLimits(limits)  // no radio yet
         await setup.controller.setTXLimits(limits)
         #expect(await !setup.controller.snapshot.desired.flags.contains(.txAllowed))
         await #expect(throws: RadioError.transmitNotAllowed) {

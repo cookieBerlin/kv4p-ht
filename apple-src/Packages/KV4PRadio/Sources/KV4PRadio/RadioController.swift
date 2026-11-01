@@ -28,7 +28,7 @@ public enum RadioFailure: Error, Equatable, Sendable {
 public enum RadioError: Error, Equatable, Sendable {
     case notReady
     case frequencyOutOfRange(Float)
-    /// The TX frequency is outside the ham band (`TXBand`).
+    /// The TX frequency is outside the TX limits (`TXLimits`).
     case transmitNotAllowed
     /// No microphone, or access to it was denied.
     case microphoneUnavailable
@@ -91,6 +91,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private let rxAudio: (any RXAudioSink)?
     private let microphone: (any AudioInput)?
     private var txEncoder = TXAudioEncoder()
+    private var txLimits = TXLimits()
     private let makeDigitalVoice: @Sendable () -> FreeDVVoice?
     /// Created when FreeDV is first needed, as Android creates its Codec2 instance.
     private var digitalVoice: FreeDVVoice?
@@ -223,7 +224,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
         stopScan()
         activeMemoryId = memoryId
-        let band = TXBand.default(for: firmware.moduleType)
+        let band = txLimits.band(for: firmware.moduleType)
         update { state in
             state.setRxFrequency(rx)
             state.setTxFrequency(tx)
@@ -251,7 +252,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         let tx = memory.txFrequency(in: range)
         let txTone = CTCSS.index(of: memory.txTone)
         let rxTone = CTCSS.index(of: memory.rxTone)
-        let band = TXBand.default(for: firmware.moduleType)
+        let band = txLimits.band(for: firmware.moduleType)
         return { state in
             if let squelch {
                 state.setSquelch(squelch)
@@ -338,6 +339,14 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         scanTimerMemory = -1
     }
 
+    /// `updateTxLimitsForBand`: the band of the module follows `limits`; the TX frequency is checked again.
+    public func setTXLimits(_ limits: TXLimits) {
+        txLimits = limits
+        guard let firmware = desiredState.firmware else { return }
+        let band = limits.band(for: firmware.moduleType)
+        update { $0.setTXAllowed(band.allows($0.desired.freqTx, bandwidth: $0.desired.bandwidth)) }
+    }
+
     public func setMicGain(_ gain: MicGain) {
         txEncoder.gain = gain
         digitalVoice?.gain = gain
@@ -375,7 +384,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         guard snapshot.status == .ready, let firmware = desiredState.firmware else { throw .notReady }
         guard !isCapturing, scanList == nil else { throw .busy }
         let desired = desiredState.desired
-        guard TXBand.default(for: firmware.moduleType).allows(frequency, bandwidth: desired.bandwidth) else {
+        guard txLimits.band(for: firmware.moduleType).allows(frequency, bandwidth: desired.bandwidth) else {
             throw .transmitNotAllowed
         }
         do {
@@ -523,7 +532,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         guard desiredState.isAppliedStateInSync, desired.freqTx > 0, let firmware = desiredState.firmware else {
             return
         }
-        let allowed = TXBand.default(for: firmware.moduleType).allows(desired.freqTx, bandwidth: desired.bandwidth)
+        let allowed = txLimits.band(for: firmware.moduleType).allows(desired.freqTx, bandwidth: desired.bandwidth)
         desiredState.setTXAllowed(allowed)
     }
 
