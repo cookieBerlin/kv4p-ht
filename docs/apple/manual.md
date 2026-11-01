@@ -248,8 +248,10 @@ The app warns when the radio's firmware is older than required or missing
 - Firmware built from the current source has Bluetooth LE; the version the app
   ships does not ([FAQ](faq.md#which-firmware-do-i-need)). Updating such a radio
   removes Bluetooth LE, so update only if the radio needs it.
-- 📱 Updating from iPhone or iPad is not possible. Use the web flasher on the
-  project website (desktop Chrome or Edge), the Android app or a Mac.
+- 📱 Updating from iPhone or iPad is not possible. The warning on the radio tab
+  links to the [web flasher](https://kv4p.com/firmware.html) on the project
+  website, which runs in desktop Chrome or Edge, and to this section. The
+  Android app or a Mac can update the radio too.
 
 ## Troubleshooting
 

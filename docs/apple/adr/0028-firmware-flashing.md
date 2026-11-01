@@ -80,5 +80,7 @@ any time; the snackbar offers it when `HELLO` is missing, invalid or older than
   radio. The manual says so; an upstream version bump would resolve it.
 - **Failed flash:** the ROM bootloader stays available, so the radio can always
   be flashed again.
-- **iOS:** the radio's USB port cannot be used, so iOS shows no update. A notice
-  with a link to the web flasher is part of phase 2.
+- **iOS:** the radio's USB port cannot be used, so iOS offers no update. When the
+  firmware is outdated and the app has no flasher, `isWebFlasherNeeded` shows a
+  notice. It links to the web flasher (`https://kv4p.com/firmware.html`) and to
+  the manual's firmware section (`FirmwareHelp`). This was added in milestone 2.4.

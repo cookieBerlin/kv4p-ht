@@ -30,8 +30,9 @@ current source sets the FreeDV feature flag, which the older image lacks.
 On a Mac, yes: connect the radio by USB and choose **Update firmware…**
 ([Firmware updates](manual.md#firmware-updates)). It writes the firmware the
 Android app ships, which has no Bluetooth LE. On iPhone and iPad this is not possible because iOS does not allow
-access to the radio's USB port; use the web flasher on the project website with
-desktop Chrome or Edge, the Android app, or a Mac. See
+access to the radio's USB port; use the [web flasher](https://kv4p.com/firmware.html)
+on the project website with desktop Chrome or Edge, the Android app, or a Mac.
+When the firmware is too old, the app links to both. See
 [Firmware updates](manual.md#firmware-updates).
 
 ## Which Macs are supported?
