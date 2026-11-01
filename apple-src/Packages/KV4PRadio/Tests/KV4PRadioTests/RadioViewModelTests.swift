@@ -26,11 +26,7 @@ struct RadioViewModelTests {
 
     /// Waits until the model reaches `condition` (snapshots arrive asynchronously).
     static func eventually(_ model: RadioViewModel, _ condition: (RadioViewModel) -> Bool) async -> Bool {
-        for _ in 0..<100_000 {
-            if condition(model) { return true }
-            await Task.yield()
-        }
-        return condition(model)
+        await KV4PTestSupport.eventually { condition(model) }
     }
 
     func eventually(_ model: RadioViewModel, _ condition: (RadioViewModel) -> Bool) async -> Bool {

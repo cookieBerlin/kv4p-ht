@@ -4,6 +4,19 @@ import Testing
 
 @Suite("Manual clock")
 struct ManualClockTests {
+    @Test("sleeps started are counted, also when they end at once or are cancelled")
+    func sleepCount() async throws {
+        let clock = ManualClock()
+        #expect(clock.sleepCount == 0)
+        try await clock.sleep(for: .zero)
+        let sleeper = Task { try await clock.sleep(for: .seconds(1)) }
+        await clock.waitForSleepers(1)
+        sleeper.cancel()
+        _ = await sleeper.result
+        #expect(clock.sleepCount == 2)
+        #expect(clock.sleeperCount == 0)
+    }
+
     @Test("time only moves when advanced")
     func advance() {
         let clock = ManualClock()

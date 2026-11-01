@@ -42,6 +42,10 @@ public final class ManualClock: Clock, Sendable {
 
     public var sleeperCount: Int { state.withLock { $0.sleepers.count } }
 
+    /// The sleeps started so far, including those already woken or cancelled: a task that replaces its timer has
+    /// started a new sleep before the old one is gone.
+    public var sleepCount: Int { state.withLock { $0.nextID } }
+
     public func sleep(until deadline: Instant, tolerance: Duration? = nil) async throws {
         let id = state.withLock { state in
             defer { state.nextID += 1 }
