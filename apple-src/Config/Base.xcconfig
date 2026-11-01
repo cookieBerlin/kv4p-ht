@@ -21,6 +21,7 @@ INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = kv4p HT sends your position 
 INFOPLIST_KEY_NSLocationUsageDescription = kv4p HT sends your position in APRS beacons when you turn them on.
 INFOPLIST_KEY_NSMicrophoneUsageDescription = kv4p HT transmits your voice while you press the PTT button.
 INFOPLIST_KEY_UILaunchScreen_Generation = YES
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 // iOS: RX keeps playing and the radio stays connected with the screen locked (ADR-0031). Xcode has no
 // INFOPLIST_KEY_ for background modes, so they come from a partial Info.plist merged into the generated one.
 INFOPLIST_FILE[sdk=iphoneos*] = KV4PHT-iOS-Info.plist
