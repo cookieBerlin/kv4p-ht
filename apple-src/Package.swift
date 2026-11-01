@@ -86,8 +86,7 @@ let package = Package(
         .target(
             name: "KV4PFlasher",
             dependencies: ["KV4PProtocol", "KV4PTransport"],
-            path: "Packages/KV4PFlasher/Sources/KV4PFlasher",
-            resources: [.copy("Resources")]
+            path: "Packages/KV4PFlasher/Sources/KV4PFlasher"
         ),
         .testTarget(
             name: "KV4PFlasherTests",

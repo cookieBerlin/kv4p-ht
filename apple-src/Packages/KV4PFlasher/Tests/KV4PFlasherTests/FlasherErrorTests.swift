@@ -1,3 +1,4 @@
+import Foundation
 import KV4PProtocol
 import KV4PTestSupport
 import KV4PTransport
@@ -76,9 +77,9 @@ struct FlasherErrorTests {
         #expect(try await flash(replacing: [0: noise + sync]) == nil)
     }
 
-    @Test("a missing stub resource is an error")
-    func missingStub() {
-        #expect(throws: (any Error).self) { try FlasherStub.load(from: nil) }
+    @Test("an invalid stub is an error")
+    func invalidStub() {
+        #expect(throws: (any Error).self) { try FlasherStub.decode(Data()) }
     }
 
     @Test("a response without status bytes counts as failed")
