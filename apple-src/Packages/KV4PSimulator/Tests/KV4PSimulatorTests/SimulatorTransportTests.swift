@@ -88,4 +88,19 @@ struct SimulatorTransportTests {
         await transport.hear([0x41, 0x42])
         #expect(try events(try #require(await incoming.next())) == [.ax25([0x41, 0x42])])
     }
+
+    @Test("a carrier opens the squelch")
+    func carrier() async throws {
+        let transport = SimulatorTransport(clock: ManualClock())
+        var incoming = transport.incoming.makeAsyncIterator()
+        try await transport.connect()
+        _ = await incoming.next()
+        try await transport.send(FrameEncoder.desiredState(desiredState(sequence: 1)))
+        _ = await incoming.next()
+        await transport.setCarrier(Carrier())
+        let output = try #require(await incoming.next())
+        let state = try #require(try events(output).states.last)
+        #expect(!state.radio.flags.contains(.squelched))
+        #expect(await transport.simulator.carrier == Carrier())
+    }
 }

@@ -1,3 +1,4 @@
+import KV4PAudio
 import KV4PProtocol
 import KV4PTransport
 
@@ -42,7 +43,7 @@ public struct RadioSnapshot: Equatable, Sendable {
 }
 
 /// Connects to the radio, runs the handshake and keeps the device in the desired state (as the Android
-/// `RadioAudioService` does): HELLO validation, flow control, desired-state sync.
+/// `RadioAudioService` does): HELLO validation, flow control, desired-state sync, RX audio to `rxAudio`.
 public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Firmware the Android app ships; older firmware is refused.
     public static var minimumFirmwareVersion: UInt16 { 17 }
@@ -54,6 +55,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private let transport: any RadioTransport
     private let clock: C
     private let helloTimeout: Duration
+    private let rxAudio: (any RXAudioSink)?
     private let window = FlowControlWindow()
     private let frames: AsyncStream<[UInt8]>
     private let outbox: AsyncStream<[UInt8]>.Continuation
@@ -64,10 +66,16 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Numbers connection attempts, so a timer of an earlier attempt cannot fail a later one.
     private var attempt = 0
 
-    public init(transport: any RadioTransport, clock: C, helloTimeout: Duration = defaultHelloTimeout) {
+    public init(
+        transport: any RadioTransport,
+        clock: C,
+        helloTimeout: Duration = defaultHelloTimeout,
+        rxAudio: (any RXAudioSink)? = nil
+    ) {
         self.transport = transport
         self.clock = clock
         self.helloTimeout = helloTimeout
+        self.rxAudio = rxAudio
         snapshot = RadioSnapshot(status: .disconnected, desired: DesiredStateController().desired, isInSync: false)
         (snapshots, snapshotContinuation) = AsyncStream.makeStream()
         (frames, outbox) = AsyncStream.makeStream()
@@ -108,6 +116,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     public func disconnect() async {
         helloTimer?.cancel()
         await transport.disconnect()
+        rxAudio?.reset()
         desiredState.detach()
         publish(.disconnected)
     }
@@ -173,12 +182,14 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
                     desiredState.update(state)
                     flush()
                 }
+            case .command(.rxAudio, let payload) where snapshot.status == .ready:
+                rxAudio?.receive(block: payload)
             case .command(.windowUpdate, let payload):
                 if let update = try? WindowUpdate(decoding: payload) {
                     await window.enlarge(by: Int(update.size))
                 }
             default:
-                break  // RX audio, digital voice, AX.25 and debug output come with later milestones
+                break  // digital voice, AX.25 and debug output come with later milestones
             }
         }
     }
@@ -230,6 +241,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     private func fail(_ failure: RadioFailure) {
         helloTimer?.cancel()
+        rxAudio?.reset()
         desiredState.detach()
         publish(.failed(failure))
     }
@@ -249,7 +261,11 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 }
 
 extension RadioController where C == ContinuousClock {
-    public init(transport: any RadioTransport, helloTimeout: Duration = defaultHelloTimeout) {
-        self.init(transport: transport, clock: ContinuousClock(), helloTimeout: helloTimeout)
+    public init(
+        transport: any RadioTransport,
+        helloTimeout: Duration = defaultHelloTimeout,
+        rxAudio: (any RXAudioSink)? = nil
+    ) {
+        self.init(transport: transport, clock: ContinuousClock(), helloTimeout: helloTimeout, rxAudio: rxAudio)
     }
 }

@@ -1,5 +1,6 @@
 .build/
 .swiftpm/
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
+# Per-user Xcode state, at any depth (it contains the account name).
+xcuserdata/
+.DS_Store
 DerivedData/

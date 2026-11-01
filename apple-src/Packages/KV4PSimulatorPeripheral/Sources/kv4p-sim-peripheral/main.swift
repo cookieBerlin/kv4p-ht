@@ -6,8 +6,9 @@
     import KV4PSimulator
 
     let usage = """
-        usage: kv4p-sim-peripheral [--uhf] [--no-radio-module] [--verbose]
+        usage: kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]
         Advertises as kv4p-sim until stopped with Ctrl-C.
+        With --signal, the radio receives a 1 kHz tone with the squelch open.
         """
 
     /// Prints every event and command (`--verbose`); notifications and writes as byte counts.
@@ -45,7 +46,7 @@
     setvbuf(stdout, nil, _IOLBF, 0)
 
     let arguments = Set(CommandLine.arguments.dropFirst())
-    guard arguments.isSubset(of: ["--uhf", "--no-radio-module", "--verbose"]) else {
+    guard arguments.isSubset(of: ["--uhf", "--no-radio-module", "--signal", "--verbose"]) else {
         print(usage)
         exit(1)
     }
@@ -55,6 +56,9 @@
     }
     if arguments.contains("--no-radio-module") {
         scenario.radioModuleStatus = .notFound
+    }
+    if arguments.contains("--signal") {
+        scenario.carrier = Carrier()
     }
     let central = CoreBluetoothPeripheralManager()
     let manager: any BLEPeripheralManager =

@@ -7,6 +7,7 @@ enum Event: Equatable {
     case state(DeviceState)
     case window(UInt32)
     case ax25([UInt8])
+    case audio([UInt8])
 }
 
 func events(_ bytes: [UInt8]) throws -> [Event] {
@@ -17,6 +18,7 @@ func events(_ bytes: [UInt8]) throws -> [Event] {
         case .command(.hello, let payload): .hello(try Hello(decoding: payload))
         case .command(.deviceState, let payload): .state(try DeviceState(decoding: payload))
         case .command(.windowUpdate, let payload): .window(try WindowUpdate(decoding: payload).size)
+        case .command(.rxAudio, let payload): .audio(payload)
         case .command(let command, _): throw UnexpectedCommand(command: command)
         }
     }
@@ -29,6 +31,10 @@ struct UnexpectedCommand: Error {
 extension [Event] {
     var states: [DeviceState] {
         compactMap { if case .state(let state) = $0 { state } else { nil } }
+    }
+
+    var audioBlocks: [[UInt8]] {
+        compactMap { if case .audio(let block) = $0 { block } else { nil } }
     }
 
     var windowUpdates: [UInt32] {

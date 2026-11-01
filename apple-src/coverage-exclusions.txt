@@ -12,3 +12,5 @@ Packages/KV4PProbe/Sources/kv4p-probe/main.swift
 Packages/KV4PSimulator/Sources/KV4PSimulator/CoreBluetoothPeripheralManager.swift
 # Entry point of the BLE simulator tool.
 Packages/KV4PSimulatorPeripheral/Sources/kv4p-sim-peripheral/main.swift
+# AVAudioEngine adapter: forwards render callbacks to RXAudioPlayer only (ADR-0018).
+Packages/KV4PAudio/Sources/KV4PAudio/AVAudioEngineOutput.swift

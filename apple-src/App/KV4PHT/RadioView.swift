@@ -55,10 +55,30 @@ struct RadioView: View {
             .disabled(!model.isReady)
 
             Section("Signal") {
+                LabeledContent("Squelch") {
+                    Label(
+                        model.isReceiving ? "Open" : "Closed",
+                        systemImage: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash"
+                    )
+                    .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
+                }
                 Gauge(value: Double(model.sMeter), in: 0...13) {
                     Text("S-meter")
                 } currentValueLabel: {
                     Text(model.sMeterText)
+                }
+                if model.canSimulateSignal {
+                    Toggle("Simulate a received signal", isOn: $model.isSignalSimulated)
+                }
+            }
+
+            Section("Audio") {
+                Slider(value: $model.volume, in: 0...1) {
+                    Text("Volume")
+                } minimumValueLabel: {
+                    Image(systemName: "speaker.fill")
+                } maximumValueLabel: {
+                    Image(systemName: "speaker.wave.3.fill")
                 }
             }
         }

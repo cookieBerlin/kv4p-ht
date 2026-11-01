@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "KV4PTransport", targets: ["KV4PTransport"]),
         .library(name: "KV4PSimulator", targets: ["KV4PSimulator"]),
         .library(name: "KV4PRadio", targets: ["KV4PRadio"]),
+        .library(name: "KV4PAudio", targets: ["KV4PAudio"]),
     ],
     targets: [
         .target(
@@ -23,6 +24,17 @@ let package = Package(
             name: "KV4PProtocolTests",
             dependencies: ["KV4PProtocol", "KV4PTestSupport"],
             path: "Packages/KV4PProtocol/Tests/KV4PProtocolTests",
+            resources: [.copy("Vectors")]
+        ),
+        .target(
+            name: "KV4PAudio",
+            dependencies: ["KV4PProtocol"],
+            path: "Packages/KV4PAudio/Sources/KV4PAudio"
+        ),
+        .testTarget(
+            name: "KV4PAudioTests",
+            dependencies: ["KV4PAudio", "KV4PTestSupport"],
+            path: "Packages/KV4PAudio/Tests/KV4PAudioTests",
             resources: [.copy("Vectors")]
         ),
         .target(
@@ -37,22 +49,22 @@ let package = Package(
         ),
         .target(
             name: "KV4PSimulator",
-            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio"],
             path: "Packages/KV4PSimulator/Sources/KV4PSimulator"
         ),
         .testTarget(
             name: "KV4PSimulatorTests",
-            dependencies: ["KV4PSimulator", "KV4PTestSupport"],
+            dependencies: ["KV4PSimulator", "KV4PAudio", "KV4PTestSupport"],
             path: "Packages/KV4PSimulator/Tests/KV4PSimulatorTests"
         ),
         .target(
             name: "KV4PRadio",
-            dependencies: ["KV4PProtocol", "KV4PTransport"],
+            dependencies: ["KV4PProtocol", "KV4PTransport", "KV4PAudio"],
             path: "Packages/KV4PRadio/Sources/KV4PRadio"
         ),
         .testTarget(
             name: "KV4PRadioTests",
-            dependencies: ["KV4PRadio", "KV4PSimulator", "KV4PTestSupport"],
+            dependencies: ["KV4PRadio", "KV4PAudio", "KV4PSimulator", "KV4PTestSupport"],
             path: "Packages/KV4PRadio/Tests/KV4PRadioTests",
             resources: [.copy("Vectors")]
         ),

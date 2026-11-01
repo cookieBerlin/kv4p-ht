@@ -2,17 +2,70 @@
 // Entry point only, excluded from coverage (ADR-0011).
 #if os(macOS)
     import Foundation
+    import KV4PAudio
     import KV4PProtocol
     import KV4PRadio
     import KV4PTransport
 
     let usage = """
-        usage: kv4p-probe [--ble [<peripheral UUID>]] [--verbose]
-               kv4p-probe --serial [<device>] [--reset] [--verbose]
+        usage: kv4p-probe [--ble [<peripheral UUID>]] [--verbose] [--tune <MHz> | --listen <seconds>]
+               kv4p-probe --serial [<device>] [--reset] [--verbose] [--tune <MHz> | --listen <seconds>]
                kv4p-probe --list
         Connects, waits up to 10 s for HELLO and prints it.
         With --tune <MHz>, the RadioController handshakes, tunes RX and TX and waits until the radio confirms.
+        With --listen <seconds>, it receives RX audio and prints the block rate and the largest gap.
         """
+
+    /// Records when `RX_AUDIO` blocks arrive (`--listen`).
+    final class ArrivalLog: RXAudioSink, @unchecked Sendable {
+        private let lock = NSLock()
+        private var arrivals: [ContinuousClock.Instant] = []
+        private var samples = 0
+        private var peak: Int16 = 0
+
+        func receive(block: [UInt8]) {
+            let decoded = ImaAdpcm.decodeBlock(block, maxSamples: KV4P.audioBlockSamples)
+            lock.withLock {
+                arrivals.append(.now)
+                samples += decoded.count
+                peak = max(peak, decoded.map { $0 == .min ? .max : abs($0) }.max() ?? 0)
+            }
+        }
+
+        func reset() {}
+
+        var summary: String {
+            lock.withLock {
+                guard let first = arrivals.first, let last = arrivals.last, arrivals.count > 1 else {
+                    return "\(arrivals.count) RX audio blocks"
+                }
+                let gaps = zip(arrivals, arrivals.dropFirst()).map { $0.duration(to: $1) }
+                // Samples after the first arrival, over the time since then.
+                let rate = Double(samples - KV4P.audioBlockSamples) / (first.duration(to: last) / .seconds(1))
+                return "\(arrivals.count) RX audio blocks, \(Int(rate)) samples/s, "
+                    + "largest gap \(gaps.max() ?? .zero), peak \(peak)\n"
+                    + [2, 4, 6, 8].map { replay(prefillBlocks: $0) }.joined(separator: "\n")
+            }
+        }
+
+        /// Replays the arrivals into a `JitterBuffer` that plays at exactly 16 kHz in 10 ms periods.
+        private func replay(prefillBlocks: Int) -> String {
+            var buffer = JitterBuffer(prefill: prefillBlocks * KV4P.audioBlockSamples)
+            let period = Duration.milliseconds(10)
+            let chunk = KV4P.audioSampleRate / 100
+            var output = [Int16](repeating: 0, count: chunk)
+            var next = arrivals[0]
+            for arrival in arrivals {
+                while next < arrival {
+                    output.withUnsafeMutableBufferPointer { buffer.pull(into: $0) }
+                    next = next.advanced(by: period)
+                }
+                buffer.push(repeatElement(Int16(0), count: KV4P.audioBlockSamples))
+            }
+            return "  prefill \(prefillBlocks) blocks: \(buffer.underruns) underruns, "
+                + "\(buffer.droppedSamples) samples dropped"
+        }
+    }
 
     /// Prints every BLE event and command (`--verbose`), to see where the connection sequence stops.
     final class LoggingCentral: BLECentral {
@@ -46,12 +99,14 @@
     setvbuf(stdout, nil, _IOLBF, 0)
 
     var arguments = Array(CommandLine.arguments.dropFirst())
-    var tune: Float?
-    if let index = arguments.firstIndex(of: "--tune") {
-        guard index + 1 < arguments.count, let frequency = Float(arguments[index + 1]) else { fail(usage) }
-        tune = frequency
+    @MainActor func option(_ name: String) -> Float? {
+        guard let index = arguments.firstIndex(of: name) else { return nil }
+        guard index + 1 < arguments.count, let value = Float(arguments[index + 1]) else { fail(usage) }
         arguments.removeSubrange(index...index + 1)
+        return value
     }
+    let tune = option("--tune")
+    let listen = option("--listen")
     let operand = arguments.dropFirst().first { !$0.hasPrefix("--") }
     let transport: any RadioTransport
     switch arguments.first {
@@ -71,6 +126,23 @@
         )
     default:
         fail(usage)
+    }
+
+    if let listen {
+        let log = ArrivalLog()
+        let controller = RadioController(transport: transport, rxAudio: log)
+        var snapshots = controller.snapshots.makeAsyncIterator()
+        await controller.connect()
+        while let snapshot = await snapshots.next() {
+            if case .failed(let failure) = snapshot.status { fail("failed: \(failure)") }
+            if snapshot.status == .ready { break }
+        }
+        print("listening for \(listen) s")
+        try? await Task.sleep(for: .seconds(Double(listen)))
+        let squelched = await controller.snapshot.deviceState?.radio.flags.contains(.squelched) ?? true
+        print(log.summary + (squelched ? ", squelch closed" : ", squelch open"))
+        await controller.disconnect()
+        exit(0)
     }
 
     Task {

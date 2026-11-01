@@ -1,3 +1,4 @@
+import KV4PAudio
 import KV4PRadio
 import KV4PSimulator
 import KV4PTransport
@@ -5,21 +6,28 @@ import KV4PTransport
 /// Composition root: wires the OS adapters to the radio stack. All behaviour lives in the packages.
 @MainActor
 enum Composition {
+    /// The simulator of the current connection, for the simulated signal.
+    private static let simulator = SimulatorBox()
+
     static func makeViewModel() -> RadioViewModel {
         RadioViewModel(
-            makeController: { RadioController(transport: transport(for: $0)) },
-            serialDevices: serialDevices
+            makeController: { RadioController(transport: transport(for: $0), rxAudio: $1) },
+            serialDevices: serialDevices,
+            audioOutput: AVAudioEngineOutput(),
+            simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? Carrier() : nil) }
         )
     }
 
     private static func transport(for connection: RadioViewModel.Connection) -> any RadioTransport {
         switch connection {
         case .bluetooth:
-            BLETransport(central: CoreBluetoothCentral())
+            return BLETransport(central: CoreBluetoothCentral())
         case .serial(let path):
-            serialTransport(path)
+            return serialTransport(path)
         case .simulator:
-            SimulatorTransport()
+            let transport = SimulatorTransport()
+            simulator.transport = transport
+            return transport
         }
     }
 
@@ -41,4 +49,9 @@ enum Composition {
             []
         }
     #endif
+}
+
+@MainActor
+private final class SimulatorBox: Sendable {
+    var transport: SimulatorTransport<ContinuousClock>?
 }

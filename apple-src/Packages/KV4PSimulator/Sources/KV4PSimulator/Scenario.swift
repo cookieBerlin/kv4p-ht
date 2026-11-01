@@ -1,3 +1,4 @@
+import Foundation
 import KV4PProtocol
 
 /// Describes the simulated device and the faults it injects (ADR-0014 C).
@@ -9,6 +10,8 @@ public struct Scenario: Equatable, Sendable {
     public var windowSize = Firmware.usbWindowSize
     /// Desired state stored in flash; `nil` for a new device.
     public var storedState: RadioState?
+    /// A signal on the receive frequency from power-on; `nil` for an idle channel.
+    public var carrier: Carrier?
     public var faults = Faults()
 
     public init() {}
@@ -27,6 +30,26 @@ public struct Scenario: Equatable, Sendable {
         var scenario = self
         change(&scenario)
         return scenario
+    }
+}
+
+/// A received signal: it opens the squelch and plays a tone (the squelch level is not simulated).
+public struct Carrier: Equatable, Sendable {
+    public var toneHz: Int
+    public var amplitude: Int16
+    /// Raw SA818 RSSI, reported with `RSSI_ENABLED`.
+    public var rssi: UInt8
+
+    public init(toneHz: Int = 1000, amplitude: Int16 = 8000, rssi: UInt8 = 100) {
+        self.toneHz = toneHz
+        self.amplitude = amplitude
+        self.rssi = rssi
+    }
+
+    /// Sample `index` of the tone; `index` counts from 0 to `KV4P.audioSampleRate`, so the phase never drifts.
+    func sample(_ index: Int) -> Int16 {
+        let phase = 2 * Double.pi * Double(toneHz) * Double(index) / Double(KV4P.audioSampleRate)
+        return Int16((Double(amplitude) * sin(phase)).rounded())
     }
 }
 
