@@ -16,7 +16,7 @@ modes=$(plutil -extract UIBackgroundModes json -o - "$plist" 2>/dev/null || echo
 for mode in audio bluetooth-central; do
   jq -e --arg mode "$mode" 'index($mode) != null' <<<"$modes" >/dev/null || fail "UIBackgroundModes in $plist lacks $mode"
 done
-[[ "$(plutil -extract CFBundleIconName raw -o - "$plist" 2>/dev/null)" == AppIcon ]] || fail "$plist has no app icon"
+[[ "$(plutil -extract CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName raw -o - "$plist" 2>/dev/null)" == AppIcon ]] || fail "$plist has no app icon"
 [[ -f "$app/Assets.car" ]] || fail "$app has no compiled asset catalog"
 [[ "$(plutil -extract ITSAppUsesNonExemptEncryption raw -o - "$plist" 2>/dev/null)" == false ]] ||
   fail "$plist does not declare ITSAppUsesNonExemptEncryption = NO"
