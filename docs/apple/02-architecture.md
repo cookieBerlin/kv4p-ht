@@ -75,6 +75,9 @@ public protocol AudioIO: Sendable {
 }
 ```
 
+RX playback uses the pull-based `AudioOutput` instead of `AudioIO.play`
+([ADR-0020](adr/0020-rx-audio-pipeline.md)).
+
 Hardware adapters implement these protocols and contain no logic beyond
 forwarding; they are the only coverage exclusions.
 
