@@ -31,8 +31,11 @@
 
 ## Installation
 
-*Planned:* signed macOS builds and TestFlight builds for iOS/iPadOS will be linked
-here.
+🖥 **Mac:** download the DMG of a release, open it and drag *kv4p HT* into
+*Applications*. Releases are signed with a Developer ID and notarized by Apple,
+so macOS opens them without a warning.
+
+📱 *Planned:* TestFlight builds for iPhone and iPad will be linked here.
 
 🖥 To build from source, open `apple-src/App/KV4PHT.xcodeproj` in Xcode and run
 the `KV4PHT` scheme (signed to run locally, no developer account needed), or see

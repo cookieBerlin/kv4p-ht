@@ -57,7 +57,8 @@ make format     # swift format --in-place
 make privacy    # personal data check (files + commit e-mails), BASE=<ref> optional
 make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
 make ios-build  # compile all modules for iOS (no simulator)
-make app        # build the app (App/KV4PHT.xcodeproj) for macOS and iOS, unsigned; checks the iOS background modes
+make app        # build the app for macOS and iOS, check the iOS bundle, release dry run
+make release    # signed, notarized macOS DMG; needs TEAM_ID and NOTARY_PROFILE (SIGN_IDENTITY=- for a dry run)
 make icon       # render the app icon from ../artwork/app-icon.svg (commit the result)
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors (Android code, vendored Codec2)
