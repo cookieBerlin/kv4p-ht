@@ -33,7 +33,11 @@ struct AboutView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 480, minHeight: 560)
+        #if os(macOS)
+            .frame(minWidth: 480, minHeight: 560)
+        #else
+            .navigationTitle("About")
+        #endif
         .sheet(item: $shown) { LicenceText(file: $0) }
     }
 }
@@ -57,7 +61,9 @@ private struct LicenceText: View {
             Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
         }
         .padding()
-        .frame(minWidth: 600, minHeight: 500)
+        #if os(macOS)
+            .frame(minWidth: 600, minHeight: 500)
+        #endif
     }
 
     private var text: String {

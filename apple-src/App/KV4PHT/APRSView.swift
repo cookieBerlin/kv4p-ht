@@ -9,6 +9,9 @@ struct APRSView: View {
     @State private var callsign = ""
     @State private var recipient = ""
     @State private var text = ""
+    #if os(iOS)
+        @State private var isShowingSettings = false
+    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,57 +20,150 @@ struct APRSView: View {
             composer.padding(8)
         }
         .onAppear { callsign = model.callsign }
+        #if os(iOS)
+            .toolbar {
+                Button("APRS settings", systemImage: "gearshape") { isShowingSettings = true }
+            }
+            .sheet(isPresented: $isShowingSettings) {
+                NavigationStack {
+                    settings
+                    .navigationTitle("APRS settings")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { Button("Done") { isShowingSettings = false } }
+                }
+            }
+        #endif
     }
 
-    private var composer: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                Toggle("Position beacon", isOn: $model.isBeaconEnabled)
-                    .disabled(!model.canBeacon || model.callsign.isEmpty)
-                Picker("Symbol", selection: $model.beaconSymbol) {
-                    ForEach(APRSSymbol.allCases, id: \.self) { Text($0.name) }
+    #if os(macOS)
+        private var composer: some View {
+            VStack(alignment: .leading) {
+                HStack {
+                    beaconToggle
+                    symbolPicker.frame(width: 200)
+                    approximateToggle
+                    frequencyPicker.frame(width: 220)
+                    digipeatToggle
                 }
-                .frame(width: 200)
-                Toggle("Approximate position", isOn: $model.isBeaconApproximate)
-                Picker("on", selection: $model.beaconFrequency) {
-                    Text("Current frequency").tag(Float?.none)
-                    ForEach(AppSettings.beaconFrequencyOptions, id: \.self) { frequency in
-                        Text(HamFrequency.format(frequency) + " MHz").tag(Float?.some(frequency))
-                    }
+                HStack {
+                    iGateToggle
+                    feedToggle
+                    internetStatus
                 }
-                .frame(width: 220)
-                Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
-                    .disabled(model.callsign.isEmpty)
+                HStack {
+                    callsignField.frame(width: 110)
+                    recipientField.frame(width: 140)
+                    messageField
+                    sendButton
+                }
+                .textFieldStyle(.roundedBorder)
             }
+        }
+    #else
+        /// iOS: the settings move into a sheet, so the message line fits a phone.
+        private var composer: some View {
             HStack {
-                Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
-                Toggle("Show nearby APRS-IS packets", isOn: $model.isInternetFeedEnabled)
-                if model.isIGateEnabled || model.isInternetFeedEnabled {
-                    Label(
-                        model.isInternetConnected ? "APRS-IS connected" : "Connecting to APRS-IS…",
-                        systemImage: model.isInternetConnected ? "network" : "network.slash"
-                    )
-                    .foregroundStyle(.secondary)
+                recipientField.frame(width: 110)
+                messageField
+                sendButton.labelStyle(.iconOnly)
+            }
+            .textFieldStyle(.roundedBorder)
+        }
+
+        private var settings: some View {
+            Form {
+                Section("Station") {
+                    callsignField
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                }
+                Section("Position beacon") {
+                    beaconToggle
+                    symbolPicker
+                    approximateToggle
+                    frequencyPicker
+                }
+                Section {
+                    digipeatToggle
+                    iGateToggle
+                    feedToggle
+                    internetStatus
                 }
             }
+        }
+    #endif
+
+    private var beaconToggle: some View {
+        Toggle("Position beacon", isOn: $model.isBeaconEnabled)
+            .disabled(!model.canBeacon || model.callsign.isEmpty)
+    }
+
+    private var symbolPicker: some View {
+        Picker("Symbol", selection: $model.beaconSymbol) {
+            ForEach(APRSSymbol.allCases, id: \.self) { Text($0.name) }
+        }
+    }
+
+    private var approximateToggle: some View {
+        Toggle("Approximate position", isOn: $model.isBeaconApproximate)
+    }
+
+    private var frequencyPicker: some View {
+        Picker("on", selection: $model.beaconFrequency) {
+            Text("Current frequency").tag(Float?.none)
+            ForEach(AppSettings.beaconFrequencyOptions, id: \.self) { frequency in
+                Text(HamFrequency.format(frequency) + " MHz").tag(Float?.some(frequency))
+            }
+        }
+    }
+
+    private var digipeatToggle: some View {
+        Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
+            .disabled(model.callsign.isEmpty)
+    }
+
+    private var iGateToggle: some View {
+        Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
             .disabled(!model.canUseInternet || model.callsign.isEmpty)
-            messageLine
+    }
+
+    private var feedToggle: some View {
+        Toggle("Show nearby APRS-IS packets", isOn: $model.isInternetFeedEnabled)
+            .disabled(!model.canUseInternet || model.callsign.isEmpty)
+    }
+
+    @ViewBuilder private var internetStatus: some View {
+        if model.isIGateEnabled || model.isInternetFeedEnabled {
+            Label(
+                model.isInternetConnected ? "APRS-IS connected" : "Connecting to APRS-IS…",
+                systemImage: model.isInternetConnected ? "network" : "network.slash"
+            )
+            .foregroundStyle(.secondary)
         }
     }
 
-    private var messageLine: some View {
-        HStack {
-            TextField("Your callsign", text: $callsign)
-                .frame(width: 110)
-                .onChange(of: callsign) { model.callsign = callsign }
+    private var callsignField: some View {
+        TextField("Your callsign", text: $callsign)
+            .onChange(of: callsign) { model.callsign = callsign }
+    }
+
+    private var recipientField: some View {
+        // iOS: a phone has room for the short label only.
+        #if os(macOS)
             TextField("To (empty: bulletin)", text: $recipient)
-                .frame(width: 140)
-            TextField("Message", text: $text)
-                .onSubmit(send)
-            Button("Send", systemImage: "paperplane", action: send)
-                .disabled(!model.isReady || text.isEmpty || model.callsign.isEmpty)
-        }
-        .textFieldStyle(.roundedBorder)
+        #else
+            TextField("To", text: $recipient)
+        #endif
+    }
+
+    private var messageField: some View {
+        TextField("Message", text: $text)
+            .onSubmit(send)
+    }
+
+    private var sendButton: some View {
+        Button("Send", systemImage: "paperplane", action: send)
+            .disabled(!model.isReady || text.isEmpty || model.callsign.isEmpty)
     }
 
     private func send() {

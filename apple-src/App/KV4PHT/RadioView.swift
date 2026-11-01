@@ -6,6 +6,9 @@ import SwiftUI
 /// The radio screen; it only binds to `RadioViewModel`.
 struct RadioView: View {
     @Bindable var model: RadioViewModel
+    #if os(iOS)
+        @State private var isShowingAbout = false
+    #endif
 
     var body: some View {
         Form {
@@ -37,6 +40,10 @@ struct RadioView: View {
             Section("Channel") {
                 TextField("Frequency (MHz)", text: $model.frequencyText)
                     .onSubmit { Task { await model.applyFrequency() } }
+                    #if os(iOS)
+                        .keyboardType(.numbersAndPunctuation)
+                        .submitLabel(.done)
+                    #endif
                 Picker("Bandwidth", selection: $model.isWideBandwidth) {
                     Text("12.5 kHz").tag(false)
                     Text("25 kHz").tag(true)
@@ -86,7 +93,9 @@ struct RadioView: View {
             }
 
             Section("Transmit") {
-                PTTButton(model: model)
+                #if os(macOS)
+                    PTTButton(model: model)
+                #endif
                 Toggle("Sticky PTT", isOn: $model.isStickyPTT)
                 Picker("Mic gain boost", selection: $model.micGain) {
                     ForEach(MicGain.allCases, id: \.self) { Text($0.label) }
@@ -115,8 +124,21 @@ struct RadioView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 420)
         .onAppear { model.refreshConnections() }
+        #if os(macOS)
+            .frame(minWidth: 420)
+        #else
+            .navigationTitle("Radio")
+            .pttBar(model)
+            .toolbar {
+                Button("About kv4p HT", systemImage: "info.circle") { isShowingAbout = true }
+            }
+            .sheet(isPresented: $isShowingAbout) {
+                NavigationStack {
+                    AboutView().toolbar { Button("Done") { isShowingAbout = false } }
+                }
+            }
+        #endif
     }
 
     /// `SettingsActivity`'s TX frequency limits, in whole MHz.
@@ -160,15 +182,40 @@ private struct FirmwareUpdateRow: View {
     }
 }
 
+#if os(iOS)
+    extension View {
+        /// iOS: the frequency, the S-meter and a large PTT button stay at the bottom, within reach of the thumb.
+        func pttBar(_ model: RadioViewModel) -> some View {
+            safeAreaInset(edge: .bottom) {
+                VStack(spacing: 6) {
+                    HStack {
+                        Text(model.isReady ? "\(model.frequencyText) MHz" : model.statusText)
+                        Spacer()
+                        Text(model.sMeterText)
+                    }
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    PTTButton(model: model, height: 64)
+                        .disabled(!model.isReady)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(.bar)
+            }
+        }
+    }
+#endif
+
 /// Press and hold to transmit; with sticky PTT, each press toggles.
 private struct PTTButton: View {
     let model: RadioViewModel
+    var height: CGFloat = 44
     @State private var isPressed = false
 
     var body: some View {
         Label(model.isOnAir ? "On air" : "Push to talk", systemImage: model.isTransmitting ? "mic.fill" : "mic")
             .font(.headline)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: .infinity, minHeight: height)
             .foregroundStyle(model.isTransmitting ? Color.white : Color.primary)
             .background(model.isTransmitting ? Color.red : Color.secondary.opacity(0.2), in: .rect(cornerRadius: 8))
             .contentShape(.rect)
@@ -184,6 +231,7 @@ private struct PTTButton: View {
                         Task { await model.releasePTT() }
                     }
             )
+            .sensoryFeedback(.impact, trigger: model.isTransmitting)
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
     }

@@ -19,14 +19,31 @@ struct MemoriesView: View {
                 ForEach(model.groups, id: \.self) { Text($0).tag(String?.some($0)) }
             }
             ForEach(model.visibleMemories) { memory in
-                VStack(alignment: .leading) {
-                    Text(memory.name)
-                    Text(HamFrequency.format(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(memory.name)
+                        Text(HamFrequency.format(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
+                    }
+                    #if os(iOS)
+                        // iOS lists select only in edit mode: a tap tunes, a checkmark marks the active memory.
+                        Spacer()
+                        if memory.id == model.activeMemoryId {
+                            Image(systemName: "checkmark").foregroundStyle(.tint)
+                        }
+                    #endif
                 }
                 .tag(memory.id)
+                #if os(iOS)
+                    .contentShape(.rect)
+                    .onTapGesture { tune(memory.id) }
+                #endif
                 .contextMenu {
                     Button("Edit…") { editing = memory }
                     Button("Delete", role: .destructive) { Task { await model.delete(memory) } }
+                }
+                .swipeActions {
+                    Button("Delete", role: .destructive) { Task { await model.delete(memory) } }
+                    Button("Edit…") { editing = memory }
                 }
             }
         }
@@ -51,8 +68,10 @@ struct MemoriesView: View {
             }
         }
         .sheet(item: $editing) { memory in
-            MemoryEditor(memory: memory) { saved in
-                Task { await model.save(saved) }
+            NavigationStack {
+                MemoryEditor(memory: memory) { saved in
+                    Task { await model.save(saved) }
+                }
             }
         }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
@@ -109,7 +128,12 @@ private struct MemoryEditor: View {
             Toggle("Skip during scan", isOn: $memory.skipDuringScan)
         }
         .formStyle(.grouped)
-        .frame(minWidth: 360)
+        #if os(macOS)
+            .frame(minWidth: 360)
+        #else
+            .navigationTitle(memory.name.isEmpty ? "New memory" : memory.name)
+            .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) {

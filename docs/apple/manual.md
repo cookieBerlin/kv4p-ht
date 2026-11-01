@@ -8,16 +8,17 @@
 
 1. [Requirements](#requirements)
 2. [Installation](#installation)
-3. [Connecting the radio](#connecting-the-radio)
-4. [Receiving](#receiving)
-5. [Transmitting](#transmitting)
-6. [Memories and scanning](#memories-and-scanning)
-7. [APRS](#aprs)
-8. [FreeDV digital voice](#freedv-digital-voice)
-9. [Settings](#settings)
-10. [Firmware updates](#firmware-updates)
-11. [Troubleshooting](#troubleshooting)
-12. [Hardware test checklist](#hardware-test-checklist)
+3. [The main window](#the-main-window)
+4. [Connecting the radio](#connecting-the-radio)
+5. [Receiving](#receiving)
+6. [Transmitting](#transmitting)
+7. [Memories and scanning](#memories-and-scanning)
+8. [APRS](#aprs)
+9. [FreeDV digital voice](#freedv-digital-voice)
+10. [Settings](#settings)
+11. [Firmware updates](#firmware-updates)
+12. [Troubleshooting](#troubleshooting)
+13. [Hardware test checklist](#hardware-test-checklist)
 
 ## Requirements
 
@@ -36,6 +37,18 @@ here.
 🖥 To build from source, open `apple-src/App/KV4PHT.xcodeproj` in Xcode and run
 the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 [`apple-src/CLAUDE.md`](../../apple-src/CLAUDE.md).
+
+## The main window
+
+- 🖥 **Mac:** the memories are in the sidebar; **Radio** and **APRS** are tabs
+  next to it.
+- 📱 **iPhone and iPad:** **Radio**, **Memories** and **APRS** are tabs, at the
+  bottom on the iPhone and at the top (or as a sidebar) on the iPad. The app
+  opens the tab you used last.
+  - On **Radio** and **Memories**, a bar at the bottom shows the frequency and
+    the S-meter, with a large **Push to talk** button.
+  - ⓘ on the radio tab opens *About*, and ⚙ on the APRS tab opens the APRS
+    settings.
 
 ## Connecting the radio
 
@@ -84,7 +97,8 @@ settings.
 
 Transmitting requires a license and an antenna or dummy load.
 
-- **Push to talk:** hold the button under **Transmit** while you speak; release it
+- **Push to talk:** hold the button under **Transmit** (📱 in the bar at the
+  bottom; it vibrates when the transmission starts and ends) while you speak; release it
   to return to receive. It turns red while PTT is pressed and shows *On air* once
   the radio transmits. The first time, macOS asks for microphone access.
 - **Sticky PTT:** each click starts or ends the transmission, as in the Android
@@ -106,13 +120,14 @@ Transmitting requires a license and an antenna or dummy load.
 
 ## Memories and scanning
 
-The memory list is in the sidebar.
+The memory list is in the sidebar (📱 in the **Memories** tab).
 
-- **Tune:** click a memory. The radio switches to its frequency, repeater
+- **Tune:** click (📱 tap) a memory; 📱 a checkmark marks the active one. The radio switches to its frequency, repeater
   offset (TX = RX ± offset) and tones. Frequencies outside the module range are
   set to the nearest limit, as in the Android app.
 - **Add:** **+** creates a memory from the current frequency. **Edit…** and
-  **Delete** are in the context menu (right-click). A memory has a name,
+  **Delete** are in the context menu (right-click, 📱 touch and hold) and appear
+  when you swipe a memory to the left. A memory has a name,
   frequency, offset (none, down or up, in kHz, default 600), TX and RX tone, an
   optional group and *Skip during scan*.
 - **Groups:** the **Group** picker shows one group or all memories.
@@ -142,7 +157,7 @@ me* hides messages between other stations; messages from or to you, to `ALL`,
 objects.
 
 **Messages** (licence required): enter your callsign at the bottom of the APRS
-tab (the app ships with none and remembers yours), a recipient and the text,
+tab (📱 under ⚙; the app ships with none and remembers yours), a recipient and the text,
 then press Return or **Send**. Without a recipient the message goes out as the
 bulletin BLN1CQ.
 
@@ -159,7 +174,7 @@ bulletin BLN1CQ.
   67 characters.
 
 **Position beacon** (licence required): turn on *Position beacon* at the bottom
-of the APRS tab. The app sends your position right away and then every five
+of the APRS tab (📱 under ⚙, as are digipeating and the APRS-IS switches). The app sends your position right away and then every five
 minutes, as long as the radio is connected and receiving. Choose the symbol
 others see (phone, car, house, …) and, with *Approximate position*, round the
 position to about 1 km. macOS asks for location access the first time; your
@@ -212,7 +227,7 @@ its settings between launches:
   frequency, digipeating, iGate, the APRS-IS feed and the list filter.
 - **Memories tab:** the group shown.
 
-**kv4p HT → About kv4p HT** shows the version and build of the app, the
+**kv4p HT → About kv4p HT** (📱 ⓘ on the radio tab) shows the version and build of the app, the
 firmware it ships for USB updates, and the licences of everything it contains
 or is ported from, with the licence texts.
 
