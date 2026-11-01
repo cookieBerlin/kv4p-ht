@@ -21,7 +21,9 @@ struct FlasherErrorTests {
 
     static let romOK: [UInt8] = [0, 0, 0, 0]
 
-    func flash(replacing overrides: [Int: [UInt8]] = [:], failure: TransportError? = nil) async throws -> FlashError? {
+    func flash(replacing overrides: [Int: [UInt8]] = [:], failure: TranscriptPort.Failure? = nil) async throws
+        -> FlashError?
+    {
         let vector = try FlasherVectorTests.vector("flash")
         let clock = VirtualClock()
         let port = TranscriptPort(
@@ -62,9 +64,9 @@ struct FlasherErrorTests {
         #expect(try await flash(replacing: [7: Self.reply(0x06, status: Self.romOK)]) == .stubNotStarted)
     }
 
-    @Test("a failing port ends the flash")
-    func portFailure() async throws {
-        #expect(try await flash(failure: .ioFailed(errno: 5)) == .port(.ioFailed(errno: 5)))
+    @Test("a failing port ends the flash", arguments: TranscriptPort.Failure.allCases)
+    func portFailure(failure: TranscriptPort.Failure) async throws {
+        #expect(try await flash(failure: failure) == .port(.ioFailed(errno: 5)))
     }
 
     @Test("noise, short frames, other opcodes and invalid escapes are skipped like esp32-flash-lib")
@@ -72,6 +74,18 @@ struct FlasherErrorTests {
         let sync = Self.reply(0x08, data: [0xDB, 0x41], status: Self.romOK)
         let noise: [UInt8] = [0x55, 0xC0, 0x01, 0x02, 0xC0] + Self.reply(0x0A, status: Self.romOK)
         #expect(try await flash(replacing: [0: noise + sync]) == nil)
+    }
+
+    @Test("a missing stub resource is an error")
+    func missingStub() {
+        #expect(throws: (any Error).self) { try FlasherStub.load(from: nil) }
+    }
+
+    @Test("a response without status bytes counts as failed")
+    func noStatus() async throws {
+        #expect(
+            try await flash(replacing: [1: Self.reply(0x0F, status: [])]) == .commandFailed(opcode: 0x0F, error: 0xFF)
+        )
     }
 
     @Test("the stub is esptool's ESP32 flasher stub")

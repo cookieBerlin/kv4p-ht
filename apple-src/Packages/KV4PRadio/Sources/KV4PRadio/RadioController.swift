@@ -70,7 +70,7 @@ public struct RadioSnapshot: Equatable, Sendable {
 /// the `microphone` as TX audio. In FreeDV 2400B mode the voice travels as Codec2 frames (`digitalVoice`).
 public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Firmware the Android app ships; older firmware is refused.
-    public static var minimumFirmwareVersion: UInt16 { 17 }
+    public static var minimumFirmwareVersion: UInt16 { KV4P.packagedFirmwareVersion }
     public static var defaultHelloTimeout: Duration { .seconds(10) }
     /// `RUNAWAY_TX_TIMEOUT_SEC`: the app ends PTT after this time, before the firmware's own limit.
     public static var runawayTXTimeout: Duration { .seconds(180) }
