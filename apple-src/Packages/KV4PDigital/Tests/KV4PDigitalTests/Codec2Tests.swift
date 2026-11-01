@@ -13,16 +13,22 @@ struct Codec2Tests {
 
     struct Expected: Decodable, Sendable {
         let frames: [String]
-        let pcm: [Int16]
+        /// The RMS of each decoded frame.
+        let rms: [Double]
     }
 
     static let vectors = (try? VectorFile<Input, Expected>.load("codec2", from: .module)) ?? []
 
-    /// SwiftPM debug builds compile the C code without optimisation, which changes a decoded sample by at most one.
-    static func expectClose(_ decoded: [Int16], _ expected: [Int16]) {
-        #expect(decoded.count == expected.count)
-        let differences = zip(decoded, expected).map { abs(Int($0) - Int($1)) }
-        #expect(differences.allSatisfy { $0 <= 1 })
+    /// Unvoiced sounds decode with random phases from a process-wide generator, so only the level of each frame is
+    /// reproducible: within 30 % or 20 (-64 dBFS) of the upstream build, wider than the spread of 500 generator states.
+    static func expectLevels(_ decoded: [Int16], _ rms: [Double]) {
+        #expect(decoded.count == rms.count * Codec2.samplesPerFrame)
+        for (index, expected) in rms.enumerated() {
+            let frame = decoded.dropFirst(index * Codec2.samplesPerFrame).prefix(Codec2.samplesPerFrame)
+            let energy = frame.map { Double($0) * Double($0) }.reduce(0, +)
+            let level = (energy / Double(Codec2.samplesPerFrame)).squareRoot()
+            #expect(abs(level - expected) <= max(0.3 * expected, 20), "frame \(index): RMS \(level), \(expected)")
+        }
     }
 
     @Test("vector file is present")
@@ -42,7 +48,7 @@ struct Codec2Tests {
             decoded += try #require(decoder.decode(frame))
         }
         #expect(frames == (try vector.expected.frames.map { try [UInt8](hex: $0) }))
-        Self.expectClose(decoded, vector.expected.pcm)
+        Self.expectLevels(decoded, vector.expected.rms)
     }
 
     @Test("frames and sample blocks of another length are refused")

@@ -26,7 +26,7 @@ struct FreeDVVoiceTests {
             #expect(stride(from: 0, to: samples.count, by: 2).allSatisfy { samples[$0] == samples[$0 + 1] })
             decoded += stride(from: 0, to: samples.count, by: 2).map { samples[$0] }
         }
-        Codec2Tests.expectClose(decoded, vector.expected.pcm)
+        Codec2Tests.expectLevels(decoded, vector.expected.rms)
     }
 
     @Test("pairs are averaged like Java ints, across chunks; a partial frame waits")

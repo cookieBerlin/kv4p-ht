@@ -4,8 +4,10 @@
  * Built by generate.sh against the pristine upstream Codec2 checkout that
  * codec2-android (the Android app's FreeDV codec) pins. Encodes deterministic
  * 8 kHz test signals with one codec instance and decodes the frames with
- * another, then prints the input, the frames and the decoded samples as JSON
- * on stdout.
+ * another, then prints the input, the frames and the RMS of each decoded frame
+ * as JSON on stdout. The decoder draws random phases for unvoiced sounds from a
+ * process-wide generator (codec2_rand), so its samples are only reproducible
+ * in level, not exactly.
  */
 #include <math.h>
 #include <stdint.h>
@@ -73,9 +75,13 @@ static void vector(const char *name, signal_fn signal, int frames, int last) {
         for (int b = 0; b < FRAME_BYTES; b++) printf("%02x", bits[f][b]);
         printf("\"");
     }
-    printf("],\n");
-    print_samples("pcm", decoded, samples);
-    printf("\n      }\n    }%s\n", last ? "" : ",");
+    printf("],\n        \"rms\": [");
+    for (int f = 0; f < frames; f++) {
+        double energy = 0;
+        for (int n = 0; n < PCM_SAMPLES; n++) energy += (double)decoded[f * PCM_SAMPLES + n] * decoded[f * PCM_SAMPLES + n];
+        printf(f ? ", %.1f" : "%.1f", sqrt(energy / PCM_SAMPLES));
+    }
+    printf("]\n      }\n    }%s\n", last ? "" : ",");
 }
 
 int main(void) {
