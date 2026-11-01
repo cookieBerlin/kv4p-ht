@@ -101,3 +101,11 @@ Your location is only read while position beacons or the APRS-IS feed are on. It
 is sent over RF in beacons; for the feed, it goes to the APRS-IS server as the
 centre of the 50 km filter. With the iGate on, received packets and your own APRS packets go
 to APRS-IS, which is public.
+
+## Which licences apply?
+
+The app is free software under the GNU GPL 3.0, like the whole kv4p HT project
+([source code](https://github.com/VanceVagell/kv4p-ht)). It contains Codec2 1.2.0
+(GNU LGPL 2.1) and the esptool flasher stub (GNU GPL 2.0 or later), both
+unmodified, and ports code from the Android app, java-aprs, javAX25 and
+esp32-flash-lib. **About kv4p HT** lists them with their licence texts.

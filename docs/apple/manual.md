@@ -202,6 +202,10 @@ its settings between launches:
   frequency, digipeating, iGate, the APRS-IS feed and the list filter.
 - **Memories tab:** the group shown.
 
+**kv4p HT → About kv4p HT** shows the version and build of the app, the
+firmware it ships for USB updates, and the licences of everything it contains
+or is ported from, with the licence texts.
+
 For reduced motion and live captions use the system settings (System Settings →
 Accessibility); the Android app's own switches for them are not needed on the
 Mac.
