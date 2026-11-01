@@ -5,13 +5,13 @@ For general questions about the radio, see the main [FAQ](../../FAQ.md).
 ## Is there an app for iPhone, iPad and Mac?
 
 Yes. All three, on the Mac with Apple Silicon, get test builds through TestFlight.
-A release in the App Store is planned. See the [roadmap](04-roadmap.md) for the
+There is no date for a release in the App Store. See the [roadmap](04-roadmap.md) for the
 current status.
 
 ## How do I get the test builds?
 
 Through Apple's TestFlight app, with an invitation from the maintainer. The app
-is not in the App Store yet. See the [manual](manual.md#installation).
+is not in the App Store. See the [manual](manual.md#installation).
 
 ## Why Bluetooth instead of USB on iPhone and iPad?
 

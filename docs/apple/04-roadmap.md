@@ -39,10 +39,17 @@ Every milestone that changes user-visible behaviour updates the
 | 2.3 | **Layouts** | iPhone (compact) and iPad (regular, multitasking) layouts; PTT ergonomics on touch. |
 | 2.4 | **Firmware notice** | Outdated firmware on iOS/iPadOS links to the web flasher and the manual. |
 | 2.5 | **Distribution** | TestFlight builds for iOS, iPadOS and macOS, App Store review notes, manual + FAQ. |
-| 2.6 | **App Store release** | Store listing, screenshots, privacy policy, App Review for iOS, iPadOS and macOS. |
 
-## Later (candidates)
+## Phase 99 — App Store release
 
-- Bluetooth Classic SPP on macOS.
-- Memory import/export compatible with the Android app.
-- Upstream pull request to the original project.
+Deferred: the maintainer plans it later. Until then, the app is distributed through
+TestFlight only ([ADR-0036](adr/0036-no-distribution-outside-app-store.md)).
+
+| # | Milestone | Acceptance criteria |
+|---|---|---|
+| 99.1 | **App Store release** | Store listing, screenshots, privacy policy, App Review for iOS, iPadOS and macOS. |
+
+## Hardware tests
+
+The open tests are listed with IDs in [hardware-tests.md](hardware-tests.md). `make testflight` generates
+the *What to Test* text of a build from that list, until the tests are marked as done.
