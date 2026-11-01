@@ -69,6 +69,9 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     public static var defaultScanSquelch: UInt8 { 7 }
 
     public nonisolated let snapshots: AsyncStream<RadioSnapshot>
+    /// AX.25 frames (without FCS) the radio decoded on air, e.g. APRS; the newest are kept if nobody reads.
+    public nonisolated let receivedFrames: AsyncStream<[UInt8]>
+    private let receivedFramesContinuation: AsyncStream<[UInt8]>.Continuation
     public private(set) var snapshot: RadioSnapshot
     private let snapshotContinuation: AsyncStream<RadioSnapshot>.Continuation
     private let transport: any RadioTransport
@@ -115,6 +118,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         self.microphone = microphone
         snapshot = RadioSnapshot(status: .disconnected, desired: DesiredStateController().desired, isInSync: false)
         (snapshots, snapshotContinuation) = AsyncStream.makeStream()
+        (receivedFrames, receivedFramesContinuation) = AsyncStream.makeStream(bufferingPolicy: .bufferingNewest(256))
         (frames, outbox) = AsyncStream.makeStream()
     }
 
@@ -126,6 +130,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         scanTimer?.cancel()
         outbox.finish()
         snapshotContinuation.finish()
+        receivedFramesContinuation.finish()
     }
 
     // MARK: Session
@@ -407,6 +412,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
                     flush()
                     checkScan()
                 }
+            case .ax25(let frame) where snapshot.status == .ready:
+                receivedFramesContinuation.yield(frame)
             case .command(.rxAudio, let payload) where snapshot.status == .ready:
                 rxAudio?.receive(block: payload)
             case .command(.windowUpdate, let payload):
@@ -414,7 +421,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
                     await window.enlarge(by: Int(update.size))
                 }
             default:
-                break  // digital voice, AX.25 and debug output come with later milestones
+                break  // digital voice and debug output come with later milestones
             }
         }
     }
