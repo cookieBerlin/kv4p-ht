@@ -69,7 +69,7 @@ struct RXAudioForwardingTests {
         scenario.carrier = Carrier()
         let clock = ManualClock()
         let transport = SimulatorTransport(simulator: RadioSimulator(scenario: scenario), clock: clock)
-        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 4096))
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 4096), fadesIn: false)
         let controller = RadioController(transport: transport, clock: clock, rxAudio: player)
         var snapshots = controller.snapshots.makeAsyncIterator()
         await controller.connect()

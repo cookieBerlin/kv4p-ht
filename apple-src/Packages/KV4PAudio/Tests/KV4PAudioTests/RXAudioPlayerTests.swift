@@ -86,10 +86,11 @@ struct RXAudioPlayerTests {
     func fadeIn() {
         let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 4096))
         let block = ImaAdpcm.encodeBlock([Int16](repeating: 16384, count: 3))
+        let alpha: Float = 0.02
         var ramp: Float = 0
         for count in 1...61 {
             player.receive(block: block)
-            ramp = 0.02 + 0.98 * ramp
+            ramp = alpha + (1 - alpha) * ramp
             let output = player.render(3)
             let expected: Float = ramp > 0.7 ? ramp * 16384 / 32768 : 0
             #expect(output.first == expected, "block \(count)")

@@ -11,6 +11,10 @@ public protocol RXAudioSink: Sendable {
 /// Decodes `RX_AUDIO` blocks into a jitter buffer and renders them for the audio output (Android
 /// `RadioAudioService.handleRxAudio`). `render(into:)` runs on the real-time audio thread; the lock is held only
 /// to copy samples.
+///
+/// Like Android (`ensureAudioPlaying`), the audio fades in after each reset: every block moves the fade 2 % closer
+/// to 1, and it stays muted below 0.7 (59 blocks, ≈ 0.9 s). This hides the transient the radio sends after it
+/// starts.
 public final class RXAudioPlayer: RXAudioSink {
     public struct Statistics: Equatable, Sendable {
         public var buffered: Int
@@ -21,14 +25,20 @@ public final class RXAudioPlayer: RXAudioSink {
     private struct State {
         var buffer: JitterBuffer
         var volume: Float = 1
+        var fade: Float
+        let fadesIn: Bool
         /// Reused by `render(into:)`, so the audio thread does not allocate.
         var scratch = [Int16](repeating: 0, count: 1024)
     }
 
     private let state: Mutex<State>
 
-    public init(buffer: JitterBuffer = JitterBuffer()) {
-        state = Mutex(State(buffer: buffer))
+    private static let fadeStep: Float = 0.02
+    private static let fadeThreshold: Float = 0.7
+
+    /// `fadesIn: false` plays from the first block.
+    public init(buffer: JitterBuffer = JitterBuffer(), fadesIn: Bool = true) {
+        state = Mutex(State(buffer: buffer, fade: fadesIn ? 0 : 1, fadesIn: fadesIn))
     }
 
     /// Output gain, 0…1.
@@ -49,11 +59,17 @@ public final class RXAudioPlayer: RXAudioSink {
 
     public func receive(block: [UInt8]) {
         let samples = ImaAdpcm.decodeBlock(block, maxSamples: KV4P.audioBlockSamples)
-        state.withLock { $0.buffer.push(samples) }
+        state.withLock { state in
+            state.buffer.push(samples)
+            state.fade = Self.fadeStep + (1 - Self.fadeStep) * state.fade
+        }
     }
 
     public func reset() {
-        state.withLock { $0.buffer.reset() }
+        state.withLock { state in
+            state.buffer.reset()
+            state.fade = state.fadesIn ? 0 : 1
+        }
     }
 
     /// Fills `output` with samples in -1…1, silence where no audio is buffered.
@@ -62,7 +78,7 @@ public final class RXAudioPlayer: RXAudioSink {
             if state.scratch.count < output.count {
                 state.scratch = [Int16](repeating: 0, count: output.count)
             }
-            let gain = state.volume / 32768
+            let gain = state.fade > Self.fadeThreshold ? state.volume * state.fade / 32768 : 0
             state.scratch.withUnsafeMutableBufferPointer { scratch in
                 let samples = UnsafeMutableBufferPointer(rebasing: scratch[..<output.count])
                 state.buffer.pull(into: samples)
