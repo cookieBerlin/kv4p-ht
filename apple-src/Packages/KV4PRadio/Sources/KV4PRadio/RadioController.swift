@@ -1,4 +1,5 @@
 import KV4PAudio
+import KV4PDigital
 import KV4PPersistence
 import KV4PProtocol
 import KV4PTransport
@@ -56,11 +57,17 @@ public struct RadioSnapshot: Equatable, Sendable {
 
     /// PTT is requested; the device reports `TX_ACTIVE` once it transmits.
     public var isTransmitting: Bool { desired.flags.contains(.pttRequested) }
+
+    /// The firmware has the FreeDV 2400B modem.
+    public var supportsFreeDV: Bool { firmware?.features.contains(.freeDV2400B) == true }
+
+    /// FreeDV 2400B digital voice instead of analog FM voice (`setFreeDV`).
+    public var isFreeDV: Bool { desired.flags.contains(.freeDV2400B) }
 }
 
 /// Connects to the radio, runs the handshake and keeps the device in the desired state (as the Android
 /// `RadioAudioService` does): HELLO validation, flow control, desired-state sync, RX audio to `rxAudio`, and PTT with
-/// the `microphone` as TX audio.
+/// the `microphone` as TX audio. In FreeDV 2400B mode the voice travels as Codec2 frames (`digitalVoice`).
 public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Firmware the Android app ships; older firmware is refused.
     public static var minimumFirmwareVersion: UInt16 { 17 }
@@ -84,6 +91,9 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private let rxAudio: (any RXAudioSink)?
     private let microphone: (any AudioInput)?
     private var txEncoder = TXAudioEncoder()
+    private let makeDigitalVoice: @Sendable () -> FreeDVVoice?
+    /// Created when FreeDV is first needed, as Android creates its Codec2 instance.
+    private var digitalVoice: FreeDVVoice?
     /// Numbers transmissions, so late microphone samples and timers of an earlier one are ignored.
     private var transmission = 0
     private var isCapturing = false
@@ -115,13 +125,15 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         clock: C,
         helloTimeout: Duration = defaultHelloTimeout,
         rxAudio: (any RXAudioSink)? = nil,
-        microphone: (any AudioInput)? = nil
+        microphone: (any AudioInput)? = nil,
+        digitalVoice: @escaping @Sendable () -> FreeDVVoice? = { FreeDVVoice() }
     ) {
         self.transport = transport
         self.clock = clock
         self.helloTimeout = helloTimeout
         self.rxAudio = rxAudio
         self.microphone = microphone
+        makeDigitalVoice = digitalVoice
         snapshot = RadioSnapshot(status: .disconnected, desired: DesiredStateController().desired, isInSync: false)
         (snapshots, snapshotContinuation) = AsyncStream.makeStream()
         (receivedFrames, receivedFramesContinuation) = AsyncStream.makeStream(bufferingPolicy: .bufferingNewest(256))
@@ -328,6 +340,31 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     public func setMicGain(_ gain: MicGain) {
         txEncoder.gain = gain
+        digitalVoice?.gain = gain
+    }
+
+    // MARK: FreeDV
+
+    /// `setFreeDv2400bEnabled`: FreeDV 2400B digital voice, if the firmware supports it and Codec2 is available.
+    public func setFreeDV(_ on: Bool) {
+        let enabled = on && voice() != nil
+        digitalVoice?.reset()
+        update { $0.setFreeDV(enabled) }
+    }
+
+    /// The FreeDV voice, created on first use.
+    private func voice() -> FreeDVVoice? {
+        if digitalVoice == nil {
+            digitalVoice = makeDigitalVoice()
+            digitalVoice?.gain = txEncoder.gain
+        }
+        return digitalVoice
+    }
+
+    /// `handleRxDigital`: decoded while receiving; played unless transmitting.
+    private func receiveDigital(_ frame: [UInt8]) {
+        guard snapshot.isFreeDV, let samples = voice()?.decode(frame), !isCapturing else { return }
+        rxAudio?.receive(samples: samples)
     }
 
     // MARK: Packets
@@ -376,6 +413,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
         guard current == transmission else { return microphone.stop() }  // ended while the microphone started
         txEncoder.reset()
+        digitalVoice?.reset()
         rxAudio?.reset()
         isKeyed = true
         update { $0.setPTT(true) }
@@ -400,8 +438,10 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     private func send(_ chunk: [Int16], transmission sending: Int) {
         guard sending == transmission, isCapturing else { return }
-        for block in txEncoder.encode(chunk) {
-            outbox.yield(FrameEncoder.txAudio(block))
+        if snapshot.isFreeDV, let voice = voice() {
+            voice.encode(chunk).forEach { outbox.yield(FrameEncoder.txDigital($0)) }
+        } else {
+            txEncoder.encode(chunk).forEach { outbox.yield(FrameEncoder.txAudio($0)) }
         }
     }
 
@@ -448,12 +488,14 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
                 receivedFramesContinuation.yield(frame)
             case .command(.rxAudio, let payload) where snapshot.status == .ready:
                 rxAudio?.receive(block: payload)
+            case .command(.rxDigital, let payload) where snapshot.status == .ready:
+                receiveDigital(payload)
             case .command(.windowUpdate, let payload):
                 if let update = try? WindowUpdate(decoding: payload) {
                     await window.enlarge(by: Int(update.size))
                 }
             default:
-                break  // digital voice and debug output come with later milestones
+                break  // debug output is not shown
             }
         }
     }
@@ -548,14 +590,16 @@ extension RadioController where C == ContinuousClock {
         transport: any RadioTransport,
         helloTimeout: Duration = defaultHelloTimeout,
         rxAudio: (any RXAudioSink)? = nil,
-        microphone: (any AudioInput)? = nil
+        microphone: (any AudioInput)? = nil,
+        digitalVoice: @escaping @Sendable () -> FreeDVVoice? = { FreeDVVoice() }
     ) {
         self.init(
             transport: transport,
             clock: ContinuousClock(),
             helloTimeout: helloTimeout,
             rxAudio: rxAudio,
-            microphone: microphone
+            microphone: microphone,
+            digitalVoice: digitalVoice
         )
     }
 }
