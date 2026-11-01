@@ -26,6 +26,10 @@ public final class Main {
         write(packages, "KV4PAPRS", "ax25-packets.json", "javAX25 Packet", Ax25Vectors.all());
         write(packages, "KV4PAPRS", "aprs-parser.json", "java-aprs Parser.parseAX25", AprsVectors.parser());
         write(packages, "KV4PAPRS", "aprs-events.json", "java-aprs AprsController.handle", AprsVectors.events());
+        write(packages, "KV4PAPRS", "aprs-messaging.json", "java-aprs AprsController messaging",
+            AprsVectors.messaging());
+        write(packages, "KV4PAPRS", "aprs-encoding.json", "java-aprs MessagePacket and APRSPacket.toAX25Frame",
+            AprsVectors.encoding());
     }
 
     private static void write(Path packages, String module, String file, String source, List<Object> vectors)

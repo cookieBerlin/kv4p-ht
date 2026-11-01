@@ -1,0 +1,180 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs MessagePacket and APRSPacket.toAX25Frame",
+  "vectors": [
+    {
+      "name": "payload N1CALL 1",
+      "input": {
+        "kind": "payload",
+        "to": "N1CALL",
+        "text": "hello",
+        "id": "1"
+      },
+      "expected": {
+        "bytes": "3a4e3143414c4c2020203a68656c6c6f7b31"
+      }
+    },
+    {
+      "name": "payload N1CALL-15 ABCDEFG",
+      "input": {
+        "kind": "payload",
+        "to": "N1CALL-15",
+        "text": "text",
+        "id": "ABCDEFG"
+      },
+      "expected": {
+        "bytes": "3a4e3143414c4c2d31353a746578747b4142434445"
+      }
+    },
+    {
+      "name": "payload BLN1CQ null",
+      "input": {
+        "kind": "payload",
+        "to": "BLN1CQ",
+        "text": "x",
+        "id": null
+      },
+      "expected": {
+        "bytes": "3a424c4e3143512020203a78"
+      }
+    },
+    {
+      "name": "payload N1CALL   ",
+      "input": {
+        "kind": "payload",
+        "to": "N1CALL",
+        "text": "x",
+        "id": "  "
+      },
+      "expected": {
+        "bytes": "3a4e3143414c4c2020203a78"
+      }
+    },
+    {
+      "name": "payload VERYLONGCALL 12",
+      "input": {
+        "kind": "payload",
+        "to": "VERYLONGCALL",
+        "text": "x",
+        "id": "12"
+      },
+      "expected": {
+        "bytes": "3a564552594c4f4e4743414c4c3a787b3132"
+      }
+    },
+    {
+      "name": "payload N1CALL null",
+      "input": {
+        "kind": "payload",
+        "to": "N1CALL",
+        "text": "\u00fc\u20ac",
+        "id": null
+      },
+      "expected": {
+        "bytes": "3a4e3143414c4c2020203a3f3f"
+      }
+    },
+    {
+      "name": "payload N1CALL AB",
+      "input": {
+        "kind": "payload",
+        "to": "N1CALL",
+        "text": "0123456789012345678901234567890123456789012345678901234567890123456789",
+        "id": "AB"
+      },
+      "expected": {
+        "bytes": "3a4e3143414c4c2020203a303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132337b4142"
+      }
+    },
+    {
+      "name": "payload N1CALL null",
+      "input": {
+        "kind": "payload",
+        "to": "N1CALL",
+        "text": "0123456789012345678901234567890123456789012345678901234567890123456789",
+        "id": null
+      },
+      "expected": {
+        "bytes": "3a4e3143414c4c2020203a30313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536"
+      }
+    },
+    {
+      "name": "frame N0CALL>APKVPA,WIDE1-1,WIDE2-1",
+      "input": {
+        "kind": "frame",
+        "source": "N0CALL",
+        "destination": "APKVPA",
+        "path": "WIDE1-1,WIDE2-1",
+        "payload": ":N1CALL   :hi{1"
+      },
+      "expected": {
+        "bytes": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a68697b31"
+      }
+    },
+    {
+      "name": "frame N0CALL-9>APKVPA,",
+      "input": {
+        "kind": "frame",
+        "source": "N0CALL-9",
+        "destination": "APKVPA",
+        "path": "",
+        "payload": ">status"
+      },
+      "expected": {
+        "bytes": "82a096aca082e09c60868298987303f03e737461747573"
+      }
+    },
+    {
+      "name": "frame n0call-15>apkvpa-3,N1CALL*,WIDE2-2",
+      "input": {
+        "kind": "frame",
+        "source": "n0call-15",
+        "destination": "apkvpa-3",
+        "path": "N1CALL*,WIDE2-2",
+        "payload": "!x"
+      },
+      "expected": {
+        "bytes": "82a096aca082e69c60868298987e9c6286829898e0ae92888a64406503f02178"
+      }
+    },
+    {
+      "name": "frame N0CALL-x>APKVPA,WIDE1-16",
+      "input": {
+        "kind": "frame",
+        "source": "N0CALL-x",
+        "destination": "APKVPA",
+        "path": "WIDE1-16",
+        "payload": ">ssid"
+      },
+      "expected": {
+        "bytes": "82a096aca082e09c608682989860ae92888a62406103f03e73736964"
+      }
+    },
+    {
+      "name": "frame N0CALLXX>APKVPA,",
+      "input": {
+        "kind": "frame",
+        "source": "N0CALLXX",
+        "destination": "APKVPA",
+        "path": "",
+        "payload": ">too long"
+      },
+      "expected": {
+        "error": true
+      }
+    },
+    {
+      "name": "frame N0CALL>APKVPA,TOOLONGCALL",
+      "input": {
+        "kind": "frame",
+        "source": "N0CALL",
+        "destination": "APKVPA",
+        "path": "TOOLONGCALL",
+        "payload": ">too long path"
+      },
+      "expected": {
+        "error": true
+      }
+    }
+  ]
+}
