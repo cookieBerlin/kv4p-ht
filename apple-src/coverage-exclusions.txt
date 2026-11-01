@@ -14,3 +14,5 @@ Packages/KV4PSimulator/Sources/KV4PSimulator/CoreBluetoothPeripheralManager.swif
 Packages/KV4PSimulatorPeripheral/Sources/kv4p-sim-peripheral/main.swift
 # AVAudioEngine adapter: forwards render callbacks to RXAudioPlayer only (ADR-0018).
 Packages/KV4PAudio/Sources/KV4PAudio/AVAudioEngineOutput.swift
+# AVAudioEngine input adapter: forwards converted microphone samples only (ADR-0018).
+Packages/KV4PAudio/Sources/KV4PAudio/AVAudioEngineInput.swift
