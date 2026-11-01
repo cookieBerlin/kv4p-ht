@@ -31,7 +31,9 @@ struct RepeaterBookImportTests {
     @Test("US format: offset sign and size, tone, name, quotes and line breaks")
     func usFormat() throws {
         let memories = try #require(RepeaterBookImport.memories(fromCSV: Self.us, group: "Local", range: Self.vhf))
-        #expect(memories.map(\.name) == ["N0CALL • Example City, North", "N1CALL • Sample Town", "N2CALL • Line Break"])
+        #expect(
+            memories.map(\.name) == ["N0CALL • Example City, North", "N1CALL • Sample Town", "N2CALL • Line Break"]
+        )
         #expect(memories.map(\.frequency) == [146.94, 147.12, 146.52])
         #expect(memories.map(\.offset) == [.down, .up, .none])
         #expect(memories.map(\.offsetKHz) == [600, 600, 0])
