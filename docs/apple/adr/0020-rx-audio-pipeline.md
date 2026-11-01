@@ -58,8 +58,11 @@ Option 2.
 
 - Playback latency is about 60–250 ms plus the output device latency.
 - The first ≈ 0.9 s after connecting are muted, as on Android.
-- Clock drift between radio and Mac is absorbed by underruns and overflows
-  (each one is a short click); resampling to compensate drift can follow if the
-  hardware test shows it is audible.
+- Measured on hardware (BLE, 10 minutes): the radio delivers about 16 007
+  samples/s (≈ 440 ppm fast), the largest gap between blocks was 75 ms, and a
+  4-block prefill had no underrun. After about 7 minutes the buffer reaches its
+  cap; from then on it drops single samples (≈ 7 per second) at the maximum
+  latency. A latency controller or resampling that follows the radio's rate can
+  replace this if it turns out to be audible.
 - TX (milestone 1.8) adds capture to `AudioOutput`'s counterpart and mutes RX
   while transmitting.
