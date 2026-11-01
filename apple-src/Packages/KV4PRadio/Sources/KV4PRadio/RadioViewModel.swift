@@ -16,6 +16,7 @@ public protocol RadioControlling: Actor {
     func update(_ changes: @Sendable (inout DesiredStateController) -> Void)
     var snapshot: RadioSnapshot { get }
     func setMicGain(_ gain: MicGain)
+    func setFreeDV(_ on: Bool)
     func startTransmitting() async throws(RadioError)
     func stopTransmitting()
     func tune(to memory: ChannelMemory) throws(RadioError)
@@ -624,6 +625,18 @@ public final class RadioViewModel {
     public var isHighPower: Bool {
         get { snapshot.desired.flags.contains(.highPower) }
         set { update { $0.setHighPower(newValue) } }
+    }
+
+    /// The firmware offers FreeDV 2400B digital voice.
+    public var supportsFreeDV: Bool { snapshot.supportsFreeDV }
+
+    /// Voice mode: FreeDV 2400B instead of analog FM.
+    public var isFreeDV: Bool {
+        get { snapshot.isFreeDV }
+        set {
+            guard isReady, let controller else { return }
+            Task { await controller.setFreeDV(newValue) }
+        }
     }
 
     /// A label of `CTCSS.labels`.
