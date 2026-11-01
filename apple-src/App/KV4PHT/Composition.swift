@@ -19,7 +19,7 @@ enum Composition {
             },
             serialDevices: serialDevices,
             audioOutput: AVAudioEngineOutput(),
-            simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? Carrier() : nil) },
+            simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? .freeDVVoice : nil) },
             memories: memoryRepository(),
             location: CoreLocationProvider(),
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector())
@@ -45,7 +45,7 @@ enum Composition {
         case .serial(let path):
             return serialTransport(path)
         case .simulator:
-            let transport = SimulatorTransport()
+            let transport = SimulatorTransport(simulator: RadioSimulator(scenario: .freeDV))
             simulator.transport = transport
             return transport
         }
