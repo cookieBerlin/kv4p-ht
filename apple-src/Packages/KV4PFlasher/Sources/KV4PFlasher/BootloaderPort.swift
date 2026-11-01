@@ -2,6 +2,8 @@ import KV4PTransport
 
 /// The serial port as the ESP32 ROM bootloader protocol needs it (esp32-flash-lib `SerialTransport`).
 public protocol BootloaderPort: Sendable {
+    func open() async throws(TransportError)
+    func close() async
     func setBaudRate(_ rate: Int) async throws(TransportError)
     /// Sets DTR and RTS together; on the kv4p HT they drive `IO0` and `EN` of the ESP32.
     func setModemLines(dtr: Bool, rts: Bool) async throws(TransportError)

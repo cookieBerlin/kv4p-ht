@@ -80,6 +80,10 @@ final class TranscriptPort: BootloaderPort {
 
     var log: [FlashStep] { state.withLock { $0.log } }
 
+    func open() {}
+
+    func close() {}
+
     func record(_ step: FlashStep) {
         state.withLock { $0.log.append(step) }
     }
