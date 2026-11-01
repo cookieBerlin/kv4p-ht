@@ -29,3 +29,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0023](0023-aprs-receive-path.md) | APRS receive path as a port of java-aprs | Proposed |
 | [0024](0024-aprs-messaging.md) | APRS messaging | Proposed |
 | [0025](0025-aprs-beacons-and-digipeating.md) | APRS position beacons and digipeating | Proposed |
+| [0026](0026-aprs-is-and-igate.md) | APRS-IS and iGate | Proposed |

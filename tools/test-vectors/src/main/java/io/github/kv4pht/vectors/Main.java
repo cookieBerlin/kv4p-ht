@@ -32,6 +32,9 @@ public final class Main {
             AprsVectors.beacons());
         write(packages, "KV4PAPRS", "aprs-digipeating.json", "java-aprs AprsController digipeating",
             AprsVectors.digipeating());
+        write(packages, "KV4PAPRS", "aprs-internet.json", "java-aprs AprsController APRS-IS and iGate",
+            AprsVectors.internet());
+        write(packages, "KV4PAPRS", "aprs-is-login.json", "java-aprs AprsIsClient login", AprsVectors.login());
         write(packages, "KV4PAPRS", "aprs-encoding.json", "java-aprs MessagePacket and APRSPacket.toAX25Frame",
             AprsVectors.encoding());
     }

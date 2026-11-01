@@ -134,7 +134,12 @@ struct APRSBeaconVectorTests {
             comment: input.comment
         )
         let transmitter = Transmitter()
-        let accepted = controller.submitBeacon(beacon, atMs: input.startMs, transmit: transmitter.transmit)
+        let accepted = controller.submitBeacon(
+            beacon,
+            atMs: input.startMs,
+            transmit: transmitter.transmit,
+            gate: { _ in false }
+        )
         #expect(accepted == vector.expected.accepted)
         #expect(transmitter.transmissions == vector.expected.transmissions)
         #expect(controller.events.map { EventJSON($0, digipeated: nil) } == vector.expected.events)
@@ -154,7 +159,8 @@ struct APRSBeaconVectorTests {
                     frame: frame,
                     frequencyHz: 144_390_000,
                     atMs: step.atMs,
-                    transmit: transmitter.transmit
+                    transmit: transmitter.transmit,
+                    gate: { _ in false }
                 )
             } else {
                 transmitter.mode = try #require(step.mode)
@@ -172,11 +178,32 @@ struct APRSBeaconVectorTests {
         controller.isDigipeatingEnabled = true
         let transmitter = Transmitter()
         let packet = try APRSParser.parse(tnc2: "N1CALL>APRS,WIDE1-1:>x")
-        controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 0, transmit: transmitter.transmit)
+        controller.receive(
+            packet,
+            frame: nil,
+            frequencyHz: nil,
+            atMs: 0,
+            transmit: transmitter.transmit,
+            gate: { _ in false }
+        )
         controller.callsign = "N0CALL"
-        controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 1, transmit: transmitter.transmit)
+        controller.receive(
+            packet,
+            frame: nil,
+            frequencyHz: nil,
+            atMs: 1,
+            transmit: transmitter.transmit,
+            gate: { _ in false }
+        )
         controller.callsign = "N2CALL"
-        controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 2, transmit: transmitter.transmit)
+        controller.receive(
+            packet,
+            frame: nil,
+            frequencyHz: nil,
+            atMs: 2,
+            transmit: transmitter.transmit,
+            gate: { _ in false }
+        )
         #expect(transmitter.transmissions.count == 2)
     }
 
@@ -186,7 +213,14 @@ struct APRSBeaconVectorTests {
         controller.isDigipeatingEnabled = true
         let transmitter = Transmitter()
         let packet = try APRSParser.parse(tnc2: "N1CALL>APRS,WIDE1-1::N2CALL   :ack1")
-        let event = controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 0, transmit: transmitter.transmit)
+        let event = controller.receive(
+            packet,
+            frame: nil,
+            frequencyHz: nil,
+            atMs: 0,
+            transmit: transmitter.transmit,
+            gate: { _ in false }
+        )
         #expect(event == nil)
         #expect(transmitter.transmissions.count == 1)
         #expect(controller.packets.map(\.source) == [.rxRF, .txRF])

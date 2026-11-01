@@ -1,0 +1,1051 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs AprsController APRS-IS and iGate",
+  "vectors": [
+    {
+      "name": "internet 1",
+      "input": {
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860ae92888a62406303f03e67617465206d65"
+          },
+          {
+            "atMs": 1700000000001,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c6486829898e0ae92888a64406303f021343930332e35304e2f30373230312e3735572d676174656420776974682070617468"
+          },
+          {
+            "atMs": 1700000000002,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860a886a092a040e103f03e66726f6d2074686520696e7465726e6574"
+          },
+          {
+            "atMs": 1700000000003,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860a886a0b0b040e103f03e7463707878"
+          },
+          {
+            "atMs": 1700000000004,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609c9e8e82a88a6103f03e6e6f67617465"
+          },
+          {
+            "atMs": 1700000000005,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860a48c9e9c98b26103f03e72666f6e6c79"
+          },
+          {
+            "atMs": 1700000000006,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c628682989860a282a4404040609c64868298986103f03e7120636f6e737472756374"
+          },
+          {
+            "atMs": 1700000000007,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c6286829898609240404040406103f03e69"
+          },
+          {
+            "atMs": 1700000000008,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03f415052533f"
+          },
+          {
+            "atMs": 1700000000009,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f07d4e3243414c4c3e415052532c57494445313a3e7468697264207061727479"
+          },
+          {
+            "atMs": 1700000000010,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f07d4e3243414c4c3e415052532c54435049502c4e3143414c4c2a3a3e74686972642070617274792066726f6d204953"
+          },
+          {
+            "atMs": 1700000000011,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f07d4e3243414c4c3e415052533a7d4e3343414c4c3e415052533a7d4e3443414c4c3e415052533a7d4e3543414c4c3e415052533a7d4e3643414c4c3e415052533a3e64656570"
+          },
+          {
+            "atMs": 1700000000012,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f07d67617262616765"
+          },
+          {
+            "atMs": 1700000000013,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f07d"
+          },
+          {
+            "atMs": 1700000000014,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f0416661756c7479"
+          },
+          {
+            "atMs": 1700000000015,
+            "kind": "net",
+            "mode": "refuse"
+          },
+          {
+            "atMs": 1700000000016,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03e6e6f7420717565756564"
+          },
+          {
+            "atMs": 1700000000017,
+            "kind": "net",
+            "mode": "hold"
+          },
+          {
+            "atMs": 1700000000018,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03e717565756564206f6e6c79"
+          },
+          {
+            "atMs": 1700000000019,
+            "kind": "net",
+            "mode": "accept"
+          },
+          {
+            "atMs": 1700000000020,
+            "kind": "igate",
+            "mode": "off"
+          },
+          {
+            "atMs": 1700000000021,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c62868298986103f03e6967617465206f6666"
+          }
+        ]
+      },
+      "expected": {
+        "transmissions": [],
+        "internetLines": [
+          {
+            "step": 0,
+            "line": "N1CALL>APRS,WIDE1-1,qAO,N0CALL:>gate me",
+            "mode": "accept"
+          },
+          {
+            "step": 1,
+            "line": "N1CALL>APRS,N2CALL*,WIDE2-1,qAO,N0CALL:!4903.50N/07201.75W-gated with path",
+            "mode": "accept"
+          },
+          {
+            "step": 9,
+            "line": "N2CALL>APRS,WIDE1,qAO,N0CALL:>third party",
+            "mode": "accept"
+          },
+          {
+            "step": 14,
+            "line": "N1CALL>APRS,qAO,N0CALL:Afaulty",
+            "mode": "accept"
+          },
+          {
+            "step": 16,
+            "line": "N1CALL>APRS,qAO,N0CALL:>not queued",
+            "mode": "refuse"
+          },
+          {
+            "step": 18,
+            "line": "N1CALL>APRS,qAO,N0CALL:>queued only",
+            "mode": "hold"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 5,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000000,
+            "packetCount": 2,
+            "dedupKey": "N1CALL|APRS|PmdhdGUgbWU=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "gate me",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 2,
+            "type": 3,
+            "firstSeenMs": 1700000000001,
+            "lastSeenMs": 1700000000001,
+            "packetCount": 2,
+            "dedupKey": "N1CALL|APRS|ITQ5MDMuNTBOLzA3MjAxLjc1Vy1nYXRlZCB3aXRoIHBhdGg=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.05833,
+            "positionLong": -72.02917,
+            "comment": "gated with path",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 3,
+            "type": 5,
+            "firstSeenMs": 1700000000002,
+            "lastSeenMs": 1700000000002,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PmZyb20gdGhlIGludGVybmV0",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "from the internet",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 4,
+            "type": 5,
+            "firstSeenMs": 1700000000003,
+            "lastSeenMs": 1700000000003,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PnRjcHh4",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "tcpxx",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 5,
+            "type": 5,
+            "firstSeenMs": 1700000000004,
+            "lastSeenMs": 1700000000004,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Pm5vZ2F0ZQ==",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "nogate",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 6,
+            "type": 5,
+            "firstSeenMs": 1700000000005,
+            "lastSeenMs": 1700000000005,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PnJmb25seQ==",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "rfonly",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 7,
+            "type": 5,
+            "firstSeenMs": 1700000000006,
+            "lastSeenMs": 1700000000006,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PnEgY29uc3RydWN0",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "q construct",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 8,
+            "type": 5,
+            "firstSeenMs": 1700000000007,
+            "lastSeenMs": 1700000000007,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Pmk=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "i",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 9,
+            "type": 0,
+            "firstSeenMs": 1700000000008,
+            "lastSeenMs": 1700000000008,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|P0FQUlM/",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "Raw: ?APRS?",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 10,
+            "type": 5,
+            "firstSeenMs": 1700000000009,
+            "lastSeenMs": 1700000000009,
+            "packetCount": 2,
+            "dedupKey": "N2CALL|APRS|PnRoaXJkIHBhcnR5",
+            "fromCallsign": "N2CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "third party",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": "N1CALL",
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 11,
+            "type": 5,
+            "firstSeenMs": 1700000000010,
+            "lastSeenMs": 1700000000010,
+            "packetCount": 1,
+            "dedupKey": "N2CALL|APRS|PnRoaXJkIHBhcnR5IGZyb20gSVM=",
+            "fromCallsign": "N2CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "third party from IS",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": "N1CALL",
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 12,
+            "type": 0,
+            "firstSeenMs": 1700000000011,
+            "lastSeenMs": 1700000000011,
+            "packetCount": 1,
+            "dedupKey": "N2CALL|APRS|fU4zQ0FMTD5BUFJTOn1ONENBTEw+QVBSUzp9TjVDQUxMPkFQUlM6fU42Q0FMTD5BUFJTOj5kZWVw",
+            "fromCallsign": "N2CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "Raw: }N3CALL>APRS:}N4CALL>APRS:}N5CALL>APRS:}N6CALL>APRS:>deep",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": "N1CALL",
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 13,
+            "type": 5,
+            "firstSeenMs": 1700000000016,
+            "lastSeenMs": 1700000000016,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|Pm5vdCBxdWV1ZWQ=",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "not queued",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 14,
+            "type": 5,
+            "firstSeenMs": 1700000000018,
+            "lastSeenMs": 1700000000018,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PnF1ZXVlZCBvbmx5",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "queued only",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 15,
+            "type": 5,
+            "firstSeenMs": 1700000000021,
+            "lastSeenMs": 1700000000021,
+            "packetCount": 1,
+            "dedupKey": "N1CALL|APRS|PmlnYXRlIG9mZg==",
+            "fromCallsign": "N1CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "igate off",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "RX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1",
+            "tnc2": null
+          },
+          {
+            "source": "TX_APRS_IS",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": null,
+            "path": "WIDE1-1,QAO,N0CALL",
+            "tnc2": "N1CALL>APRS,WIDE1-1,qAO,N0CALL:>gate me"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 2,
+            "timestampMs": 1700000000001,
+            "frequencyHz": 144390000,
+            "path": "N2CALL*,WIDE2-1",
+            "tnc2": null
+          },
+          {
+            "source": "TX_APRS_IS",
+            "eventId": 2,
+            "timestampMs": 1700000000001,
+            "frequencyHz": null,
+            "path": "N2CALL*,WIDE2-1,QAO,N0CALL",
+            "tnc2": "N1CALL>APRS,N2CALL*,WIDE2-1,qAO,N0CALL:!4903.50N/07201.75W-gated with path"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 3,
+            "timestampMs": 1700000000002,
+            "frequencyHz": 144390000,
+            "path": "TCPIP*",
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 4,
+            "timestampMs": 1700000000003,
+            "frequencyHz": 144390000,
+            "path": "TCPXX*",
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 5,
+            "timestampMs": 1700000000004,
+            "frequencyHz": 144390000,
+            "path": "NOGATE",
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 6,
+            "timestampMs": 1700000000005,
+            "frequencyHz": 144390000,
+            "path": "RFONLY",
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 7,
+            "timestampMs": 1700000000006,
+            "frequencyHz": 144390000,
+            "path": "QAR,N2CALL",
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 8,
+            "timestampMs": 1700000000007,
+            "frequencyHz": 144390000,
+            "path": "I",
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 9,
+            "timestampMs": 1700000000008,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 10,
+            "timestampMs": 1700000000009,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "TX_APRS_IS",
+            "eventId": 10,
+            "timestampMs": 1700000000009,
+            "frequencyHz": null,
+            "path": "WIDE1,QAO,N0CALL",
+            "tnc2": "N2CALL>APRS,WIDE1,qAO,N0CALL:>third party"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 11,
+            "timestampMs": 1700000000010,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 12,
+            "timestampMs": 1700000000011,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": null,
+            "timestampMs": 1700000000012,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": null,
+            "timestampMs": 1700000000013,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": null,
+            "timestampMs": 1700000000014,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "TX_APRS_IS",
+            "eventId": null,
+            "timestampMs": 1700000000014,
+            "frequencyHz": null,
+            "path": "QAO,N0CALL",
+            "tnc2": "N1CALL>APRS,qAO,N0CALL:Afaulty"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 13,
+            "timestampMs": 1700000000016,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 14,
+            "timestampMs": 1700000000018,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 15,
+            "timestampMs": 1700000000021,
+            "frequencyHz": 144390000,
+            "path": null,
+            "tnc2": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "internet 2",
+      "input": {
+        "startMs": 1700000000000,
+        "steps": [
+          {
+            "atMs": 1700000000000,
+            "kind": "igate",
+            "mode": "on"
+          },
+          {
+            "atMs": 1700000000000,
+            "kind": "post",
+            "to": "N1CALL",
+            "text": "via rf and is"
+          },
+          {
+            "atMs": 1700000000001,
+            "kind": "beacon"
+          },
+          {
+            "atMs": 1700000000002,
+            "kind": "is",
+            "line": "N1CALL>APRS,TCPIP*,qAC,T2TEST::N0CALL   :ackW3V28"
+          },
+          {
+            "atMs": 1700000000003,
+            "kind": "is",
+            "line": "N2CALL>APRS,TCPIP*,qAC,T2TEST:>internet status"
+          },
+          {
+            "atMs": 1700000000004,
+            "kind": "rx",
+            "frame": "82a0a4a64040e09c648682989860ae92888a62406303f03e696e7465726e657420737461747573"
+          },
+          {
+            "atMs": 1700000000005,
+            "kind": "is",
+            "line": "N2CALL>APRS,TCPIP*,qAC,T2TEST:>internet status"
+          },
+          {
+            "atMs": 1700000000006,
+            "kind": "is",
+            "line": "N3CALL>APRS,TCPIP*::N0CALL   :hello{5"
+          },
+          {
+            "atMs": 1700000002000,
+            "kind": "tick"
+          },
+          {
+            "atMs": 1700000002001,
+            "kind": "is",
+            "line": ""
+          },
+          {
+            "atMs": 1700000002002,
+            "kind": "is",
+            "line": "   "
+          },
+          {
+            "atMs": 1700000002003,
+            "kind": "is",
+            "line": "garbage"
+          },
+          {
+            "atMs": 1700000002004,
+            "kind": "is",
+            "line": "N4CALL>APRS:Afaulty"
+          }
+        ]
+      },
+      "expected": {
+        "transmissions": [
+          {
+            "step": 1,
+            "purpose": "OUTGOING_MESSAGE",
+            "frequencyHz": 144390000,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03a4e3143414c4c2020203a76696120726620616e642069737b5733563238",
+            "mode": "accept"
+          },
+          {
+            "step": 2,
+            "purpose": "POSITION_BEACON",
+            "frequencyHz": null,
+            "frame": "82a096aca082e09c608682989860ae92888a624062ae92888a64406303f03d2f35603d783c3b3e7124207354",
+            "mode": "accept"
+          }
+        ],
+        "internetLines": [
+          {
+            "step": 1,
+            "line": "N0CALL>APKVPA,TCPIP*::N1CALL   :via rf and is{W3V28",
+            "mode": "accept"
+          },
+          {
+            "step": 2,
+            "line": "N0CALL>APKVPA,TCPIP*:=/5`=x<;>q$ sT",
+            "mode": "accept"
+          },
+          {
+            "step": 5,
+            "line": "N2CALL>APRS,WIDE1-1,qAO,N0CALL:>internet status",
+            "mode": "accept"
+          }
+        ],
+        "events": [
+          {
+            "id": 1,
+            "type": 1,
+            "firstSeenMs": 1700000000000,
+            "lastSeenMs": 1700000000002,
+            "packetCount": 3,
+            "dedupKey": "N0CALL|APKVPA|Ok4xQ0FMTCAgIDp2aWEgcmYgYW5kIGlze1czVjI4",
+            "fromCallsign": "N0CALL",
+            "toCallsign": "N1CALL",
+            "messageIdentifier": "W3V28",
+            "body": "via rf and is",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 2,
+            "digipeated": false
+          },
+          {
+            "id": 2,
+            "type": 3,
+            "firstSeenMs": 1700000000001,
+            "lastSeenMs": 1700000000001,
+            "packetCount": 2,
+            "dedupKey": "N0CALL|APKVPA|PS81YD14PDs+cSQgc1Q=",
+            "fromCallsign": "N0CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 49.0583,
+            "positionLong": -72.02921,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 3,
+            "type": 5,
+            "firstSeenMs": 1700000000003,
+            "lastSeenMs": 1700000000005,
+            "packetCount": 4,
+            "dedupKey": "N2CALL|APRS|PmludGVybmV0IHN0YXR1cw==",
+            "fromCallsign": "N2CALL",
+            "toCallsign": null,
+            "messageIdentifier": null,
+            "body": null,
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": "internet status",
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": false,
+            "deliveryState": 0,
+            "digipeated": false
+          },
+          {
+            "id": 4,
+            "type": 1,
+            "firstSeenMs": 1700000000006,
+            "lastSeenMs": 1700000000006,
+            "packetCount": 1,
+            "dedupKey": "N3CALL|APRS|Ok4wQ0FMTCAgIDpoZWxsb3s1",
+            "fromCallsign": "N3CALL",
+            "toCallsign": "N0CALL",
+            "messageIdentifier": "5",
+            "body": "hello",
+            "positionLat": 0.0,
+            "positionLong": 0.0,
+            "comment": null,
+            "objectName": null,
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "pressure": 0.0,
+            "rain": 0.0,
+            "snow": 0.0,
+            "windForce": 0,
+            "windDirection": null,
+            "relayCallsign": null,
+            "internetOnly": true,
+            "deliveryState": 0,
+            "digipeated": false
+          }
+        ],
+        "packets": [
+          {
+            "source": "TX_RF",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "tnc2": null
+          },
+          {
+            "source": "TX_APRS_IS",
+            "eventId": 1,
+            "timestampMs": 1700000000000,
+            "frequencyHz": null,
+            "path": "TCPIP*",
+            "tnc2": "N0CALL>APKVPA,TCPIP*::N1CALL   :via rf and is{W3V28"
+          },
+          {
+            "source": "TX_RF",
+            "eventId": 2,
+            "timestampMs": 1700000000001,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1,WIDE2-1",
+            "tnc2": null
+          },
+          {
+            "source": "TX_APRS_IS",
+            "eventId": 2,
+            "timestampMs": 1700000000001,
+            "frequencyHz": null,
+            "path": "TCPIP*",
+            "tnc2": "N0CALL>APKVPA,TCPIP*:=/5`=x<;>q$ sT"
+          },
+          {
+            "source": "RX_APRS_IS",
+            "eventId": 1,
+            "timestampMs": 1700000000002,
+            "frequencyHz": null,
+            "path": "TCPIP*,QAC,T2TEST",
+            "tnc2": "N1CALL>APRS,TCPIP*,qAC,T2TEST::N0CALL   :ackW3V28"
+          },
+          {
+            "source": "RX_APRS_IS",
+            "eventId": 3,
+            "timestampMs": 1700000000003,
+            "frequencyHz": null,
+            "path": "TCPIP*,QAC,T2TEST",
+            "tnc2": "N2CALL>APRS,TCPIP*,qAC,T2TEST:>internet status"
+          },
+          {
+            "source": "RX_RF",
+            "eventId": 3,
+            "timestampMs": 1700000000004,
+            "frequencyHz": 144390000,
+            "path": "WIDE1-1",
+            "tnc2": null
+          },
+          {
+            "source": "TX_APRS_IS",
+            "eventId": 3,
+            "timestampMs": 1700000000004,
+            "frequencyHz": null,
+            "path": "WIDE1-1,QAO,N0CALL",
+            "tnc2": "N2CALL>APRS,WIDE1-1,qAO,N0CALL:>internet status"
+          },
+          {
+            "source": "RX_APRS_IS",
+            "eventId": 3,
+            "timestampMs": 1700000000005,
+            "frequencyHz": null,
+            "path": "TCPIP*,QAC,T2TEST",
+            "tnc2": "N2CALL>APRS,TCPIP*,qAC,T2TEST:>internet status"
+          },
+          {
+            "source": "RX_APRS_IS",
+            "eventId": 4,
+            "timestampMs": 1700000000006,
+            "frequencyHz": null,
+            "path": "TCPIP*",
+            "tnc2": "N3CALL>APRS,TCPIP*::N0CALL   :hello{5"
+          },
+          {
+            "source": "RX_APRS_IS",
+            "eventId": null,
+            "timestampMs": 1700000002004,
+            "frequencyHz": null,
+            "path": null,
+            "tnc2": "N4CALL>APRS:Afaulty"
+          }
+        ]
+      }
+    }
+  ]
+}

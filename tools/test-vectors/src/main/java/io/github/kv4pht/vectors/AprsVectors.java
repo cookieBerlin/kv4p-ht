@@ -2,6 +2,8 @@ package io.github.kv4pht.vectors;
 
 import io.github.dkaukov.aprs.AprsController;
 import io.github.dkaukov.aprs.AprsEvent;
+import io.github.dkaukov.aprs.AprsIsAccess;
+import io.github.dkaukov.aprs.AprsIsClient;
 import io.github.dkaukov.aprs.AprsPacket;
 import io.github.dkaukov.aprs.AprsRepository;
 import io.github.dkaukov.aprs.AprsSource;
@@ -456,7 +458,11 @@ final class AprsVectors {
     /** The transport of the generator: accepts, refuses for now, or refuses for good. */
     private static final class Transmitter implements AprsController.Callbacks {
         String mode = "accept";
+        /** {@code accept}: APRS-IS lines are queued and confirmed after the step; any other mode refuses them. */
+        String internetMode = "accept";
         final List<Object> transmissions = new ArrayList<>();
+        final List<Object> internetLines = new ArrayList<>();
+        final List<Runnable> confirmations = new ArrayList<>();
         int step;
 
         @Override public void onIncomingMessage(AprsEvent event, boolean forLocal) {}
@@ -477,7 +483,21 @@ final class AprsVectors {
         }
 
         @Override public BeaconData getBeaconData() { return null; }
-        @Override public boolean submitAprsIs(String line, Runnable onSent) { return false; }
+
+        @Override public boolean submitAprsIs(String line, Runnable onSent) {
+            internetLines.add(Json.obj().put("step", step).put("line", line).put("mode", internetMode));
+            if (!"accept".equals(internetMode)) {
+                return false;
+            }
+            confirmations.add(onSent);
+            return true;
+        }
+
+        void confirm() {
+            List<Runnable> due = new ArrayList<>(confirmations);
+            confirmations.clear();
+            due.forEach(Runnable::run);
+        }
     }
 
     /**
@@ -729,6 +749,165 @@ final class AprsVectors {
                 .put("input", Json.obj().put("startMs", 1_700_000_000_000L).put("steps", steps))
                 .put("expected", Json.obj().put("transmissions", transmitter.transmissions)
                     .put("events", events).put("packets", repository.packets.size())));
+        }
+        return vectors;
+    }
+
+    // MARK: APRS-IS
+
+    /**
+     * Steps {@code {at, kind, value}} with the iGate enabled for N0CALL: {@code rx} (RF), {@code is} (an APRS-IS
+     * line), {@code post} (to, text), {@code beacon}, {@code tick}, {@code mode} (RF), {@code net} (APRS-IS:
+     * accept queues and confirms after the step, anything else refuses), {@code igate} (on/off).
+     */
+    private static final Object[][][] INTERNET = {
+        {
+            {0L, "rx", "N1CALL>APRS,WIDE1-1:>gate me"},
+            {1L, "rx", "N1CALL>APRS,N2CALL*,WIDE2-1:!4903.50N/07201.75W-gated with path"},
+            {2L, "rx", "N1CALL>APRS,TCPIP*:>from the internet"},
+            {3L, "rx", "N1CALL>APRS,TCPXX*:>tcpxx"},
+            {4L, "rx", "N1CALL>APRS,NOGATE:>nogate"},
+            {5L, "rx", "N1CALL>APRS,RFONLY:>rfonly"},
+            {6L, "rx", "N1CALL>APRS,qAR,N2CALL:>q construct"},
+            {7L, "rx", "N1CALL>APRS,I:>i"},
+            {8L, "rx", "N1CALL>APRS:?APRS?"},
+            {9L, "rx", "N1CALL>APRS:}N2CALL>APRS,WIDE1:>third party"},
+            {10L, "rx", "N1CALL>APRS:}N2CALL>APRS,TCPIP,N1CALL*:>third party from IS"},
+            {11L, "rx", "N1CALL>APRS:}N2CALL>APRS:}N3CALL>APRS:}N4CALL>APRS:}N5CALL>APRS:}N6CALL>APRS:>deep"},
+            {12L, "rx", "N1CALL>APRS:}garbage"},
+            {13L, "rx", "N1CALL>APRS:}"},
+            {14L, "rx", "N1CALL>APRS:Afaulty"},
+            {15L, "net", "refuse"},
+            {16L, "rx", "N1CALL>APRS:>not queued"},
+            {17L, "net", "hold"},
+            {18L, "rx", "N1CALL>APRS:>queued only"},
+            {19L, "net", "accept"},
+            {20L, "igate", "off"},
+            {21L, "rx", "N1CALL>APRS:>igate off"},
+        },
+        {
+            {0L, "igate", "on"},
+            {0L, "post", "N1CALL", "via rf and is"},
+            {1L, "beacon"},
+            {2L, "is", "N1CALL>APRS,TCPIP*,qAC,T2TEST::N0CALL   :ack" + "W3V28"},
+            {3L, "is", "N2CALL>APRS,TCPIP*,qAC,T2TEST:>internet status"},
+            {4L, "rx", "N2CALL>APRS,WIDE1-1:>internet status"},
+            {5L, "is", "N2CALL>APRS,TCPIP*,qAC,T2TEST:>internet status"},
+            {6L, "is", "N3CALL>APRS,TCPIP*::N0CALL   :hello{5"},
+            {2_000L, "tick"},
+            {2_001L, "is", ""},
+            {2_002L, "is", "   "},
+            {2_003L, "is", "garbage"},
+            {2_004L, "is", "N4CALL>APRS:Afaulty"},
+        },
+    };
+
+    static List<Object> internet() throws Exception {
+        List<Object> vectors = new ArrayList<>();
+        int index = 0;
+        for (Object[][] session : INTERNET) {
+            MutableClock clock = new MutableClock();
+            clock.millis = 1_700_000_000_000L;
+            MemoryRepository repository = new MemoryRepository();
+            Transmitter transmitter = new Transmitter();
+            AprsController controller = new AprsController(repository, transmitter, clock);
+            controller.setCallsign("N0CALL");
+            controller.setTxDestination("APKVPA");
+            controller.setTxPath(List.of(new Digipeater("WIDE1-1"), new Digipeater("WIDE2-1")));
+            controller.setIgateEnabled(true);
+            List<Object> steps = new ArrayList<>();
+            for (Object[] step : session) {
+                long now = 1_700_000_000_000L + (Long) step[0];
+                clock.millis = now;
+                Json.Obj input = Json.obj().put("atMs", now).put("kind", step[1]);
+                switch ((String) step[1]) {
+                    case "rx" -> {
+                        byte[] frame = frame((String) step[2]);
+                        input.put("frame", Json.hex(frame));
+                        controller.handle(Parser.parseAX25(frame, 0, frame.length), AprsSource.RX_RF,
+                            144_390_000L, frame);
+                    }
+                    case "is" -> {
+                        input.put("line", step[2]);
+                        controller.handleAprsIsPacket((String) step[2]);
+                    }
+                    case "post" -> {
+                        input.put("to", step[2]).put("text", step[3]);
+                        controller.postMessage((String) step[2], (String) step[3], 144_390_000L);
+                    }
+                    case "beacon" -> controller.submitPositionBeacon(BeaconData.builder().latitude(49.0583)
+                        .longitude(-72.0292).symbolTable('/').symbolCode('$').messagingCapable(true)
+                        .compressed(true).build());
+                    case "tick" -> controller.tick(now);
+                    case "mode" -> {
+                        transmitter.mode = (String) step[2];
+                        input.put("mode", step[2]);
+                    }
+                    case "net" -> {
+                        transmitter.internetMode = (String) step[2];
+                        input.put("mode", step[2]);
+                    }
+                    default -> {
+                        controller.setIgateEnabled("on".equals(step[2]));
+                        input.put("mode", step[2]);
+                    }
+                }
+                if (!"hold".equals(transmitter.internetMode)) {
+                    transmitter.confirm();
+                }
+                steps.add(input);
+                transmitter.step++;
+            }
+            List<Object> events = new ArrayList<>();
+            for (AprsEvent event : repository.events) {
+                events.add(event(event).put("digipeated", event.isDigipeated()));
+            }
+            List<Object> packets = new ArrayList<>();
+            for (AprsPacket packet : repository.packets) {
+                packets.add(Json.obj().put("source", packet.getSource()).put("eventId", packet.getEventId())
+                    .put("timestampMs", packet.getTimestampMs()).put("frequencyHz", packet.getFrequencyHz())
+                    .put("path", packet.getPath()).put("tnc2", packet.getRawTnc2()));
+            }
+            vectors.add(Json.obj().put("name", "internet " + ++index)
+                .put("input", Json.obj().put("startMs", 1_700_000_000_000L).put("steps", steps))
+                .put("expected", Json.obj().put("transmissions", transmitter.transmissions)
+                    .put("internetLines", transmitter.internetLines).put("events", events)
+                    .put("packets", packets)));
+        }
+        return vectors;
+    }
+
+    /** APRS-IS login: passcode, login line with filter, server addresses. */
+    static List<Object> login() {
+        List<Object> vectors = new ArrayList<>();
+        for (String call : new String[] {"N0CALL", "n0call-7", "N0CALL-0", " N1CALL ", "A", "ABCDEFGHI"}) {
+            vectors.add(Json.obj().put("name", "passcode " + call)
+                .put("input", Json.obj().put("kind", "passcode").put("callsign", call))
+                .put("expected", Json.obj().put("passcode", AprsIsAccess.passcode(call))));
+        }
+        Object[][] logins = {
+            {"N0CALL", 12345, false, null, null, 50.0},
+            {"N0CALL", -1, true, null, null, 50.0},
+            {"N0CALL-7", 12345, true, 49.0583, -72.0292, 50.0},
+            {"N0CALL", 12345, true, 49.0583, -72.0292, 12.5},
+            {"N0CALL", 12345, true, 91.0, 0.0, 0.125},
+            {"N0CALL", 12345, true, 49.0, Double.NaN, 100.0005},
+        };
+        for (Object[] l : logins) {
+            vectors.add(Json.obj().put("name", "login " + l[0] + " " + l[2] + " " + l[3])
+                .put("input", Json.obj().put("kind", "login").put("callsign", l[0]).put("passcode", l[1])
+                    .put("receive", l[2]).put("latitude", l[3])
+                    .put("longitudeIsNaN", l[4] instanceof Double d && d.isNaN())
+                    .put("longitude", l[4] instanceof Double d && d.isNaN() ? null : l[4]).put("radiusKm", l[5]))
+                .put("expected", Json.obj().put("line", AprsIsAccess.loginLine((String) l[0], (Integer) l[1],
+                    (Boolean) l[2], (Double) l[3], (Double) l[4], (Double) l[5]))));
+        }
+        for (String server : new String[] {"rotate.aprs2.net:14580", "", "euro.aprs2.net", "host:0", "host:65536",
+                "[2001:db8::1]:14580", "2001:db8::1", "user@host:1", "host/path", "host:x", "host?q", "host#f",
+                " host:14581 "}) {
+            vectors.add(Json.obj().put("name", "server " + server)
+                .put("input", Json.obj().put("kind", "server").put("server", server))
+                .put("expected", Json.obj().put("normalized", AprsIsClient.normalizeServer(server))));
         }
         return vectors;
     }

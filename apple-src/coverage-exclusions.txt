@@ -18,3 +18,5 @@ Packages/KV4PAudio/Sources/KV4PAudio/AVAudioEngineOutput.swift
 Packages/KV4PAudio/Sources/KV4PAudio/AVAudioEngineInput.swift
 # CoreLocation adapter: forwards the first location update only (ADR-0018).
 Packages/KV4PRadio/Sources/KV4PRadio/CoreLocationProvider.swift
+# Network.framework adapter for APRS-IS: forwards TCP lines only (ADR-0018).
+Packages/KV4PAPRS/Sources/KV4PAPRS/NetworkLineConnector.swift

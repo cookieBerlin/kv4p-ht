@@ -156,7 +156,18 @@ own beacons appear in the list. Beacons go out on the current TX frequency.
 This transmits without you pressing anything; only turn it on where a
 digipeater is useful.
 
-*Planned:* a separate beacon frequency and APRS-IS.
+**APRS-IS** (internet, needs your callsign):
+
+- *Show nearby APRS-IS packets* adds packets from the internet around your
+  position (50 km) to the list; they are marked as internet-only. Without a known
+  position, the server uses your last reported position.
+- *iGate* passes the packets your radio receives to APRS-IS, and your own
+  messages and beacons too, so stations elsewhere see them. Packets from the
+  internet, marked NOGATE or RFONLY, and queries are not passed on.
+- Both use `rotate.aprs2.net` and reconnect by themselves; the label next to the
+  switches shows whether the app is connected. The feed works without a radio.
+
+*Planned:* a separate beacon frequency.
 
 ## FreeDV digital voice
 
@@ -220,6 +231,9 @@ Used by developers before merging a milestone that touches hardware behaviour:
 - [ ] APRS message to a second station (or the Android app) into a dummy load
       nearby: it arrives, the acknowledgement turns the message *delivered*;
       a message to the Mac's callsign is acknowledged.
+- [ ] APRS-IS: with *Show nearby APRS-IS packets* on, internet packets appear;
+      with the iGate on, a received RF packet shows up on aprs.fi as gated by
+      your callsign.
 - [ ] Position beacon into a dummy load: a second receiver decodes the position
       and symbol; with digipeating on, a WIDE1-1 packet is repeated once.
 - [ ] Tune a memory with offset and tone: a second radio hears the TX on the

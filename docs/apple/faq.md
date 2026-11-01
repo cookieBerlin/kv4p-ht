@@ -88,5 +88,7 @@ same in both apps.
 No data is sent anywhere except what you configure: APRS packets you transmit or
 send to APRS-IS contain your callsign and, if enabled, your position. The
 microphone is only on while PTT is pressed, and its audio goes only to the radio.
-Your location is only read while position beacons are on, and only sent over RF
-in those beacons.
+Your location is only read while position beacons or the APRS-IS feed are on. It
+is sent over RF in beacons; for the feed, it goes to the APRS-IS server as the
+centre of the 50 km filter. With the iGate on, received packets and your own APRS packets go
+to APRS-IS, which is public.

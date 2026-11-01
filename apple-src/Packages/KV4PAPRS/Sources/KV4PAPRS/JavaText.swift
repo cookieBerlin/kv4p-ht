@@ -63,6 +63,17 @@ enum Java {
         Int32(String(text)).map(Int.init)
     }
 
+    /// `String.format(Locale.US, "%.Nf", value)`: Java rounds the shortest decimal text half up, not the binary value.
+    static func format(_ value: Double, decimals: Int) -> String {
+        var exact = NSDecimalNumber(string: "\(value)").decimalValue
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &exact, decimals, .plain)
+        let text = NSDecimalNumber(decimal: rounded).stringValue
+        let parts = text.split(separator: ".", maxSplits: 1)
+        let fraction = parts.count > 1 ? String(parts[1]) : ""
+        return parts[0] + "." + fraction + String(repeating: "0", count: decimals - fraction.count)
+    }
+
     /// `Math.round(double)` as `(long) floor(x + 0.5)`.
     static func round(_ value: Double) -> Double {
         (value + 0.5).rounded(.down)

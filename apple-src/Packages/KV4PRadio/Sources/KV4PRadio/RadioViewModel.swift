@@ -99,11 +99,38 @@ public final class RadioViewModel {
     public private(set) var aprsEvents: [APRSEvent] = []
 
     let rxAudio = RXAudioPlayer()
-    /// The station's callsign for APRS; empty disables sending.
-    public var callsign: String {
-        get { aprs.callsign }
-        set { aprs.callsign = newValue }
+    /// The station's callsign for APRS, normalised; empty disables sending. Kept apart from `aprs`, which is still
+    /// being changed when its callbacks read the callsign.
+    public var callsign = "" {
+        didSet {
+            aprs.callsign = callsign
+            if callsign != aprs.callsign {
+                callsign = aprs.callsign
+            }
+            updateInternet()
+        }
     }
+    /// iGate: pass received RF packets and our own packets to APRS-IS.
+    public var isIGateEnabled = false {
+        didSet {
+            aprs.isIGateEnabled = isIGateEnabled
+            updateInternet()
+        }
+    }
+    /// Show APRS-IS packets near our position in the feed.
+    public var isInternetFeedEnabled = false {
+        didSet {
+            internetLocation = nil
+            updateInternet()
+            if isInternetFeedEnabled, let location {
+                Task { await locateInternetFilter(with: location) }
+            }
+        }
+    }
+    /// An APRS-IS connection is available.
+    public var canUseInternet: Bool { internet != nil }
+    /// Logged in to APRS-IS.
+    public private(set) var isInternetConnected = false
 
     /// Send a position beacon now and every five minutes (`AprsBeaconSchedule`).
     public var isBeaconEnabled = false {
@@ -127,6 +154,9 @@ public final class RadioViewModel {
     static let beaconIntervalMs: Int64 = 5 * 60_000
     private var nextBeaconAtMs: Int64 = 0
     private let location: (any LocationProvider)?
+    private let internet: (any APRSInternetLink)?
+    private var internetLocation: GeoPoint?
+    private var internetObservers: [Task<Void, Never>] = []
     private var aprs: APRSController
     private var packetObserver: Task<Void, Never>?
     private var aprsTicker: Task<Void, Never>?
@@ -152,11 +182,13 @@ public final class RadioViewModel {
         simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
         memories: (any MemoryRepository)? = nil,
         location: (any LocationProvider)? = nil,
+        internet: (any APRSInternetLink)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
         repository = memories
         self.location = location
+        self.internet = internet
         self.now = now
         self.aprsTickInterval = aprsTickInterval
         var aprs = APRSController(startMs: now())
@@ -168,6 +200,7 @@ public final class RadioViewModel {
         self.audioOutput = audioOutput
         self.simulateSignal = simulateSignal
         refreshConnections()
+        observeInternet()
     }
 
     /// Bluetooth, the USB serial devices present, and the built-in simulator.
@@ -286,7 +319,14 @@ public final class RadioViewModel {
     /// Frames that are not APRS are ignored, as on Android.
     private func receive(_ frame: [UInt8]) {
         guard let packet = try? APRSParser.parse(ax25: frame) else { return }
-        aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now(), transmit: transmitAPRS)
+        aprs.receive(
+            packet,
+            frame: frame,
+            frequencyHz: rxFrequencyHz,
+            atMs: now(),
+            transmit: transmitAPRS,
+            gate: gateAPRS
+        )
         showAPRS()
     }
 
@@ -312,7 +352,14 @@ public final class RadioViewModel {
         let cleaned = String(text.map { "|~{".contains($0) ? " " : $0 })
         let to = recipient.trimmingCharacters(in: .whitespaces).isEmpty ? "BLN1CQ" : recipient
         let frequency = Self.hertz(snapshot.desired.freqTx)
-        let posted = aprs.post(to: to, text: cleaned, frequencyHz: frequency, atMs: now(), transmit: transmitAPRS)
+        let posted = aprs.post(
+            to: to,
+            text: cleaned,
+            frequencyHz: frequency,
+            atMs: now(),
+            transmit: transmitAPRS,
+            gate: gateAPRS
+        )
         if !posted {
             message = "The APRS message was not accepted for transmission."
         }
@@ -320,6 +367,7 @@ public final class RadioViewModel {
     }
 
     private func tickAPRS() {
+        isInternetConnected = internet?.isLoggedIn ?? false
         let time = now()
         aprs.tick(atMs: time, transmit: transmitAPRS)
         if isBeaconEnabled, time >= nextBeaconAtMs, let location {
@@ -342,12 +390,69 @@ public final class RadioViewModel {
             symbolTable: "/",
             symbolCode: beaconSymbol.code
         )
-        _ = aprs.submitBeacon(beacon, atMs: now(), transmit: transmitAPRS)
+        _ = aprs.submitBeacon(beacon, atMs: now(), transmit: transmitAPRS, gate: gateAPRS)
         showAPRS()
     }
 
     private func showAPRS() {
         aprsEvents = aprs.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
+    }
+
+    /// `ServiceAprsCallbacks.submitAprsIs`.
+    private func gateAPRS(_ request: APRSInternetRequest) -> Bool {
+        guard let internet else { return false }
+        return internet.send(request, as: callsign)
+    }
+
+    /// `updateAprsIsConnection`: connected while the iGate or the feed is on; sending only for the iGate.
+    private func updateInternet() {
+        let active = isIGateEnabled || isInternetFeedEnabled
+        internet?.update(
+            APRSISSettings(
+                isEnabled: active,
+                isReceiveEnabled: isInternetFeedEnabled,
+                isTransmitEnabled: isIGateEnabled,
+                callsign: callsign,
+                latitude: internetLocation?.latitude,
+                longitude: internetLocation?.longitude
+            )
+        )
+        isInternetConnected = internet?.isLoggedIn ?? false
+    }
+
+    /// `refreshAprsIsFilterLocation`: the feed shows packets around our position.
+    private func locateInternetFilter(with location: any LocationProvider) async {
+        guard let point = await location.currentLocation(), isInternetFeedEnabled else { return }
+        internetLocation = point
+        updateInternet()
+    }
+
+    private func observeInternet() {
+        guard let internet else { return }
+        let received = internet.received
+        let delivered = internet.delivered
+        internetObservers = [
+            Task { [weak self] in
+                for await line in received {
+                    self?.receiveInternet(line)
+                }
+            },
+            Task { [weak self] in
+                for await request in delivered {
+                    self?.confirmInternet(request)
+                }
+            },
+        ]
+    }
+
+    private func receiveInternet(_ line: String) {
+        aprs.receive(internetLine: line, atMs: now())
+        showAPRS()
+    }
+
+    private func confirmInternet(_ request: APRSInternetRequest) {
+        aprs.recordInternetTransmission(request, atMs: now())
+        showAPRS()
     }
 
     /// `ServiceAprsCallbacks.submitRf` with `AprsRfFrequencyPolicy`: only while receiving; a reliable message stays on

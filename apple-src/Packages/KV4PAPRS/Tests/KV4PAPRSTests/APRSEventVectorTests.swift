@@ -90,8 +90,10 @@ struct APRSEventVectorTests {
                 try APRSParser.parse(ax25: frame),
                 frame: frame,
                 frequencyHz: 144_390_000,
-                atMs: step.timeMs
-            ) { _ in .never }
+                atMs: step.timeMs,
+                transmit: { _ in .never },
+                gate: { _ in false }
+            )
         }
         #expect(controller.events.map(EventJSON.init) == vector.expected.events)
         #expect(controller.packets.count == vector.expected.packets)
