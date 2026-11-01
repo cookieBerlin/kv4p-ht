@@ -286,7 +286,14 @@ public final class RadioViewModel {
     /// Frames that are not APRS are ignored, as on Android.
     private func receive(_ frame: [UInt8]) {
         guard let packet = try? APRSParser.parse(ax25: frame) else { return }
-        aprs.receive(packet, frame: frame, frequencyHz: rxFrequencyHz, atMs: now(), transmit: transmitAPRS)
+        aprs.receive(
+            packet,
+            frame: frame,
+            frequencyHz: rxFrequencyHz,
+            atMs: now(),
+            transmit: transmitAPRS,
+            gate: gateAPRS
+        )
         showAPRS()
     }
 
@@ -312,7 +319,14 @@ public final class RadioViewModel {
         let cleaned = String(text.map { "|~{".contains($0) ? " " : $0 })
         let to = recipient.trimmingCharacters(in: .whitespaces).isEmpty ? "BLN1CQ" : recipient
         let frequency = Self.hertz(snapshot.desired.freqTx)
-        let posted = aprs.post(to: to, text: cleaned, frequencyHz: frequency, atMs: now(), transmit: transmitAPRS)
+        let posted = aprs.post(
+            to: to,
+            text: cleaned,
+            frequencyHz: frequency,
+            atMs: now(),
+            transmit: transmitAPRS,
+            gate: gateAPRS
+        )
         if !posted {
             message = "The APRS message was not accepted for transmission."
         }
@@ -342,12 +356,17 @@ public final class RadioViewModel {
             symbolTable: "/",
             symbolCode: beaconSymbol.code
         )
-        _ = aprs.submitBeacon(beacon, atMs: now(), transmit: transmitAPRS)
+        _ = aprs.submitBeacon(beacon, atMs: now(), transmit: transmitAPRS, gate: gateAPRS)
         showAPRS()
     }
 
     private func showAPRS() {
         aprsEvents = aprs.events.sorted { $0.lastSeenMs > $1.lastSeenMs }
+    }
+
+    /// `ServiceAprsCallbacks.submitAprsIs`; APRS-IS comes with its client.
+    private func gateAPRS(_ request: APRSInternetRequest) -> Bool {
+        false
     }
 
     /// `ServiceAprsCallbacks.submitRf` with `AprsRfFrequencyPolicy`: only while receiving; a reliable message stays on

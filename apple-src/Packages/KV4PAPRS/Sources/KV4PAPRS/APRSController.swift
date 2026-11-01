@@ -10,6 +10,13 @@ public enum APRSTransmitPurpose: String, Sendable {
     case digipeatedPacket = "DIGIPEATED_PACKET"
 }
 
+/// A TNC2 line for APRS-IS; confirm its delivery with `recordInternetTransmission`.
+public struct APRSInternetRequest: Equatable, Sendable {
+    public let line: String
+    /// The event the line belongs to.
+    public let eventId: Int64?
+}
+
 /// A packet the controller wants sent over RF; `frequencyHz` is `nil` for the current TX frequency.
 public struct APRSTransmitRequest: Sendable {
     public let packet: APRSPacket
@@ -32,6 +39,8 @@ public struct APRSPacketRecord: Equatable, Sendable {
     public enum Source: String, Sendable {
         case rxRF = "RX_RF"
         case txRF = "TX_RF"
+        case rxInternet = "RX_APRS_IS"
+        case txInternet = "TX_APRS_IS"
     }
 
     public let source: Source
@@ -41,6 +50,8 @@ public struct APRSPacketRecord: Equatable, Sendable {
     /// The digipeater path, e.g. `N1CALL*,WIDE2-1`; `nil` without one.
     public let path: String?
     public let frame: [UInt8]?
+    /// The line as received from or sent to APRS-IS.
+    public let tnc2: String?
 }
 
 /// The APRS feed and messaging of the Android app (java-aprs `AprsController`): events from received packets,
@@ -71,6 +82,8 @@ public struct APRSController: Sendable {
     }
     /// Repeat packets addressed to `WIDE1-1` or to `callsign` (fill-in digipeater).
     public var isDigipeatingEnabled = false
+    /// Pass received RF packets and our own packets to APRS-IS.
+    public var isIGateEnabled = false
     /// The AX.25 destination of transmitted packets (the Android app uses `APKVPA`).
     public var txDestination: String {
         get { storedDestination }
@@ -97,39 +110,105 @@ public struct APRSController: Sendable {
     // MARK: Receive
 
     /// `handle(packet, RX_RF, frequencyHz, frame)`; returns the new or updated event. Our own digipeated packets
-    /// heard back are ignored.
+    /// heard back are ignored; with the iGate on, the packet is passed to APRS-IS through `gate`.
     @discardableResult
     public mutating func receive(
         _ packet: APRSPacket,
         frame: [UInt8]?,
         frequencyHz: Int64?,
         atMs now: Int64,
-        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome
+        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome,
+        gate: (APRSInternetRequest) -> Bool
     ) -> APRSEvent? {
         digipeatOutput = digipeatOutput.filter { now - $0.value < Self.digipeatDedupMs }
         guard digipeatOutput[Self.digipeatKey(packet)] == nil else { return nil }
         let digipeated = digipeat(packet, frequencyHz: frequencyHz, at: now, transmit: transmit)
         let record = Self.record(packet, source: .rxRF, frequencyHz: frequencyHz, frame: frame, at: now)
-        var event: APRSEvent?
-        if let message = packet.info.thirdParty == nil ? packet.info.message : nil, message.isAck || message.isRej {
-            event = deliver(message, from: packet.source, record: record)
-        } else if let candidate = Self.event(for: packet, at: now) {
-            let persisted = persist(candidate, record: record, at: now)
-            if persisted.kind == .message {
-                acknowledge(persisted, frequencyHz: frequencyHz, at: now)
+        var event = handle(packet, record: record, frequencyHz: frequencyHz, at: now, isInternet: false)
+        if let digipeated {
+            if let index = events.firstIndex(where: { $0.id == event?.id }) {
+                events[index].isDigipeated = true
+                associate(digipeated, with: index)
+                event = events[index]
+            } else {
+                packets.append(digipeated)
             }
-            event = persisted
-        } else {
+        }
+        if isIGateEnabled, let line = Self.gateLine(packet, depth: 0), !Self.address(callsign).isEmpty {
+            // `appendIgateConstruct`
+            let gated = line.header + ",qAO," + Self.address(callsign) + ":" + line.payload
+            _ = gate(APRSInternetRequest(line: gated, eventId: event?.id))
+        }
+        return event
+    }
+
+    /// `handleAprsIsPacket`: a line from APRS-IS; never digipeated, gated or acknowledged.
+    @discardableResult
+    public mutating func receive(internetLine line: String, atMs now: Int64) -> APRSEvent? {
+        guard !Java.isBlank(line), let packet = try? APRSParser.parse(tnc2: line) else { return nil }
+        let record = Self.record(packet, source: .rxInternet, frequencyHz: nil, frame: nil, tnc2: line, at: now)
+        return handle(packet, record: record, frequencyHz: nil, at: now, isInternet: true)
+    }
+
+    /// `parseEvent` and `persistIncoming`: a delivery, a new or repeated event, or only the packet.
+    private mutating func handle(
+        _ packet: APRSPacket,
+        record: APRSPacketRecord,
+        frequencyHz: Int64?,
+        at now: Int64,
+        isInternet: Bool
+    ) -> APRSEvent? {
+        if let message = packet.info.thirdParty == nil ? packet.info.message : nil, message.isAck || message.isRej {
+            return deliver(message, from: packet.source, record: record)
+        }
+        guard var candidate = Self.event(for: packet, at: now) else {
             packets.append(record)
+            return nil
         }
-        guard let digipeated else { return event }
-        guard let index = events.firstIndex(where: { $0.id == event?.id }) else {
-            packets.append(digipeated)
-            return event
+        candidate.isInternetOnly = isInternet
+        let event = persist(candidate, record: record, at: now)
+        if event.kind == .message, !isInternet {
+            acknowledge(event, frequencyHz: frequencyHz, at: now)
         }
-        events[index].isDigipeated = true
-        associate(digipeated, with: index)
-        return events[index]
+        return event
+    }
+
+    /// `recordAprsIsTransmission`: APRS-IS confirmed a line passed to `gate`.
+    public mutating func recordInternetTransmission(_ request: APRSInternetRequest, atMs now: Int64) {
+        guard let packet = try? APRSParser.parse(tnc2: request.line) else { return }
+        let record = Self.record(packet, source: .txInternet, frequencyHz: nil, frame: nil, tnc2: request.line, at: now)
+        guard let index = events.firstIndex(where: { $0.id == request.eventId }) else {
+            packets.append(record)
+            return
+        }
+        associate(record, with: index)
+    }
+
+    /// `igateLine`: packets from or for the internet, queries and deep third-party packets are not gated.
+    static func gateLine(_ packet: APRSPacket, depth: Int) -> (header: String, payload: String)? {
+        let forbidden: Set<String> = ["TCPIP", "TCPXX", "NOGATE", "RFONLY", "I"]
+        let qConstructs: Set<String> = ["qac", "qax", "qau", "qao", "qas", "qar", "qaz", "qai"]
+        guard depth <= 4, packet.dti != UInt8(ascii: "?"),
+            !packet.digipeaters.contains(where: {
+                forbidden.contains($0.callsign.uppercased()) || qConstructs.contains($0.callsign.lowercased())
+            })
+        else { return nil }
+        guard packet.dti == UInt8(ascii: "}") else {
+            let path = packet.digipeaters.map { "," + $0.description }.joined()
+            return ("\(packet.source)>\(packet.destination)\(path)", Java.latin1(packet.info.payload))
+        }
+        let payload = packet.info.payload
+        guard payload.count >= 2, let inner = try? APRSParser.parse(tnc2: Java.latin1(payload.dropFirst())) else {
+            return nil
+        }
+        return gateLine(inner, depth: depth + 1)
+    }
+
+    /// `submitLocalToAprsIs`: our own packet with the `TCPIP*` path.
+    private func gateLocal(_ packet: APRSPacket, eventId: Int64, gate: (APRSInternetRequest) -> Bool) {
+        guard isIGateEnabled else { return }
+        let line = "\(packet.source)>\(packet.destination),TCPIP*:" + Java.latin1(packet.info.payload)
+        _ = gate(APRSInternetRequest(line: line, eventId: eventId))
     }
 
     /// `maybeDigipeat`: the first unused path element is `WIDE1-1` or our callsign; it becomes our used callsign.
@@ -176,7 +255,8 @@ public struct APRSController: Sendable {
     public mutating func submitBeacon(
         _ beacon: APRSBeacon,
         atMs now: Int64,
-        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome
+        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome,
+        gate: (APRSInternetRequest) -> Bool
     ) -> Bool {
         guard !callsign.isEmpty, !txDestination.isEmpty, beacon.isValid else { return false }
         let packet = APRSPacket(
@@ -200,7 +280,11 @@ public struct APRSController: Sendable {
             event = parsed
         }
         event.dedupKey = Self.dedupKey(packet)
-        _ = insert(event, record: Self.record(packet, source: .txRF, frequencyHz: sentHz, frame: frame, at: now))
+        let inserted = insert(
+            event,
+            record: Self.record(packet, source: .txRF, frequencyHz: sentHz, frame: frame, at: now)
+        )
+        gateLocal(packet, eventId: inserted.id, gate: gate)
         return true
     }
 
@@ -236,6 +320,7 @@ public struct APRSController: Sendable {
         }
         events[index].lastSeenMs = candidate.lastSeenMs
         events[index].relayCallsign = candidate.relayCallsign
+        events[index].isInternetOnly = events[index].isInternetOnly && candidate.isInternetOnly
         associate(record, with: index)
         return events[index]
     }
@@ -280,7 +365,8 @@ public struct APRSController: Sendable {
         text: String,
         frequencyHz: Int64?,
         atMs now: Int64,
-        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome
+        transmit: (APRSTransmitRequest) -> APRSTransmitOutcome,
+        gate: (APRSInternetRequest) -> Bool
     ) -> Bool {
         let destination = Java.trim(recipient).uppercased()
         guard !callsign.isEmpty, !txDestination.isEmpty, !destination.isEmpty else { return false }
@@ -309,7 +395,11 @@ public struct APRSController: Sendable {
             event.transmitAttempts = 1
             event.nextRetryAtMs = now + Self.retryDelaysMs[0]
         }
-        _ = insert(event, record: Self.record(packet, source: .txRF, frequencyHz: sentHz, frame: frame, at: now))
+        let inserted = insert(
+            event,
+            record: Self.record(packet, source: .txRF, frequencyHz: sentHz, frame: frame, at: now)
+        )
+        gateLocal(packet, eventId: inserted.id, gate: gate)
         return true
     }
 
@@ -477,6 +567,7 @@ public struct APRSController: Sendable {
         source: APRSPacketRecord.Source,
         frequencyHz: Int64?,
         frame: [UInt8]?,
+        tnc2: String? = nil,
         at now: Int64
     ) -> APRSPacketRecord {
         let path = packet.digipeaters.map(\.description).joined(separator: ",")
@@ -485,7 +576,8 @@ public struct APRSController: Sendable {
             timestampMs: now,
             frequencyHz: frequencyHz,
             path: path.isEmpty ? nil : path,
-            frame: frame
+            frame: frame,
+            tnc2: tnc2
         )
     }
 

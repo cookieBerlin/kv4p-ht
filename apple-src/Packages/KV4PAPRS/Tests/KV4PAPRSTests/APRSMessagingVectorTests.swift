@@ -139,7 +139,8 @@ struct APRSMessagingVectorTests {
                     frame: frame,
                     frequencyHz: 144_390_000,
                     atMs: step.atMs,
-                    transmit: transmit
+                    transmit: transmit,
+                    gate: { _ in false }
                 )
             case "post":
                 result = controller.post(
@@ -147,7 +148,8 @@ struct APRSMessagingVectorTests {
                     text: try #require(step.text),
                     frequencyHz: 144_390_000,
                     atMs: step.atMs,
-                    transmit: transmit
+                    transmit: transmit,
+                    gate: { _ in false }
                 )
             case "tick":
                 controller.tick(atMs: step.atMs, transmit: transmit)
@@ -175,9 +177,23 @@ struct APRSMessagingVectorTests {
     func notConfigured() {
         var controller = APRSController(startMs: 0)
         let refuse = { (_: APRSTransmitRequest) -> APRSTransmitOutcome in .never }
-        let withoutCallsign = controller.post(to: "N1CALL", text: "x", frequencyHz: nil, atMs: 0, transmit: refuse)
+        let withoutCallsign = controller.post(
+            to: "N1CALL",
+            text: "x",
+            frequencyHz: nil,
+            atMs: 0,
+            transmit: refuse,
+            gate: { _ in false }
+        )
         controller.callsign = "N0CALL"
-        let withoutDestination = controller.post(to: "N1CALL", text: "x", frequencyHz: nil, atMs: 0, transmit: refuse)
+        let withoutDestination = controller.post(
+            to: "N1CALL",
+            text: "x",
+            frequencyHz: nil,
+            atMs: 0,
+            transmit: refuse,
+            gate: { _ in false }
+        )
         #expect(!withoutCallsign)
         #expect(!withoutDestination)
     }
@@ -190,10 +206,10 @@ struct APRSMessagingVectorTests {
         let accept = { (request: APRSTransmitRequest) -> APRSTransmitOutcome in
             .accepted(frequencyHz: 1, frame: (try? request.packet.ax25Frame()) ?? [])
         }
-        _ = controller.post(to: "N1CALL", text: "a", frequencyHz: nil, atMs: 0, transmit: accept)
+        _ = controller.post(to: "N1CALL", text: "a", frequencyHz: nil, atMs: 0, transmit: accept, gate: { _ in false })
         controller.nextMessageIdentifier = 35
-        _ = controller.post(to: "N1CALL", text: "b", frequencyHz: nil, atMs: 0, transmit: accept)
-        _ = controller.post(to: "N2CALL", text: "c", frequencyHz: nil, atMs: 0, transmit: accept)
+        _ = controller.post(to: "N1CALL", text: "b", frequencyHz: nil, atMs: 0, transmit: accept, gate: { _ in false })
+        _ = controller.post(to: "N2CALL", text: "c", frequencyHz: nil, atMs: 0, transmit: accept, gate: { _ in false })
         #expect(controller.events.map(\.messageIdentifier) == ["Z", "10", "11"])
     }
 
@@ -201,7 +217,14 @@ struct APRSMessagingVectorTests {
     func thirdPartyAcknowledgement() throws {
         var controller = APRSController(startMs: 0)
         let packet = try APRSParser.parse(tnc2: "N1CALL>APRS:}N2CALL>APRS,TCPIP,N1CALL*::N0CALL   :ack1")
-        let event = controller.receive(packet, frame: nil, frequencyHz: nil, atMs: 0) { _ in .never }
+        let event = controller.receive(
+            packet,
+            frame: nil,
+            frequencyHz: nil,
+            atMs: 0,
+            transmit: { _ in .never },
+            gate: { _ in false }
+        )
         #expect(event == nil)
         #expect(controller.packets.count == 1)
     }

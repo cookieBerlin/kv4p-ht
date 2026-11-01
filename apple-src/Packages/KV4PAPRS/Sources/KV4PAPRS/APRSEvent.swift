@@ -40,6 +40,8 @@ public struct APRSEvent: Equatable, Identifiable, Sendable {
     public internal(set) var relayCallsign: String?
     /// This station digipeated the packet.
     public internal(set) var isDigipeated = false
+    /// Only seen on APRS-IS, never on RF.
+    public internal(set) var isInternetOnly = false
     /// Outgoing numbered messages wait for an acknowledgement.
     public internal(set) var deliveryState = DeliveryState.none
     public internal(set) var transmitAttempts = 0

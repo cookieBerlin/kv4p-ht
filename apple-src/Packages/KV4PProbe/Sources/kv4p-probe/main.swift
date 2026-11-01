@@ -160,9 +160,14 @@
                     print("  frame   \(frame.count) bytes, not APRS")
                     continue
                 }
-                let event = feed.receive(packet, frame: frame, frequencyHz: nil, atMs: RadioViewModel.systemTimeMs()) {
-                    _ in .never
-                }
+                let event = feed.receive(
+                    packet,
+                    frame: frame,
+                    frequencyHz: nil,
+                    atMs: RadioViewModel.systemTimeMs(),
+                    transmit: { _ in .never },
+                    gate: { _ in false }
+                )
                 let path = packet.digipeaters.map(\.description).joined(separator: ",")
                 print(
                     "  APRS    \(packet.source)>\(packet.destination)\(path.isEmpty ? "" : "," + path)",
