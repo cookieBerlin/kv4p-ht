@@ -185,7 +185,8 @@ Used by developers before merging a milestone that touches hardware behaviour:
 - [ ] Reconnect after radio power cycle.
 - [ ] Out-of-range frequency is rejected.
 - [ ] APRS: tuned to the regional APRS frequency, packets appear in the APRS
-      tab and match what the Android app shows for the same packets.
+      tab and match what the Android app shows for the same packets
+      (`swift run kv4p-probe --ble --tune 144.8 --listen 600` prints them).
 - [ ] Tune a memory with offset and tone: a second radio hears the TX on the
       offset frequency with the tone; scan stops on a busy memory.
 - [ ] Tuning is applied and confirmed by the radio
