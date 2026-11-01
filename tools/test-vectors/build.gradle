@@ -24,6 +24,7 @@ sourceSets {
             include 'io/github/kv4pht/vectors/**'
             include 'com/vagell/kv4pht/radio/ControllerAccess.java'
             include 'com/vagell/kv4pht/ui/ToneAccess.java'
+            include 'io/github/dkaukov/aprs/AprsIsAccess.java'
             include 'android/**'
             include 'androidx/**'
         }

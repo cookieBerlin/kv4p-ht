@@ -1,0 +1,292 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "java-aprs AprsIsClient login",
+  "vectors": [
+    {
+      "name": "passcode N0CALL",
+      "input": {
+        "kind": "passcode",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "passcode": 13023
+      }
+    },
+    {
+      "name": "passcode n0call-7",
+      "input": {
+        "kind": "passcode",
+        "callsign": "n0call-7"
+      },
+      "expected": {
+        "passcode": 13023
+      }
+    },
+    {
+      "name": "passcode N0CALL-0",
+      "input": {
+        "kind": "passcode",
+        "callsign": "N0CALL-0"
+      },
+      "expected": {
+        "passcode": 13023
+      }
+    },
+    {
+      "name": "passcode  N1CALL ",
+      "input": {
+        "kind": "passcode",
+        "callsign": " N1CALL "
+      },
+      "expected": {
+        "passcode": 13022
+      }
+    },
+    {
+      "name": "passcode A",
+      "input": {
+        "kind": "passcode",
+        "callsign": "A"
+      },
+      "expected": {
+        "passcode": 13026
+      }
+    },
+    {
+      "name": "passcode ABCDEFGHI",
+      "input": {
+        "kind": "passcode",
+        "callsign": "ABCDEFGHI"
+      },
+      "expected": {
+        "passcode": 15082
+      }
+    },
+    {
+      "name": "login N0CALL false null",
+      "input": {
+        "kind": "login",
+        "callsign": "N0CALL",
+        "passcode": 12345,
+        "receive": false,
+        "latitude": null,
+        "longitudeIsNaN": false,
+        "longitude": null,
+        "radiusKm": 50.0
+      },
+      "expected": {
+        "line": "user N0CALL pass 12345 vers kv4p-ht 1.0"
+      }
+    },
+    {
+      "name": "login N0CALL true null",
+      "input": {
+        "kind": "login",
+        "callsign": "N0CALL",
+        "passcode": -1,
+        "receive": true,
+        "latitude": null,
+        "longitudeIsNaN": false,
+        "longitude": null,
+        "radiusKm": 50.0
+      },
+      "expected": {
+        "line": "user N0CALL pass -1 vers kv4p-ht 1.0 filter m/50"
+      }
+    },
+    {
+      "name": "login N0CALL-7 true 49.0583",
+      "input": {
+        "kind": "login",
+        "callsign": "N0CALL-7",
+        "passcode": 12345,
+        "receive": true,
+        "latitude": 49.0583,
+        "longitudeIsNaN": false,
+        "longitude": -72.0292,
+        "radiusKm": 50.0
+      },
+      "expected": {
+        "line": "user N0CALL-7 pass 12345 vers kv4p-ht 1.0 filter r/49.05830/-72.02920/50"
+      }
+    },
+    {
+      "name": "login N0CALL true 49.0583",
+      "input": {
+        "kind": "login",
+        "callsign": "N0CALL",
+        "passcode": 12345,
+        "receive": true,
+        "latitude": 49.0583,
+        "longitudeIsNaN": false,
+        "longitude": -72.0292,
+        "radiusKm": 12.5
+      },
+      "expected": {
+        "line": "user N0CALL pass 12345 vers kv4p-ht 1.0 filter r/49.05830/-72.02920/12.5"
+      }
+    },
+    {
+      "name": "login N0CALL true 91.0",
+      "input": {
+        "kind": "login",
+        "callsign": "N0CALL",
+        "passcode": 12345,
+        "receive": true,
+        "latitude": 91.0,
+        "longitudeIsNaN": false,
+        "longitude": 0.0,
+        "radiusKm": 0.125
+      },
+      "expected": {
+        "line": "user N0CALL pass 12345 vers kv4p-ht 1.0 filter m/0.125"
+      }
+    },
+    {
+      "name": "login N0CALL true 49.0",
+      "input": {
+        "kind": "login",
+        "callsign": "N0CALL",
+        "passcode": 12345,
+        "receive": true,
+        "latitude": 49.0,
+        "longitudeIsNaN": true,
+        "longitude": null,
+        "radiusKm": 100.0005
+      },
+      "expected": {
+        "line": "user N0CALL pass 12345 vers kv4p-ht 1.0 filter m/100.001"
+      }
+    },
+    {
+      "name": "server rotate.aprs2.net:14580",
+      "input": {
+        "kind": "server",
+        "server": "rotate.aprs2.net:14580"
+      },
+      "expected": {
+        "normalized": "rotate.aprs2.net:14580"
+      }
+    },
+    {
+      "name": "server ",
+      "input": {
+        "kind": "server",
+        "server": ""
+      },
+      "expected": {
+        "normalized": "rotate.aprs2.net:14580"
+      }
+    },
+    {
+      "name": "server euro.aprs2.net",
+      "input": {
+        "kind": "server",
+        "server": "euro.aprs2.net"
+      },
+      "expected": {
+        "normalized": "euro.aprs2.net:14580"
+      }
+    },
+    {
+      "name": "server host:0",
+      "input": {
+        "kind": "server",
+        "server": "host:0"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server host:65536",
+      "input": {
+        "kind": "server",
+        "server": "host:65536"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server [2001:db8::1]:14580",
+      "input": {
+        "kind": "server",
+        "server": "[2001:db8::1]:14580"
+      },
+      "expected": {
+        "normalized": "[2001:db8::1]:14580"
+      }
+    },
+    {
+      "name": "server 2001:db8::1",
+      "input": {
+        "kind": "server",
+        "server": "2001:db8::1"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server user@host:1",
+      "input": {
+        "kind": "server",
+        "server": "user@host:1"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server host/path",
+      "input": {
+        "kind": "server",
+        "server": "host/path"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server host:x",
+      "input": {
+        "kind": "server",
+        "server": "host:x"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server host?q",
+      "input": {
+        "kind": "server",
+        "server": "host?q"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server host#f",
+      "input": {
+        "kind": "server",
+        "server": "host#f"
+      },
+      "expected": {
+        "normalized": null
+      }
+    },
+    {
+      "name": "server  host:14581 ",
+      "input": {
+        "kind": "server",
+        "server": " host:14581 "
+      },
+      "expected": {
+        "normalized": "host:14581"
+      }
+    }
+  ]
+}
