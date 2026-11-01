@@ -35,8 +35,9 @@
 *Applications*. Releases are signed with a Developer ID and notarized by Apple,
 so macOS opens them without a warning.
 
-📱 **iPhone and iPad:** test builds come through Apple's TestFlight app. Install
-TestFlight from the App Store and open the invitation you received. A build
+📱🖥 **TestFlight:** test builds for iPhone, iPad and Mac come through Apple's
+TestFlight app. Install TestFlight from the App Store and open the invitation you
+received. A build
 expires after 90 days; TestFlight then offers the current one.
 
 🖥 To build from source, open `apple-src/App/KV4PHT.xcodeproj` in Xcode and run

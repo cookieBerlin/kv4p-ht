@@ -17,7 +17,11 @@ Source code: https://github.com/cookieBerlin/kv4p-ht
 **Licence:** transmitting on air requires an amateur radio licence. The simulator
 sends nothing on air.
 
-**Background modes:**
+**On the Mac:** the radio can also connect over USB, and the app can update the
+radio's firmware over USB. That is why the Mac app uses the serial and USB
+entitlements.
+
+**Background modes (iOS):**
 
 - `audio`: received radio audio keeps playing with the screen locked.
 - `bluetooth-central`: the connection to the radio stays up with the screen

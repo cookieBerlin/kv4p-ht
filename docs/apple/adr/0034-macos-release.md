@@ -6,7 +6,7 @@
 ## Context
 
 Milestone 1.13 asks for a signed and notarized macOS build
-([ADR-0010](0010-distribution.md)). Outside the Mac App Store, Gatekeeper only
+([roadmap](../04-roadmap.md)). Outside the Mac App Store, Gatekeeper only
 opens an app without warnings when it meets three conditions:
 
 - it is signed with a **Developer ID Application** certificate;
@@ -52,4 +52,5 @@ repository.
   Publishing the DMG, for example as a GitHub release, is a manual step.
 - **Next:** TestFlight (milestone 2.5) uses the same account with an *Apple
   Distribution* certificate and an App Store Connect record. It is a separate
-  step.
+  step ([ADR-0035](0035-testflight.md)); the DMG stays for people who do not use
+  TestFlight.

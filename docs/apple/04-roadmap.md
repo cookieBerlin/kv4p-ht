@@ -38,7 +38,7 @@ Every milestone that changes user-visible behaviour updates the
 | 2.2 | **Background operation** | `audio` and `bluetooth-central` background modes; RX continues with screen locked. |
 | 2.3 | **Layouts** | iPhone (compact) and iPad (regular, multitasking) layouts; PTT ergonomics on touch. |
 | 2.4 | **Firmware notice** | Outdated firmware on iOS/iPadOS links to the web flasher and the manual. |
-| 2.5 | **Distribution** | TestFlight builds, App Store review notes, manual + FAQ for iOS/iPadOS. |
+| 2.5 | **Distribution** | TestFlight builds for iOS, iPadOS and macOS, App Store review notes, manual + FAQ. |
 
 ## Later (candidates)
 
