@@ -40,6 +40,20 @@ Every milestone that changes user-visible behaviour updates the
 | 2.4 | **Firmware notice** | Outdated firmware on iOS/iPadOS links to the web flasher and the manual. |
 | 2.5 | **Distribution** | TestFlight builds for iOS, iPadOS and macOS, App Store review notes, manual + FAQ. |
 
+## Phase 3 — Device selection, GUI and sync
+
+| # | Milestone | Acceptance criteria |
+|---|---|---|
+| 3.1 | **Version and build ID** | The build reads the Android `versionName` and uses its first three numbers as the app version, because App Store Connect accepts no more (2.0.0.1 becomes 2.0.0). The build ID stays the upload time. The commit hash is stored in the bundle, and About shows version, build ID and hash. ADR. |
+| 3.2 | **BLE device selection** | The app lists the radios it finds, the user chooses one, and the app remembers it for the next connection. |
+| 3.3 | **Error alerts** | When an error needs the user's attention, above all a lost connection to the radio, whatever the cause, the app reports it. On iPhone and iPad, a local notification does so while the app is not in the foreground; the app asks for permission the first time it needs it and works without it. On the Mac, a dialog opens, and the Dock icon bounces while the app is in the background. In the foreground, iPhone and iPad also show the error in the app. A disconnect the user chose causes none, and one failure causes one report. Tested through an adapter behind a protocol. ADR. |
+| 3.4 | **Screen layout** | The app is structured like the Android app: frequency and S-meter on top, memories or APRS below, PTT always in reach, settings on their own screen. iPhone, iPad and Mac share this structure and use the extra room on large screens. ADR. |
+| 3.5 | **Tooltips** | Every control whose meaning is not obvious explains itself: tooltips on the Mac, an equivalent on touch devices. |
+| 3.6 | **Callsign and listen-only** | On start without a callsign, the app asks for it. The user can choose listen-only mode instead, in which the app cannot transmit: no PTT, APRS messages, beacons or digipeating. iGate and the APRS-IS feed stay available once a callsign is set. |
+| 3.7 | **Accessibility** | Apple's accessibility audit (`performAccessibilityAudit` in UI tests, Accessibility Inspector) passes on all screens on iPhone, iPad and Mac: VoiceOver labels, contrast, Dynamic Type, hit regions. The findings are fixed, and each exception is justified. The audit runs repeatably through the `Makefile`. ADR. |
+| 3.8 | **Settings sync** | Settings (callsign, APRS options, PTT settings, TX limits) changed on one device reach the user's other iPhones, iPads and Macs through iCloud. The chosen radio stays local to each device. ADR. |
+| 3.9 | **Memory sync** | Memories and groups sync between the user's devices through iCloud (CloudKit). Concurrent changes and deletions do not lose data, and a device without iCloud keeps working locally. ADR. |
+
 ## Phase 99 — App Store release
 
 Deferred: the maintainer plans it later. Until then, the app is distributed through
