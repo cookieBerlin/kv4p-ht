@@ -42,6 +42,8 @@ public struct RadioSnapshot: Equatable, Sendable {
     public var desired: HostDesiredState
     /// The device applied the last desired state.
     public var isInSync: Bool
+    /// Scanning the memories (`startScan`).
+    public var isScanning = false
     /// Counts the snapshots of one controller, so a reader can drop stale ones.
     public var revision = 0
 
@@ -61,6 +63,10 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     public static var defaultHelloTimeout: Duration { .seconds(10) }
     /// `RUNAWAY_TX_TIMEOUT_SEC`: the app ends PTT after this time, before the firmware's own limit.
     public static var runawayTXTimeout: Duration { .seconds(180) }
+    /// `SCAN_SQUELCHED_ADVANCE_DELAY_MS`: how long the squelch stays closed before the scan moves on.
+    public static var scanAdvanceDelay: Duration { .milliseconds(250) }
+    /// `DEFAULT_SCAN_SQUELCH`: used while scanning when the squelch is open (0).
+    public static var defaultScanSquelch: UInt8 { 7 }
 
     public nonisolated let snapshots: AsyncStream<RadioSnapshot>
     public private(set) var snapshot: RadioSnapshot
@@ -76,6 +82,15 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private var isCapturing = false
     private var capture: Task<Void, Never>?
     private var runawayTimer: Task<Void, Never>?
+    /// The memories being scanned; `nil` while not scanning.
+    private var scanList: [ChannelMemory]?
+    private var scanBaseSquelch: UInt8 = 0
+    /// The memory tuned last, -1 for a plain frequency.
+    private var activeMemoryId: Int32 = -1
+    private var scanTimer: Task<Void, Never>?
+    private var scanTimerMemory: Int32 = -1
+    /// Numbers scan timers, so a cancelled one cannot advance.
+    private var scanTimerGeneration = 0
     private let window = FlowControlWindow()
     private let frames: AsyncStream<[UInt8]>
     private let outbox: AsyncStream<[UInt8]>.Continuation
@@ -108,6 +123,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         helloTimer?.cancel()
         capture?.cancel()
         runawayTimer?.cancel()
+        scanTimer?.cancel()
         outbox.finish()
         snapshotContinuation.finish()
     }
@@ -142,6 +158,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         await transport.disconnect()
         rxAudio?.reset()
         endTransmission()
+        endScan()
         desiredState.setPTT(false)
         desiredState.detach()
         publish(.disconnected)
@@ -181,6 +198,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         for frequency in [rx, tx] where !range.contains(frequency) {
             throw .frequencyOutOfRange(frequency)
         }
+        stopScan()
+        activeMemoryId = memoryId
         let band = TXBand.default(for: firmware.moduleType)
         update { state in
             state.setRxFrequency(rx)
@@ -190,16 +209,30 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
     }
 
-    /// `RadioAudioService.tuneToMemory`: RX and TX (with the offset) are made safe instead of refused.
+    /// `RadioAudioService.tuneToMemory`: RX and TX (with the offset) are made safe instead of refused. Ends a scan.
     public func tune(to memory: ChannelMemory) throws(RadioError) {
         guard snapshot.status == .ready, let firmware = desiredState.firmware else { throw .notReady }
+        stopScan()
+        update(tuning(to: memory, firmware: firmware))
+    }
+
+    /// The changes of `tuneToMemory`; `squelch` replaces the squelch while scanning.
+    private func tuning(
+        to memory: ChannelMemory,
+        firmware: FirmwareVersion,
+        squelch: UInt8? = nil
+    ) -> @Sendable (inout DesiredStateController) -> Void {
+        activeMemoryId = memory.id
         let range = firmware.minRadioFreq...firmware.maxRadioFreq
         let rx = HamFrequency.safe(memory.frequency, in: range)
         let tx = memory.txFrequency(in: range)
         let txTone = CTCSS.index(of: memory.txTone)
         let rxTone = CTCSS.index(of: memory.rxTone)
         let band = TXBand.default(for: firmware.moduleType)
-        update { state in
+        return { state in
+            if let squelch {
+                state.setSquelch(squelch)
+            }
             state.setMemoryId(memory.id)
             state.setTxFrequency(tx)
             state.setRxFrequency(rx)
@@ -207,6 +240,79 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             state.setRxTone(rxTone)
             state.setTXAllowed(band.allows(tx, bandwidth: state.desired.bandwidth))
         }
+    }
+
+    // MARK: Scan
+
+    /// `RadioAudioService.setScanning(true)`: tunes through `memories` (skipping marked ones and those outside the
+    /// module range), moving on when the squelch stays closed for `scanAdvanceDelay`.
+    public func startScan(_ memories: [ChannelMemory]) throws(RadioError) {
+        guard snapshot.status == .ready else { throw .notReady }
+        if scanList == nil {
+            scanBaseSquelch = desiredState.desired.squelch
+        }
+        scanList = memories
+        nextScan()
+        publish(snapshot.status)
+    }
+
+    /// `RadioAudioService.setScanning(false)`: the squelch from before the scan returns.
+    public func stopScan() {
+        guard scanList != nil else { return }
+        endScan()
+        let squelch = scanBaseSquelch
+        update { $0.setSquelch(squelch) }
+    }
+
+    private func endScan() {
+        scanList = nil
+        cancelScanTimer()
+    }
+
+    private func nextScan() {
+        cancelScanTimer()
+        guard let memories = scanList, !memories.isEmpty, let firmware = desiredState.firmware else { return }
+        let range = firmware.minRadioFreq...firmware.maxRadioFreq
+        let current = memories.firstIndex { $0.id == activeMemoryId } ?? -1
+        let candidates = (1...memories.count).map { memories[(current + $0) % memories.count] }
+        guard let next = candidates.first(where: { !$0.skipDuringScan && range.contains($0.frequency) }) else { return }
+        let squelch = scanBaseSquelch > 0 ? scanBaseSquelch : Self.defaultScanSquelch
+        update(tuning(to: next, firmware: firmware, squelch: squelch))
+    }
+
+    /// `checkScanDueToSquelch` on every device state.
+    private func checkScan() {
+        guard scanList != nil, let radio = desiredState.deviceState?.radio,
+            radio.memoryId == activeMemoryId, radio.flags.contains(.squelched)
+        else { return cancelScanTimer() }
+        if scanTimer != nil, scanTimerMemory == activeMemoryId {
+            return  // already waiting for this memory
+        }
+        cancelScanTimer()
+        scanTimerMemory = activeMemoryId
+        let generation = scanTimerGeneration
+        let clock = clock
+        scanTimer = Task { [weak self] in
+            try? await clock.sleep(for: Self.scanAdvanceDelay)
+            await self?.scanTimerFired(generation: generation)
+        }
+    }
+
+    /// The squelch stayed closed on the same memory: move on.
+    private func scanTimerFired(generation: Int) {
+        guard generation == scanTimerGeneration else { return }
+        scanTimer = nil
+        guard let radio = desiredState.deviceState?.radio,
+            radio.memoryId == activeMemoryId, radio.flags.contains(.squelched)
+        else { return }
+        nextScan()
+    }
+
+    private func cancelScanTimer() {
+        scanTimerGeneration += 1
+        scanTimer?.cancel()
+        scanTimer = nil
+        scanTimerMemory = -1
     }
 
     public func setMicGain(_ gain: MicGain) {
@@ -222,6 +328,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         guard !isCapturing else { return }
         guard desiredState.desired.flags.contains(.txAllowed) else { throw .transmitNotAllowed }
         guard let microphone else { throw .microphoneUnavailable }
+        stopScan()
         transmission += 1
         let current = transmission
         isCapturing = true
@@ -298,6 +405,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
                     desiredState.update(state)
                     applyTXRule()
                     flush()
+                    checkScan()
                 }
             case .command(.rxAudio, let payload) where snapshot.status == .ready:
                 rxAudio?.receive(block: payload)
@@ -373,6 +481,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         helloTimer?.cancel()
         rxAudio?.reset()
         endTransmission()
+        endScan()
         desiredState.setPTT(false)
         desiredState.detach()
         publish(.failed(failure))
@@ -385,6 +494,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             deviceState: desiredState.deviceState,
             desired: desiredState.desired,
             isInSync: desiredState.isAppliedStateInSync,
+            isScanning: scanList != nil,
             revision: snapshot.revision
         )
         guard next != snapshot else { return }
