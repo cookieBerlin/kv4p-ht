@@ -159,7 +159,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         let timeout = helloTimeout
         let current = attempt
         helloTimer = Task { [weak self] in
-            try? await clock.sleep(for: timeout)
+            guard (try? await clock.sleep(for: timeout)) != nil else { return }  // cancelled
             await self?.helloTimedOut(attempt: current)
         }
     }
@@ -304,7 +304,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         let generation = scanTimerGeneration
         let clock = clock
         scanTimer = Task { [weak self] in
-            try? await clock.sleep(for: Self.scanAdvanceDelay)
+            guard (try? await clock.sleep(for: Self.scanAdvanceDelay)) != nil else { return }  // cancelled
             await self?.scanTimerFired(generation: generation)
         }
     }
@@ -386,7 +386,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
         let clock = clock
         runawayTimer = Task { [weak self] in
-            try? await clock.sleep(for: Self.runawayTXTimeout)
+            guard (try? await clock.sleep(for: Self.runawayTXTimeout)) != nil else { return }  // cancelled
             await self?.runawayTimedOut(transmission: current)
         }
     }
