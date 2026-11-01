@@ -35,6 +35,9 @@ struct RadioView: View {
                 if model.canUpdateFirmware || model.firmwareUpdate != .idle {
                     FirmwareUpdateRow(model: model)
                 }
+                if model.isWebFlasherNeeded {
+                    WebFlasherNotice()
+                }
             }
 
             Section("Channel") {
@@ -205,6 +208,23 @@ private struct FirmwareUpdateRow: View {
         }
     }
 #endif
+
+/// iOS: the app cannot reach the radio's USB port, so it points to the web flasher and the manual.
+private struct WebFlasherNotice: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("The radio needs a firmware update.").foregroundStyle(.orange)
+            Text("Connect the radio by USB to a computer and update it with the web flasher in a desktop browser.")
+                .foregroundStyle(.secondary)
+            if let flasher = URL(string: FirmwareHelp.webFlasherAddress) {
+                Link("Open the web flasher", destination: flasher)
+            }
+            if let manual = URL(string: FirmwareHelp.manualAddress) {
+                Link("Firmware updates in the manual", destination: manual)
+            }
+        }
+    }
+}
 
 /// Press and hold to transmit; with sticky PTT, each press toggles.
 private struct PTTButton: View {

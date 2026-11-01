@@ -119,6 +119,27 @@ struct RadioViewModelFirmwareTests {
         #expect(await RadioViewModelTests.eventually(silent) { $0.isFirmwareOutdated })
     }
 
+    @Test("without a flasher (iOS), outdated firmware points to the web flasher and the manual")
+    func webFlasher() async {
+        var scenario = Scenario.ble
+        scenario.firmwareVersion = 16
+        let model = Self.model(scenario, flasher: nil)
+        model.selectedConnection = .bluetooth
+        #expect(!model.isWebFlasherNeeded)
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isFirmwareOutdated })
+        #expect(model.isWebFlasherNeeded)
+        let flashing = Self.model(scenario, flasher: FakeFirmwareFlasher())
+        await flashing.connect()
+        #expect(await RadioViewModelTests.eventually(flashing) { $0.isFirmwareOutdated })
+        #expect(!flashing.isWebFlasherNeeded)
+        #expect(FirmwareHelp.webFlasherAddress == "https://kv4p.com/firmware.html")
+        #expect(
+            FirmwareHelp.manualAddress
+                == "https://github.com/VanceVagell/kv4p-ht/blob/main/docs/apple/manual.md#firmware-updates"
+        )
+    }
+
     @Test(
         "flash errors explain what to do",
         arguments: [

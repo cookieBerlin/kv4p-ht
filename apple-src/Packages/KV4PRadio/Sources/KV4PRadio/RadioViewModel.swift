@@ -383,6 +383,9 @@ public final class RadioViewModel {
         }
     }
 
+    /// Outdated firmware that this app cannot update itself (iOS): the web flasher on a computer can.
+    public var isWebFlasherNeeded: Bool { isFirmwareOutdated && firmware == nil }
+
     /// `startFirmwareActivity`: disconnects, flashes the packaged firmware into the radio on the selected USB
     /// device, and reconnects once it is verified (`renegotiateAfterFlashing`).
     public func updateFirmware() async {
