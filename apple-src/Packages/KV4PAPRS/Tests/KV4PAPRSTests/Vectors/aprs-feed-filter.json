@@ -1,0 +1,210 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "AprsFeedPolicy.isVisibleToMine",
+  "vectors": [
+    {
+      "name": "message N1CALL > N0CALL for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "N0CALL",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N0CALL > N1CALL for n0call ",
+      "input": {
+        "type": 1,
+        "from": "N0CALL",
+        "to": "N1CALL",
+        "callsign": "n0call "
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N0CALL-0 > N1CALL for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N0CALL-0",
+        "to": "N1CALL",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N1CALL > N0CALL-0 for N0CALL-0",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "N0CALL-0",
+        "callsign": "N0CALL-0"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N1CALL > N0CALL-7 for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "N0CALL-7",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": false
+      }
+    },
+    {
+      "name": "message N1CALL > N2CALL for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "N2CALL",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": false
+      }
+    },
+    {
+      "name": "message N1CALL > ALL for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "ALL",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N1CALL > qst for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "qst",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N1CALL > CQ for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "CQ",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N1CALL > BLN1 for N0CALL",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "BLN1",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message N1CALL > BLNWX for ",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "BLNWX",
+        "callsign": ""
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "message null > null for N0CALL",
+      "input": {
+        "type": 1,
+        "from": null,
+        "to": null,
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": false
+      }
+    },
+    {
+      "name": "message N1CALL > N2CALL for null",
+      "input": {
+        "type": 1,
+        "from": "N1CALL",
+        "to": "N2CALL",
+        "callsign": null
+      },
+      "expected": {
+        "visible": false
+      }
+    },
+    {
+      "name": "position N1CALL > APRS for N0CALL",
+      "input": {
+        "type": 3,
+        "from": "N1CALL",
+        "to": "APRS",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "weather N1CALL > null for N0CALL",
+      "input": {
+        "type": 4,
+        "from": "N1CALL",
+        "to": null,
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "object N1CALL > APRS for N0CALL",
+      "input": {
+        "type": 2,
+        "from": "N1CALL",
+        "to": "APRS",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    },
+    {
+      "name": "status N1CALL > APRS for N0CALL",
+      "input": {
+        "type": 5,
+        "from": "N1CALL",
+        "to": "APRS",
+        "callsign": "N0CALL"
+      },
+      "expected": {
+        "visible": true
+      }
+    }
+  ]
+}
