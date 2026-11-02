@@ -17,7 +17,7 @@ final class FakeBLEScanner: BLEScanning {
 
     func scan() -> AsyncStream<[BLEDevice]> {
         let (stream, continuation) = AsyncStream.makeStream(of: [BLEDevice].self)
-        continuation.onTermination = { [counts] _ in counts.withLock { $0.ended += 1 } }
+        continuation.onTermination = { _ in self.counts.withLock { $0.ended += 1 } }
         counts.withLock { $0.started += 1 }
         self.continuation.withLock { $0 = continuation }
         return stream
@@ -166,6 +166,23 @@ struct RadioViewModelBluetoothTests {
         #expect(model.connections.filter { $0.label.hasSuffix("(B2C3)") }.count == 1)
         #expect(model.selectedConnection == .bluetoothDevice(renamed))
         #expect(model.settings.bluetoothRadio == renamed)
+        model.stopBluetoothScan()
+    }
+
+    @Test("a remembered radio takes its new name also while USB or the simulator is chosen")
+    func renamesWhileNotChosen() async {
+        var stored = AppSettings()
+        stored.bluetoothRadio = Self.radio
+        let scanner = FakeBLEScanner()
+        let settings = MemorySettingsStore(stored)
+        let model = Self.model(scanner: scanner, settings: settings)
+        model.selectedConnection = .simulator
+        let renamed = BLEDevice(id: Self.radio.id, name: "Base")
+        model.startBluetoothScan()
+        scanner.find([renamed])
+        #expect(await eventually { settings.settings.bluetoothRadio == renamed })
+        #expect(model.selectedConnection == .simulator)
+        #expect(model.connections.contains(.bluetoothDevice(renamed)))
         model.stopBluetoothScan()
     }
 
