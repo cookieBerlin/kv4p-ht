@@ -1,6 +1,7 @@
 import Foundation
 import KV4PAPRS
 import KV4PAudio
+import KV4PTransport
 
 /// The settings of the app itself (Android `AppSetting`); the radio keeps its own configuration.
 public struct AppSettings: Codable, Equatable, Sendable {
@@ -19,6 +20,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var txLimits = TXLimits()
     /// The memory group shown (`lastGroup`); `nil` for all.
     public var selectedGroup: String?
+    /// The radio chosen over Bluetooth; `nil` for the first one found (ADR-0038).
+    public var bluetoothRadio: BLEDevice?
 
     /// `SettingsActivity.populateAprsFrequencies`, after "Current".
     public static let beaconFrequencyOptions: [Float] = [144.39, 144.575, 144.64, 144.66, 144.8, 145.175, 145.825]
@@ -50,6 +53,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         aprsDestinationFilter = values.value(.aprsDestinationFilter, or: defaults.aprsDestinationFilter)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
+        bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)
     }
 }
 

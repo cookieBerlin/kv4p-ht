@@ -34,6 +34,8 @@ public enum BLEEvent: Equatable, Sendable {
     case powerState(BLEPowerState)
     /// A peripheral advertising the KV4P service.
     case discovered(UUID)
+    /// The same peripheral with its name, for the list of radios (ADR-0038).
+    case advertised(BLEDevice)
     case connected
     case failedToConnect
     case disconnected

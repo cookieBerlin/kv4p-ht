@@ -2,10 +2,6 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 3.1 (version and build ID). The structure below is the target layout
-> defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
-> it is created incrementally.
-
 ## Platforms
 
 - macOS 26+ on Apple Silicon (phase 1), iOS 26+ and iPadOS 26+ (phase 2).
