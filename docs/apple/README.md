@@ -4,8 +4,7 @@ Native SwiftUI app for **macOS (Apple Silicon)** first, then **iOS and iPadOS**,
 talking to the kv4p HT over Bluetooth LE (all platforms) and USB (macOS).
 No changes to the firmware or the Android app are required.
 
-**Status:** planning complete, implementation starts with phase 1.0
-([roadmap](04-roadmap.md)).
+**Status:** the [roadmap](04-roadmap.md) shows which milestones are done.
 
 ## Documents
 
