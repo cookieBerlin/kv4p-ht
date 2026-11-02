@@ -27,6 +27,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-18](#hw-18) | Outdated firmware notice | – | ⬜ |
 | [HW-19](#hw-19) | Layouts on real devices | – | ⬜ |
 | [HW-20](#hw-20) | Permissions on first use | ⬜ | ⬜ |
+| [HW-21](#hw-21) | Choosing a radio over Bluetooth | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -148,3 +149,10 @@ easy to reach. On an iPad, the app also works in a resized window.
 On a fresh install from TestFlight, the app asks for Bluetooth, the microphone and
 the location when each is first needed. Denying Bluetooth or the microphone shows
 the hint to the system settings.
+
+### HW-21
+
+With two radios on, or one radio and `swift run kv4p-sim-peripheral` on a second Mac,
+both appear under **Radio**. The app connects to the one you choose. After a restart
+of the app, that radio is still chosen and the app connects to it. A radio you
+switched off stays in the list, and connecting to it does not reach another radio.
