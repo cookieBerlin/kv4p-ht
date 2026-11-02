@@ -26,7 +26,8 @@ enum Composition {
             location: CoreLocationProvider(),
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
             firmware: firmwareFlasher(),
-            settings: settingsStore()
+            settings: settingsStore(),
+            bluetoothScanner: BLEScanner { CoreBluetoothCentral() }
         )
     }
 
@@ -66,6 +67,8 @@ enum Composition {
         switch connection {
         case .bluetooth:
             return BLETransport(central: CoreBluetoothCentral())
+        case .bluetoothDevice(let device):
+            return BLETransport(central: CoreBluetoothCentral(), peripheral: device.id)
         case .serial(let path):
             return serialTransport(path)
         case .simulator:
