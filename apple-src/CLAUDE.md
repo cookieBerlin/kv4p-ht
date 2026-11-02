@@ -2,7 +2,7 @@
 
 Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
-> Status: milestone 3.1 (version and build ID). The structure below is the target layout
+> Status: milestone 3.2 (BLE device selection). The structure below is the target layout
 > defined in [`docs/apple/02-architecture.md`](../docs/apple/02-architecture.md);
 > it is created incrementally.
 

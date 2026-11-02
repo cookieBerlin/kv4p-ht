@@ -54,9 +54,13 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 Choose the connection under **Radio** and click **Connect**:
 
-- **Bluetooth:** power on the radio; the app connects to the first kv4p HT it
-  finds. Allow Bluetooth access when macOS asks. The radio serves one Bluetooth
-  connection at a time, so disconnect other apps first.
+- **Bluetooth:** power on the radio. While nothing is connected, the app looks for
+  radios and lists them under **Radio**, each with its name and the end of its ID.
+  Choose yours, and the app remembers it for the next start. *Bluetooth (first
+  radio found)* connects to whichever kv4p HT it finds first. Allow Bluetooth
+  access when the system asks, which happens when the radio screen first opens.
+  The radio serves one Bluetooth connection at a time, so disconnect other apps
+  first.
 - **USB (🖥 only):** connect the radio by USB cable; it appears as
   `USB cu.usbserial-…`. The app restarts the radio when connecting, so it
   reports itself.
