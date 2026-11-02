@@ -10,9 +10,11 @@ box. Hardware test results are in [hardware-tests.md](hardware-tests.md).
 
 ## Phase 0 — Planning
 
-- [x] Fork, branch, `CLAUDE.md`
-- [x] Feasibility, protocol specification, ADRs, architecture
-- [x] Review of proposed ADRs → all accepted (ADR-0009 with option 2)
+|   | # | Milestone | Acceptance criteria |
+|---|---|---|---|
+| ✅ | 0.1 | **Setup** | Fork, branch, `CLAUDE.md`. |
+| ✅ | 0.2 | **Planning documents** | Feasibility, protocol specification, ADRs, architecture. |
+| ✅ | 0.3 | **ADR review** | Review of proposed ADRs → all accepted (ADR-0009 with option 2). |
 
 ## Phase 1 — macOS (Apple Silicon)
 
