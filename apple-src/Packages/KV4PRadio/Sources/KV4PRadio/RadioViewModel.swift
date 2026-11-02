@@ -48,6 +48,8 @@ public struct AudioFilters: Equatable, Sendable {
 public final class RadioViewModel {
     public enum Connection: Hashable, Sendable, Identifiable {
         case bluetooth
+        /// One radio, chosen from a scan.
+        case bluetoothDevice(BLEDevice)
         /// A USB serial device path.
         case serial(String)
         case simulator
@@ -56,7 +58,8 @@ public final class RadioViewModel {
 
         public var label: String {
             switch self {
-            case .bluetooth: "Bluetooth"
+            case .bluetooth: "Bluetooth (first radio found)"
+            case .bluetoothDevice(let device): device.label
             case .serial(let path): "USB " + String(path.reversed().prefix { $0 != "/" }.reversed())
             case .simulator: "Simulator"
             }
@@ -83,7 +86,17 @@ public final class RadioViewModel {
 
     public private(set) var connections: [Connection] = []
     public private(set) var firmwareUpdate = FirmwareUpdate.idle
-    public var selectedConnection = Connection.bluetooth
+    public var selectedConnection = Connection.bluetooth {
+        didSet {
+            switch selectedConnection {
+            case .bluetooth: bluetoothRadio = nil
+            case .bluetoothDevice(let device): bluetoothRadio = device
+            case .serial, .simulator: break
+            }
+            refreshConnections()
+            saveSettings()
+        }
+    }
     public private(set) var snapshot = RadioViewModel.disconnected
     /// The frequency field, in MHz.
     public var frequencyText = ""
@@ -223,6 +236,11 @@ public final class RadioViewModel {
     private let now: () -> Int64
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
+    private let bluetoothScanner: (any BLEScanning)?
+    private var bluetoothRadio: BLEDevice?
+    private var foundRadios: [BLEDevice] = []
+    private var isBluetoothScanWanted = false
+    private var bluetoothScan: Task<Void, Never>?
     private let audioOutput: (any AudioOutput)?
     private let audioSession: (any AudioSession)?
     private var audioSessionObserver: Task<Void, Never>?
@@ -251,12 +269,14 @@ public final class RadioViewModel {
         internet: (any APRSInternetLink)? = nil,
         firmware: (any FirmwareFlashing)? = nil,
         settings: (any SettingsStore)? = nil,
+        bluetoothScanner: (any BLEScanning)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
         repository = memories
         self.firmware = firmware
         settingsStore = settings
+        self.bluetoothScanner = bluetoothScanner
         self.location = location
         self.internet = internet
         self.now = now
@@ -294,6 +314,7 @@ public final class RadioViewModel {
         settings.aprsDestinationFilter = aprsDestinationFilter
         settings.txLimits = txLimits
         settings.selectedGroup = selectedGroup
+        settings.bluetoothRadio = bluetoothRadio
         return settings
     }
 
@@ -314,6 +335,9 @@ public final class RadioViewModel {
         aprsDestinationFilter = settings.aprsDestinationFilter
         txLimits = settings.txLimits
         selectedGroup = settings.selectedGroup
+        if let radio = settings.bluetoothRadio {
+            selectedConnection = .bluetoothDevice(radio)
+        }
     }
 
     private func saveSettings() {
@@ -321,9 +345,56 @@ public final class RadioViewModel {
         settingsStore.save(data)
     }
 
-    /// Bluetooth, the USB serial devices present, and the built-in simulator.
+    /// Bluetooth with the radios found or remembered, the USB serial devices present, and the built-in simulator.
     public func refreshConnections() {
-        connections = [.bluetooth] + serialDevices().map(Connection.serial) + [.simulator]
+        var radios = foundRadios
+        if let bluetoothRadio, !radios.contains(where: { $0.id == bluetoothRadio.id }) {
+            radios.append(bluetoothRadio)
+        }
+        connections =
+            [.bluetooth] + radios.sorted { $0.label < $1.label }.map(Connection.bluetoothDevice)
+            + serialDevices().map(Connection.serial) + [.simulator]
+    }
+
+    /// Lists the radios in range, while no connection is up or being set up (ADR-0038).
+    public func startBluetoothScan() {
+        isBluetoothScanWanted = true
+        updateBluetoothScan()
+    }
+
+    public func stopBluetoothScan() {
+        isBluetoothScanWanted = false
+        updateBluetoothScan()
+    }
+
+    private func updateBluetoothScan() {
+        var isIdle = controller == nil
+        if case .failed = snapshot.status { isIdle = true }
+        guard isBluetoothScanWanted, isIdle else {
+            bluetoothScan?.cancel()
+            bluetoothScan = nil
+            return
+        }
+        guard bluetoothScan == nil, let bluetoothScanner else { return }
+        let radios = bluetoothScanner.scan()
+        bluetoothScan = Task { [weak self] in
+            for await found in radios {
+                self?.show(found)
+            }
+        }
+    }
+
+    private func show(_ found: [BLEDevice]) {
+        foundRadios = found
+        if let renamed = found.first(where: { $0.id == bluetoothRadio?.id }), renamed != bluetoothRadio {
+            if selectedConnection == bluetoothRadio.map(Connection.bluetoothDevice) {
+                selectedConnection = .bluetoothDevice(renamed)
+                return
+            }
+            bluetoothRadio = renamed
+            saveSettings()
+        }
+        refreshConnections()
     }
 
     public var isReady: Bool { snapshot.status == .ready }
@@ -415,7 +486,9 @@ public final class RadioViewModel {
     // MARK: Connection
 
     public func connect() async {
-        await disconnect()
+        bluetoothScan?.cancel()
+        bluetoothScan = nil
+        await tearDown()
         let controller = makeController(selectedConnection, rxAudio)
         self.controller = controller
         await controller.setTXLimits(txLimits)
@@ -445,6 +518,11 @@ public final class RadioViewModel {
     }
 
     public func disconnect() async {
+        await tearDown()
+        updateBluetoothScan()
+    }
+
+    private func tearDown() async {
         observer?.cancel()
         observer = nil
         packetObserver?.cancel()
@@ -465,6 +543,7 @@ public final class RadioViewModel {
         self.snapshot = snapshot
         if case .failed(let failure) = snapshot.status {
             message = Self.message(for: failure)
+            updateBluetoothScan()
         }
         if snapshot.status == .ready, let reported = snapshot.deviceState?.radio.freqRx, reported != frequency {
             frequency = reported
