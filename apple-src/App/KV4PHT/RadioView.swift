@@ -6,6 +6,7 @@ import SwiftUI
 /// The radio screen; it only binds to `RadioViewModel`.
 struct RadioView: View {
     @Bindable var model: RadioViewModel
+    @Environment(\.scenePhase) private var scenePhase
     #if os(iOS)
         @State private var isShowingAbout = false
     #endif
@@ -127,7 +128,14 @@ struct RadioView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { model.refreshConnections() }
+        .onAppear {
+            model.refreshConnections()
+            model.startBluetoothScan()
+        }
+        .onDisappear { model.stopBluetoothScan() }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { model.startBluetoothScan() } else { model.stopBluetoothScan() }
+        }
         #if os(macOS)
             .frame(minWidth: 420)
         #else
