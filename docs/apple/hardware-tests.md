@@ -27,7 +27,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-18](#hw-18) | Outdated firmware notice | – | ⬜ |
 | [HW-19](#hw-19) | Layouts on real devices | – | ⬜ |
 | [HW-20](#hw-20) | Permissions on first use | ⬜ | ⬜ |
-| [HW-21](#hw-21) | Choosing a radio over Bluetooth | ⬜ | ⬜ |
+| [HW-21](#hw-21) | Choosing a radio over Bluetooth | ✅ | ✅ |
 
 ## TestFlight
 
