@@ -46,6 +46,8 @@ The structure is the same on all devices, and similar to the Android app:
   the squelch state and the S-meter. Type a frequency and press Return to tune.
 - **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
 - **At the bottom:** a large **Push to talk** button.
+- A problem that needs your attention, such as a missing location, shows in red below
+  the connection (and in ⚙ **Settings**) until you dismiss it with ✕.
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
 
 📱 On an iPhone or in a narrow iPad window, **Memories**, **APRS** and ⚙ **Settings**
