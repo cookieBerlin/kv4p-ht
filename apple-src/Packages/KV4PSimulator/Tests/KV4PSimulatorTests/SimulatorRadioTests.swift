@@ -1,3 +1,4 @@
+import Foundation
 import KV4PProtocol
 import KV4PTestSupport
 import KV4PTransport
@@ -48,6 +49,19 @@ struct SimulatorRadioTests {
     func strengths(signal: SimulatedSignal, value: Int, label: String) {
         #expect(SMeter.value(rssi: signal.rssi) == value)
         #expect(signal.label == label)
+    }
+
+    @Test("the bands are named")
+    func bands() {
+        #expect(SimulatedBand.allCases.map(\.label) == ["VHF", "UHF"])
+    }
+
+    @Test("the settings can be stored")
+    func coding() throws {
+        var settings = SimulatorSettings()
+        settings.band = .uhf
+        let data = try JSONEncoder().encode(settings)
+        #expect(try JSONDecoder().decode(SimulatorSettings.self, from: data) == settings)
     }
 
     @Test("a new transport uses the settings of that moment")

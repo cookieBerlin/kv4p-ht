@@ -91,8 +91,11 @@ public final class SimulatorRadio<C: Clock>: SimulatorControlling where C.Durati
     }
 
     public func setSignal(_ signal: SimulatedSignal?) async {
-        var carrier = signal.map { _ in Carrier.freeDVVoice }
-        carrier?.rssi = signal?.rssi ?? 0
+        let carrier = signal.map { signal in
+            var carrier = Carrier.freeDVVoice
+            carrier.rssi = signal.rssi
+            return carrier
+        }
         await transport?.setCarrier(carrier)
     }
 

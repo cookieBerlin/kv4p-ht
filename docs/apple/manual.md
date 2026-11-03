@@ -80,7 +80,11 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
 - **USB (🖥 only):** connect the radio by USB cable; it appears as
   `USB cu.usbserial-…`. The app restarts the radio when connecting, so it
   reports itself.
-- **Simulator:** a built-in simulated radio, to try the app without hardware.
+- **Simulator:** a built-in simulated radio, to try the app without hardware. While it
+  is chosen, ⚙ **Settings** has a **Simulator** section: its band, its firmware, FreeDV,
+  the power switch, the radio module and whether it answers, which apply at the next
+  connection. While it is connected, **Simulator actions** set a received signal, lose
+  the connection and receive APRS test packets.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
@@ -120,7 +124,7 @@ disconnect yourself:
   APRS, digipeating and the iGate. Disconnect to save the battery. Position
   beacons wait until the app is on screen again, because iOS only gives the app
   your location while you use it.
-- **Simulator:** *Simulate a received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
+- **Simulator:** *Received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
   open.
 
 ## Transmitting
@@ -241,7 +245,7 @@ modem, the app encodes and decodes the speech with Codec2.
 - The radio keeps the setting while it is on, also when the app reconnects;
   after a restart it is analog again. Switch back to *Analog* for normal FM.
 - Try it without a second radio: connect the **Simulator**, choose FreeDV 2400B
-  and turn on *Simulate a received signal* in ⚙ **Settings**; you hear a vowel-like test sound.
+  and choose a *Received signal* in ⚙ **Settings**; you hear a vowel-like test sound.
 
 ## Settings
 

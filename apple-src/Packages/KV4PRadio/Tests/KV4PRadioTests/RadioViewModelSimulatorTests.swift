@@ -87,6 +87,11 @@ struct RadioViewModelSimulatorTests {
         await plain.connect()
         #expect(await RadioViewModelTests.eventually(plain) { $0.isReady })
         #expect(!plain.canSimulateSignal)
+        plain.simulatedSignal = .s9
+        plain.loseSimulatedConnection()
+        plain.simulatePacket(.status)
+        #expect(plain.isReady)
+        #expect(plain.aprsEvents.isEmpty)
     }
 
     @Test("a real radio cannot use them")
