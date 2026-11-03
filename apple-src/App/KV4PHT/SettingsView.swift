@@ -19,6 +19,10 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            if model.notice != nil {
+                Section { NoticeBanner(model: model) }
+            }
+
             Section("Station") {
                 LabeledContent("Your callsign") {
                     TextField("Your callsign", text: $callsign, prompt: Text("N0CALL"))
@@ -174,7 +178,13 @@ struct SettingsView: View {
                 .disabled(!model.canBeacon || model.callsign.isEmpty)
                 .explained(ControlHelp.beacon)
             Picker("Symbol", selection: $model.beaconSymbol) {
-                ForEach(APRSSymbol.allCases, id: \.self) { Label($0.name, systemImage: $0.systemImage) }
+                ForEach(APRSSymbol.allCases, id: \.self) { symbol in
+                    if let image = symbol.systemImage {
+                        Label(symbol.name, systemImage: image)
+                    } else {
+                        Text(symbol.name)
+                    }
+                }
             }
             .explained(ControlHelp.symbol)
             Picker("Position accuracy", selection: $model.beaconAccuracy) {
@@ -268,8 +278,8 @@ struct WebFlasherNotice: View {
 }
 
 extension APRSSymbol {
-    /// The closest system symbol. Not all have one of their own, such as the van and the helicopter.
-    fileprivate var systemImage: String {
+    /// A system symbol, if one fits; milestone 4.3 finds a solution for the others.
+    fileprivate var systemImage: String? {
         switch self {
         case .phone: "iphone"
         case .person: "figure.stand"
@@ -279,14 +289,10 @@ extension APRSSymbol {
         case .jeep: "suv.side"
         case .truck: "truck.box"
         case .motorcycle: "motorcycle"
-        case .van: "car.side"
-        case .rv: "bus"
         case .eighteenWheeler: "box.truck"
-        case .glider: "paperplane"
         case .smallAircraft: "airplane"
-        case .helicopter: "airplane.departure"
         case .sailboat: "sailboat"
-        case .motorboat: "ferry"
+        case .van, .rv, .glider, .helicopter, .motorboat: nil
         }
     }
 }

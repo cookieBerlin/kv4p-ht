@@ -52,6 +52,7 @@ struct RadioHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             connection
+            NoticeBanner(model: model)
             if model.isWebFlasherNeeded {
                 WebFlasherNotice()
             } else if model.isFirmwareOutdated || model.firmwareUpdate != .idle {
@@ -122,7 +123,7 @@ struct RadioHeader: View {
     private var status: some View {
         Text(model.statusText)
             .lineLimit(2)
-            .foregroundStyle(model.message == nil ? Color.secondary : Color.red)
+            .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
     }
 
     private var frequency: some View {
@@ -150,11 +151,12 @@ struct RadioHeader: View {
     }
 }
 
-/// The S-meter as a row of bars, as in the Android app. A line over the full height shows the squelch level: level n
+/// The S-meter as a row of bars, as in the Android app. A line a little higher than the bars shows the squelch level: level n
 /// stands at the end of bar n, as a signal of S n lights n bars.
 private struct SMeterBars: View {
     private static let spacing: CGFloat = 2
     private static let markWidth: CGFloat = 2
+    private static let markOverhang: CGFloat = 6
 
     let value: Int
     let squelch: Int?
@@ -172,16 +174,34 @@ private struct SMeterBars: View {
                 if let squelch {
                     Rectangle()
                         .fill(Color.primary)
-                        .frame(width: Self.markWidth)
-                        .offset(x: markOffset(squelch, width: geometry.size.width))
+                        .frame(width: Self.markWidth, height: geometry.size.height + 2 * Self.markOverhang)
+                        .offset(x: markOffset(squelch, width: geometry.size.width), y: -Self.markOverhang)
                 }
             }
         }
+        .padding(.vertical, Self.markOverhang)
     }
 
     private func markOffset(_ squelch: Int, width: CGFloat) -> CGFloat {
         let barEnd = (width + Self.spacing) * CGFloat(squelch) / CGFloat(RadioViewModel.sMeterBarCount) - Self.spacing
         return max(0, barEnd - Self.markWidth)
+    }
+}
+
+/// A problem the user should know, such as a missing callsign, until it is dismissed.
+struct NoticeBanner: View {
+    let model: RadioViewModel
+
+    var body: some View {
+        if let notice = model.notice {
+            HStack(alignment: .firstTextBaseline) {
+                Text(notice).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button("Dismiss", systemImage: "xmark.circle.fill") { model.dismissNotice() }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+            }
+        }
     }
 }
 
@@ -234,20 +254,18 @@ private struct PTTButton: View {
                 in: .rect(cornerRadius: 8)
             )
             .contentShape(.rect)
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        guard !isPressed else { return }
-                        isPressed = true
-                        pressedAt = .now
-                        Self.log.info("press recognised")
-                        Task { await model.pressPTT() }
-                    }
-                    .onEnded { _ in
-                        isPressed = false
-                        Task { await model.releasePTT() }
-                    }
-            )
+            #if os(iOS)
+                // SwiftUI reports a held touch late, only UIKit reports it when the finger lands.
+                .overlay {
+                    TouchArea(onDown: pressed, onUp: released)
+                }
+            #else
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in pressed() }
+                        .onEnded { _ in released() }
+                )
+            #endif
             .onChange(of: model.isTransmitting) {
                 if model.isTransmitting {
                     Self.log.info("on after \(String(describing: ContinuousClock.now - pressedAt), privacy: .public)")
@@ -258,4 +276,60 @@ private struct PTTButton: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
     }
+
+    private func pressed() {
+        guard isEnabled, !isPressed else { return }
+        isPressed = true
+        pressedAt = .now
+        Self.log.info("press recognised")
+        Task { await model.pressPTT() }
+    }
+
+    private func released() {
+        guard isPressed else { return }
+        isPressed = false
+        Task { await model.releasePTT() }
+    }
 }
+
+#if os(iOS)
+    /// Reports a touch when the finger lands and when it ends, also if the finger has moved off the area.
+    private struct TouchArea: UIViewRepresentable {
+        let onDown: () -> Void
+        let onUp: () -> Void
+
+        func makeCoordinator() -> Coordinator {
+            Coordinator()
+        }
+
+        func makeUIView(context: Context) -> UIControl {
+            let control = UIControl()
+            control.addTarget(context.coordinator, action: #selector(Coordinator.down), for: .touchDown)
+            control.addTarget(
+                context.coordinator,
+                action: #selector(Coordinator.up),
+                for: [.touchUpInside, .touchUpOutside, .touchCancel]
+            )
+            return control
+        }
+
+        func updateUIView(_ control: UIControl, context: Context) {
+            context.coordinator.onDown = onDown
+            context.coordinator.onUp = onUp
+        }
+
+        @MainActor
+        final class Coordinator: NSObject {
+            var onDown: () -> Void = {}
+            var onUp: () -> Void = {}
+
+            @objc func down() {
+                onDown()
+            }
+
+            @objc func up() {
+                onUp()
+            }
+        }
+    }
+#endif

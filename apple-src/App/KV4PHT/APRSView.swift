@@ -11,11 +11,14 @@ struct APRSView: View {
     var body: some View {
         VStack(spacing: 0) {
             if model.isBeaconEnabled {
-                Label("Position beacon on", systemImage: "location.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
+                Label(
+                    "Position beacon on · accuracy: \(model.beaconAccuracy.label)",
+                    systemImage: "location.fill"
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
             }
             feed
             Divider()
