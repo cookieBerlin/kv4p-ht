@@ -81,6 +81,11 @@ struct RadioViewModelSimulatorTests {
         #expect(setup.model.simulatedSignal == nil)
     }
 
+    @Test("each strength is named like the S-meter shows it", arguments: SimulatedSignal.allCases)
+    func strengthLabels(signal: SimulatedSignal) {
+        #expect(signal.label == RadioViewModel.sMeterText(for: signal.rawValue))
+    }
+
     @Test("without a simulator, there is no signal to simulate")
     func noSimulator() async {
         let plain = RadioViewModelTests.model()

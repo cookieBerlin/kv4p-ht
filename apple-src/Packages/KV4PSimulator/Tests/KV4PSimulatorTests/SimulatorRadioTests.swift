@@ -39,16 +39,14 @@ struct SimulatorRadioTests {
         #expect(scenario.faults.omitsHello)
     }
 
-    @Test(
-        "each signal strength shows as its S-meter value",
-        arguments: [
-            (SimulatedSignal.s3, 3, "S3"), (.s9, 9, "S9"), (.s9Plus40, 11, "S9+40"),
-            (.overload, SMeter.overload, "Overload"),
-        ]
-    )
-    func strengths(signal: SimulatedSignal, value: Int, label: String) {
-        #expect(SMeter.value(rssi: signal.rssi) == value)
-        #expect(signal.label == label)
+    @Test("each strength shows as its value on the S-meter", arguments: SimulatedSignal.allCases)
+    func strengths(signal: SimulatedSignal) {
+        #expect(SMeter.value(rssi: signal.rssi) == signal.rawValue)
+    }
+
+    @Test("all values of the S-meter can be chosen, in order")
+    func allStrengths() {
+        #expect(SimulatedSignal.allCases.map(\.rawValue) == Array(0...SMeter.overload))
     }
 
     @Test("the bands are named")

@@ -12,27 +12,23 @@ public enum SimulatedBand: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// A received signal of a given strength.
-public enum SimulatedSignal: String, CaseIterable, Sendable {
-    case s3, s9, s9Plus40, overload
+/// A received signal, with a strength for each value of `SMeter`, which is its raw value.
+public enum SimulatedSignal: Int, CaseIterable, Sendable {
+    case s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s9Plus20, s9Plus40, s9Plus60, overload
 
     public var label: String {
         switch self {
-        case .s3: "S3"
-        case .s9: "S9"
+        case .s9Plus20: "S9+20"
         case .s9Plus40: "S9+40"
+        case .s9Plus60: "S9+60"
         case .overload: "Overload"
+        default: "S\(rawValue)"
         }
     }
 
-    /// The raw SA818 RSSI that `SMeter` shows as `label`.
+    /// The raw SA818 RSSI that `SMeter` shows as this value.
     var rssi: UInt8 {
-        switch self {
-        case .s3: 27
-        case .s9: 57
-        case .s9Plus40: 90
-        case .overload: 110
-        }
+        [0, 17, 22, 27, 32, 37, 42, 47, 52, 57, 74, 90, 107, 110][rawValue]
     }
 }
 

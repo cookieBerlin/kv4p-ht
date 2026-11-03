@@ -17,7 +17,7 @@ notice. The user also has no sample APRS packets for milestones 4.3 and 4.4.
   `Scenario`. `SimulatorRadio` makes the transport of each connection from it.
 - **When it applies:** these settings take effect at the next connection and are locked
   while connected, as a radio does not change during a session.
-- **What acts at once:** the received signal with a strength (S3, S9, S9+40, overload),
+- **What acts at once:** the received signal with every strength of the S-meter,
   losing the connection, and receiving an APRS packet of each type. The packets use
   placeholder data only.
 - **Firmware update:** the simulator offers **Update firmware…** on all platforms. A
