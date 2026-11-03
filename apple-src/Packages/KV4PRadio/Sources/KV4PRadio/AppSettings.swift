@@ -3,6 +3,32 @@ import KV4PAPRS
 import KV4PAudio
 import KV4PTransport
 
+/// How accurately a position beacon reports the position; Android offers exact and about 1 km.
+public enum BeaconAccuracy: String, Codable, CaseIterable, Sendable {
+    case exact, about100m, about1km, about10km
+
+    public var label: String {
+        switch self {
+        case .exact: "Exact"
+        case .about100m: "About 100 m"
+        case .about1km: "About 1 km"
+        case .about10km: "About 10 km"
+        }
+    }
+
+    /// Rounds a latitude or longitude.
+    public func rounded(_ degrees: Double) -> Double {
+        let factor: Double
+        switch self {
+        case .exact: return degrees
+        case .about100m: factor = 1000
+        case .about1km: factor = 100
+        case .about10km: factor = 10
+        }
+        return (degrees * factor + 0.5).rounded(.down) / factor
+    }
+}
+
 /// The settings of the app itself (Android `AppSetting`); the radio keeps its own configuration.
 public struct AppSettings: Codable, Equatable, Sendable {
     public var callsign = ""
@@ -10,7 +36,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isStickyPTT = false
     public var isBeaconEnabled = false
     public var beaconSymbol = APRSSymbol.phone
-    public var isBeaconApproximate = false
+    public var beaconAccuracy = BeaconAccuracy.exact
     /// MHz; `nil` beacons on the current TX frequency (Android "Current").
     public var beaconFrequency: Float?
     public var isDigipeatingEnabled = false
@@ -45,7 +71,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isStickyPTT = values.value(.isStickyPTT, or: defaults.isStickyPTT)
         isBeaconEnabled = values.value(.isBeaconEnabled, or: defaults.isBeaconEnabled)
         beaconSymbol = values.value(.beaconSymbol, or: defaults.beaconSymbol)
-        isBeaconApproximate = values.value(.isBeaconApproximate, or: defaults.isBeaconApproximate)
+        let former = try decoder.container(keyedBy: FormerKeys.self)
+        let wasApproximate = (try? former.decodeIfPresent(Bool.self, forKey: .isBeaconApproximate)) == true
+        beaconAccuracy = values.value(.beaconAccuracy, or: wasApproximate ? .about1km : defaults.beaconAccuracy)
         beaconFrequency = values.value(.beaconFrequency, or: defaults.beaconFrequency)
         isDigipeatingEnabled = values.value(.isDigipeatingEnabled, or: defaults.isDigipeatingEnabled)
         isIGateEnabled = values.value(.isIGateEnabled, or: defaults.isIGateEnabled)
@@ -54,6 +82,11 @@ public struct AppSettings: Codable, Equatable, Sendable {
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)
+    }
+
+    /// Settings stored by earlier versions.
+    private enum FormerKeys: String, CodingKey {
+        case isBeaconApproximate
     }
 }
 

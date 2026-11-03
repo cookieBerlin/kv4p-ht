@@ -206,8 +206,7 @@ public final class RadioViewModel {
     public var beaconSymbol = APRSSymbol.phone {
         didSet { saveSettings() }
     }
-    /// Round the position to 0.01° (about 1 km), Android's approximate accuracy.
-    public var isBeaconApproximate = false {
+    public var beaconAccuracy = BeaconAccuracy.exact {
         didSet { saveSettings() }
     }
     /// MHz, one of `AppSettings.beaconFrequencyOptions`; `nil` beacons on the current TX frequency.
@@ -313,7 +312,7 @@ public final class RadioViewModel {
         settings.isStickyPTT = isStickyPTT
         settings.isBeaconEnabled = isBeaconEnabled
         settings.beaconSymbol = beaconSymbol
-        settings.isBeaconApproximate = isBeaconApproximate
+        settings.beaconAccuracy = beaconAccuracy
         settings.beaconFrequency = beaconFrequency
         settings.isDigipeatingEnabled = isDigipeatingEnabled
         settings.isIGateEnabled = isIGateEnabled
@@ -334,7 +333,7 @@ public final class RadioViewModel {
         isStickyPTT = settings.isStickyPTT
         isBeaconEnabled = settings.isBeaconEnabled
         beaconSymbol = settings.beaconSymbol
-        isBeaconApproximate = settings.isBeaconApproximate
+        beaconAccuracy = settings.beaconAccuracy
         beaconFrequency = settings.beaconFrequency
         isDigipeatingEnabled = settings.isDigipeatingEnabled
         isIGateEnabled = settings.isIGateEnabled
@@ -701,10 +700,9 @@ public final class RadioViewModel {
             message = "Your location is unknown."
             return
         }
-        let round = { (value: Double) in self.isBeaconApproximate ? (value * 100 + 0.5).rounded(.down) / 100 : value }
         let beacon = APRSBeacon(
-            latitude: round(point.latitude),
-            longitude: round(point.longitude),
+            latitude: beaconAccuracy.rounded(point.latitude),
+            longitude: beaconAccuracy.rounded(point.longitude),
             symbolTable: "/",
             symbolCode: beaconSymbol.code
         )
