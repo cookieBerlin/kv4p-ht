@@ -78,23 +78,14 @@ struct RadioViewModelFailureAlertTests {
         #expect(setup.model.notice == nil)
     }
 
-    @Test("iPhone and iPad report a lost connection in a notice and through the platform")
-    func noticePlatform() async {
+    @Test("iPhone and iPad show a lost connection once, as the status, and report it through the platform")
+    func statusPlatform() async {
         let setup = Setup(usesDialog: false)
         await setup.connected()
         await setup.lostConnection()
         #expect(setup.alerts.delivered == [Self.lost])
         #expect(setup.model.alertMessage == nil)
-        #expect(setup.model.notice == Self.lost)
-    }
-
-    @Test("the status summarises a failure, as the notice or the dialog has the reason")
-    func summary() async {
-        let setup = Setup(usesDialog: false)
-        #expect(setup.model.statusSummary == "Not connected")
-        await setup.connected()
-        await setup.lostConnection()
-        #expect(setup.model.statusSummary == "Connection failed")
+        #expect(setup.model.notice == nil)
         #expect(setup.model.statusText == Self.lost)
     }
 
@@ -155,12 +146,12 @@ struct RadioViewModelFailureAlertTests {
         #expect(setup.model.statusText == Self.lost)
     }
 
-    @Test("without a platform adapter, a failure is a notice")
+    @Test("without a platform adapter, a failure shows as the status")
     func noAdapter() async {
         let model = RadioViewModelTests.model(.noRadioModule)
         await model.connect()
-        #expect(await KV4PTestSupport.eventually { model.notice != nil })
-        #expect(model.notice == model.statusText)
+        #expect(await KV4PTestSupport.eventually { model.hasFailed })
+        #expect(model.notice == nil)
         #expect(model.alertMessage == nil)
     }
 }
