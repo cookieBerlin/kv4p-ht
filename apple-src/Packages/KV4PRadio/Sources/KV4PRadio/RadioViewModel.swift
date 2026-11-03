@@ -101,11 +101,13 @@ public final class RadioViewModel {
     /// The frequency field, in MHz.
     public var frequencyText = ""
     /// The last problem, in words for the user.
-    public private(set) var message: String?
+    public private(set) var message: String? {
+        didSet { isNoticeSuccess = false }
+    }
+    /// `notice` reports something that worked.
+    public private(set) var isNoticeSuccess = false
     /// A failed connection, for the dialog; `nil` when no dialog is open (ADR-0039).
     public private(set) var alertMessage: String?
-    /// The app is not on screen; set by the views.
-    public var isInBackground = false
 
     private static let disconnected = RadioSnapshot(
         status: .disconnected,
@@ -206,8 +208,7 @@ public final class RadioViewModel {
     public var beaconSymbol = APRSSymbol.phone {
         didSet { saveSettings() }
     }
-    /// Round the position to 0.01° (about 1 km), Android's approximate accuracy.
-    public var isBeaconApproximate = false {
+    public var beaconAccuracy = BeaconAccuracy.exact {
         didSet { saveSettings() }
     }
     /// MHz, one of `AppSettings.beaconFrequencyOptions`; `nil` beacons on the current TX frequency.
@@ -225,7 +226,7 @@ public final class RadioViewModel {
     /// `aprsBeaconTxOverrideMhz`: set while a beacon is submitted.
     private var beaconOverride: Float?
     /// A location is available for beacons.
-    public var canBeacon: Bool { location != nil }
+    public var canBeacon: Bool { location != nil && !isDenied(.location) }
 
     static let beaconIntervalMs: Int64 = 5 * 60_000
     private var nextBeaconAtMs: Int64 = 0
@@ -242,6 +243,9 @@ public final class RadioViewModel {
     private let serialDevices: () -> [String]
     private let bluetoothScanner: (any BLEScanning)?
     private let failureAlerts: (any FailureAlerting)?
+    private let permissions: (any PermissionChecking)?
+    private var deniedPermissions: Set<Permission> = []
+    private var permissionObserver: Task<Void, Never>?
     private var bluetoothRadio: BLEDevice?
     private var foundRadios: [BLEDevice] = []
     private var isBluetoothScanWanted = false
@@ -276,6 +280,7 @@ public final class RadioViewModel {
         settings: (any SettingsStore)? = nil,
         bluetoothScanner: (any BLEScanning)? = nil,
         failureAlerts: (any FailureAlerting)? = nil,
+        permissions: (any PermissionChecking)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -284,6 +289,7 @@ public final class RadioViewModel {
         settingsStore = settings
         self.bluetoothScanner = bluetoothScanner
         self.failureAlerts = failureAlerts
+        self.permissions = permissions
         self.location = location
         self.internet = internet
         self.now = now
@@ -300,7 +306,9 @@ public final class RadioViewModel {
         refreshConnections()
         observeInternet()
         observeAudioSession()
+        observePermissions()
         restore(AppSettings(data: settings?.load()))
+        refreshPermissions()
     }
 
     // MARK: Settings
@@ -313,7 +321,7 @@ public final class RadioViewModel {
         settings.isStickyPTT = isStickyPTT
         settings.isBeaconEnabled = isBeaconEnabled
         settings.beaconSymbol = beaconSymbol
-        settings.isBeaconApproximate = isBeaconApproximate
+        settings.beaconAccuracy = beaconAccuracy
         settings.beaconFrequency = beaconFrequency
         settings.isDigipeatingEnabled = isDigipeatingEnabled
         settings.isIGateEnabled = isIGateEnabled
@@ -334,7 +342,7 @@ public final class RadioViewModel {
         isStickyPTT = settings.isStickyPTT
         isBeaconEnabled = settings.isBeaconEnabled
         beaconSymbol = settings.beaconSymbol
-        isBeaconApproximate = settings.isBeaconApproximate
+        beaconAccuracy = settings.beaconAccuracy
         beaconFrequency = settings.beaconFrequency
         isDigipeatingEnabled = settings.isDigipeatingEnabled
         isIGateEnabled = settings.isIGateEnabled
@@ -375,7 +383,9 @@ public final class RadioViewModel {
     }
 
     private func updateBluetoothScan() {
-        guard isBluetoothScanWanted, controller == nil || hasFailed else {
+        // Without a decision, a scan would ask for Bluetooth, which waits until the user connects.
+        let isAllowed = permissions.map { $0.state(of: .bluetooth) == .granted } ?? true
+        guard isBluetoothScanWanted, controller == nil || hasFailed, isAllowed else {
             bluetoothScan?.cancel()
             bluetoothScan = nil
             return
@@ -404,9 +414,56 @@ public final class RadioViewModel {
 
     public var isReady: Bool { snapshot.status == .ready }
 
-    private var hasFailed: Bool {
+    /// The connection has failed; `statusText` says why.
+    public var hasFailed: Bool {
         if case .failed = snapshot.status { return true }
         return false
+    }
+
+    /// A message to show besides the status, as a failed connection is the status itself.
+    public var notice: String? { hasFailed ? nil : message }
+
+    public func isDenied(_ permission: Permission) -> Bool {
+        deniedPermissions.contains(permission)
+    }
+
+    /// The chosen connection needs the Bluetooth access the user has refused.
+    public var isBluetoothBlocked: Bool {
+        guard isDenied(.bluetooth) else { return false }
+        switch selectedConnection {
+        case .bluetooth, .bluetoothDevice: return true
+        case .serial, .simulator: return false
+        }
+    }
+
+    public var canStartConnection: Bool { canConnect && !isBluetoothBlocked && !firmwareUpdate.isRunning }
+
+    /// Reads the permissions again; the beacon ends without location access and stays off afterwards.
+    public func refreshPermissions() {
+        deniedPermissions = Set(Permission.allCases.filter { permissions?.state(of: $0) == .denied })
+        if isDenied(.location) { isBeaconEnabled = false }
+        updateBluetoothScan()
+    }
+
+    private func observePermissions() {
+        guard let changes = permissions?.changes else { return }
+        permissionObserver = Task { [weak self] in
+            for await _ in changes {
+                self?.refreshPermissions()
+            }
+        }
+    }
+
+    /// Everything but Bluetooth, which the connection itself asks for; the simulator needs nothing real.
+    private func askForPermissions() {
+        guard selectedConnection != .simulator else { return }
+        permissions?.request(.microphone)
+        permissions?.request(.location)
+        failureAlerts?.prepare()
+    }
+
+    public func dismissNotice() {
+        message = nil
     }
 
     public var canConnect: Bool {
@@ -421,11 +478,20 @@ public final class RadioViewModel {
     /// E.g. `Firmware 17 · VHF 134–174 MHz`.
     public var firmwareText: String? {
         snapshot.firmware.map { firmware in
-            let band = firmware.moduleType == .sa818UHF ? "UHF" : "VHF"
-            return
-                "Firmware \(firmware.version) · \(band) \(Int(firmware.minRadioFreq))–\(Int(firmware.maxRadioFreq)) MHz"
+            "Firmware \(firmware.version) · \(Self.band(of: firmware)) "
+                + "\(Int(firmware.minRadioFreq))–\(Int(firmware.maxRadioFreq)) MHz"
         }
     }
+
+    /// `VHF` or `UHF`, once the radio has reported its module.
+    public var bandText: String? { snapshot.firmware.map(Self.band) }
+
+    private static func band(of firmware: FirmwareVersion) -> String {
+        firmware.moduleType == .sa818UHF ? "UHF" : "VHF"
+    }
+
+    /// The bars of the S-meter, the last one for overload.
+    public static let sMeterBarCount = SMeter.overload
 
     public var sMeter: Int { snapshot.sMeter }
 
@@ -499,7 +565,7 @@ public final class RadioViewModel {
         bluetoothScan?.cancel()
         bluetoothScan = nil
         await tearDown()
-        failureAlerts?.prepare()
+        askForPermissions()
         let controller = makeController(selectedConnection, rxAudio)
         self.controller = controller
         await controller.setTXLimits(txLimits)
@@ -530,7 +596,7 @@ public final class RadioViewModel {
 
     public func disconnect() async {
         await tearDown()
-        updateBluetoothScan()
+        refreshPermissions()
     }
 
     private func tearDown() async {
@@ -557,7 +623,7 @@ public final class RadioViewModel {
             let text = Self.message(for: failure)
             message = text
             if !hadFailed { report(text) }
-            updateBluetoothScan()
+            refreshPermissions()
         }
         if snapshot.status == .ready, let reported = snapshot.deviceState?.radio.freqRx, reported != frequency {
             frequency = reported
@@ -566,7 +632,7 @@ public final class RadioViewModel {
     }
 
     private func report(_ text: String) {
-        if !isInBackground || failureAlerts?.showsDialogInBackground != false {
+        if failureAlerts?.usesDialog == true {
             alertMessage = text
         }
         failureAlerts?.deliver(text)
@@ -692,10 +758,9 @@ public final class RadioViewModel {
             message = "Your location is unknown."
             return
         }
-        let round = { (value: Double) in self.isBeaconApproximate ? (value * 100 + 0.5).rounded(.down) / 100 : value }
         let beacon = APRSBeacon(
-            latitude: round(point.latitude),
-            longitude: round(point.longitude),
+            latitude: beaconAccuracy.rounded(point.latitude),
+            longitude: beaconAccuracy.rounded(point.longitude),
             symbolTable: "/",
             symbolCode: beaconSymbol.code
         )
@@ -832,6 +897,11 @@ public final class RadioViewModel {
         return isReady && id >= 0 ? id : nil
     }
 
+    /// The name of the memory the radio is tuned to.
+    public var activeMemoryName: String? {
+        memories.first { $0.id == activeMemoryId }?.name
+    }
+
     public var isScanning: Bool { snapshot.isScanning }
 
     public func loadMemories() async {
@@ -891,6 +961,7 @@ public final class RadioViewModel {
             _ = try await repository.insert(imported)
             memories = try await repository.all()
             message = "Imported \(imported.count) repeater\(imported.count == 1 ? "" : "s")."
+            isNoticeSuccess = true
         }
     }
 

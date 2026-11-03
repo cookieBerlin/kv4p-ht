@@ -13,6 +13,7 @@ final class FakeMicrophone: AudioInput {
 
     private struct State {
         var continuation: AsyncStream<[Int16]>.Continuation?
+        var prepares = 0
         var starts = 0
         var stops = 0
     }
@@ -39,8 +40,13 @@ final class FakeMicrophone: AudioInput {
         opener?.finish()
     }
 
+    var prepares: Int { state.withLock { $0.prepares } }
     var starts: Int { state.withLock { $0.starts } }
     var stops: Int { state.withLock { $0.stops } }
+
+    func prepare() {
+        state.withLock { $0.prepares += 1 }
+    }
 
     func start() async throws -> AsyncStream<[Int16]> {
         state.withLock { $0.starts += 1 }
@@ -116,6 +122,16 @@ struct TransmitControllerTests {
             _ = try #require(await snapshots.next { $0.status == .ready })
             try await controller.tune(rx: 146.52, tx: 146.52)
         }
+    }
+
+    @Test("connecting prepares the microphone without starting it, so that PTT starts it quickly")
+    func preparesMicrophone() async {
+        let microphone = FakeMicrophone()
+        let controller = RadioController(transport: ScriptedTransport(), clock: ManualClock(), microphone: microphone)
+        await controller.connect()
+        #expect(microphone.prepares == 1)
+        #expect(microphone.starts == 0)
+        await controller.disconnect()
     }
 
     @Test("PTT keys the radio and streams the microphone with its gain")

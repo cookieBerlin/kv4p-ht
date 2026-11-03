@@ -13,7 +13,13 @@
             let continuation: AsyncStream<[Int16]>.Continuation
         }
 
+        private struct PreparedEngine: @unchecked Sendable {
+            let engine: AVAudioEngine
+        }
+
         private let session = Mutex<Session?>(nil)
+        /// A new engine takes long to start, which PTT would feel. It is kept between transmissions.
+        private let prepared = Mutex<PreparedEngine?>(nil)
 
         public init() {}
 
@@ -21,10 +27,19 @@
             stop()
         }
 
+        public func prepare() {
+            let engine = AVAudioEngine()
+            _ = engine.inputNode
+            engine.prepare()
+            prepared.withLock { $0 = PreparedEngine(engine: engine) }
+        }
+
         public func start() async throws -> AsyncStream<[Int16]> {
             stop()
-            guard await AVAudioApplication.requestRecordPermission() else { throw Unavailable() }
-            let engine = AVAudioEngine()
+            if AVAudioApplication.shared.recordPermission != .granted {
+                guard await AVAudioApplication.requestRecordPermission() else { throw Unavailable() }
+            }
+            let engine = prepared.withLock { $0.take() }?.engine ?? AVAudioEngine()
             let input = engine.inputNode
             let inputFormat = input.outputFormat(forBus: 0)
             guard inputFormat.sampleRate > 0,
@@ -70,6 +85,8 @@
             guard let stopped = session.withLock({ $0.take() }) else { return }
             stopped.engine.inputNode.removeTap(onBus: 0)
             stopped.engine.stop()
+            stopped.engine.prepare()
+            prepared.withLock { $0 = PreparedEngine(engine: stopped.engine) }
             stopped.continuation.finish()
         }
     }

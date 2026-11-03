@@ -7,8 +7,8 @@ open until the maintainer marks it as done for that platform.
 
 | ID | Test | Mac | iOS |
 |---|---|---|---|
-| [HW-01](#hw-01) | BLE connection, firmware and module type | ⬜ | ⬜ |
-| [HW-02](#hw-02) | USB connection | ⬜ | – |
+| [HW-01](#hw-01) | BLE connection, firmware and module type | ✅ | ✅ |
+| [HW-02](#hw-02) | USB connection | ✅ | – |
 | [HW-03](#hw-03) | RX audio for 10 minutes | ⬜ | ⬜ |
 | [HW-04](#hw-04) | PTT into a dummy load | ⬜ | ⬜ |
 | [HW-05](#hw-05) | Reconnect after a power cycle | ⬜ | ⬜ |
@@ -25,10 +25,11 @@ open until the maintainer marks it as done for that platform.
 | [HW-16](#hw-16) | Background operation | – | ⬜ |
 | [HW-17](#hw-17) | Settings survive a restart | ⬜ | ⬜ |
 | [HW-18](#hw-18) | Outdated firmware notice | – | ⬜ |
-| [HW-19](#hw-19) | Layouts on real devices | – | ⬜ |
-| [HW-20](#hw-20) | Permissions on first use | ⬜ | ⬜ |
+| [HW-19](#hw-19) | Layouts on real devices | ⬜ | ⬜ |
+| [HW-20](#hw-20) | Permissions on first use | ✅ | ✅ |
 | [HW-21](#hw-21) | Choosing a radio over Bluetooth | ✅ | ✅ |
 | [HW-22](#hw-22) | Reporting a failed connection | ⬜ | ⬜ |
+| [HW-23](#hw-23) | PTT starts quickly | ⬜ | ✅ |
 
 ## TestFlight
 
@@ -79,7 +80,7 @@ Tuning is applied and confirmed by the radio. Without the app:
 
 ### HW-08
 
-Tune to the regional APRS frequency. Packets appear in the APRS tab and match what
+Tune to the regional APRS frequency. Packets appear in the APRS list and match what
 the Android app shows for the same packets.
 `swift run kv4p-probe --ble --tune 144.8 --listen 600` prints them.
 
@@ -137,19 +138,26 @@ After a restart of the app, they are unchanged.
 
 ### HW-18
 
-Connect a radio with outdated firmware. The radio tab shows the notice, with links
+Connect a radio with outdated firmware. The bottom of the screen shows the notice, with links
 to the web flasher and the manual.
 
 ### HW-19
 
-On an iPhone and an iPad, in portrait and landscape, all tabs are usable and PTT is
-easy to reach. On an iPad, the app also works in a resized window.
+On an iPhone and an iPad, in portrait and landscape, the header, the memories, APRS
+and the settings are usable and PTT is easy to reach. On an iPad, memories and APRS
+stand side by side, and a narrow window shows pages instead. On an iPhone, swiping and
+the bar at the bottom change between the memories, APRS and the settings. On a Mac,
+they stand side by side, and ⌘, opens the settings. All explanations are readable: tooltips on the
+Mac, texts and ⓘ on iPhone and iPad.
 
 ### HW-20
 
-On a fresh install from TestFlight, the app asks for Bluetooth, the microphone and
-the location when each is first needed. Denying Bluetooth or the microphone shows
-the hint to the system settings.
+On a fresh install from TestFlight, the app asks for nothing at its start. The first
+**Connect** over Bluetooth asks for Bluetooth, the microphone and the location, and on
+iPhone and iPad for notifications. After that, the radios appear under **Radio**.
+Without the microphone, a text with **Open Settings** replaces PTT. Without the location,
+the beacon switch is grey with a text below it. Without Bluetooth, **Connect** is grey
+for Bluetooth radios with a text, and USB and the simulator still work.
 
 ### HW-21
 
@@ -160,10 +168,15 @@ switched off stays in the list, and connecting to it does not reach another radi
 
 ### HW-22
 
-Connect over Bluetooth, then switch the radio off. With the app in front, a dialog
-opens once. Connect again, then choose **Disconnect**: nothing is reported. On the
-Mac, with another app in front, switch the radio off: the dialog opens and the Dock
-icon bounces. On iPhone and iPad, allow notifications at the first connection, then
-lock the screen and switch the radio off: one notification arrives, and no dialog
-waits on return. With notifications denied, the app works and shows the failure as
-its status.
+Connect over Bluetooth, then switch the radio off. On the Mac, a dialog opens once,
+and the status bar shows the reason; with another app in front, the Dock icon also
+bounces. On iPhone and iPad, with the app in front, the reason shows once in red above PTT.
+Allow notifications at the first connection, then lock the screen and switch the radio
+off: one notification arrives, and the reason shows on return. Choosing **Disconnect** reports nothing.
+
+### HW-23
+
+Connect the radio and press PTT. The press gives a light vibration at once (iPhone).
+The button turns red without a noticeable delay, and the microphone indicator of iOS
+lights only while PTT is on, not while merely connected. Moving the finger on the
+button does not end the transmission.

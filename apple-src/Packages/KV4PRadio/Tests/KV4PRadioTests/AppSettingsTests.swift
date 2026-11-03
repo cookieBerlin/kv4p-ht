@@ -16,7 +16,7 @@ struct AppSettingsTests {
         #expect(!settings.isStickyPTT)
         #expect(!settings.isBeaconEnabled)
         #expect(settings.beaconSymbol == .phone)
-        #expect(!settings.isBeaconApproximate)
+        #expect(settings.beaconAccuracy == .exact)
         #expect(settings.beaconFrequency == nil)
         #expect(!settings.isDigipeatingEnabled)
         #expect(!settings.isIGateEnabled)
@@ -43,6 +43,29 @@ struct AppSettingsTests {
         #expect(AppSettings(data: partial) == expected)
         #expect(AppSettings(data: Data("x".utf8)) == AppSettings())
         #expect(AppSettings(data: nil) == AppSettings())
+    }
+
+    @Test("the former switch for an approximate position becomes an accuracy of 1000 m")
+    func formerApproximateSwitch() {
+        #expect(AppSettings(data: Data(#"{"isBeaconApproximate": true}"#.utf8)).beaconAccuracy == .within1000m)
+        #expect(AppSettings(data: Data(#"{"isBeaconApproximate": false}"#.utf8)).beaconAccuracy == .exact)
+        let both = #"{"isBeaconApproximate": true, "beaconAccuracy": "within50m"}"#
+        #expect(AppSettings(data: Data(both.utf8)).beaconAccuracy == .within50m)
+    }
+
+    @Test(
+        "the accuracies round a position to steps of about their distance",
+        arguments: [
+            (BeaconAccuracy.exact, 49.0567, "Exact"),
+            (.within50m, 49.0565, "50 m"),
+            (.within100m, 49.057, "100 m"),
+            (.within500m, 49.055, "500 m"),
+            (.within1000m, 49.06, "1000 m"),
+        ]
+    )
+    func accuracies(accuracy: BeaconAccuracy, rounded: Double, label: String) {
+        #expect(abs(accuracy.rounded(49.0567) - rounded) < 0.000_01)
+        #expect(accuracy.label == label)
     }
 
     @Test("the APRS beacon frequencies Android offers")

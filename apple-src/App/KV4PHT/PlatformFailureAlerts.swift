@@ -6,7 +6,7 @@ import KV4PRadio
     /// The Mac: a dialog, and the Dock icon bounces until the user comes back. The system ignores the request while
     /// the app is active.
     struct PlatformFailureAlerts: FailureAlerting {
-        let showsDialogInBackground = true
+        let usesDialog = true
 
         func prepare() {}
 
@@ -18,9 +18,9 @@ import KV4PRadio
     import UserNotifications
 
     /// iPhone and iPad: a local notification. The system drops it while the app is in the foreground, as the app sets
-    /// no notification delegate. Without permission, the failure shows in the app when the user returns.
+    /// no notification delegate. The app also shows the failure as a notice.
     struct PlatformFailureAlerts: FailureAlerting {
-        let showsDialogInBackground = false
+        let usesDialog = false
 
         func prepare() {
             UNUserNotificationCenter.current().removeAllDeliveredNotifications()

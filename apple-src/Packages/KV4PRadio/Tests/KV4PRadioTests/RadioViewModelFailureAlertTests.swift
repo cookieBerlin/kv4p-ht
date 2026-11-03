@@ -8,12 +8,12 @@ import Testing
 /// Records what the view model asks the platform to do.
 @MainActor
 final class FakeFailureAlerts: FailureAlerting {
-    let showsDialogInBackground: Bool
+    let usesDialog: Bool
     private(set) var prepared = 0
     private(set) var delivered: [String] = []
 
-    init(showsDialogInBackground: Bool) {
-        self.showsDialogInBackground = showsDialogInBackground
+    init(usesDialog: Bool) {
+        self.usesDialog = usesDialog
     }
 
     func prepare() {
@@ -38,8 +38,8 @@ struct RadioViewModelFailureAlertTests {
         let model: RadioViewModel
         private let box = Box<ScriptedTransport>()
 
-        init(showsDialogInBackground: Bool = true, connectError: TransportError? = nil) {
-            let alerts = FakeFailureAlerts(showsDialogInBackground: showsDialogInBackground)
+        init(usesDialog: Bool = true, connectError: TransportError? = nil) {
+            let alerts = FakeFailureAlerts(usesDialog: usesDialog)
             let box = box
             self.alerts = alerts
             model = RadioViewModel(
@@ -68,42 +68,25 @@ struct RadioViewModelFailureAlertTests {
         }
     }
 
-    @Test("a lost connection opens the dialog and reports it to the platform")
-    func lostInForeground() async {
-        let setup = Setup()
+    @Test("the Mac reports a lost connection in a dialog and through the platform")
+    func dialogPlatform() async {
+        let setup = Setup(usesDialog: true)
         await setup.connected()
         await setup.lostConnection()
         #expect(setup.alerts.delivered == [Self.lost])
         #expect(setup.model.alertMessage == Self.lost)
+        #expect(setup.model.notice == nil)
     }
 
-    @Test("in the background, the Mac keeps the dialog open for the user")
-    func dialogInBackground() async {
-        let setup = Setup(showsDialogInBackground: true)
+    @Test("iPhone and iPad show a lost connection once, as the status, and report it through the platform")
+    func statusPlatform() async {
+        let setup = Setup(usesDialog: false)
         await setup.connected()
-        setup.model.isInBackground = true
-        await setup.lostConnection()
-        #expect(setup.alerts.delivered == [Self.lost])
-        #expect(setup.model.alertMessage == Self.lost)
-    }
-
-    @Test("in the background, iPhone and iPad report through the platform only")
-    func noDialogInBackground() async {
-        let setup = Setup(showsDialogInBackground: false)
-        await setup.connected()
-        setup.model.isInBackground = true
         await setup.lostConnection()
         #expect(setup.alerts.delivered == [Self.lost])
         #expect(setup.model.alertMessage == nil)
-        #expect(setup.model.message == Self.lost)
-    }
-
-    @Test("in the foreground, iPhone and iPad show the dialog too")
-    func dialogInForeground() async {
-        let setup = Setup(showsDialogInBackground: false)
-        await setup.connected()
-        await setup.lostConnection()
-        #expect(setup.model.alertMessage == Self.lost)
+        #expect(setup.model.notice == nil)
+        #expect(setup.model.statusText == Self.lost)
     }
 
     @Test("a connection that cannot be set up is reported")
@@ -163,12 +146,12 @@ struct RadioViewModelFailureAlertTests {
         #expect(setup.model.statusText == Self.lost)
     }
 
-    @Test("without a platform adapter, the dialog still opens")
+    @Test("without a platform adapter, a failure shows as the status")
     func noAdapter() async {
         let model = RadioViewModelTests.model(.noRadioModule)
-        model.isInBackground = true
         await model.connect()
-        #expect(await KV4PTestSupport.eventually { model.alertMessage != nil })
-        #expect(model.alertMessage == model.statusText)
+        #expect(await KV4PTestSupport.eventually { model.hasFailed })
+        #expect(model.notice == nil)
+        #expect(model.alertMessage == nil)
     }
 }
