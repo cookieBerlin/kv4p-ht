@@ -16,75 +16,22 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Station") {
-                TextField("Your callsign", text: $callsign)
-                    #if os(iOS)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                    #endif
-                    .onChange(of: callsign) { model.callsign = callsign }
+                LabeledContent("Your callsign") {
+                    TextField("Your callsign", text: $callsign, prompt: Text("N0CALL"))
+                        .labelsHidden()
+                        .multilineTextAlignment(.trailing)
+                        #if os(iOS)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                        #endif
+                        .onChange(of: callsign) { model.callsign = callsign }
+                }
             }
 
             radio
 
-            Section("Channel") {
-                Picker("Bandwidth", selection: $model.isWideBandwidth) {
-                    Text("12.5 kHz").tag(false)
-                    Text("25 kHz").tag(true)
-                }
-                .explained(ControlHelp.bandwidth)
-                Stepper("Squelch \(model.squelch)", value: $model.squelch, in: 0...8)
-                    .explained(ControlHelp.squelch)
-                Picker("TX tone (CTCSS)", selection: $model.txTone) {
-                    ForEach(CTCSS.labels, id: \.self) { Text($0) }
-                }
-                .explained(ControlHelp.txTone)
-                Picker("RX tone (CTCSS)", selection: $model.rxTone) {
-                    ForEach(CTCSS.labels, id: \.self) { Text($0) }
-                }
-                .explained(ControlHelp.rxTone)
-                Toggle("High power", isOn: $model.isHighPower)
-                    .explained(ControlHelp.highPower)
-                Picker("Voice mode", selection: $model.isFreeDV) {
-                    Text("Analog").tag(false)
-                    Text("FreeDV 2400B").tag(true)
-                }
-                .disabled(!model.supportsFreeDV)
-                .explained(ControlHelp.voiceMode)
-                if model.isReady, !model.supportsFreeDV {
-                    Text("The firmware of this radio has no FreeDV 2400B modem.").foregroundStyle(.secondary)
-                }
-            }
-            .disabled(!model.isReady)
-
-            Section("Audio filters") {
-                Toggle("Pre-emphasis", isOn: $model.filters.preEmphasis)
-                    .explained(ControlHelp.preEmphasis)
-                Toggle("High-pass", isOn: $model.filters.highPass)
-                    .explained(ControlHelp.highPass)
-                Toggle("Low-pass", isOn: $model.filters.lowPass)
-                    .explained(ControlHelp.lowPass)
-            }
-            .disabled(!model.isReady)
-
-            Section("Transmit") {
-                Toggle("Sticky PTT", isOn: $model.isStickyPTT)
-                    .explained(ControlHelp.stickyPTT)
-                Picker("Mic gain boost", selection: $model.micGain) {
-                    ForEach(MicGain.allCases, id: \.self) { Text($0.label) }
-                }
-                .explained(ControlHelp.micGain)
-            }
-            .disabled(!model.isReady)
-
-            Section {
-                limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
-                limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
-                limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
-                limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
-            } header: {
-                Text("TX limits")
-            } footer: {
-                Text(ControlHelp.txLimits)
+            if model.isReady {
+                radioSettings
             }
 
             #if os(iOS)
@@ -95,6 +42,16 @@ struct SettingsView: View {
             #endif
 
             aprs
+
+            Section {
+                DisclosureGroup("Advanced") {
+                    limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
+                    limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
+                    limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
+                    limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
+                    Text(ControlHelp.txLimits).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
 
             #if os(iOS)
                 Section { NavigationLink("About kv4p HT") { AboutView() } }
@@ -108,6 +65,54 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+
+    /// What the radio applies at once; hidden without a radio.
+    @ViewBuilder private var radioSettings: some View {
+        Section("Channel") {
+            Picker("Bandwidth", selection: $model.isWideBandwidth) {
+                Text("12.5 kHz").tag(false)
+                Text("25 kHz").tag(true)
+            }
+            .explained(ControlHelp.bandwidth)
+            Stepper("Squelch \(model.squelch)", value: $model.squelch, in: 0...8)
+                .explained(ControlHelp.squelch)
+            Picker("TX tone (CTCSS)", selection: $model.txTone) {
+                ForEach(CTCSS.labels, id: \.self) { Text($0) }
+            }
+            .explained(ControlHelp.txTone)
+            Picker("RX tone (CTCSS)", selection: $model.rxTone) {
+                ForEach(CTCSS.labels, id: \.self) { Text($0) }
+            }
+            .explained(ControlHelp.rxTone)
+            Toggle("High power", isOn: $model.isHighPower)
+                .explained(ControlHelp.highPower)
+            Picker("Voice mode", selection: $model.isFreeDV) {
+                Text("Analog").tag(false)
+                Text("FreeDV 2400B").tag(true)
+            }
+            .disabled(!model.supportsFreeDV)
+            .explained(ControlHelp.voiceMode)
+            if !model.supportsFreeDV {
+                Text("The firmware of this radio has no FreeDV 2400B modem.").foregroundStyle(.secondary)
+            }
+        }
+        Section("Audio filters") {
+            Toggle("Pre-emphasis", isOn: $model.filters.preEmphasis)
+                .explained(ControlHelp.preEmphasis)
+            Toggle("High-pass", isOn: $model.filters.highPass)
+                .explained(ControlHelp.highPass)
+            Toggle("Low-pass", isOn: $model.filters.lowPass)
+                .explained(ControlHelp.lowPass)
+        }
+        Section("Transmit") {
+            Toggle("Sticky PTT", isOn: $model.isStickyPTT)
+                .explained(ControlHelp.stickyPTT)
+            Picker("Mic gain boost", selection: $model.micGain) {
+                ForEach(MicGain.allCases, id: \.self) { Text($0.label) }
+            }
+            .explained(ControlHelp.micGain)
+        }
     }
 
     @ViewBuilder private var radio: some View {
