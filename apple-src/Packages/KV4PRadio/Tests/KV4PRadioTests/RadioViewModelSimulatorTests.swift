@@ -24,7 +24,8 @@ struct RadioViewModelSimulatorTests {
                 },
                 serialDevices: { [] },
                 settings: store,
-                simulator: radio
+                simulator: radio,
+                simulatedFlashStep: .zero
             )
         }
 
@@ -100,6 +101,32 @@ struct RadioViewModelSimulatorTests {
         await setup.model.connect()
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.isReady })
         #expect(!setup.model.canSimulateSignal)
+    }
+
+    @Test("the simulator offers a firmware update, also without a flasher")
+    func offersUpdate() {
+        let setup = Setup()
+        #expect(!setup.model.canUpdateFirmware)
+        setup.model.selectedConnection = .simulator
+        #expect(setup.model.canUpdateFirmware)
+        let plain = RadioViewModelTests.model()
+        plain.selectedConnection = .simulator
+        #expect(!plain.canUpdateFirmware)
+    }
+
+    @Test("too old firmware offers the update, not the web flasher, and the update fixes it")
+    func update() async {
+        let setup = Setup()
+        setup.model.simulatorSettings.hasCurrentFirmware = false
+        setup.model.selectedConnection = .simulator
+        await setup.model.connect()
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isFirmwareOutdated })
+        #expect(!setup.model.isWebFlasherNeeded)
+        #expect(setup.model.canUpdateFirmware)
+        await setup.model.updateFirmware()
+        #expect(setup.model.firmwareUpdate == .finished)
+        #expect(setup.model.simulatorSettings.hasCurrentFirmware)
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isReady })
     }
 
     @Test("losing the connection is reported as a failure")
