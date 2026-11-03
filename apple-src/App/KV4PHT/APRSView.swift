@@ -2,16 +2,11 @@ import KV4PAPRS
 import KV4PRadio
 import SwiftUI
 
-/// The APRS packets heard on air, newest first, and a line to send messages.
+/// The APRS packets heard on air, newest first, and a line to send messages; the settings are in `SettingsView`.
 struct APRSView: View {
     @Bindable var model: RadioViewModel
-    /// The callsign as typed; the model keeps it normalised in the settings.
-    @State private var callsign = ""
     @State private var recipient = ""
     @State private var text = ""
-    #if os(iOS)
-        @State private var isShowingSettings = false
-    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,132 +14,15 @@ struct APRSView: View {
             Divider()
             composer.padding(8)
         }
-        .onAppear { callsign = model.callsign }
-        #if os(iOS)
-            .toolbar {
-                Button("APRS settings", systemImage: "gearshape") { isShowingSettings = true }
-            }
-            .sheet(isPresented: $isShowingSettings) {
-                NavigationStack {
-                    settings
-                    .navigationTitle("APRS settings")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar { Button("Done") { isShowingSettings = false } }
-                }
-            }
-        #endif
     }
 
-    #if os(macOS)
-        private var composer: some View {
-            VStack(alignment: .leading) {
-                HStack {
-                    beaconToggle
-                    symbolPicker.frame(width: 200)
-                    approximateToggle
-                    frequencyPicker.frame(width: 220)
-                    digipeatToggle
-                }
-                HStack {
-                    iGateToggle
-                    feedToggle
-                    internetStatus
-                }
-                HStack {
-                    callsignField.frame(width: 110)
-                    recipientField.frame(width: 140)
-                    messageField
-                    sendButton
-                }
-                .textFieldStyle(.roundedBorder)
-            }
+    private var composer: some View {
+        HStack {
+            recipientField.frame(width: 140)
+            messageField
+            sendButton.labelStyle(.iconOnly)
         }
-    #else
-        /// iOS: the settings move into a sheet, so the message line fits a phone.
-        private var composer: some View {
-            HStack {
-                recipientField.frame(width: 110)
-                messageField
-                sendButton.labelStyle(.iconOnly)
-            }
-            .textFieldStyle(.roundedBorder)
-        }
-
-        private var settings: some View {
-            Form {
-                Section("Station") {
-                    callsignField
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                }
-                Section("Position beacon") {
-                    beaconToggle
-                    symbolPicker
-                    approximateToggle
-                    frequencyPicker
-                }
-                Section {
-                    digipeatToggle
-                    iGateToggle
-                    feedToggle
-                    internetStatus
-                }
-            }
-        }
-    #endif
-
-    private var beaconToggle: some View {
-        Toggle("Position beacon", isOn: $model.isBeaconEnabled)
-            .disabled(!model.canBeacon || model.callsign.isEmpty)
-    }
-
-    private var symbolPicker: some View {
-        Picker("Symbol", selection: $model.beaconSymbol) {
-            ForEach(APRSSymbol.allCases, id: \.self) { Text($0.name) }
-        }
-    }
-
-    private var approximateToggle: some View {
-        Toggle("Approximate position", isOn: $model.isBeaconApproximate)
-    }
-
-    private var frequencyPicker: some View {
-        Picker("on", selection: $model.beaconFrequency) {
-            Text("Current frequency").tag(Float?.none)
-            ForEach(AppSettings.beaconFrequencyOptions, id: \.self) { frequency in
-                Text(HamFrequency.format(frequency) + " MHz").tag(Float?.some(frequency))
-            }
-        }
-    }
-
-    private var digipeatToggle: some View {
-        Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
-            .disabled(model.callsign.isEmpty)
-    }
-
-    private var iGateToggle: some View {
-        Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
-            .disabled(!model.canUseInternet || model.callsign.isEmpty)
-    }
-
-    private var feedToggle: some View {
-        Toggle("Show nearby APRS-IS packets", isOn: $model.isInternetFeedEnabled)
-            .disabled(!model.canUseInternet || model.callsign.isEmpty)
-    }
-
-    @ViewBuilder private var internetStatus: some View {
-        if model.isIGateEnabled || model.isInternetFeedEnabled {
-            Label(
-                model.isInternetConnected ? "APRS-IS connected" : "Connecting to APRS-IS…",
-                systemImage: model.isInternetConnected ? "network" : "network.slash"
-            )
-            .foregroundStyle(.secondary)
-        }
-    }
-
-    private var callsignField: some View {
-        TextField("Your callsign", text: $callsign)
-            .onChange(of: callsign) { model.callsign = callsign }
+        .textFieldStyle(.roundedBorder)
     }
 
     private var recipientField: some View {
@@ -192,7 +70,6 @@ struct APRSView: View {
                 )
             }
         }
-        .navigationTitle("APRS")
     }
 
     private func row(_ event: APRSEvent) -> some View {

@@ -47,7 +47,6 @@ struct MemoriesView: View {
                 }
             }
         }
-        .navigationTitle("Memories")
         .toolbar {
             ToolbarItemGroup {
                 Button(
@@ -92,7 +91,6 @@ struct MemoriesView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
-        .task { await model.loadMemories() }
     }
 
     private func tune(_ id: Int32?) {
