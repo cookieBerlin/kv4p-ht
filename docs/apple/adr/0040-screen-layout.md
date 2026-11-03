@@ -33,6 +33,9 @@ Several controls do not say what they do.
 - **Notices:** problems other than a failed connection show as a line at the bottom of
   every screen until dismissed, on a phone above the page bar. They were not visible at
   all before.
+- **Permissions:** the app asks for the microphone, the location, Bluetooth and, on
+  iPhone and iPad, notifications when it starts, as the Android app does, and no longer
+  when each is first needed.
 - **PTT touch:** iPhone and iPad use a `UIControl`, as SwiftUI's gesture reported a held
   touch late. The Mac keeps the gesture.
 - **PTT:** on a phone, only the memories page shows it, as it serves no purpose on the

@@ -30,6 +30,7 @@ struct RootView: View {
                 if scenePhase == .active { model.startBluetoothScan() } else { model.stopBluetoothScan() }
             }
             .task { await model.loadMemories() }
+            .task { await StartupPermissions.request() }
     }
 
     @ViewBuilder private var content: some View {

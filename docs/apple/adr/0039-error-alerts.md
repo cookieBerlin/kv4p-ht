@@ -25,7 +25,7 @@ the radio is still listening.
   notification and no dialog, so the user gets one report; the status text shows
   the failure on return. The app sets no notification delegate, so the system
   drops a notification sent in the foreground.
-- **Permission:** iOS asks when the user first connects. The request cannot appear
+- **Permission:** iOS asks when the app starts (ADR-0040). The request cannot appear
   while the app is in the background, when the failure happens. Connecting does not
   wait for the answer, and without permission the app works as before.
 - **Background state:** the app counts as in the background only in

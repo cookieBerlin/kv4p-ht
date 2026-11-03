@@ -153,8 +153,9 @@ Mac, texts and ⓘ on iPhone and iPad.
 ### HW-20
 
 On a fresh install from TestFlight, the app asks for Bluetooth, the microphone and
-the location when each is first needed. Denying Bluetooth or the microphone shows
-the hint to the system settings.
+the location at its first start, and on iPhone and iPad for notifications. It does not
+ask again at the next start. Denying Bluetooth or the microphone shows the hint to the
+system settings.
 
 ### HW-21
 

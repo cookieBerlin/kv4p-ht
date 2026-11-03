@@ -60,6 +60,10 @@ Controls that are not self-explanatory explain themselves: 🖥 point at them fo
 tooltip; 📱 a short text is below each setting, and ⓘ explains the
 recipient of a message.
 
+When it first starts, the app asks for access to the microphone, your location and
+Bluetooth, and 📱 for notifications. You can use it with any of them denied, without the
+functions that need them, and change your answers in the system settings.
+
 ## Connecting the radio
 
 Choose the connection under **Radio** in the header (📱 on an iPhone, tap the status
@@ -69,7 +73,7 @@ line) and click **Connect**:
   radios and lists them under **Radio**, each with its name and the end of its ID.
   Choose yours, and the app remembers it for the next start. *Bluetooth (first
   radio found)* connects to whichever kv4p HT it finds first. Allow Bluetooth
-  access when the system asks, which happens when the app first opens.
+  access when the system asks.
   The radio serves one Bluetooth connection at a time, so disconnect other apps
   first.
 - **USB (🖥 only):** connect the radio by USB cable; it appears as
@@ -87,8 +91,8 @@ disconnect yourself:
 
 - 🖥 A dialog opens. While the app is in the background, its Dock icon also bounces.
 - 📱 A dialog opens while the app is in the foreground. In the background, you get a
-  notification instead. The app asks for this permission when you first connect. It
-  works without it, but you then see the failure only when you return to the app.
+  notification instead. The app works without this permission, but you then see the failure
+  only when you return to the app.
 
 ## Receiving
 
@@ -125,7 +129,7 @@ Transmitting requires a license and an antenna or dummy load.
 - **Push to talk:** hold the button at the bottom (📱 it vibrates when the
   transmission starts and ends) while you speak; release it
   to return to receive. It turns red while PTT is pressed and shows *On air* once
-  the radio transmits. The first time, macOS asks for microphone access.
+  the radio transmits. It needs the microphone access the app asks for when it first starts.
 - **Sticky PTT:** each click starts or ends the transmission, as in the Android
   app.
 - **Mic gain boost:** *None*, *Low* (×1.5), *Med* (×2) or *High* (×2.5); use it
@@ -202,8 +206,7 @@ bulletin BLN1CQ.
 where digipeating and the APRS-IS switches are too. The app sends your position right away and then every five
 minutes, as long as the radio is connected and receiving. Choose the symbol
 others see (phone, car, house, …) and, under *Position accuracy*, round the position
-to about 50, 100, 500 or 1000 m. While the beacon is on, the APRS list says so. macOS asks for location access the first time; your
-own beacons appear in the list. Beacons go out on the current TX frequency, or
+to about 50, 100, 500 or 1000 m. While the beacon is on, the APRS list says so. Your own beacons appear in the list. Beacons go out on the current TX frequency, or
 on the APRS frequency chosen next to the symbol (144.390 … 145.825 MHz); the
 radio returns to its frequency afterwards.
 
