@@ -206,7 +206,10 @@ struct SettingsView: View {
         } header: {
             Text("Simulator")
         } footer: {
-            Text("These take effect at the next connection.")
+            Text(
+                model.canConnect
+                    ? "These take effect at the next connection." : "Disconnect to change these settings."
+            )
         }
         .disabled(!model.canConnect)
         if model.canSimulateSignal {
@@ -306,10 +309,14 @@ struct FirmwareUpdateRow: View {
             Button("Flash") { Task { await model.updateFirmware() } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(
-                "This replaces the firmware on your kv4p HT with the version the app ships. Keep the USB cable "
-                    + "connected until the update is finished."
-            )
+            if model.canConfigureSimulator {
+                Text("This gives the simulated radio the current firmware. No real radio is changed.")
+            } else {
+                Text(
+                    "This replaces the firmware on your kv4p HT with the version the app ships. Keep the USB cable "
+                        + "connected until the update is finished."
+                )
+            }
         }
     }
 }

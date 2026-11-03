@@ -83,7 +83,8 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
 - **Simulator:** a built-in simulated radio, to try the app without hardware. While it
   is chosen, ⚙ **Settings** has a **Simulator** section: its band, its firmware, FreeDV,
   the power switch, the radio module and whether it answers, which apply at the next
-  connection. While it is connected, **Simulator actions** set a received signal, lose
+  connection and are locked while connected. **Update firmware…** runs a simulated update
+  that gives it the current firmware. While it is connected, **Simulator actions** set a received signal, lose
   the connection and receive APRS test packets.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and

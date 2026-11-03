@@ -20,6 +20,9 @@ notice. The user also has no sample APRS packets for milestones 4.3 and 4.4.
 - **What acts at once:** the received signal with a strength (S3, S9, S9+40, overload),
   losing the connection, and receiving an APRS packet of each type. The packets use
   placeholder data only.
+- **Firmware update:** the simulator offers **Update firmware…** on all platforms. A
+  stand-in reports progress like the real flasher, and the simulated radio then has the
+  current firmware. The real flasher and the web flasher notice stay for real radios.
 - **Where it shows:** a section in the settings, only while the simulator is the chosen
   radio. It stays in release builds, as App Review and testers use the simulator.
 - **Storage:** with the other settings on the device. Settings sync (milestone 3.8) must
