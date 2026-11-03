@@ -27,7 +27,8 @@ enum Composition {
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
             firmware: firmwareFlasher(),
             settings: settingsStore(),
-            bluetoothScanner: BLEScanner { CoreBluetoothCentral() }
+            bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
+            failureAlerts: PlatformFailureAlerts()
         )
     }
 
