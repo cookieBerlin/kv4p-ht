@@ -19,10 +19,6 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            if model.notice != nil {
-                Section { NoticeBanner(model: model) }
-            }
-
             Section("Station") {
                 LabeledContent("Your callsign") {
                     TextField("Your callsign", text: $callsign, prompt: Text("N0CALL"))
@@ -69,6 +65,9 @@ struct SettingsView: View {
             #endif
         }
         .formStyle(.grouped)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !isPage { NoticeBanner(model: model) }
+        }
         .onAppear { callsign = model.callsign }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
             guard case .success(let url) = result else { return }
@@ -93,6 +92,15 @@ struct SettingsView: View {
         #else
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    /// On a phone, the screen around the settings page shows the notices.
+    private var isPage: Bool {
+        #if os(iOS)
+            sizeClass == .compact
+        #else
+            false
         #endif
     }
 

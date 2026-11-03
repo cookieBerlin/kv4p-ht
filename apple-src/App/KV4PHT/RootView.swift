@@ -99,6 +99,7 @@ struct RootView: View {
                     Divider()
                     PTTBar(model: model)
                 }
+                NoticeBanner(model: model)
                 pageBar
             }
         }

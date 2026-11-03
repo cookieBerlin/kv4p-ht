@@ -1,6 +1,5 @@
 import KV4PAudio
 import KV4PRadio
-import OSLog
 import SwiftUI
 
 extension View {
@@ -14,7 +13,11 @@ extension View {
             .background(.bar)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PTTBar(model: model).background(.bar)
+            VStack(spacing: 0) {
+                NoticeBanner(model: model)
+                PTTBar(model: model)
+            }
+            .background(.bar)
         }
         .navigationTitle(title)
         #if os(iOS)
@@ -52,7 +55,6 @@ struct RadioHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             connection
-            NoticeBanner(model: model)
             if model.isWebFlasherNeeded {
                 WebFlasherNotice()
             } else if model.isFirmwareOutdated || model.firmwareUpdate != .idle {
@@ -201,6 +203,9 @@ struct NoticeBanner: View {
                     .labelStyle(.iconOnly)
                     .buttonStyle(.borderless)
             }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(.bar)
         }
     }
 }
@@ -237,12 +242,9 @@ struct PTTBar: View {
 
 /// Press and hold to transmit; with sticky PTT, each press toggles.
 private struct PTTButton: View {
-    private static let log = Logger(subsystem: "kv4p-ht", category: "ptt")
-
     let model: RadioViewModel
     @Environment(\.isEnabled) private var isEnabled
     @State private var isPressed = false
-    @State private var pressedAt = ContinuousClock.now
 
     var body: some View {
         Label(model.isOnAir ? "On air" : "Push to talk", systemImage: model.isTransmitting ? "mic.fill" : "mic")
@@ -266,11 +268,6 @@ private struct PTTButton: View {
                         .onEnded { _ in released() }
                 )
             #endif
-            .onChange(of: model.isTransmitting) {
-                if model.isTransmitting {
-                    Self.log.info("on after \(String(describing: ContinuousClock.now - pressedAt), privacy: .public)")
-                }
-            }
             .sensoryFeedback(.impact(weight: .light), trigger: isPressed) { _, pressed in pressed }
             .sensoryFeedback(.impact, trigger: model.isTransmitting)
             .accessibilityAddTraits(.isButton)
@@ -280,8 +277,6 @@ private struct PTTButton: View {
     private func pressed() {
         guard isEnabled, !isPressed else { return }
         isPressed = true
-        pressedAt = .now
-        Self.log.info("press recognised")
         Task { await model.pressPTT() }
     }
 
