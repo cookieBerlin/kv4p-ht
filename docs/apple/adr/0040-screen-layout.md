@@ -1,0 +1,41 @@
+# ADR-0040: Screen layout and control explanations
+
+- **Status:** Proposed
+- **Date:** 2026-11-03
+
+## Context
+
+The radio screen is one long form with every setting, and the frequency and S-meter
+scroll out of view. The memories and APRS are separate views, and each platform
+arranges them differently. Users who know the Android app do not find its structure.
+Several controls do not say what they do.
+
+## Decision
+
+- **One structure, as in the Android app:** a header with the connection, frequency,
+  band, squelch state and S-meter; the memories and APRS below; PTT always in reach;
+  the settings on their own screen.
+- **Apple controls:** the app takes over the structure, not the colours, the font or
+  the animated receive circle. A reworked layout changes no behaviour: the user still
+  connects by hand, unlike on Android, and chooses the radio as in ADR-0038.
+- **Room decides, not the device:** with a regular width, and always on the Mac, the
+  memories and APRS stand side by side. With a compact width, which includes an iPad
+  in a narrow window, each has a tab.
+- **Settings:** the Mac uses its settings window (⌘,). iPhone and iPad push a page
+  instead of showing a sheet, because a dialog of ADR-0039 may not appear over a sheet.
+- **Volume:** in the header when there is room, otherwise in the settings.
+- **Firmware:** an outdated firmware shows its notice in the header. The update also
+  stays available in the settings.
+- **Explanations (`ControlHelp`):** each text exists once. The Mac shows it as a
+  tooltip. On iPhone and iPad, a setting has it below the row, and a control without
+  room has an info button.
+
+## Consequences
+
+- The Bluetooth scan of ADR-0038 no longer depends on a radio screen. It runs while the
+  app is active and nothing is connected, as the picker is always in the header.
+- The header takes room from the lists, more so on a phone in landscape.
+- `SettingsView` holds what was on the radio screen and in the APRS settings, so the
+  callsign field moves out of the APRS screen.
+- The layout cannot be tested automatically before milestone 3.7; hardware test HW-19
+  covers it.

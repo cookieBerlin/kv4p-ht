@@ -25,7 +25,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-16](#hw-16) | Background operation | – | ⬜ |
 | [HW-17](#hw-17) | Settings survive a restart | ⬜ | ⬜ |
 | [HW-18](#hw-18) | Outdated firmware notice | – | ⬜ |
-| [HW-19](#hw-19) | Layouts on real devices | – | ⬜ |
+| [HW-19](#hw-19) | Layouts on real devices | ⬜ | ⬜ |
 | [HW-20](#hw-20) | Permissions on first use | ⬜ | ⬜ |
 | [HW-21](#hw-21) | Choosing a radio over Bluetooth | ✅ | ✅ |
 | [HW-22](#hw-22) | Reporting a failed connection | ⬜ | ⬜ |
@@ -79,7 +79,7 @@ Tuning is applied and confirmed by the radio. Without the app:
 
 ### HW-08
 
-Tune to the regional APRS frequency. Packets appear in the APRS tab and match what
+Tune to the regional APRS frequency. Packets appear in the APRS list and match what
 the Android app shows for the same packets.
 `swift run kv4p-probe --ble --tune 144.8 --listen 600` prints them.
 
@@ -137,13 +137,16 @@ After a restart of the app, they are unchanged.
 
 ### HW-18
 
-Connect a radio with outdated firmware. The radio tab shows the notice, with links
+Connect a radio with outdated firmware. The header shows the notice, with links
 to the web flasher and the manual.
 
 ### HW-19
 
-On an iPhone and an iPad, in portrait and landscape, all tabs are usable and PTT is
-easy to reach. On an iPad, the app also works in a resized window.
+On an iPhone and an iPad, in portrait and landscape, the header, the memories, APRS
+and the settings are usable and PTT is easy to reach. On an iPad, memories and APRS
+stand side by side, and a narrow window shows tabs instead. On a Mac, they stand side
+by side, and ⌘, opens the settings. All explanations are readable: tooltips on the
+Mac, texts and ⓘ on iPhone and iPad.
 
 ### HW-20
 

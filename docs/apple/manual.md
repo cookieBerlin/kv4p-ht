@@ -40,25 +40,30 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 ## The main window
 
-- 🖥 **Mac:** the memories are in the sidebar; **Radio** and **APRS** are tabs
-  next to it.
-- 📱 **iPhone and iPad:** **Radio**, **Memories** and **APRS** are tabs, at the
-  bottom on the iPhone and at the top (or as a sidebar) on the iPad. The app
-  opens the tab you used last.
-  - On **Radio** and **Memories**, a bar at the bottom shows the frequency and
-    the S-meter, with a large **Push to talk** button.
-  - ⓘ on the radio tab opens *About*, and ⚙ on the APRS tab opens the APRS
-    settings.
+The structure is the same on all devices, and similar to the Android app:
+
+- **On top:** the connection, the name of the active memory, the frequency, the band,
+  the squelch state and the S-meter. Type a frequency and press Return to tune.
+- **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side;
+  on an iPhone or a narrow iPad window each has a tab at the bottom, and the app opens
+  the one you used last.
+- **At the bottom:** a large **Push to talk** button.
+- ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
+
+Controls that are not self-explanatory explain themselves: 🖥 point at them for a
+tooltip; 📱 a short text is below each setting, and ⓘ explains the S-meter and the
+recipient of a message.
 
 ## Connecting the radio
 
-Choose the connection under **Radio** and click **Connect**:
+Choose the connection under **Radio** in the header (📱 on an iPhone, tap the status
+line) and click **Connect**:
 
 - **Bluetooth:** power on the radio. While nothing is connected, the app looks for
   radios and lists them under **Radio**, each with its name and the end of its ID.
   Choose yours, and the app remembers it for the next start. *Bluetooth (first
   radio found)* connects to whichever kv4p HT it finds first. Allow Bluetooth
-  access when the system asks, which happens when the radio screen first opens.
+  access when the system asks, which happens when the app first opens.
   The radio serves one Bluetooth connection at a time, so disconnect other apps
   first.
 - **USB (🖥 only):** connect the radio by USB cable; it appears as
@@ -91,7 +96,7 @@ disconnect yourself:
 - **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*.
 - **Squelch indicator:** *Open* while a signal is received and played, *Closed*
   otherwise. The radio mutes the audio itself while the squelch is closed.
-- **Volume:** the slider under **Audio** sets the playback volume in the app; the
+- **Volume:** the slider in the header (📱 on an iPhone, in ⚙ **Settings**) sets the playback volume in the app; the
   Mac's own volume applies on top. The audio plays on the current output device
   and moves along when you plug in headphones.
 - 📱 On iPhone and iPad the audio plays on the speaker, or on a connected headset
@@ -102,22 +107,22 @@ disconnect yourself:
   APRS, digipeating and the iGate. Disconnect to save the battery. Position
   beacons wait until the app is on screen again, because iOS only gives the app
   your location while you use it.
-- **Simulator:** *Simulate a received signal* plays a 1 kHz tone with the squelch
+- **Simulator:** *Simulate a received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
   open.
 
 ## Transmitting
 
 Transmitting requires a license and an antenna or dummy load.
 
-- **Push to talk:** hold the button under **Transmit** (📱 in the bar at the
-  bottom; it vibrates when the transmission starts and ends) while you speak; release it
+- **Push to talk:** hold the button at the bottom (📱 it vibrates when the
+  transmission starts and ends) while you speak; release it
   to return to receive. It turns red while PTT is pressed and shows *On air* once
   the radio transmits. The first time, macOS asks for microphone access.
 - **Sticky PTT:** each click starts or ends the transmission, as in the Android
   app.
 - **Mic gain boost:** *None*, *Low* (×1.5), *Med* (×2) or *High* (×2.5); use it
   if others hear you too quietly.
-- **High power** is under **Channel**.
+- **High power** is in ⚙ **Settings** under **Channel**.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
   Narrower limits can be chosen under **TX limits**. Otherwise the screen shows
@@ -132,7 +137,7 @@ Transmitting requires a license and an antenna or dummy load.
 
 ## Memories and scanning
 
-The memory list is in the sidebar (📱 in the **Memories** tab).
+The memory list is next to APRS (on an iPhone, in the **Memories** tab).
 
 - **Tune:** click (📱 tap) a memory; 📱 a checkmark marks the active one. The radio switches to its frequency, repeater
   offset (TX = RX ± offset) and tones. Frequencies outside the module range are
@@ -168,8 +173,8 @@ me* hides messages between other stations; messages from or to you, to `ALL`,
 `QST`, `CQ` and bulletins stay, as do all positions, weather reports and
 objects.
 
-**Messages** (licence required): enter your callsign at the bottom of the APRS
-tab (📱 under ⚙; the app ships with none and remembers yours), a recipient and the text,
+**Messages** (licence required): enter your callsign in ⚙ **Settings** (the app
+ships with none and remembers yours), then a recipient and the text below the APRS list,
 then press Return or **Send**. Without a recipient the message goes out as the
 bulletin BLN1CQ.
 
@@ -185,8 +190,8 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
-**Position beacon** (licence required): turn on *Position beacon* at the bottom
-of the APRS tab (📱 under ⚙, as are digipeating and the APRS-IS switches). The app sends your position right away and then every five
+**Position beacon** (licence required): turn on *Position beacon* in ⚙ **Settings**,
+where digipeating and the APRS-IS switches are too. The app sends your position right away and then every five
 minutes, as long as the radio is connected and receiving. Choose the symbol
 others see (phone, car, house, …) and, with *Approximate position*, round the
 position to about 1 km. macOS asks for location access the first time; your
@@ -215,7 +220,7 @@ digipeater is useful.
 FreeDV 2400B is digital voice on FM radios: the radio's firmware runs the
 modem, the app encodes and decodes the speech with Codec2.
 
-- Set **Voice mode** to *FreeDV 2400B* in the Radio tab. The setting needs
+- Set **Voice mode** to *FreeDV 2400B* in ⚙ **Settings**. The setting needs
   firmware with the FreeDV modem; otherwise the app says so and stays analog.
 - Receiving: the squelch opens only for FreeDV signals; analog stations are not
   heard in this mode. The S-meter shows the signal quality.
@@ -224,7 +229,7 @@ modem, the app encodes and decodes the speech with Codec2.
 - The radio keeps the setting while it is on, also when the app reconnects;
   after a restart it is analog again. Switch back to *Analog* for normal FM.
 - Try it without a second radio: connect the **Simulator**, choose FreeDV 2400B
-  and turn on *Simulate a received signal*; you hear a vowel-like test sound.
+  and turn on *Simulate a received signal* in ⚙ **Settings**; you hear a vowel-like test sound.
 
 ## Settings
 
@@ -232,14 +237,15 @@ The radio keeps its own settings (frequency, bandwidth, squelch, tones, power,
 filters, voice mode) and reports them when the app connects. The app remembers
 its settings between launches:
 
-- **Radio tab:** sticky PTT, mic gain boost and the **TX limits**: 2 m from
+- **⚙ Settings:** sticky PTT, mic gain boost and the **TX limits**: 2 m from
   144 MHz to 148 or 146 MHz, 70 cm from 420 or 430 MHz to 450 or 440 MHz, as in
   the Android app. The app transmits only inside the band of the radio module.
-- **APRS tab:** your callsign, position beacon with symbol, accuracy and
-  frequency, digipeating, iGate, the APRS-IS feed and the list filter.
-- **Memories tab:** the group shown.
+- **⚙ Settings:** your callsign, position beacon with symbol, accuracy and
+  frequency, digipeating, iGate and the APRS-IS feed.
+- **APRS list:** the list filter.
+- **Memories:** the group shown.
 
-**kv4p HT → About kv4p HT** (📱 ⓘ on the radio tab) shows the version, build and commit of the app, the
+**kv4p HT → About kv4p HT** (📱 at the end of ⚙ **Settings**) shows the version, build and commit of the app, the
 firmware it ships for USB updates, and the licences of everything it contains
 or is ported from, with the licence texts.
 
@@ -253,14 +259,14 @@ The app warns when the radio's firmware is older than required or missing
 (*The radio needs a firmware update.*).
 
 - 🖥 Connect the radio by USB, select it under **Radio** and choose **Update
-  firmware…**, then **Flash**. The app writes firmware 17, the version the
+  firmware…** in the header or in ⚙ **Settings**, then **Flash**. The app writes firmware 17, the version the
   Android app ships, verifies it and reconnects, in less than a minute. Do
   not disconnect the cable until *Firmware updated and verified.* appears. If an
   update fails, simply start it again: the radio's bootloader is always there.
 - Firmware built from the current source has Bluetooth LE; the version the app
   ships does not ([FAQ](faq.md#which-firmware-do-i-need)). Updating such a radio
   removes Bluetooth LE, so update only if the radio needs it.
-- 📱 Updating from iPhone or iPad is not possible. The warning on the radio tab
+- 📱 Updating from iPhone or iPad is not possible. The warning in the header
   links to the [web flasher](https://kv4p.com/firmware.html) on the project
   website, which runs in desktop Chrome or Edge, and to this section. The
   Android app or a Mac can update the radio too.
@@ -276,7 +282,7 @@ The app warns when the radio's firmware is older than required or missing
 | *Bluetooth access is not allowed.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
 | *The microphone is not available.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
-| *Set your callsign to send APRS messages.* | Enter your callsign in the APRS tab. |
+| *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings**. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
 | *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |
