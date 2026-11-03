@@ -104,8 +104,6 @@ public final class RadioViewModel {
     public private(set) var message: String?
     /// A failed connection, for the dialog; `nil` when no dialog is open (ADR-0039).
     public private(set) var alertMessage: String?
-    /// The app is not on screen; set by the views.
-    public var isInBackground = false
 
     private static let disconnected = RadioSnapshot(
         status: .disconnected,
@@ -224,7 +222,7 @@ public final class RadioViewModel {
     /// `aprsBeaconTxOverrideMhz`: set while a beacon is submitted.
     private var beaconOverride: Float?
     /// A location is available for beacons.
-    public var canBeacon: Bool { location != nil }
+    public var canBeacon: Bool { location != nil && !isDenied(.location) }
 
     static let beaconIntervalMs: Int64 = 5 * 60_000
     private var nextBeaconAtMs: Int64 = 0
@@ -241,6 +239,9 @@ public final class RadioViewModel {
     private let serialDevices: () -> [String]
     private let bluetoothScanner: (any BLEScanning)?
     private let failureAlerts: (any FailureAlerting)?
+    private let permissions: (any PermissionChecking)?
+    private var deniedPermissions: Set<Permission> = []
+    private var permissionObserver: Task<Void, Never>?
     private var bluetoothRadio: BLEDevice?
     private var foundRadios: [BLEDevice] = []
     private var isBluetoothScanWanted = false
@@ -275,6 +276,7 @@ public final class RadioViewModel {
         settings: (any SettingsStore)? = nil,
         bluetoothScanner: (any BLEScanning)? = nil,
         failureAlerts: (any FailureAlerting)? = nil,
+        permissions: (any PermissionChecking)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -283,6 +285,7 @@ public final class RadioViewModel {
         settingsStore = settings
         self.bluetoothScanner = bluetoothScanner
         self.failureAlerts = failureAlerts
+        self.permissions = permissions
         self.location = location
         self.internet = internet
         self.now = now
@@ -299,7 +302,9 @@ public final class RadioViewModel {
         refreshConnections()
         observeInternet()
         observeAudioSession()
+        observePermissions()
         restore(AppSettings(data: settings?.load()))
+        refreshPermissions()
     }
 
     // MARK: Settings
@@ -374,7 +379,9 @@ public final class RadioViewModel {
     }
 
     private func updateBluetoothScan() {
-        guard isBluetoothScanWanted, controller == nil || hasFailed else {
+        // Without a decision, a scan would ask for Bluetooth, which waits until the user connects.
+        let isAllowed = permissions.map { $0.state(of: .bluetooth) == .granted } ?? true
+        guard isBluetoothScanWanted, controller == nil || hasFailed, isAllowed else {
             bluetoothScan?.cancel()
             bluetoothScan = nil
             return
@@ -409,8 +416,50 @@ public final class RadioViewModel {
         return false
     }
 
-    /// A problem to show besides the status, as a failed connection is the status itself.
-    public var notice: String? { hasFailed ? nil : message }
+    /// A problem to show; a failed connection opens a dialog instead where the platform uses one.
+    public var notice: String? { hasFailed && failureAlerts?.usesDialog == true ? nil : message }
+
+    /// The status where a notice or a dialog has the reason of a failure.
+    public var statusSummary: String { hasFailed ? "Connection failed" : statusText }
+
+    public func isDenied(_ permission: Permission) -> Bool {
+        deniedPermissions.contains(permission)
+    }
+
+    /// The chosen connection needs the Bluetooth access the user has refused.
+    public var isBluetoothBlocked: Bool {
+        guard isDenied(.bluetooth) else { return false }
+        switch selectedConnection {
+        case .bluetooth, .bluetoothDevice: return true
+        case .serial, .simulator: return false
+        }
+    }
+
+    public var canStartConnection: Bool { canConnect && !isBluetoothBlocked && !firmwareUpdate.isRunning }
+
+    /// Reads the permissions again; the beacon ends without location access and stays off afterwards.
+    public func refreshPermissions() {
+        deniedPermissions = Set(Permission.allCases.filter { permissions?.state(of: $0) == .denied })
+        if isDenied(.location) { isBeaconEnabled = false }
+        updateBluetoothScan()
+    }
+
+    private func observePermissions() {
+        guard let changes = permissions?.changes else { return }
+        permissionObserver = Task { [weak self] in
+            for await _ in changes {
+                self?.refreshPermissions()
+            }
+        }
+    }
+
+    /// Everything but Bluetooth, which the connection itself asks for; the simulator needs nothing real.
+    private func askForPermissions() {
+        guard selectedConnection != .simulator else { return }
+        permissions?.request(.microphone)
+        permissions?.request(.location)
+        failureAlerts?.prepare()
+    }
 
     public func dismissNotice() {
         message = nil
@@ -515,7 +564,7 @@ public final class RadioViewModel {
         bluetoothScan?.cancel()
         bluetoothScan = nil
         await tearDown()
-        failureAlerts?.prepare()
+        askForPermissions()
         let controller = makeController(selectedConnection, rxAudio)
         self.controller = controller
         await controller.setTXLimits(txLimits)
@@ -546,7 +595,7 @@ public final class RadioViewModel {
 
     public func disconnect() async {
         await tearDown()
-        updateBluetoothScan()
+        refreshPermissions()
     }
 
     private func tearDown() async {
@@ -573,7 +622,7 @@ public final class RadioViewModel {
             let text = Self.message(for: failure)
             message = text
             if !hadFailed { report(text) }
-            updateBluetoothScan()
+            refreshPermissions()
         }
         if snapshot.status == .ready, let reported = snapshot.deviceState?.radio.freqRx, reported != frequency {
             frequency = reported
@@ -582,7 +631,7 @@ public final class RadioViewModel {
     }
 
     private func report(_ text: String) {
-        if !isInBackground || failureAlerts?.showsDialogInBackground != false {
+        if failureAlerts?.usesDialog == true {
             alertMessage = text
         }
         failureAlerts?.deliver(text)
