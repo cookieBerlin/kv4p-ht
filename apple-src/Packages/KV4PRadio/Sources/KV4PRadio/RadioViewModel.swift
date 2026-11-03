@@ -43,6 +43,21 @@ public struct AudioFilters: Equatable, Sendable {
     }
 }
 
+/// What a bar of the S-meter stands for; red is only for the one real problem, overload (ADR-0040).
+public enum SMeterZone: Sendable {
+    case weak, normal, strong, overload
+
+    /// `bar` counts from 0: bar 0 lights at S1, and the last one at overload.
+    public init(bar: Int) {
+        switch bar {
+        case 0..<3: self = .weak
+        case 3..<9: self = .normal
+        case 9..<SMeter.overload - 1: self = .strong
+        default: self = .overload
+        }
+    }
+}
+
 /// State and actions of the radio screen; the SwiftUI views only bind to it.
 @MainActor
 @Observable

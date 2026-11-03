@@ -142,12 +142,13 @@ private struct SMeterBars: View {
 
     let value: Int
     let squelch: Int?
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: Self.spacing) {
             ForEach(0..<RadioViewModel.sMeterBarCount, id: \.self) { bar in
                 RoundedRectangle(cornerRadius: 1)
-                    .fill(bar < value ? Color.green : Color.secondary.opacity(0.25))
+                    .fill(bar < value ? color(of: SMeterZone(bar: bar)) : Color.secondary.opacity(0.25))
                     .frame(height: 16)
             }
         }
@@ -162,6 +163,16 @@ private struct SMeterBars: View {
             }
         }
         .padding(.vertical, Self.markOverhang)
+    }
+
+    /// Plain yellow is hard to read on a light background.
+    private func color(of zone: SMeterZone) -> Color {
+        switch zone {
+        case .weak: colorScheme == .dark ? .yellow : Color(red: 0.78, green: 0.62, blue: 0)
+        case .normal: .green
+        case .strong: .orange
+        case .overload: .red
+        }
     }
 
     private func markOffset(_ squelch: Int, width: CGFloat) -> CGFloat {
