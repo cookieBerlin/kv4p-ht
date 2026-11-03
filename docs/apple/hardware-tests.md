@@ -29,7 +29,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-20](#hw-20) | Permissions on first use | ⬜ | ⬜ |
 | [HW-21](#hw-21) | Choosing a radio over Bluetooth | ✅ | ✅ |
 | [HW-22](#hw-22) | Reporting a failed connection | ⬜ | ⬜ |
-| [HW-23](#hw-23) | PTT starts quickly | ⬜ | ⬜ |
+| [HW-23](#hw-23) | PTT starts quickly | ⬜ | ✅ |
 
 ## TestFlight
 
@@ -178,5 +178,4 @@ its status.
 Connect the radio and press PTT. The press gives a light vibration at once (iPhone).
 The button turns red without a noticeable delay, and the microphone indicator of iOS
 lights only while PTT is on, not while merely connected. Moving the finger on the
-button does not end the transmission. In the Xcode console, the `ptt` and `microphone`
-logs show the timing.
+button does not end the transmission.

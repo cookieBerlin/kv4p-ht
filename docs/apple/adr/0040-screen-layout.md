@@ -30,8 +30,9 @@ Several controls do not say what they do.
   *Advanced*. The RepeaterBook import moves here, as a phone has no room for it.
 - **Memory actions:** each memory shows a button with its actions, because the pages
   take a sideways swipe and a touch and hold cannot be discovered.
-- **Notices:** problems other than a failed connection show as a line in the header
-  and the settings until dismissed. They were not visible at all before.
+- **Notices:** problems other than a failed connection show as a line at the bottom of
+  every screen until dismissed, on a phone above the page bar. They were not visible at
+  all before.
 - **PTT touch:** iPhone and iPad use a `UIControl`, as SwiftUI's gesture reported a held
   touch late. The Mac keeps the gesture.
 - **PTT:** on a phone, only the memories page shows it, as it serves no purpose on the
