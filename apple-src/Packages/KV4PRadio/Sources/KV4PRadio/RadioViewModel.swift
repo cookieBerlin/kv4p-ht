@@ -102,6 +102,10 @@ public final class RadioViewModel {
     public var frequencyText = ""
     /// The last problem, in words for the user.
     public private(set) var message: String?
+    /// A failed connection, for the dialog; `nil` when no dialog is open (ADR-0039).
+    public private(set) var alertMessage: String?
+    /// The app is not on screen; set by the views.
+    public var isInBackground = false
 
     private static let disconnected = RadioSnapshot(
         status: .disconnected,
@@ -237,6 +241,7 @@ public final class RadioViewModel {
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
     private let bluetoothScanner: (any BLEScanning)?
+    private let failureAlerts: (any FailureAlerting)?
     private var bluetoothRadio: BLEDevice?
     private var foundRadios: [BLEDevice] = []
     private var isBluetoothScanWanted = false
@@ -270,6 +275,7 @@ public final class RadioViewModel {
         firmware: (any FirmwareFlashing)? = nil,
         settings: (any SettingsStore)? = nil,
         bluetoothScanner: (any BLEScanning)? = nil,
+        failureAlerts: (any FailureAlerting)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -277,6 +283,7 @@ public final class RadioViewModel {
         self.firmware = firmware
         settingsStore = settings
         self.bluetoothScanner = bluetoothScanner
+        self.failureAlerts = failureAlerts
         self.location = location
         self.internet = internet
         self.now = now
@@ -368,9 +375,7 @@ public final class RadioViewModel {
     }
 
     private func updateBluetoothScan() {
-        var isIdle = controller == nil
-        if case .failed = snapshot.status { isIdle = true }
-        guard isBluetoothScanWanted, isIdle else {
+        guard isBluetoothScanWanted, controller == nil || hasFailed else {
             bluetoothScan?.cancel()
             bluetoothScan = nil
             return
@@ -398,6 +403,11 @@ public final class RadioViewModel {
     }
 
     public var isReady: Bool { snapshot.status == .ready }
+
+    private var hasFailed: Bool {
+        if case .failed = snapshot.status { return true }
+        return false
+    }
 
     public var canConnect: Bool {
         switch snapshot.status {
@@ -489,6 +499,7 @@ public final class RadioViewModel {
         bluetoothScan?.cancel()
         bluetoothScan = nil
         await tearDown()
+        failureAlerts?.prepare()
         let controller = makeController(selectedConnection, rxAudio)
         self.controller = controller
         await controller.setTXLimits(txLimits)
@@ -540,15 +551,29 @@ public final class RadioViewModel {
 
     private func show(_ snapshot: RadioSnapshot) {
         guard snapshot.revision >= self.snapshot.revision else { return }  // already showing a newer one
+        let hadFailed = hasFailed
         self.snapshot = snapshot
         if case .failed(let failure) = snapshot.status {
-            message = Self.message(for: failure)
+            let text = Self.message(for: failure)
+            message = text
+            if !hadFailed { report(text) }
             updateBluetoothScan()
         }
         if snapshot.status == .ready, let reported = snapshot.deviceState?.radio.freqRx, reported != frequency {
             frequency = reported
             frequencyText = HamFrequency.format(reported)
         }
+    }
+
+    private func report(_ text: String) {
+        if !isInBackground || failureAlerts?.showsDialogInBackground != false {
+            alertMessage = text
+        }
+        failureAlerts?.deliver(text)
+    }
+
+    public func dismissAlert() {
+        alertMessage = nil
     }
 
     // MARK: Audio session

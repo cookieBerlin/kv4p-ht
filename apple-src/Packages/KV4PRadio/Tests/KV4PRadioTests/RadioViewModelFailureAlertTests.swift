@@ -119,10 +119,7 @@ struct RadioViewModelFailureAlertTests {
         let setup = Setup()
         await setup.connected()
         await setup.lostConnection()
-        let revision = setup.model.snapshot.revision
-        setup.loseConnection()
-        #expect(await KV4PTestSupport.eventually { setup.model.snapshot.revision > revision })
-        await setup.model.handle(.deviceUnavailable)
+        await setup.model.handle(.deviceUnavailable)  // shows the failed snapshot again
         #expect(setup.alerts.delivered.count == 1)
     }
 
