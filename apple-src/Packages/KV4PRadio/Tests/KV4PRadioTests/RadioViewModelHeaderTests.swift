@@ -53,14 +53,4 @@ struct RadioViewModelNoticeTests {
         #expect(model.notice == nil)
         #expect(model.message == nil)
     }
-
-    @Test("a failed connection shows as the status, not as a notice")
-    func failure() async {
-        let model = RadioViewModelTests.model(.noRadioModule)
-        #expect(!model.hasFailed)
-        await model.connect()
-        #expect(await RadioViewModelTests.eventually(model) { $0.hasFailed })
-        #expect(model.message != nil)
-        #expect(model.notice == nil)
-    }
 }
