@@ -47,10 +47,12 @@ struct MemoriesView: View {
     /// The group shown and what acts on the memories, above the list.
     private var controls: some View {
         HStack {
+            Text("Group")
             Picker("Group", selection: $model.selectedGroup) {
                 Text("All").tag(String?.none)
                 ForEach(model.groups, id: \.self) { Text($0).tag(String?.some($0)) }
             }
+            .labelsHidden()
             .fixedSize()
             Spacer()
             Button(model.isScanning ? "Stop scan" : "Scan") {

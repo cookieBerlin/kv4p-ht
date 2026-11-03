@@ -44,11 +44,14 @@ The structure is the same on all devices, and similar to the Android app:
 
 - **On top:** the connection, the name of the active memory, the frequency, the band,
   the squelch state and the S-meter. Type a frequency and press Return to tune.
-- **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side;
-  on an iPhone or a narrow iPad window each has a tab at the bottom, and the app opens
-  the one you used last.
+- **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
 - **At the bottom:** a large **Push to talk** button.
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
+
+📱 On an iPhone or in a narrow iPad window, **Memories**, **APRS** and ⚙ **Settings**
+are pages: use the bar at the bottom, or swipe sideways. The app opens the page you
+used last. The settings page shows neither the header nor PTT. On a memory, swiping
+from right to left opens its actions, so swipe elsewhere to change the page.
 
 Controls that are not self-explanatory explain themselves: 🖥 point at them for a
 tooltip; 📱 a short text is below each setting, and ⓘ explains the S-meter and the
@@ -93,9 +96,11 @@ disconnect yourself:
 - **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8.
 - **TX/RX tone (CTCSS):** one of the 38 standard tones or *None*.
 - **High power** and the **audio filters** (pre-emphasis, high-pass, low-pass).
-- **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*.
-- **Squelch indicator:** *Open* while a signal is received and played, *Closed*
-  otherwise. The radio mutes the audio itself while the squelch is closed.
+- **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*. The mark above the bars
+  shows the squelch level you set.
+- **Squelch indicator:** a green speaker while a signal is received and played, a
+  crossed-out speaker otherwise. The radio mutes the audio itself while the squelch
+  is closed.
 - **Volume:** the slider in the header (📱 on an iPhone, in ⚙ **Settings**) sets the playback volume in the app; the
   Mac's own volume applies on top. The audio plays on the current output device
   and moves along when you plug in headphones.
@@ -125,7 +130,7 @@ Transmitting requires a license and an antenna or dummy load.
 - **High power** is in ⚙ **Settings** under **Channel**.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
-  Narrower limits can be chosen under **TX limits**. Otherwise the screen shows
+  Narrower limits can be chosen in ⚙ **Settings** under **Advanced**. Otherwise the screen shows
   *Can't transmit outside the ham band.*
 - 📱 A phone call, or a headset that is unplugged or switched off, ends the
   transmission.
@@ -147,7 +152,8 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   when you swipe a memory to the left. A memory has a name,
   frequency, offset (none, down or up, in kHz, default 600), TX and RX tone, an
   optional group and *Skip during scan*.
-- **Groups:** the **Group** picker shows one group or all memories.
+- **Groups:** the **Group** picker above the list shows one group or all memories.
+  **Scan**, **+** and the import are next to it.
 - **Scan:** steps through the memories shown, in order, and stays on a memory
   while a signal opens the squelch. It moves on 250 ms after the squelch closes.
   It skips memories marked *Skip during scan* and those outside the module
@@ -237,7 +243,8 @@ The radio keeps its own settings (frequency, bandwidth, squelch, tones, power,
 filters, voice mode) and reports them when the app connects. The app remembers
 its settings between launches:
 
-- **⚙ Settings:** sticky PTT, mic gain boost and the **TX limits**: 2 m from
+- **⚙ Settings:** sticky PTT and mic gain boost, which appear with the other radio
+  settings while the radio is connected. Under **Advanced**, the **TX limits**: 2 m from
   144 MHz to 148 or 146 MHz, 70 cm from 420 or 430 MHz to 450 or 440 MHz, as in
   the Android app. The app transmits only inside the band of the radio module.
 - **⚙ Settings:** your callsign, position beacon with symbol, accuracy and

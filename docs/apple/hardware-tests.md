@@ -29,6 +29,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-20](#hw-20) | Permissions on first use | ⬜ | ⬜ |
 | [HW-21](#hw-21) | Choosing a radio over Bluetooth | ✅ | ✅ |
 | [HW-22](#hw-22) | Reporting a failed connection | ⬜ | ⬜ |
+| [HW-23](#hw-23) | PTT starts quickly | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -144,8 +145,9 @@ to the web flasher and the manual.
 
 On an iPhone and an iPad, in portrait and landscape, the header, the memories, APRS
 and the settings are usable and PTT is easy to reach. On an iPad, memories and APRS
-stand side by side, and a narrow window shows tabs instead. On a Mac, they stand side
-by side, and ⌘, opens the settings. All explanations are readable: tooltips on the
+stand side by side, and a narrow window shows pages instead. On an iPhone, swiping and
+the bar at the bottom change between the memories, APRS and the settings. On a Mac,
+they stand side by side, and ⌘, opens the settings. All explanations are readable: tooltips on the
 Mac, texts and ⓘ on iPhone and iPad.
 
 ### HW-20
@@ -170,3 +172,11 @@ icon bounces. On iPhone and iPad, allow notifications at the first connection, t
 lock the screen and switch the radio off: one notification arrives, and no dialog
 waits on return. With notifications denied, the app works and shows the failure as
 its status.
+
+### HW-23
+
+Connect the radio and press PTT. The press gives a light vibration at once (iPhone).
+The button turns red clearly faster than the earlier two seconds, and the microphone
+indicator of iOS lights only while PTT is on, not while merely connected. Moving the
+finger on the button does not end the transmission. In the Xcode console, the
+`microphone` log shows how long the start took.

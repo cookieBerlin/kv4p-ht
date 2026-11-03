@@ -3,7 +3,7 @@ import KV4PRadio
 import SwiftUI
 
 extension View {
-    /// The parts of the main screen around the memories and APRS: the header, the PTT bar and the settings button.
+    /// With room for it, the parts around the memories and APRS: the header, the PTT bar and the settings button.
     func mainChrome(_ model: RadioViewModel, title: String) -> some View {
         safeAreaInset(edge: .top, spacing: 0) {
             VStack(spacing: 0) {
@@ -34,7 +34,7 @@ extension View {
 }
 
 /// The connection, the frequency and the S-meter, as at the top of the Android app.
-private struct RadioHeader: View {
+struct RadioHeader: View {
     @Bindable var model: RadioViewModel
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
@@ -201,7 +201,7 @@ struct VolumeSlider: View {
 }
 
 /// PTT stays in reach below the memories and APRS.
-private struct PTTBar: View {
+struct PTTBar: View {
     let model: RadioViewModel
 
     var body: some View {
