@@ -403,9 +403,17 @@ public final class RadioViewModel {
 
     public var isReady: Bool { snapshot.status == .ready }
 
-    private var hasFailed: Bool {
+    /// The connection has failed; `statusText` says why.
+    public var hasFailed: Bool {
         if case .failed = snapshot.status { return true }
         return false
+    }
+
+    /// A problem to show besides the status, as a failed connection is the status itself.
+    public var notice: String? { hasFailed ? nil : message }
+
+    public func dismissNotice() {
+        message = nil
     }
 
     public var canConnect: Bool {
