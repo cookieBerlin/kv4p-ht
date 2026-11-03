@@ -36,3 +36,31 @@ struct RadioViewModelHeaderTests {
         #expect(RadioViewModel.sMeterBarCount == SMeter.overload)
     }
 }
+
+/// Problems that are not a failed connection, which the app shows until the user dismisses them.
+@MainActor
+@Suite("Radio view model: notices")
+struct RadioViewModelNoticeTests {
+    @Test("a problem is a notice until the user dismisses it")
+    func notice() async {
+        let model = RadioViewModelTests.model()
+        #expect(model.notice == nil)
+        await model.importRepeaterBook("not a csv", group: "Group")
+        let notice = model.notice
+        #expect(notice != nil)
+        #expect(notice == model.message)
+        model.dismissNotice()
+        #expect(model.notice == nil)
+        #expect(model.message == nil)
+    }
+
+    @Test("a failed connection shows as the status, not as a notice")
+    func failure() async {
+        let model = RadioViewModelTests.model(.noRadioModule)
+        #expect(!model.hasFailed)
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.hasFailed })
+        #expect(model.message != nil)
+        #expect(model.notice == nil)
+    }
+}
