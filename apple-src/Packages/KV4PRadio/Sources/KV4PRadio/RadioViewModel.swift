@@ -101,7 +101,11 @@ public final class RadioViewModel {
     /// The frequency field, in MHz.
     public var frequencyText = ""
     /// The last problem, in words for the user.
-    public private(set) var message: String?
+    public private(set) var message: String? {
+        didSet { isNoticeSuccess = false }
+    }
+    /// `notice` reports something that worked.
+    public private(set) var isNoticeSuccess = false
     /// A failed connection, for the dialog; `nil` when no dialog is open (ADR-0039).
     public private(set) var alertMessage: String?
 
@@ -416,11 +420,8 @@ public final class RadioViewModel {
         return false
     }
 
-    /// A problem to show; a failed connection opens a dialog instead where the platform uses one.
-    public var notice: String? { hasFailed && failureAlerts?.usesDialog == true ? nil : message }
-
-    /// The status where a notice or a dialog has the reason of a failure.
-    public var statusSummary: String { hasFailed ? "Connection failed" : statusText }
+    /// A message to show besides the status, as a failed connection is the status itself.
+    public var notice: String? { hasFailed ? nil : message }
 
     public func isDenied(_ permission: Permission) -> Bool {
         deniedPermissions.contains(permission)
@@ -960,6 +961,7 @@ public final class RadioViewModel {
             _ = try await repository.insert(imported)
             memories = try await repository.all()
             message = "Imported \(imported.count) repeater\(imported.count == 1 ? "" : "s")."
+            isNoticeSuccess = true
         }
     }
 
