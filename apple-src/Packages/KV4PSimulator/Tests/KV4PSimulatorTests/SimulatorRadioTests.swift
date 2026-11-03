@@ -51,6 +51,30 @@ struct SimulatorRadioTests {
         #expect(SimulatedSignal.allCases.map(\.rawValue) == Array(0...SMeter.overload))
     }
 
+    @Test("from strength to strength, the tone only rises and the noise only falls")
+    func mix() {
+        let carriers = SimulatedSignal.allCases.map(\.carrier)
+        for (lower, higher) in zip(carriers, carriers.dropFirst()) {
+            #expect(lower.amplitude <= higher.amplitude)
+            #expect(lower.noiseAmplitude >= higher.noiseAmplitude)
+        }
+        #expect(SimulatedSignal.s0.carrier.amplitude == 0)
+        #expect(SimulatedSignal.s0.carrier.noiseAmplitude == 2000)
+        #expect(SimulatedSignal.s3.carrier.amplitude == 1600)
+        #expect(SimulatedSignal.s9.carrier.amplitude == 8000)
+        #expect(SimulatedSignal.s9.carrier.noiseAmplitude == 0)
+        #expect(SimulatedSignal.allCases.filter { $0.carrier.isDistorted } == [.overload])
+    }
+
+    @Test("the ramp runs up through every strength and back down")
+    func ramp() {
+        #expect(SimulatedSignal.ramp.first == .s0)
+        #expect(SimulatedSignal.ramp.last == .s0)
+        #expect(SimulatedSignal.ramp.count == 27)
+        #expect(SimulatedSignal.ramp[13] == .overload)
+        #expect(SimulatedSignal.ramp[12] == SimulatedSignal.ramp[14])
+    }
+
     @Test("the bands are named")
     func bands() {
         #expect(SimulatedBand.allCases.map(\.label) == ["VHF", "UHF"])

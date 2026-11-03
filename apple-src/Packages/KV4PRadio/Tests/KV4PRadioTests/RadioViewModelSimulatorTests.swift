@@ -111,6 +111,65 @@ struct RadioViewModelSimulatorTests {
         )
     }
 
+    /// A simulator that records the signals.
+    @MainActor
+    final class FakeSimulator: SimulatorControlling {
+        var settings = SimulatorSettings()
+        private(set) var signals: [SimulatedSignal?] = []
+
+        func setSignal(_ signal: SimulatedSignal?) async {
+            signals.append(signal)
+        }
+
+        func loseConnection() async {}
+
+        func hear(_ frame: [UInt8]) async {}
+    }
+
+    static func rampModel(_ fake: FakeSimulator, step: Duration) -> RadioViewModel {
+        RadioViewModel(
+            makeController: { _, rxAudio in
+                RadioController(
+                    transport: SimulatorTransport(clock: ManualClock()),
+                    clock: ManualClock(),
+                    rxAudio: rxAudio
+                )
+            },
+            serialDevices: { [] },
+            simulator: fake,
+            simulatedSignalStep: step
+        )
+    }
+
+    @Test("the ramp plays every strength up and down, then ends without a signal")
+    func ramp() async {
+        let fake = FakeSimulator()
+        let model = Self.rampModel(fake, step: .zero)
+        #expect(!model.isSignalRampRunning)
+        model.toggleSignalRamp()
+        #expect(model.isSignalRampRunning)
+        #expect(await KV4PTestSupport.eventually { !model.isSignalRampRunning })
+        #expect(await KV4PTestSupport.eventually { fake.signals.last == .some(nil) })
+        #expect(model.simulatedSignal == nil)
+        #expect(fake.signals.dropLast().map { $0 } == SimulatedSignal.ramp.map { $0 })
+    }
+
+    @Test("the ramp stops on request and with the connection")
+    func rampStops() async {
+        let fake = FakeSimulator()
+        let model = Self.rampModel(fake, step: .seconds(60))
+        model.toggleSignalRamp()
+        #expect(await KV4PTestSupport.eventually { model.simulatedSignal == .s0 })
+        model.toggleSignalRamp()
+        #expect(!model.isSignalRampRunning)
+        #expect(model.simulatedSignal == nil)
+        model.toggleSignalRamp()
+        #expect(await KV4PTestSupport.eventually { model.simulatedSignal == .s0 })
+        await model.disconnect()
+        #expect(!model.isSignalRampRunning)
+        #expect(model.simulatedSignal == nil)
+    }
+
     @Test("each strength is named like the S-meter shows it", arguments: SimulatedSignal.allCases)
     func strengthLabels(signal: SimulatedSignal) {
         #expect(signal.label == RadioViewModel.sMeterText(for: signal.rawValue))
