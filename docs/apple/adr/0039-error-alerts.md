@@ -17,12 +17,12 @@ the radio is still listening.
   causes none. Errors of a single action, such as a packet that cannot be sent,
   stay in the app as before.
 - **Where the decision lives:** `RadioViewModel` detects the failure and sets
-  `alertMessage` for the dialog or a notice (ADR-0040). The protocol `FailureAlerting` hides the platform.
+  `alertMessage` for the dialog. The protocol `FailureAlerting` hides the platform.
   Its adapter is in the app target, and the tests use a fake.
 - **Mac:** the dialog opens also while the app is in the background, and the Dock
   icon bounces until the user comes back (`requestUserAttention`).
-- **iPhone and iPad:** a notice at the bottom of the screen and no dialog. In the
-  background, also a local notification; the notice is there on return. The app sets
+- **iPhone and iPad:** the reason as the status above PTT and no dialog. In the
+  background, also a local notification; the status is there on return. The app sets
   no notification delegate, so the system drops a notification sent in the foreground.
 - **Permission:** iOS asks when the user connects (ADR-0040). The request cannot appear
   while the app is in the background, when the failure happens. Connecting does not

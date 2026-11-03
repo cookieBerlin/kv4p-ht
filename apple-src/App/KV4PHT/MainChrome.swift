@@ -51,11 +51,6 @@ struct RadioHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             connection
-            if model.isWebFlasherNeeded {
-                WebFlasherNotice()
-            } else if model.isFirmwareOutdated || model.firmwareUpdate != .idle {
-                FirmwareUpdateRow(model: model)
-            }
             if let name = model.activeMemoryName {
                 Text(name).font(.headline).lineLimit(1)
             }
@@ -184,11 +179,9 @@ struct BottomBar: View {
         VStack(spacing: 0) {
             Divider()
             #if os(iOS)
-                Text(model.statusSummary)
-                    .font(.footnote)
-                    .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
-                    .padding(.top, 6)
+                StatusLine(model: model).padding(.top, 6)
             #endif
+            firmware
             if model.isBluetoothBlocked {
                 PermissionNotice(permission: .bluetooth).padding(.horizontal).padding(.vertical, 8)
             }
@@ -212,6 +205,28 @@ struct BottomBar: View {
             #endif
         }
         .background(.bar)
+    }
+
+    @ViewBuilder private var firmware: some View {
+        if model.isWebFlasherNeeded {
+            WebFlasherNotice().padding(.horizontal).padding(.vertical, 8)
+        } else if model.isFirmwareOutdated || model.firmwareUpdate != .idle {
+            FirmwareUpdateRow(model: model).padding(.horizontal).padding(.vertical, 8)
+        }
+    }
+}
+
+/// The state of the connection; red with the reason when it has failed.
+struct StatusLine: View {
+    let model: RadioViewModel
+
+    var body: some View {
+        Text(model.statusText)
+            .font(.footnote)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal)
     }
 }
 
@@ -250,14 +265,16 @@ struct PermissionNotice: View {
     }
 }
 
-/// A problem the user should know, such as a missing callsign, until it is dismissed.
+/// A message the user should see, such as a missing callsign, until it is dismissed.
 struct NoticeBanner: View {
     let model: RadioViewModel
 
     var body: some View {
         if let notice = model.notice {
             HStack(alignment: .firstTextBaseline) {
-                Text(notice).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+                Text(notice)
+                    .foregroundStyle(model.isNoticeSuccess ? Color.green : Color.red)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button("Dismiss", systemImage: "xmark.circle.fill") { model.dismissNotice() }
                     .labelStyle(.iconOnly)

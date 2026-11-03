@@ -138,7 +138,7 @@ After a restart of the app, they are unchanged.
 
 ### HW-18
 
-Connect a radio with outdated firmware. The header shows the notice, with links
+Connect a radio with outdated firmware. The bottom of the screen shows the notice, with links
 to the web flasher and the manual.
 
 ### HW-19
@@ -170,10 +170,9 @@ switched off stays in the list, and connecting to it does not reach another radi
 
 Connect over Bluetooth, then switch the radio off. On the Mac, a dialog opens once,
 and the status bar shows the reason; with another app in front, the Dock icon also
-bounces. On iPhone and iPad, with the app in front, *Connection failed* shows above PTT
-and a red message with the reason above the bar at the bottom. Allow notifications at
-the first connection, then lock the screen and switch the radio off: one notification
-arrives, and the message waits on return. Choosing **Disconnect** reports nothing.
+bounces. On iPhone and iPad, with the app in front, the reason shows once in red above PTT.
+Allow notifications at the first connection, then lock the screen and switch the radio
+off: one notification arrives, and the reason shows on return. Choosing **Disconnect** reports nothing.
 
 ### HW-23
 

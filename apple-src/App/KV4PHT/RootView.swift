@@ -100,6 +100,9 @@ struct RootView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 if page == .settings {
+                    if model.hasFailed {
+                        StatusLine(model: model).padding(.vertical, 6)
+                    }
                     NoticeBanner(model: model)
                 } else {
                     BottomBar(model: model, showsPTT: page == .memories)

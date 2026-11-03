@@ -42,14 +42,15 @@ Several controls do not say what they do.
   PTT is replaced by the text. Connect is grey for Bluetooth radios; USB and the
   simulator still work.
 - **Status and messages at the bottom:** the status moves from the header to above PTT.
-  It says *Connection failed*, and a notice has the reason. The Mac has a status bar at
-  the bottom of the window with the full text, and the dialog of ADR-0039.
+  A failed connection shows there once, in red with its reason. The Mac has a status bar
+  at the bottom of the window instead, and the dialog of ADR-0039. A finished import is
+  a green message.
 - **PTT touch:** iPhone and iPad use a `UIControl`, as SwiftUI's gesture reported a held
   touch late. The Mac keeps the gesture.
 - **PTT:** on a phone, only the memories page shows it, as it serves no purpose on the
   APRS page.
 - **Volume:** in the header when there is room, otherwise in the settings.
-- **Firmware:** an outdated firmware shows its notice in the header. The update also
+- **Firmware:** an outdated firmware shows its notice at the bottom. The update also
   stays available in the settings.
 - **Explanations (`ControlHelp`):** each text exists once. The Mac shows it as a
   tooltip. On iPhone and iPad, a setting has it below the row, and a control without

@@ -47,7 +47,8 @@ The structure is the same on all devices, and similar to the Android app:
 - **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
 - **At the bottom:** a large **Push to talk** button, the connection status above it
   (🖥 in a status bar at the bottom of the window) and any messages.
-- A problem that needs your attention, such as a missing location, shows in red at the
+- A message, red for a problem such as a missing location and green for a finished
+  import, shows at the
   bottom of the screen until you dismiss it with ✕: 📱 on an iPhone above the bar with
   the pages, otherwise above **Push to talk** and in the 🖥 settings window.
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
@@ -91,8 +92,8 @@ disconnect yourself:
 
 - 🖥 A dialog opens, and the status bar at the bottom of the window shows the reason.
   While the app is in the background, its Dock icon also bounces.
-- 📱 *Connection failed* shows above **Push to talk**, and the reason in red at the bottom
-  of the screen. In the background, you also get a notification if you allowed it.
+- 📱 The reason shows in red above **Push to talk**. In the background, you also get a
+  notification if you allowed it.
 
 ## Receiving
 
@@ -272,14 +273,14 @@ The app warns when the radio's firmware is older than required or missing
 (*The radio needs a firmware update.*).
 
 - 🖥 Connect the radio by USB, select it under **Radio** and choose **Update
-  firmware…** in the header or in ⚙ **Settings**, then **Flash**. The app writes firmware 17, the version the
+  firmware…** at the bottom of the window or in ⚙ **Settings**, then **Flash**. The app writes firmware 17, the version the
   Android app ships, verifies it and reconnects, in less than a minute. Do
   not disconnect the cable until *Firmware updated and verified.* appears. If an
   update fails, simply start it again: the radio's bootloader is always there.
 - Firmware built from the current source has Bluetooth LE; the version the app
   ships does not ([FAQ](faq.md#which-firmware-do-i-need)). Updating such a radio
   removes Bluetooth LE, so update only if the radio needs it.
-- 📱 Updating from iPhone or iPad is not possible. The warning in the header
+- 📱 Updating from iPhone or iPad is not possible. The warning at the bottom of the screen
   links to the [web flasher](https://kv4p.com/firmware.html) on the project
   website, which runs in desktop Chrome or Edge, and to this section. The
   Android app or a Mac can update the radio too.
