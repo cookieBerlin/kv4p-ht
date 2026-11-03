@@ -155,6 +155,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     // MARK: Session
 
     public func connect() async {
+        microphone?.prepare()
         startTasks()
         parser = KISSParser()
         desiredState.attach()
