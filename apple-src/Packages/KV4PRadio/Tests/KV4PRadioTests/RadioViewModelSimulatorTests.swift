@@ -81,6 +81,36 @@ struct RadioViewModelSimulatorTests {
         #expect(setup.model.simulatedSignal == nil)
     }
 
+    @Test("the simulator starts on a frequency it may transmit on")
+    func startFrequency() async {
+        let setup = Setup()
+        await setup.connect()
+        #expect(setup.model.frequencyText == "145.5000")
+        #expect(setup.model.canTransmit)
+        #expect(setup.model.transmitBlockedText == nil)
+    }
+
+    @Test("at the band edge, the message names the allowed range for the bandwidth")
+    func blockedText() async {
+        let setup = Setup()
+        #expect(setup.model.transmitBlockedText == nil)
+        await setup.connect()
+        setup.model.frequencyText = "144"
+        await setup.model.applyFrequency()
+        #expect(await RadioViewModelTests.eventually(setup.model) { !$0.canTransmit })
+        #expect(
+            setup.model.transmitBlockedText
+                == "Can't transmit here: with 25 kHz, the allowed range is 144.0125–147.9875 MHz."
+        )
+        setup.model.isWideBandwidth = false
+        #expect(
+            await RadioViewModelTests.eventually(setup.model) {
+                $0.transmitBlockedText
+                    == "Can't transmit here: with 12.5 kHz, the allowed range is 144.00625–147.99375 MHz."
+            }
+        )
+    }
+
     @Test("each strength is named like the S-meter shows it", arguments: SimulatedSignal.allCases)
     func strengthLabels(signal: SimulatedSignal) {
         #expect(signal.label == RadioViewModel.sMeterText(for: signal.rawValue))

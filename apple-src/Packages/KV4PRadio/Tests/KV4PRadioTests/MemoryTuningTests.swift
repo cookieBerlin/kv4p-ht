@@ -11,6 +11,13 @@ import Testing
 struct MemoryTuningTests {
     static let vhf: ClosedRange<Float> = 134...174
 
+    @Test("a limit shows as many decimals as it needs, at least four")
+    func limitFormat() {
+        #expect(HamFrequency.formatLimit(144.0125) == "144.0125")
+        #expect(HamFrequency.formatLimit(144.00625) == "144.00625")
+        #expect(HamFrequency.formatLimit(148) == "148.0000")
+    }
+
     @Test("makeSafeHamFreq: 1467 → 146.7, clamped, four decimals")
     func safeFrequency() {
         #expect(HamFrequency.safe("1467", in: Self.vhf) == 146.7)

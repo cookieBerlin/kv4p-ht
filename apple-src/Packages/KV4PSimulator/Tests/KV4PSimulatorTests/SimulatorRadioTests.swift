@@ -19,6 +19,7 @@ struct SimulatorRadioTests {
         #expect(scenario.radioModuleStatus == .found)
         #expect(!scenario.faults.omitsHello)
         #expect(scenario.windowSize == Firmware.bleWindowSize)
+        #expect(scenario.defaultFrequency == 145.5)
     }
 
     @Test("the settings change the radio")
@@ -32,6 +33,7 @@ struct SimulatorRadioTests {
         settings.answers = false
         let scenario = settings.scenario
         #expect(scenario.moduleType == .sa818UHF)
+        #expect(scenario.defaultFrequency == 435)
         #expect(scenario.firmwareVersion == Firmware.version - 1)
         #expect(!scenario.features.contains(.freeDV2400B))
         #expect(!scenario.features.contains(.highLowPower))
