@@ -50,11 +50,11 @@ The structure is the same on all devices, and similar to the Android app:
 
 📱 On an iPhone or in a narrow iPad window, **Memories**, **APRS** and ⚙ **Settings**
 are pages: use the bar at the bottom, or swipe sideways. The app opens the page you
-used last. The settings page shows neither the header nor PTT. On a memory, swiping
-from right to left opens its actions, so swipe elsewhere to change the page.
+used last. **Push to talk** is on the memories page, and the header on the memories and
+APRS pages.
 
 Controls that are not self-explanatory explain themselves: 🖥 point at them for a
-tooltip; 📱 a short text is below each setting, and ⓘ explains the S-meter and the
+tooltip; 📱 a short text is below each setting, and ⓘ explains the
 recipient of a message.
 
 ## Connecting the radio
@@ -130,7 +130,7 @@ Transmitting requires a license and an antenna or dummy load.
 - **High power** is in ⚙ **Settings** under **Channel**.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
-  Narrower limits can be chosen in ⚙ **Settings** under **Advanced**. Otherwise the screen shows
+  Narrower limits can be chosen in ⚙ **Settings** under **Advanced**, **Frequency limits**. Otherwise the screen shows
   *Can't transmit outside the ham band.*
 - 📱 A phone call, or a headset that is unplugged or switched off, ends the
   transmission.
@@ -148,12 +148,11 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   offset (TX = RX ± offset) and tones. Frequencies outside the module range are
   set to the nearest limit, as in the Android app.
 - **Add:** **+** creates a memory from the current frequency. **Edit…** and
-  **Delete** are in the context menu (right-click, 📱 touch and hold) and appear
-  when you swipe a memory to the left. A memory has a name,
+  **Delete** are behind the ⋯ button of each memory. A memory has a name,
   frequency, offset (none, down or up, in kHz, default 600), TX and RX tone, an
   optional group and *Skip during scan*.
 - **Groups:** the **Group** picker above the list shows one group or all memories.
-  **Scan**, **+** and the import are next to it.
+  **Scan** and **+** are next to it.
 - **Scan:** steps through the memories shown, in order, and stays on a memory
   while a signal opens the squelch. It moves on 250 ms after the squelch closes.
   It skips memories marked *Skip during scan* and those outside the module
@@ -161,7 +160,7 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   scan** restores your squelch. Transmitting or tuning by hand ends the scan.
 - **RepeaterBook import:** download a CSV export from
   [RepeaterBook](https://www.repeaterbook.com) in your browser (US or
-  international format), then choose **Import RepeaterBook CSV…** and enter a
+  international format), then choose **Import RepeaterBook CSV…** in ⚙ **Settings** and enter a
   group name. The app adds the repeaters the connected radio can receive, with
   offset and uplink tone. Connect the radio first.
 - Memories are stored on this device.
@@ -199,8 +198,8 @@ bulletin BLN1CQ.
 **Position beacon** (licence required): turn on *Position beacon* in ⚙ **Settings**,
 where digipeating and the APRS-IS switches are too. The app sends your position right away and then every five
 minutes, as long as the radio is connected and receiving. Choose the symbol
-others see (phone, car, house, …) and, with *Approximate position*, round the
-position to about 1 km. macOS asks for location access the first time; your
+others see (phone, car, house, …) and, under *Position accuracy*, round the position
+to about 50, 100, 500 or 1000 m. While the beacon is on, the APRS list says so. macOS asks for location access the first time; your
 own beacons appear in the list. Beacons go out on the current TX frequency, or
 on the APRS frequency chosen next to the symbol (144.390 … 145.825 MHz); the
 radio returns to its frequency afterwards.
@@ -231,7 +230,7 @@ modem, the app encodes and decodes the speech with Codec2.
 - Receiving: the squelch opens only for FreeDV signals; analog stations are not
   heard in this mode. The S-meter shows the signal quality.
 - Transmitting (licence required) works like analog voice: PTT, mic gain and the
-  same TX limits. Stations need FreeDV 2400B to understand you.
+  same frequency limits. Stations need FreeDV 2400B to understand you.
 - The radio keeps the setting while it is on, also when the app reconnects;
   after a restart it is analog again. Switch back to *Analog* for normal FM.
 - Try it without a second radio: connect the **Simulator**, choose FreeDV 2400B
@@ -243,8 +242,9 @@ The radio keeps its own settings (frequency, bandwidth, squelch, tones, power,
 filters, voice mode) and reports them when the app connects. The app remembers
 its settings between launches:
 
-- **⚙ Settings:** sticky PTT and mic gain boost, which appear with the other radio
-  settings while the radio is connected. Under **Advanced**, the **TX limits**: 2 m from
+- **⚙ Settings:** sticky PTT and mic gain boost; without a radio, the settings that
+  need one say that they are not available. Under **Advanced**, the **Frequency
+  limits**: 2 m from
   144 MHz to 148 or 146 MHz, 70 cm from 420 or 430 MHz to 450 or 440 MHz, as in
   the Android app. The app transmits only inside the band of the radio module.
 - **⚙ Settings:** your callsign, position beacon with symbol, accuracy and

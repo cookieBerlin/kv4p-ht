@@ -25,9 +25,13 @@ Several controls do not say what they do.
 - **PTT outside the pages:** the header and PTT do not move with a page. A moving
   finger on PTT therefore cannot change the page and end the transmission.
 - **Settings:** the Mac uses its settings window (⌘,), and a wide iPad pushes a page.
-  Neither uses a sheet, because a dialog of ADR-0039 may not appear over one. Settings
-  that act on the radio appear only while it is connected, and the TX limits are under
-  *Advanced*.
+  Neither uses a sheet, because a dialog of ADR-0039 may not appear over one. Sections
+  that need a radio stay visible and say so, and the frequency limits are under
+  *Advanced*. The RepeaterBook import moves here, as a phone has no room for it.
+- **Memory actions:** each memory shows a button with its actions, because the pages
+  take a sideways swipe and a touch and hold cannot be discovered.
+- **PTT:** on a phone, only the memories page shows it, as it serves no purpose on the
+  APRS page.
 - **Volume:** in the header when there is room, otherwise in the settings.
 - **Firmware:** an outdated firmware shows its notice in the header. The update also
   stays available in the settings.
@@ -40,8 +44,6 @@ Several controls do not say what they do.
 - The Bluetooth scan of ADR-0038 no longer depends on a radio screen. It runs while the
   app is active and nothing is connected, as the picker is always in the header.
 - The header takes room from the lists, more so on a phone in landscape.
-- On a memory row, swiping from right to left opens the row's actions and does not
-  change the page.
 - `SettingsView` holds what was on the radio screen and in the APRS settings, so the
   callsign field moves out of the APRS screen.
 - The layout cannot be tested automatically before milestone 3.7; hardware test HW-19

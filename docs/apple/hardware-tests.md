@@ -176,7 +176,7 @@ its status.
 ### HW-23
 
 Connect the radio and press PTT. The press gives a light vibration at once (iPhone).
-The button turns red clearly faster than the earlier two seconds, and the microphone
-indicator of iOS lights only while PTT is on, not while merely connected. Moving the
-finger on the button does not end the transmission. In the Xcode console, the
-`microphone` log shows how long the start took.
+The button turns red without a noticeable delay, and the microphone indicator of iOS
+lights only while PTT is on, not while merely connected. Moving the finger on the
+button does not end the transmission. In the Xcode console, the `ptt` and `microphone`
+logs show the timing.
