@@ -42,10 +42,11 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 The structure is the same on all devices, and similar to the Android app:
 
-- **On top:** the connection, the name of the active memory, the frequency, the band,
+- **On top:** the choice of radio, **Connect**, the name of the active memory, the frequency, the band,
   the squelch state and the S-meter. Type a frequency and press Return to tune.
 - **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
-- **At the bottom:** a large **Push to talk** button.
+- **At the bottom:** a large **Push to talk** button, the connection status above it
+  (🖥 in a status bar at the bottom of the window) and any messages.
 - A problem that needs your attention, such as a missing location, shows in red at the
   bottom of the screen until you dismiss it with ✕: 📱 on an iPhone above the bar with
   the pages, otherwise above **Push to talk** and in the 🖥 settings window.
@@ -60,17 +61,16 @@ Controls that are not self-explanatory explain themselves: 🖥 point at them fo
 tooltip; 📱 a short text is below each setting, and ⓘ explains the
 recipient of a message.
 
-When it first starts, the app asks for access to the microphone, your location and
-Bluetooth, and 📱 for notifications. You can use it with any of them denied, without the
-functions that need them, and change your answers in the system settings.
+The first time you connect, the app asks for access to the microphone and your location
+(📱 and for notifications), and over Bluetooth for Bluetooth. You can use it with any of
+them denied: the functions that need one say so and offer **Open Settings**.
 
 ## Connecting the radio
 
-Choose the connection under **Radio** in the header (📱 on an iPhone, tap the status
-line) and click **Connect**:
+Choose the connection under **Radio** at the top (📱 on an iPhone, tap the chosen radio) and click **Connect**:
 
-- **Bluetooth:** power on the radio. While nothing is connected, the app looks for
-  radios and lists them under **Radio**, each with its name and the end of its ID.
+- **Bluetooth:** power on the radio. Once Bluetooth access is settled, at your first
+  connection, the app looks for radios while nothing is connected and lists them under **Radio**, each with its name and the end of its ID.
   Choose yours, and the app remembers it for the next start. *Bluetooth (first
   radio found)* connects to whichever kv4p HT it finds first. Allow Bluetooth
   access when the system asks.
@@ -82,17 +82,17 @@ line) and click **Connect**:
 - **Simulator:** a built-in simulated radio, to try the app without hardware.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
-frequency range. *Connected, applying settings…* means the radio has not yet
+frequency range. The status *Connected, applying settings…* means the radio has not yet
 confirmed the latest change. **Disconnect** ends the session; the radio keeps its
 settings.
 
 If the connection fails or is lost, the app tells you once, and not when you
 disconnect yourself:
 
-- 🖥 A dialog opens. While the app is in the background, its Dock icon also bounces.
-- 📱 A dialog opens while the app is in the foreground. In the background, you get a
-  notification instead. The app works without this permission, but you then see the failure
-  only when you return to the app.
+- 🖥 A dialog opens, and the status bar at the bottom of the window shows the reason.
+  While the app is in the background, its Dock icon also bounces.
+- 📱 *Connection failed* shows above **Push to talk**, and the reason in red at the bottom
+  of the screen. In the background, you also get a notification if you allowed it.
 
 ## Receiving
 
@@ -129,7 +129,7 @@ Transmitting requires a license and an antenna or dummy load.
 - **Push to talk:** hold the button at the bottom (📱 it vibrates when the
   transmission starts and ends) while you speak; release it
   to return to receive. It turns red while PTT is pressed and shows *On air* once
-  the radio transmits. It needs the microphone access the app asks for when it first starts.
+  the radio transmits. Without microphone access, a text replaces the button.
 - **Sticky PTT:** each click starts or ends the transmission, as in the Android
   app.
 - **Mic gain boost:** *None*, *Low* (×1.5), *Med* (×2) or *High* (×2.5); use it

@@ -26,11 +26,14 @@ struct RootView: View {
             }
             .onAppear { model.refreshConnections() }
             .onChange(of: scenePhase, initial: true) {
-                model.isInBackground = scenePhase == .background
-                if scenePhase == .active { model.startBluetoothScan() } else { model.stopBluetoothScan() }
+                if scenePhase == .active {
+                    model.refreshPermissions()  // the user may return from the system settings
+                    model.startBluetoothScan()
+                } else {
+                    model.stopBluetoothScan()
+                }
             }
             .task { await model.loadMemories() }
-            .task { await StartupPermissions.request() }
     }
 
     @ViewBuilder private var content: some View {
@@ -96,11 +99,11 @@ struct RootView: View {
                     NavigationStack { SettingsView(model: model) }.tag(Page.settings)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                if page == .memories {
-                    Divider()
-                    PTTBar(model: model)
+                if page == .settings {
+                    NoticeBanner(model: model)
+                } else {
+                    BottomBar(model: model, showsPTT: page == .memories)
                 }
-                NoticeBanner(model: model)
                 pageBar
             }
         }

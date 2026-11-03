@@ -29,8 +29,8 @@ its central reports only the identifier, and only while connecting.
 
 - The system identifier of a peripheral differs between devices, so this setting
   stays local to each device. Settings sync (milestone 3.8) must leave it out.
-- Bluetooth permission is asked when the app first starts, not when the
-  user first connects.
+- Bluetooth permission is asked at the first Bluetooth connection (ADR-0040), so the
+  list of radios is empty until then.
 - A chosen radio that is off is not replaced by another one: connecting keeps
   waiting for it until the user disconnects.
 - Radios that go out of range stay in the list until the next scan reports a new

@@ -152,10 +152,12 @@ Mac, texts and ⓘ on iPhone and iPad.
 
 ### HW-20
 
-On a fresh install from TestFlight, the app asks for Bluetooth, the microphone and
-the location at its first start, and on iPhone and iPad for notifications. It does not
-ask again at the next start. Denying Bluetooth or the microphone shows the hint to the
-system settings.
+On a fresh install from TestFlight, the app asks for nothing at its start. The first
+**Connect** over Bluetooth asks for Bluetooth, the microphone and the location, and on
+iPhone and iPad for notifications. After that, the radios appear under **Radio**.
+Without the microphone, a text with **Open Settings** replaces PTT. Without the location,
+the beacon switch is grey with a text below it. Without Bluetooth, **Connect** is grey
+for Bluetooth radios with a text, and USB and the simulator still work.
 
 ### HW-21
 
@@ -166,13 +168,12 @@ switched off stays in the list, and connecting to it does not reach another radi
 
 ### HW-22
 
-Connect over Bluetooth, then switch the radio off. With the app in front, a dialog
-opens once. Connect again, then choose **Disconnect**: nothing is reported. On the
-Mac, with another app in front, switch the radio off: the dialog opens and the Dock
-icon bounces. On iPhone and iPad, allow notifications at the first connection, then
-lock the screen and switch the radio off: one notification arrives, and no dialog
-waits on return. With notifications denied, the app works and shows the failure as
-its status.
+Connect over Bluetooth, then switch the radio off. On the Mac, a dialog opens once,
+and the status bar shows the reason; with another app in front, the Dock icon also
+bounces. On iPhone and iPad, with the app in front, *Connection failed* shows above PTT
+and a red message with the reason above the bar at the bottom. Allow notifications at
+the first connection, then lock the screen and switch the radio off: one notification
+arrives, and the message waits on return. Choosing **Disconnect** reports nothing.
 
 ### HW-23
 

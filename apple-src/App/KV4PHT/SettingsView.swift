@@ -194,6 +194,9 @@ struct SettingsView: View {
             Toggle("Position beacon", isOn: $model.isBeaconEnabled)
                 .disabled(!model.canBeacon || model.callsign.isEmpty)
                 .explained(ControlHelp.beacon)
+            if model.isDenied(.location) {
+                PermissionNotice(permission: .location)
+            }
             Picker("Symbol", selection: $model.beaconSymbol) {
                 ForEach(APRSSymbol.allCases, id: \.self) { symbol in
                     if let image = symbol.systemImage {

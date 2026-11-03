@@ -10,8 +10,8 @@ Bluetooth LE. Real use needs the radio, because the phone has no amateur radio
 transmitter or receiver of its own.
 
 **Testing without a radio:** the app has a built-in simulated radio. At the top of
-the main screen, choose **Simulator** under **Radio** (on an iPhone, tap the status
-line first) and tap **Connect**. Tuning, receiving,
+the main screen, choose **Simulator** under **Radio** (on an iPhone, tap the chosen
+radio first) and tap **Connect**. Tuning, receiving,
 transmitting, memories and APRS can then be used without hardware.
 Source code: https://github.com/cookieBerlin/kv4p-ht
 

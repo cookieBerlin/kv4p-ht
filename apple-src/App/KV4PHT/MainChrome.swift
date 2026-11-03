@@ -13,11 +13,7 @@ extension View {
             .background(.bar)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 0) {
-                NoticeBanner(model: model)
-                PTTBar(model: model)
-            }
-            .background(.bar)
+            BottomBar(model: model, showsPTT: true)
         }
         .navigationTitle(title)
         #if os(iOS)
@@ -83,7 +79,7 @@ struct RadioHeader: View {
         .padding(.vertical, 8)
     }
 
-    /// A phone has no room for the picker next to the status, so the status opens the list of radios.
+    /// A phone has no room for a labelled picker, so the chosen radio opens the list.
     private var connection: some View {
         HStack {
             if isCompact {
@@ -91,24 +87,19 @@ struct RadioHeader: View {
                     Menu {
                         radioPicker
                     } label: {
-                        Label {
-                            status
-                        } icon: {
-                            Image(systemName: "chevron.up.chevron.down")
-                        }
+                        Label(model.selectedConnection.label, systemImage: "chevron.up.chevron.down")
                     }
                 } else {
-                    status
+                    Text(model.selectedConnection.label).foregroundStyle(.secondary)
                 }
             } else {
                 radioPicker.fixedSize()
-                status
             }
             Spacer()
             if model.canConnect {
                 Button("Connect") { Task { await model.connect() } }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(model.firmwareUpdate.isRunning)
+                    .disabled(!model.canStartConnection)
             } else {
                 Button("Disconnect") { Task { await model.disconnect() } }
             }
@@ -120,12 +111,6 @@ struct RadioHeader: View {
             ForEach(model.connections) { Text($0.label).tag($0) }
         }
         .disabled(!model.canConnect || model.firmwareUpdate.isRunning)
-    }
-
-    private var status: some View {
-        Text(model.statusText)
-            .lineLimit(2)
-            .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
     }
 
     private var frequency: some View {
@@ -187,6 +172,81 @@ private struct SMeterBars: View {
     private func markOffset(_ squelch: Int, width: CGFloat) -> CGFloat {
         let barEnd = (width + Self.spacing) * CGFloat(squelch) / CGFloat(RadioViewModel.sMeterBarCount) - Self.spacing
         return max(0, barEnd - Self.markWidth)
+    }
+}
+
+/// What stays at the bottom: the status, PTT and every message. The Mac shows the status as a bar of the window.
+struct BottomBar: View {
+    let model: RadioViewModel
+    let showsPTT: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Divider()
+            #if os(iOS)
+                Text(model.statusSummary)
+                    .font(.footnote)
+                    .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
+                    .padding(.top, 6)
+            #endif
+            if model.isBluetoothBlocked {
+                PermissionNotice(permission: .bluetooth).padding(.horizontal).padding(.vertical, 8)
+            }
+            if showsPTT {
+                if model.isDenied(.microphone) {
+                    PermissionNotice(permission: .microphone).padding(.horizontal).padding(.vertical, 8)
+                } else {
+                    PTTBar(model: model)
+                }
+            }
+            NoticeBanner(model: model)
+            #if os(macOS)
+                Divider()
+                Text(model.statusText)
+                    .font(.caption)
+                    .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.vertical, 4)
+            #endif
+        }
+        .background(.bar)
+    }
+}
+
+/// Why a function is not available, with the way to the system settings.
+struct PermissionNotice: View {
+    let permission: Permission
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(permission.deniedMessage)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+            if let settings {
+                Button("Open Settings") { openURL(settings) }
+                    .font(.footnote)
+                    .buttonStyle(.borderless)
+            }
+        }
+    }
+
+    private var settings: URL? {
+        #if os(iOS)
+            URL(string: UIApplication.openSettingsURLString)
+        #else
+            let pane =
+                switch permission {
+                case .bluetooth: "Privacy_Bluetooth"
+                case .microphone: "Privacy_Microphone"
+                case .location: "Privacy_LocationServices"
+                }
+            return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")
+        #endif
     }
 }
 
