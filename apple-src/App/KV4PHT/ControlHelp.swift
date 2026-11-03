@@ -2,7 +2,9 @@ import SwiftUI
 
 /// What the controls do, in one place: a tooltip on the Mac, a text or an info button on iPhone and iPad.
 enum ControlHelp {
-    static let meter = "S-meter: the strength of the received signal. Closed means the squelch mutes the speaker."
+    static let meter =
+        "S-meter: the strength of the received signal. The mark above it is the squelch level; weaker signals stay "
+        + "muted. The speaker icon shows whether the squelch is open."
     static let scan = "Steps through the memories shown and stops on a signal."
     static let importCSV = "Adds repeaters from a CSV file exported from RepeaterBook."
     static let recipient = "The callsign to send to. Leave it empty to send a bulletin to everyone."

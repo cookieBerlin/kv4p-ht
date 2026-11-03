@@ -13,11 +13,76 @@ struct MemoriesView: View {
     @State private var importGroup = ""
 
     var body: some View {
-        List(selection: Binding(get: { model.activeMemoryId }, set: { id in tune(id) })) {
+        VStack(spacing: 0) {
+            controls
+            list
+        }
+        .sheet(item: $editing) { memory in
+            NavigationStack {
+                MemoryEditor(memory: memory) { saved in
+                    Task { await model.save(saved) }
+                }
+            }
+        }
+        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
+            guard case .success(let url) = result else { return }
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            importedCSV = try? String(contentsOf: url, encoding: .utf8)
+            importGroup = url.deletingPathExtension().lastPathComponent
+        }
+        .alert(
+            "Save repeaters as group",
+            isPresented: Binding(get: { importedCSV != nil }, set: { if !$0 { importedCSV = nil } })
+        ) {
+            TextField("Group", text: $importGroup)
+            Button("Import") {
+                let csv = importedCSV ?? ""
+                Task { await model.importRepeaterBook(csv, group: importGroup) }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    /// The group shown and what acts on the memories, above the list.
+    private var controls: some View {
+        HStack {
             Picker("Group", selection: $model.selectedGroup) {
                 Text("All").tag(String?.none)
                 ForEach(model.groups, id: \.self) { Text($0).tag(String?.some($0)) }
             }
+            .fixedSize()
+            Spacer()
+            Button(model.isScanning ? "Stop scan" : "Scan") {
+                Task { await model.toggleScan() }
+            }
+            .buttonStyle(.bordered)
+            .disabled(!model.isReady || model.visibleMemories.isEmpty)
+            .help(ControlHelp.scan)
+            Button("Add memory", systemImage: "plus") {
+                editing = ChannelMemory(
+                    name: "",
+                    frequency: Float(model.frequencyText) ?? 146.52,
+                    group: model.selectedGroup ?? ""
+                )
+            }
+            .labelStyle(.iconOnly)
+            // A phone shows no text for an icon, so a menu names the import.
+            #if os(iOS)
+                Menu("More", systemImage: "ellipsis") {
+                    importButton
+                }
+                .labelStyle(.iconOnly)
+            #else
+                importButton.labelStyle(.iconOnly).help(ControlHelp.importCSV)
+            #endif
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
+
+    private var list: some View {
+        List(selection: Binding(get: { model.activeMemoryId }, set: { id in tune(id) })) {
             ForEach(model.visibleMemories) { memory in
                 HStack {
                     VStack(alignment: .leading) {
@@ -46,59 +111,6 @@ struct MemoriesView: View {
                     Button("Edit…") { editing = memory }
                 }
             }
-        }
-        .toolbar {
-            ToolbarItemGroup {
-                Button(
-                    model.isScanning ? "Stop scan" : "Scan",
-                    systemImage: model.isScanning ? "stop.fill" : "dot.radiowaves.left.and.right"
-                ) {
-                    Task { await model.toggleScan() }
-                }
-                .labelStyle(.titleOnly)
-                .disabled(!model.isReady || model.visibleMemories.isEmpty)
-                .help(ControlHelp.scan)
-                Button("Add memory", systemImage: "plus") {
-                    editing = ChannelMemory(
-                        name: "",
-                        frequency: Float(model.frequencyText) ?? 146.52,
-                        group: model.selectedGroup ?? ""
-                    )
-                }
-                // iOS shows toolbar buttons as icons, so a menu names the import.
-                #if os(iOS)
-                    Menu("More", systemImage: "ellipsis") {
-                        importButton
-                    }
-                #else
-                    importButton.help(ControlHelp.importCSV)
-                #endif
-            }
-        }
-        .sheet(item: $editing) { memory in
-            NavigationStack {
-                MemoryEditor(memory: memory) { saved in
-                    Task { await model.save(saved) }
-                }
-            }
-        }
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
-            guard case .success(let url) = result else { return }
-            let scoped = url.startAccessingSecurityScopedResource()
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            importedCSV = try? String(contentsOf: url, encoding: .utf8)
-            importGroup = url.deletingPathExtension().lastPathComponent
-        }
-        .alert(
-            "Save repeaters as group",
-            isPresented: Binding(get: { importedCSV != nil }, set: { if !$0 { importedCSV = nil } })
-        ) {
-            TextField("Group", text: $importGroup)
-            Button("Import") {
-                let csv = importedCSV ?? ""
-                Task { await model.importRepeaterBook(csv, group: importGroup) }
-            }
-            Button("Cancel", role: .cancel) {}
         }
     }
 

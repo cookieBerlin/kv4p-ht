@@ -61,7 +61,7 @@ private struct RadioHeader: View {
             }
             frequency
             HStack {
-                SMeterBars(value: model.sMeter)
+                SMeterBars(value: model.sMeter, squelch: model.isReady ? model.squelch : nil)
                 Text(model.sMeterText)
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
@@ -69,7 +69,7 @@ private struct RadioHeader: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("S-meter")
-            .accessibilityValue(model.sMeterText)
+            .accessibilityValue(model.isReady ? "\(model.sMeterText), squelch \(model.squelch)" : model.sMeterText)
             .help(ControlHelp.meter)
             if !isCompact {
                 VolumeSlider(model: model)
@@ -142,29 +142,47 @@ private struct RadioHeader: View {
             }
             Spacer()
             HelpButton(ControlHelp.meter)
-            Label(
-                model.isReceiving ? "Open" : "Closed",
-                systemImage: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash"
-            )
-            .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
-            .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
-            .help(ControlHelp.meter)
+            Image(systemName: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash")
+                .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
+                .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
+                .help(ControlHelp.meter)
         }
     }
 }
 
-/// The S-meter as a row of bars, as in the Android app.
+/// The S-meter as a row of bars, as in the Android app. A mark above them shows the squelch level: level n stands at
+/// the end of bar n, as a signal of S n lights n bars.
 private struct SMeterBars: View {
+    private static let spacing: CGFloat = 2
+    private static let markWidth: CGFloat = 2
+
     let value: Int
+    let squelch: Int?
 
     var body: some View {
-        HStack(spacing: 2) {
-            ForEach(0..<RadioViewModel.sMeterBarCount, id: \.self) { bar in
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(bar < value ? Color.green : Color.secondary.opacity(0.25))
-                    .frame(height: 10)
+        VStack(spacing: 2) {
+            GeometryReader { geometry in
+                if let squelch {
+                    Rectangle()
+                        .fill(Color.primary)
+                        .frame(width: Self.markWidth)
+                        .offset(x: markOffset(squelch, width: geometry.size.width))
+                }
+            }
+            .frame(height: 6)
+            HStack(spacing: Self.spacing) {
+                ForEach(0..<RadioViewModel.sMeterBarCount, id: \.self) { bar in
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(bar < value ? Color.green : Color.secondary.opacity(0.25))
+                        .frame(height: 10)
+                }
             }
         }
+    }
+
+    private func markOffset(_ squelch: Int, width: CGFloat) -> CGFloat {
+        let barEnd = (width + Self.spacing) * CGFloat(squelch) / CGFloat(RadioViewModel.sMeterBarCount) - Self.spacing
+        return max(0, barEnd - Self.markWidth)
     }
 }
 
@@ -222,6 +240,7 @@ private struct PTTButton: View {
                         Task { await model.releasePTT() }
                     }
             )
+            .sensoryFeedback(.impact(weight: .light), trigger: isPressed) { _, pressed in pressed }
             .sensoryFeedback(.impact, trigger: model.isTransmitting)
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
