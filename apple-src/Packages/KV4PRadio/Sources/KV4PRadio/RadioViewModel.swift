@@ -421,11 +421,20 @@ public final class RadioViewModel {
     /// E.g. `Firmware 17 · VHF 134–174 MHz`.
     public var firmwareText: String? {
         snapshot.firmware.map { firmware in
-            let band = firmware.moduleType == .sa818UHF ? "UHF" : "VHF"
-            return
-                "Firmware \(firmware.version) · \(band) \(Int(firmware.minRadioFreq))–\(Int(firmware.maxRadioFreq)) MHz"
+            "Firmware \(firmware.version) · \(Self.band(of: firmware)) "
+                + "\(Int(firmware.minRadioFreq))–\(Int(firmware.maxRadioFreq)) MHz"
         }
     }
+
+    /// `VHF` or `UHF`, once the radio has reported its module.
+    public var bandText: String? { snapshot.firmware.map(Self.band) }
+
+    private static func band(of firmware: FirmwareVersion) -> String {
+        firmware.moduleType == .sa818UHF ? "UHF" : "VHF"
+    }
+
+    /// The bars of the S-meter, the last one for overload.
+    public static let sMeterBarCount = SMeter.overload
 
     public var sMeter: Int { snapshot.sMeter }
 
@@ -830,6 +839,11 @@ public final class RadioViewModel {
     public var activeMemoryId: Int32? {
         let id = snapshot.desired.memoryId
         return isReady && id >= 0 ? id : nil
+    }
+
+    /// The name of the memory the radio is tuned to.
+    public var activeMemoryName: String? {
+        memories.first { $0.id == activeMemoryId }?.name
     }
 
     public var isScanning: Bool { snapshot.isScanning }
