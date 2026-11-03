@@ -30,6 +30,24 @@ public enum SimulatedSignal: Int, CaseIterable, Sendable {
     var rssi: UInt8 {
         [0, 17, 22, 27, 32, 37, 42, 47, 52, 57, 74, 90, 107, 110][rawValue]
     }
+
+    /// Every strength up to overload and back, one after the other.
+    public static let ramp = allCases + allCases.dropLast().reversed()
+
+    private static let fullLevel = 8000
+
+    /// The signal as it sounds. FM stays equally loud in reality; here the tone grows out of the noise on purpose, so
+    /// that the strengths can be told apart by ear.
+    var carrier: Carrier {
+        let levels = [0, 5, 10, 20, 30, 45, 60, 75, 90, 100, 100, 100, 100, 100]
+        let noises = [25, 25, 25, 25, 20, 15, 10, 6, 3, 0, 0, 0, 0, 0]
+        var carrier = Carrier.freeDVVoice
+        carrier.rssi = rssi
+        carrier.amplitude = Int16(Self.fullLevel * levels[rawValue] / 100)
+        carrier.noiseAmplitude = Int16(Self.fullLevel * noises[rawValue] / 100)
+        carrier.isDistorted = self == .overload
+        return carrier
+    }
 }
 
 /// What the user can choose about the simulated radio; takes effect at the next connection.
@@ -88,12 +106,7 @@ public final class SimulatorRadio<C: Clock>: SimulatorControlling where C.Durati
     }
 
     public func setSignal(_ signal: SimulatedSignal?) async {
-        let carrier = signal.map { signal in
-            var carrier = Carrier.freeDVVoice
-            carrier.rssi = signal.rssi
-            return carrier
-        }
-        await transport?.setCarrier(carrier)
+        await transport?.setCarrier(signal?.carrier)
     }
 
     public func loseConnection() async {

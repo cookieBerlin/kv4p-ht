@@ -278,6 +278,8 @@ public final class RadioViewModel {
     private var audioSessionObserver: Task<Void, Never>?
     private let simulator: (any SimulatorControlling)?
     private let simulatedFlashStep: Duration
+    private let simulatedSignalStep: Duration
+    private var signalRamp: Task<Void, Never>?
     private let repository: (any MemoryRepository)?
     private let firmware: (any FirmwareFlashing)?
     private let settingsStore: (any SettingsStore)?
@@ -306,6 +308,7 @@ public final class RadioViewModel {
         permissions: (any PermissionChecking)? = nil,
         simulator: (any SimulatorControlling)? = nil,
         simulatedFlashStep: Duration = .milliseconds(400),
+        simulatedSignalStep: Duration = .seconds(1),
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -329,6 +332,7 @@ public final class RadioViewModel {
         self.audioSession = audioSession
         self.simulator = simulator
         self.simulatedFlashStep = simulatedFlashStep
+        self.simulatedSignalStep = simulatedSignalStep
         refreshConnections()
         observeInternet()
         observeAudioSession()
@@ -556,6 +560,28 @@ public final class RadioViewModel {
     /// The simulator is the chosen radio, so its settings apply.
     public var canConfigureSimulator: Bool { selectedConnection == .simulator && simulator != nil }
 
+    public var isSignalRampRunning: Bool { signalRamp != nil }
+
+    /// Starts the signal through all strengths, up and down, then off; or ends it early.
+    public func toggleSignalRamp() {
+        guard signalRamp == nil else { return stopSignalRamp() }
+        let step = simulatedSignalStep
+        signalRamp = Task { [weak self] in
+            for signal in SimulatedSignal.ramp {
+                self?.simulatedSignal = signal
+                try? await Task.sleep(for: step)
+                guard !Task.isCancelled else { return }
+            }
+            self?.stopSignalRamp()
+        }
+    }
+
+    private func stopSignalRamp() {
+        signalRamp?.cancel()
+        signalRamp = nil
+        simulatedSignal = nil
+    }
+
     public func loseSimulatedConnection() {
         guard let simulator else { return }
         Task { await simulator.loseConnection() }
@@ -674,7 +700,7 @@ public final class RadioViewModel {
         audioSession?.deactivate()
         controller = nil
         connection = nil
-        simulatedSignal = nil
+        stopSignalRamp()
         snapshot = Self.disconnected
     }
 
