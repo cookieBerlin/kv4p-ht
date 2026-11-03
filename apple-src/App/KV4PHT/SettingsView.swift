@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Bindable var model: RadioViewModel
     /// The callsign as typed; the model keeps it normalised in the settings.
     @State private var callsign = ""
+    @State private var areLimitsShown = false
     @State private var isImporting = false
     @State private var importedCSV: String?
     @State private var importGroup = ""
@@ -51,12 +52,20 @@ struct SettingsView: View {
             }
 
             Section("Advanced") {
-                DisclosureGroup("Frequency limits") {
+                DisclosureGroup(isExpanded: $areLimitsShown) {
                     limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
                     limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
                     limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
                     limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
                     Text(ControlHelp.frequencyLimits).font(.footnote).foregroundStyle(.secondary)
+                } label: {
+                    Text("Frequency limits")
+                        #if os(macOS)
+                            // The Mac opens the group only on its small triangle, unless the row reacts too.
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(.rect)
+                            .onTapGesture { withAnimation { areLimitsShown.toggle() } }
+                        #endif
                 }
             }
 
