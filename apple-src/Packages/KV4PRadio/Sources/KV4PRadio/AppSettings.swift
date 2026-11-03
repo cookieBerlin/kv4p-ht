@@ -1,6 +1,7 @@
 import Foundation
 import KV4PAPRS
 import KV4PAudio
+import KV4PSimulator
 import KV4PTransport
 
 /// How accurately a position beacon reports the position; Android offers exact and the 0.01° of 1000 m.
@@ -50,6 +51,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var selectedGroup: String?
     /// The radio chosen over Bluetooth; `nil` for the first one found (ADR-0038).
     public var bluetoothRadio: BLEDevice?
+    /// How the simulated radio behaves, for testing; local to the device (ADR-0041).
+    public var simulator = SimulatorSettings()
 
     /// `SettingsActivity.populateAprsFrequencies`, after "Current".
     public static let beaconFrequencyOptions: [Float] = [144.39, 144.575, 144.64, 144.66, 144.8, 145.175, 145.825]
@@ -84,6 +87,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)
+        simulator = values.value(.simulator, or: defaults.simulator)
     }
 
     /// Settings stored by earlier versions.

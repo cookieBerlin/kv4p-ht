@@ -4,6 +4,7 @@ import KV4PAudio
 import KV4PFlasher
 import KV4PPersistence
 import KV4PProtocol
+import KV4PSimulator
 import KV4PTransport
 import Observation
 
@@ -118,12 +119,19 @@ public final class RadioViewModel {
     public var volume: Float = 1 {
         didSet { rxAudio.volume = volume }
     }
-    /// The simulator receives a signal (`canSimulateSignal`).
-    public var isSignalSimulated = false {
+    /// The signal the simulator receives (`canSimulateSignal`).
+    public var simulatedSignal: SimulatedSignal? {
         didSet {
-            guard isSignalSimulated != oldValue, let simulateSignal else { return }
-            let isOn = isSignalSimulated
-            Task { await simulateSignal(isOn) }
+            guard simulatedSignal != oldValue, let simulator else { return }
+            let signal = simulatedSignal
+            Task { await simulator.setSignal(signal) }
+        }
+    }
+    /// How the simulator behaves from the next connection.
+    public var simulatorSettings = SimulatorSettings() {
+        didSet {
+            simulator?.settings = simulatorSettings
+            saveSettings()
         }
     }
 
@@ -253,7 +261,7 @@ public final class RadioViewModel {
     private let audioOutput: (any AudioOutput)?
     private let audioSession: (any AudioSession)?
     private var audioSessionObserver: Task<Void, Never>?
-    private let simulateSignal: (@Sendable (Bool) async -> Void)?
+    private let simulator: (any SimulatorControlling)?
     private let repository: (any MemoryRepository)?
     private let firmware: (any FirmwareFlashing)?
     private let settingsStore: (any SettingsStore)?
@@ -272,7 +280,6 @@ public final class RadioViewModel {
         serialDevices: @escaping () -> [String],
         audioOutput: (any AudioOutput)? = nil,
         audioSession: (any AudioSession)? = nil,
-        simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
         memories: (any MemoryRepository)? = nil,
         location: (any LocationProvider)? = nil,
         internet: (any APRSInternetLink)? = nil,
@@ -281,6 +288,7 @@ public final class RadioViewModel {
         bluetoothScanner: (any BLEScanning)? = nil,
         failureAlerts: (any FailureAlerting)? = nil,
         permissions: (any PermissionChecking)? = nil,
+        simulator: (any SimulatorControlling)? = nil,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -302,7 +310,7 @@ public final class RadioViewModel {
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
         self.audioSession = audioSession
-        self.simulateSignal = simulateSignal
+        self.simulator = simulator
         refreshConnections()
         observeInternet()
         observeAudioSession()
@@ -330,6 +338,7 @@ public final class RadioViewModel {
         settings.txLimits = txLimits
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
+        settings.simulator = simulatorSettings
         return settings
     }
 
@@ -350,6 +359,7 @@ public final class RadioViewModel {
         aprsDestinationFilter = settings.aprsDestinationFilter
         txLimits = settings.txLimits
         selectedGroup = settings.selectedGroup
+        simulatorSettings = settings.simulator
         if let radio = settings.bluetoothRadio {
             selectedConnection = .bluetoothDevice(radio)
         }
@@ -512,7 +522,22 @@ public final class RadioViewModel {
     /// The TX frequency is inside the ham band.
     public var canTransmit: Bool { isReady && snapshot.desired.flags.contains(.txAllowed) }
 
-    public var canSimulateSignal: Bool { isReady && connection == .simulator && simulateSignal != nil }
+    public var canSimulateSignal: Bool { isReady && connection == .simulator && simulator != nil }
+
+    /// The simulator is the chosen radio, so its settings apply.
+    public var canConfigureSimulator: Bool { selectedConnection == .simulator && simulator != nil }
+
+    public func loseSimulatedConnection() {
+        guard let simulator else { return }
+        Task { await simulator.loseConnection() }
+    }
+
+    public func simulatePacket(_ packet: SimulatedPacket) {
+        guard let simulator, let frame = try? APRSParser.parse(tnc2: packet.tnc2(to: callsign)).ax25Frame() else {
+            return
+        }
+        Task { await simulator.hear(frame) }
+    }
 
     // MARK: Firmware
 
@@ -611,7 +636,7 @@ public final class RadioViewModel {
         audioSession?.deactivate()
         controller = nil
         connection = nil
-        isSignalSimulated = false
+        simulatedSignal = nil
         snapshot = Self.disconnected
     }
 

@@ -41,7 +41,8 @@ struct SimulatorRadioTests {
     @Test(
         "each signal strength shows as its S-meter value",
         arguments: [
-            (SimulatedSignal.s3, 3, "S3"), (.s9, 9, "S9"), (.s9Plus40, 11, "S9+40"), (.overload, SMeter.overload, "Overload"),
+            (SimulatedSignal.s3, 3, "S3"), (.s9, 9, "S9"), (.s9Plus40, 11, "S9+40"),
+            (.overload, SMeter.overload, "Overload"),
         ]
     )
     func strengths(signal: SimulatedSignal, value: Int, label: String) {
