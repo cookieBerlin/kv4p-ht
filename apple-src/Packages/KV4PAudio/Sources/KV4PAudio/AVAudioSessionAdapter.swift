@@ -56,6 +56,8 @@
                 mode: .default,
                 options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
             )
+            // iOS mutes haptics during a recording session by default, and PTT confirms a press with one.
+            try session.setAllowHapticsAndSystemSoundsDuringRecording(true)
             try session.setActive(true)
         }
 

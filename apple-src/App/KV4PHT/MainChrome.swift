@@ -1,5 +1,6 @@
 import KV4PAudio
 import KV4PRadio
+import OSLog
 import SwiftUI
 
 extension View {
@@ -141,7 +142,6 @@ struct RadioHeader: View {
                 Text(band).font(.caption.bold()).foregroundStyle(.secondary)
             }
             Spacer()
-            HelpButton(ControlHelp.meter)
             Image(systemName: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash")
                 .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
                 .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
@@ -150,8 +150,8 @@ struct RadioHeader: View {
     }
 }
 
-/// The S-meter as a row of bars, as in the Android app. A mark above them shows the squelch level: level n stands at
-/// the end of bar n, as a signal of S n lights n bars.
+/// The S-meter as a row of bars, as in the Android app. A line over the full height shows the squelch level: level n
+/// stands at the end of bar n, as a signal of S n lights n bars.
 private struct SMeterBars: View {
     private static let spacing: CGFloat = 2
     private static let markWidth: CGFloat = 2
@@ -160,21 +160,20 @@ private struct SMeterBars: View {
     let squelch: Int?
 
     var body: some View {
-        VStack(spacing: 2) {
+        HStack(spacing: Self.spacing) {
+            ForEach(0..<RadioViewModel.sMeterBarCount, id: \.self) { bar in
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(bar < value ? Color.green : Color.secondary.opacity(0.25))
+                    .frame(height: 16)
+            }
+        }
+        .overlay {
             GeometryReader { geometry in
                 if let squelch {
                     Rectangle()
                         .fill(Color.primary)
                         .frame(width: Self.markWidth)
                         .offset(x: markOffset(squelch, width: geometry.size.width))
-                }
-            }
-            .frame(height: 6)
-            HStack(spacing: Self.spacing) {
-                ForEach(0..<RadioViewModel.sMeterBarCount, id: \.self) { bar in
-                    RoundedRectangle(cornerRadius: 1)
-                        .fill(bar < value ? Color.green : Color.secondary.opacity(0.25))
-                        .frame(height: 10)
                 }
             }
         }
@@ -218,21 +217,30 @@ struct PTTBar: View {
 
 /// Press and hold to transmit; with sticky PTT, each press toggles.
 private struct PTTButton: View {
+    private static let log = Logger(subsystem: "kv4p-ht", category: "ptt")
+
     let model: RadioViewModel
+    @Environment(\.isEnabled) private var isEnabled
     @State private var isPressed = false
+    @State private var pressedAt = ContinuousClock.now
 
     var body: some View {
         Label(model.isOnAir ? "On air" : "Push to talk", systemImage: model.isTransmitting ? "mic.fill" : "mic")
             .font(.headline)
             .frame(maxWidth: .infinity, minHeight: 64)
-            .foregroundStyle(model.isTransmitting ? Color.white : Color.primary)
-            .background(model.isTransmitting ? Color.red : Color.secondary.opacity(0.2), in: .rect(cornerRadius: 8))
+            .foregroundStyle(model.isTransmitting ? Color.white : isEnabled ? Color.primary : Color.secondary)
+            .background(
+                model.isTransmitting ? Color.red : Color.secondary.opacity(isEnabled ? 0.2 : 0.08),
+                in: .rect(cornerRadius: 8)
+            )
             .contentShape(.rect)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in
                         guard !isPressed else { return }
                         isPressed = true
+                        pressedAt = .now
+                        Self.log.info("press recognised")
                         Task { await model.pressPTT() }
                     }
                     .onEnded { _ in
@@ -240,6 +248,11 @@ private struct PTTButton: View {
                         Task { await model.releasePTT() }
                     }
             )
+            .onChange(of: model.isTransmitting) {
+                if model.isTransmitting {
+                    Self.log.info("on after \(String(describing: ContinuousClock.now - pressedAt), privacy: .public)")
+                }
+            }
             .sensoryFeedback(.impact(weight: .light), trigger: isPressed) { _, pressed in pressed }
             .sensoryFeedback(.impact, trigger: model.isTransmitting)
             .accessibilityAddTraits(.isButton)

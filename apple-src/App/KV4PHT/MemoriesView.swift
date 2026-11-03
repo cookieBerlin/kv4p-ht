@@ -2,15 +2,11 @@ import KV4PPersistence
 import KV4PProtocol
 import KV4PRadio
 import SwiftUI
-import UniformTypeIdentifiers
 
-/// The memory list: group filter, tune on click, scan, add, edit, delete and RepeaterBook import.
+/// The memory list: group filter, tune on click, scan, add, edit and delete.
 struct MemoriesView: View {
     @Bindable var model: RadioViewModel
     @State private var editing: ChannelMemory?
-    @State private var isImporting = false
-    @State private var importedCSV: String?
-    @State private var importGroup = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,24 +19,6 @@ struct MemoriesView: View {
                     Task { await model.save(saved) }
                 }
             }
-        }
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
-            guard case .success(let url) = result else { return }
-            let scoped = url.startAccessingSecurityScopedResource()
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            importedCSV = try? String(contentsOf: url, encoding: .utf8)
-            importGroup = url.deletingPathExtension().lastPathComponent
-        }
-        .alert(
-            "Save repeaters as group",
-            isPresented: Binding(get: { importedCSV != nil }, set: { if !$0 { importedCSV = nil } })
-        ) {
-            TextField("Group", text: $importGroup)
-            Button("Import") {
-                let csv = importedCSV ?? ""
-                Task { await model.importRepeaterBook(csv, group: importGroup) }
-            }
-            Button("Cancel", role: .cancel) {}
         }
     }
 
@@ -69,15 +47,6 @@ struct MemoriesView: View {
                 )
             }
             .labelStyle(.iconOnly)
-            // A phone shows no text for an icon, so a menu names the import.
-            #if os(iOS)
-                Menu("More", systemImage: "ellipsis") {
-                    importButton
-                }
-                .labelStyle(.iconOnly)
-            #else
-                importButton.labelStyle(.iconOnly).help(ControlHelp.importCSV)
-            #endif
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -91,23 +60,31 @@ struct MemoriesView: View {
                         Text(memory.name)
                         Text(HamFrequency.format(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
                     }
+                    Spacer()
                     #if os(iOS)
                         // iOS lists select only in edit mode: a tap tunes, a checkmark marks the active memory.
-                        Spacer()
                         if memory.id == model.activeMemoryId {
                             Image(systemName: "checkmark").foregroundStyle(.tint)
                         }
                     #endif
+                    Menu {
+                        actions(memory)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title2)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(.rect)
+                    }
+                    .menuIndicator(.hidden)
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Actions for \(memory.name)")
                 }
                 .tag(memory.id)
                 #if os(iOS)
                     .contentShape(.rect)
                     .onTapGesture { tune(memory.id) }
                 #endif
-                .contextMenu {
-                    Button("Edit…") { editing = memory }
-                    Button("Delete", role: .destructive) { Task { await model.delete(memory) } }
-                }
+                .contextMenu { actions(memory) }
                 .swipeActions {
                     Button("Delete", role: .destructive) { Task { await model.delete(memory) } }
                     Button("Edit…") { editing = memory }
@@ -116,8 +93,9 @@ struct MemoriesView: View {
         }
     }
 
-    private var importButton: some View {
-        Button("Import RepeaterBook CSV…", systemImage: "square.and.arrow.down") { isImporting = true }
+    @ViewBuilder private func actions(_ memory: ChannelMemory) -> some View {
+        Button("Edit…") { editing = memory }
+        Button("Delete", role: .destructive) { Task { await model.delete(memory) } }
     }
 
     private func tune(_ id: Int32?) {

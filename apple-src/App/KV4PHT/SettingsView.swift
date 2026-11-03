@@ -3,12 +3,16 @@ import KV4PAudio
 import KV4PProtocol
 import KV4PRadio
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// All settings on one screen, as in the Android app; the Mac shows them in its settings window.
 struct SettingsView: View {
     @Bindable var model: RadioViewModel
     /// The callsign as typed; the model keeps it normalised in the settings.
     @State private var callsign = ""
+    @State private var isImporting = false
+    @State private var importedCSV: String?
+    @State private var importGroup = ""
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
@@ -30,9 +34,7 @@ struct SettingsView: View {
 
             radio
 
-            if model.isReady {
-                radioSettings
-            }
+            radioSettings
 
             #if os(iOS)
                 // A phone has no room for the volume in the header.
@@ -43,13 +45,18 @@ struct SettingsView: View {
 
             aprs
 
-            Section {
-                DisclosureGroup("Advanced") {
+            Section("Memories") {
+                Button("Import RepeaterBook CSV…", systemImage: "square.and.arrow.down") { isImporting = true }
+                    .explained(ControlHelp.importCSV)
+            }
+
+            Section("Advanced") {
+                DisclosureGroup("Frequency limits") {
                     limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
                     limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
                     limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
                     limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
-                    Text(ControlHelp.txLimits).font(.footnote).foregroundStyle(.secondary)
+                    Text(ControlHelp.frequencyLimits).font(.footnote).foregroundStyle(.secondary)
                 }
             }
 
@@ -59,6 +66,24 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .onAppear { callsign = model.callsign }
+        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
+            guard case .success(let url) = result else { return }
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            importedCSV = try? String(contentsOf: url, encoding: .utf8)
+            importGroup = url.deletingPathExtension().lastPathComponent
+        }
+        .alert(
+            "Save repeaters as group",
+            isPresented: Binding(get: { importedCSV != nil }, set: { if !$0 { importedCSV = nil } })
+        ) {
+            TextField("Group", text: $importGroup)
+            Button("Import") {
+                let csv = importedCSV ?? ""
+                Task { await model.importRepeaterBook(csv, group: importGroup) }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
         #if os(macOS)
             .frame(minWidth: 480, minHeight: 560)
         #else
@@ -67,9 +92,9 @@ struct SettingsView: View {
         #endif
     }
 
-    /// What the radio applies at once; hidden without a radio.
+    /// What needs a radio; without one, the sections stay and say so.
     @ViewBuilder private var radioSettings: some View {
-        Section("Channel") {
+        radioSection("Channel") {
             Picker("Bandwidth", selection: $model.isWideBandwidth) {
                 Text("12.5 kHz").tag(false)
                 Text("25 kHz").tag(true)
@@ -97,7 +122,7 @@ struct SettingsView: View {
                 Text("The firmware of this radio has no FreeDV 2400B modem.").foregroundStyle(.secondary)
             }
         }
-        Section("Audio filters") {
+        radioSection("Audio filters") {
             Toggle("Pre-emphasis", isOn: $model.filters.preEmphasis)
                 .explained(ControlHelp.preEmphasis)
             Toggle("High-pass", isOn: $model.filters.highPass)
@@ -105,13 +130,23 @@ struct SettingsView: View {
             Toggle("Low-pass", isOn: $model.filters.lowPass)
                 .explained(ControlHelp.lowPass)
         }
-        Section("Transmit") {
+        radioSection("Transmit") {
             Toggle("Sticky PTT", isOn: $model.isStickyPTT)
                 .explained(ControlHelp.stickyPTT)
             Picker("Mic gain boost", selection: $model.micGain) {
                 ForEach(MicGain.allCases, id: \.self) { Text($0.label) }
             }
             .explained(ControlHelp.micGain)
+        }
+    }
+
+    private func radioSection(_ title: String, @ViewBuilder rows: () -> some View) -> some View {
+        Section(title) {
+            if model.isReady {
+                rows()
+            } else {
+                Text("Not available while no radio is connected.").foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -139,11 +174,13 @@ struct SettingsView: View {
                 .disabled(!model.canBeacon || model.callsign.isEmpty)
                 .explained(ControlHelp.beacon)
             Picker("Symbol", selection: $model.beaconSymbol) {
-                ForEach(APRSSymbol.allCases, id: \.self) { Text($0.name) }
+                ForEach(APRSSymbol.allCases, id: \.self) { Label($0.name, systemImage: $0.systemImage) }
             }
             .explained(ControlHelp.symbol)
-            Toggle("Approximate position", isOn: $model.isBeaconApproximate)
-                .explained(ControlHelp.approximate)
+            Picker("Position accuracy", selection: $model.beaconAccuracy) {
+                ForEach(BeaconAccuracy.allCases, id: \.self) { Text($0.label) }
+            }
+            .explained(ControlHelp.accuracy)
             Picker("Beacon on", selection: $model.beaconFrequency) {
                 Text("Current frequency").tag(Float?.none)
                 ForEach(AppSettings.beaconFrequencyOptions, id: \.self) { frequency in
@@ -226,6 +263,30 @@ struct WebFlasherNotice: View {
             if let manual = URL(string: FirmwareHelp.manualAddress) {
                 Link("Firmware updates in the manual", destination: manual)
             }
+        }
+    }
+}
+
+extension APRSSymbol {
+    /// The closest system symbol. Not all have one of their own, such as the van and the helicopter.
+    fileprivate var systemImage: String {
+        switch self {
+        case .phone: "iphone"
+        case .person: "figure.stand"
+        case .house: "house"
+        case .bicycle: "bicycle"
+        case .car: "car"
+        case .jeep: "suv.side"
+        case .truck: "truck.box"
+        case .motorcycle: "motorcycle"
+        case .van: "car.side"
+        case .rv: "bus"
+        case .eighteenWheeler: "box.truck"
+        case .glider: "paperplane"
+        case .smallAircraft: "airplane"
+        case .helicopter: "airplane.departure"
+        case .sailboat: "sailboat"
+        case .motorboat: "ferry"
         }
     }
 }

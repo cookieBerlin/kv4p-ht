@@ -38,9 +38,11 @@
         }
 
         public func start() async throws -> AsyncStream<[Int16]> {
-            stop()
-            guard await AVAudioApplication.requestRecordPermission() else { throw Unavailable() }
             let begin = ContinuousClock.now
+            stop()
+            if AVAudioApplication.shared.recordPermission != .granted {
+                guard await AVAudioApplication.requestRecordPermission() else { throw Unavailable() }
+            }
             let engine = prepared.withLock { $0.take() }?.engine ?? AVAudioEngine()
             let input = engine.inputNode
             let inputFormat = input.outputFormat(forBus: 0)
@@ -56,7 +58,14 @@
             converter.downmix = true
             let (samples, continuation) = AsyncStream.makeStream(of: [Int16].self)
             let ratio = format.sampleRate / inputFormat.sampleRate
+            let isFirstBuffer = Mutex(true)
             input.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { buffer, _ in
+                if isFirstBuffer.withLock({ $0 }) {
+                    isFirstBuffer.withLock { $0 = false }
+                    Self.log.info(
+                        "first samples after \(String(describing: ContinuousClock.now - begin), privacy: .public)"
+                    )
+                }
                 let capacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 1
                 guard let output = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { return }
                 nonisolated(unsafe) var consumed = false

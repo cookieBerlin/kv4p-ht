@@ -95,7 +95,7 @@ struct RootView: View {
                     NavigationStack { SettingsView(model: model) }.tag(Page.settings)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                if page != .settings {
+                if page == .memories {
                     Divider()
                     PTTBar(model: model)
                 }

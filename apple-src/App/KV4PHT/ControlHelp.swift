@@ -19,10 +19,11 @@ enum ControlHelp {
     static let lowPass = "Removes high tones, such as hiss, from the sound."
     static let stickyPTT = "Press PTT once to start transmitting and again to stop, instead of holding it."
     static let micGain = "Makes a quiet microphone louder."
-    static let txLimits = "The app transmits only inside these frequencies. Set them to what your licence allows."
+    static let frequencyLimits =
+        "The app transmits only inside these frequencies. Set them to what your licence allows."
     static let beacon = "Sends your position now and every five minutes while the radio is connected."
     static let symbol = "The icon others see for your station on APRS maps."
-    static let approximate = "Rounds your position to about 1 km."
+    static let accuracy = "How accurately others see your position. Rounding it keeps your exact location private."
     static let beaconFrequency = "The frequency for your beacons; usually the APRS frequency of your region."
     static let digipeat = "Sends on packets addressed to WIDE1-1 or your callsign, so they reach further."
     static let iGate = "Passes the packets you receive on to the APRS-IS internet network."
