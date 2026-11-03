@@ -48,6 +48,7 @@ public struct SimulatorSettings: Codable, Equatable, Sendable {
     public var scenario: Scenario {
         var scenario = Scenario.ble
         scenario.moduleType = band == .uhf ? .sa818UHF : .sa818VHF
+        scenario.startFrequency = band == .uhf ? 435 : 145.5  // the firmware's 144 MHz is at the band edge
         scenario.firmwareVersion = hasCurrentFirmware ? Firmware.version : Firmware.version - 1
         if hasFreeDVModem { scenario.features.insert(.freeDV2400B) }
         if !hasPowerSwitch { scenario.features.remove(.highLowPower) }

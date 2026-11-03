@@ -23,6 +23,9 @@ notice. The user also has no sample APRS packets for milestones 4.3 and 4.4.
 - **Firmware update:** the simulator offers **Update firmware…** on all platforms. A
   stand-in reports progress like the real flasher, and the simulated radio then has the
   current firmware. The real flasher and the web flasher notice stay for real radios.
+- **Start frequency:** 145.5 MHz (VHF) or 435 MHz (UHF), as the firmware's 144 MHz lies
+  on the band edge, where the channel would reach outside the band. Real radios keep
+  theirs, and the transmit rule stays as in the Android app.
 - **Where it shows:** a section in the settings, only while the simulator is the chosen
   radio. It stays in release builds, as App Review and testers use the simulator.
 - **Storage:** with the other settings on the device. Settings sync (milestone 3.8) must

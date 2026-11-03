@@ -307,8 +307,8 @@ struct PTTBar: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            if model.isReady, !model.canTransmit {
-                Text("Can't transmit outside the ham band.").font(.footnote).foregroundStyle(.secondary)
+            if let blocked = model.transmitBlockedText {
+                Text(blocked).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
             PTTButton(model: model).disabled(!model.isReady)
         }

@@ -525,6 +525,17 @@ public final class RadioViewModel {
     /// The TX frequency is inside the ham band.
     public var canTransmit: Bool { isReady && snapshot.desired.flags.contains(.txAllowed) }
 
+    /// Why PTT cannot transmit on this frequency, with the range for the bandwidth.
+    public var transmitBlockedText: String? {
+        guard isReady, !canTransmit, let firmware = snapshot.firmware else { return nil }
+        let bandwidth = snapshot.desired.bandwidth
+        let allowed = txLimits.band(for: firmware.moduleType).allowedRange(bandwidth: bandwidth)
+        let lower = HamFrequency.formatLimit(allowed.lowerBound)
+        let upper = HamFrequency.formatLimit(allowed.upperBound)
+        return
+            "Can't transmit here: with \(bandwidth == 1 ? "25" : "12.5") kHz, the allowed range is \(lower)–\(upper) MHz."
+    }
+
     public var canSimulateSignal: Bool { isReady && connection == .simulator && simulator != nil }
 
     /// The simulator is the chosen radio, so its settings apply.
@@ -906,7 +917,7 @@ public final class RadioViewModel {
             do {
                 try await controller.startTransmitting()
             } catch {
-                message = Self.message(for: error)
+                if error != .transmitNotAllowed { message = Self.message(for: error) }
             }
         }
         show(await controller.snapshot)

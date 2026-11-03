@@ -144,7 +144,8 @@ Transmitting requires a license and an antenna or dummy load.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
   Narrower limits can be chosen in ⚙ **Settings** under **Advanced**, **Frequency limits**. Otherwise the screen shows
-  *Can't transmit outside the ham band.*
+  *Can't transmit here*, with the allowed range. On 144.0000 MHz, half of the channel
+  would lie outside the band, so with 25 kHz the first allowed frequency is 144.0125 MHz.
 - 📱 A phone call, or a headset that is unplugged or switched off, ends the
   transmission.
 - Safety stops: the app ends a transmission after 3 minutes; the radio itself

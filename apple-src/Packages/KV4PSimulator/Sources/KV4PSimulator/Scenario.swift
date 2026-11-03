@@ -6,6 +6,8 @@ public struct Scenario: Equatable, Sendable {
     public var firmwareVersion = Firmware.version
     public var radioModuleStatus = RadioModuleStatus.found
     public var moduleType = RFModuleType.sa818VHF
+    /// MHz; `nil` for the default of the firmware.
+    public var startFrequency: Float?
     public var features: FirmwareFeatures = [.highLowPower, .esp32AFSK]
     public var windowSize = Firmware.usbWindowSize
     /// Desired state stored in flash; `nil` for a new device.
@@ -26,7 +28,7 @@ public struct Scenario: Equatable, Sendable {
     var frequencyRange: ClosedRange<Float> { moduleType == .sa818UHF ? 400...480 : 134...174 }
 
     /// `moduleDefaultRadioFreq()`, MHz.
-    var defaultFrequency: Float { moduleType == .sa818UHF ? 435 : 144 }
+    var defaultFrequency: Float { startFrequency ?? (moduleType == .sa818UHF ? 435 : 144) }
 
     private func with(_ change: (inout Scenario) -> Void) -> Scenario {
         var scenario = self
