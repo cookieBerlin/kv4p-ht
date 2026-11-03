@@ -7,8 +7,8 @@ open until the maintainer marks it as done for that platform.
 
 | ID | Test | Mac | iOS |
 |---|---|---|---|
-| [HW-01](#hw-01) | BLE connection, firmware and module type | ⬜ | ⬜ |
-| [HW-02](#hw-02) | USB connection | ⬜ | – |
+| [HW-01](#hw-01) | BLE connection, firmware and module type | ✅ | ✅ |
+| [HW-02](#hw-02) | USB connection | ✅ | – |
 | [HW-03](#hw-03) | RX audio for 10 minutes | ⬜ | ⬜ |
 | [HW-04](#hw-04) | PTT into a dummy load | ⬜ | ⬜ |
 | [HW-05](#hw-05) | Reconnect after a power cycle | ⬜ | ⬜ |
