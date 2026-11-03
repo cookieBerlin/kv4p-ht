@@ -218,6 +218,10 @@ struct SettingsView: View {
                     Text("None").tag(SimulatedSignal?.none)
                     ForEach(SimulatedSignal.allCases, id: \.self) { Text($0.label).tag(SimulatedSignal?.some($0)) }
                 }
+                .disabled(model.isSignalRampRunning)
+                Button(model.isSignalRampRunning ? "Stop signal ramp" : "Ramp signal up and down") {
+                    model.toggleSignalRamp()
+                }
                 Button("Lose connection") { model.loseSimulatedConnection() }
                 ForEach(SimulatedPacket.allCases, id: \.self) { packet in
                     Button("Receive APRS \(packet.label.lowercased())") { model.simulatePacket(packet) }

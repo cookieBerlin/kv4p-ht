@@ -84,8 +84,10 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
   is chosen, ⚙ **Settings** has a **Simulator** section: its band, its firmware, FreeDV,
   the power switch, the radio module and whether it answers, which apply at the next
   connection and are locked while connected. **Update firmware…** runs a simulated update
-  that gives it the current firmware. While it is connected, **Simulator actions** set a received signal, lose
-  the connection and receive APRS test packets.
+  that gives it the current firmware. While it is connected, **Simulator actions** set a received signal, ramp it through all
+  strengths up and down, lose the connection and receive APRS test packets. A weak signal
+  is quiet noise, out of which the tone grows up to S9; a real FM signal stays equally
+  loud and only gets less noisy. Each squelch level opens from the same S value on.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet

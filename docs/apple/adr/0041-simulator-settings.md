@@ -26,6 +26,13 @@ notice. The user also has no sample APRS packets for milestones 4.3 and 4.4.
 - **Start frequency:** 145.5 MHz (VHF) or 435 MHz (UHF), as the firmware's 144 MHz lies
   on the band edge, where the channel would reach outside the band. Real radios keep
   theirs, and the transmit rule stays as in the Android app.
+- **Reception by ear:** a weak signal is quiet noise, and the tone grows out of it up to
+  S9; overload is clipped. FM stays equally loud in reality, so this is on purpose not
+  physical: it makes the strengths audible. The table of levels is one place.
+- **Squelch level:** a signal opens the squelch from the S value of the level on, level 0
+  always. Whether the SA818 behaves like this is for a test on the radio.
+- **Ramp:** one button runs the signal from S0 to overload and back, one second per
+  strength, then ends without a signal.
 - **Where it shows:** a section in the settings, only while the simulator is the chosen
   radio. It stays in release builds, as App Review and testers use the simulator.
 - **Storage:** with the other settings on the device. Settings sync (milestone 3.8) must
@@ -35,6 +42,5 @@ notice. The user also has no sample APRS packets for milestones 4.3 and 4.4.
 ## Consequences
 
 - Messages and notices can be tested without hardware or source changes.
-- The simulator does not simulate the squelch level: any signal opens the squelch.
 - A received signal always carries FreeDV voice frames, as the former switch did;
   analog, it sounds like a tone.
