@@ -42,3 +42,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0036](0036-no-distribution-outside-app-store.md) | No distribution outside the App Store | Proposed |
 | [0037](0037-version-and-build-id.md) | App version, build ID and commit | Proposed |
 | [0038](0038-ble-device-selection.md) | Choosing a radio over Bluetooth | Proposed |
+| [0039](0039-error-alerts.md) | Reporting a failed connection | Proposed |
