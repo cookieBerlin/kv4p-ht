@@ -61,7 +61,7 @@ struct RadioViewModelSettingsTests {
         settings.isStickyPTT = true
         settings.isBeaconEnabled = true
         settings.beaconSymbol = .car
-        settings.beaconAccuracy = .about1km
+        settings.beaconAccuracy = .within1000m
         settings.beaconFrequency = 144.39
         settings.isDigipeatingEnabled = true
         settings.aprsDestinationFilter = .mine
@@ -73,7 +73,7 @@ struct RadioViewModelSettingsTests {
         #expect(model.isStickyPTT)
         #expect(model.isBeaconEnabled)
         #expect(model.beaconSymbol == .car)
-        #expect(model.beaconAccuracy == .about1km)
+        #expect(model.beaconAccuracy == .within1000m)
         #expect(model.beaconFrequency == 144.39)
         #expect(model.isDigipeatingEnabled)
         #expect(model.aprsDestinationFilter == .mine)
@@ -89,7 +89,7 @@ struct RadioViewModelSettingsTests {
         model.micGain = .low
         model.isStickyPTT = true
         model.beaconSymbol = .house
-        model.beaconAccuracy = .about1km
+        model.beaconAccuracy = .within1000m
         model.beaconFrequency = 145.175
         model.isDigipeatingEnabled = true
         model.isIGateEnabled = true

@@ -89,11 +89,11 @@ struct RadioViewModelBeaconTests {
         #expect(await setup.sent.count == 2)
     }
 
-    @Test("a position of about 1 km is rounded to two decimals")
+    @Test("a position within 1000 m is rounded to two decimals, as Android's approximate accuracy")
     func approximate() async {
         let setup = Setup()
         await setup.connect()
-        setup.model.beaconAccuracy = .about1km
+        setup.model.beaconAccuracy = .within1000m
         setup.model.isBeaconEnabled = true
         #expect(await eventually { await setup.sent.count == 1 })
         let position = await setup.sent.first?.info.position?.position

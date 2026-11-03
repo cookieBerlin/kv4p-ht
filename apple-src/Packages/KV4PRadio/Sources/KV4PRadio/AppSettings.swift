@@ -3,29 +3,31 @@ import KV4PAPRS
 import KV4PAudio
 import KV4PTransport
 
-/// How accurately a position beacon reports the position; Android offers exact and about 1 km.
+/// How accurately a position beacon reports the position; Android offers exact and the 0.01° of 1000 m.
 public enum BeaconAccuracy: String, Codable, CaseIterable, Sendable {
-    case exact, about100m, about1km, about10km
+    case exact, within50m, within100m, within500m, within1000m
 
     public var label: String {
         switch self {
         case .exact: "Exact"
-        case .about100m: "About 100 m"
-        case .about1km: "About 1 km"
-        case .about10km: "About 10 km"
+        case .within50m: "50 m"
+        case .within100m: "100 m"
+        case .within500m: "500 m"
+        case .within1000m: "1000 m"
         }
     }
 
-    /// Rounds a latitude or longitude.
+    /// Rounds a latitude or longitude to steps of 0.0005° to 0.01°, about the distance named.
     public func rounded(_ degrees: Double) -> Double {
-        let factor: Double
+        let stepsPerDegree: Double
         switch self {
         case .exact: return degrees
-        case .about100m: factor = 1000
-        case .about1km: factor = 100
-        case .about10km: factor = 10
+        case .within50m: stepsPerDegree = 2000
+        case .within100m: stepsPerDegree = 1000
+        case .within500m: stepsPerDegree = 200
+        case .within1000m: stepsPerDegree = 100
         }
-        return (degrees * factor + 0.5).rounded(.down) / factor
+        return (degrees * stepsPerDegree + 0.5).rounded(.down) / stepsPerDegree
     }
 }
 
@@ -73,7 +75,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         beaconSymbol = values.value(.beaconSymbol, or: defaults.beaconSymbol)
         let former = try decoder.container(keyedBy: FormerKeys.self)
         let wasApproximate = (try? former.decodeIfPresent(Bool.self, forKey: .isBeaconApproximate)) == true
-        beaconAccuracy = values.value(.beaconAccuracy, or: wasApproximate ? .about1km : defaults.beaconAccuracy)
+        beaconAccuracy = values.value(.beaconAccuracy, or: wasApproximate ? .within1000m : defaults.beaconAccuracy)
         beaconFrequency = values.value(.beaconFrequency, or: defaults.beaconFrequency)
         isDigipeatingEnabled = values.value(.isDigipeatingEnabled, or: defaults.isDigipeatingEnabled)
         isIGateEnabled = values.value(.isIGateEnabled, or: defaults.isIGateEnabled)

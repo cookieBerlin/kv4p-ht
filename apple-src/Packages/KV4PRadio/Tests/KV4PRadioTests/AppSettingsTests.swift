@@ -45,21 +45,22 @@ struct AppSettingsTests {
         #expect(AppSettings(data: nil) == AppSettings())
     }
 
-    @Test("the former switch for an approximate position becomes an accuracy of about 1 km")
+    @Test("the former switch for an approximate position becomes an accuracy of 1000 m")
     func formerApproximateSwitch() {
-        #expect(AppSettings(data: Data(#"{"isBeaconApproximate": true}"#.utf8)).beaconAccuracy == .about1km)
+        #expect(AppSettings(data: Data(#"{"isBeaconApproximate": true}"#.utf8)).beaconAccuracy == .within1000m)
         #expect(AppSettings(data: Data(#"{"isBeaconApproximate": false}"#.utf8)).beaconAccuracy == .exact)
-        let both = #"{"isBeaconApproximate": true, "beaconAccuracy": "about10km"}"#
-        #expect(AppSettings(data: Data(both.utf8)).beaconAccuracy == .about10km)
+        let both = #"{"isBeaconApproximate": true, "beaconAccuracy": "within50m"}"#
+        #expect(AppSettings(data: Data(both.utf8)).beaconAccuracy == .within50m)
     }
 
     @Test(
-        "the accuracies round a position to their number of decimals",
+        "the accuracies round a position to steps of about their distance",
         arguments: [
             (BeaconAccuracy.exact, 49.0567, "Exact"),
-            (.about100m, 49.057, "About 100 m"),
-            (.about1km, 49.06, "About 1 km"),
-            (.about10km, 49.1, "About 10 km"),
+            (.within50m, 49.0565, "50 m"),
+            (.within100m, 49.057, "100 m"),
+            (.within500m, 49.055, "500 m"),
+            (.within1000m, 49.06, "1000 m"),
         ]
     )
     func accuracies(accuracy: BeaconAccuracy, rounded: Double, label: String) {
