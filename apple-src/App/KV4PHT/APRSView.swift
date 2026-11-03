@@ -18,7 +18,8 @@ struct APRSView: View {
 
     private var composer: some View {
         HStack {
-            recipientField.frame(width: 140)
+            recipientField.frame(width: 140).help(ControlHelp.recipient)
+            HelpButton(ControlHelp.recipient)
             messageField
             sendButton.labelStyle(.iconOnly)
         }

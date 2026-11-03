@@ -55,7 +55,9 @@ struct MemoriesView: View {
                 ) {
                     Task { await model.toggleScan() }
                 }
+                .labelStyle(.titleOnly)
                 .disabled(!model.isReady || model.visibleMemories.isEmpty)
+                .help(ControlHelp.scan)
                 Button("Add memory", systemImage: "plus") {
                     editing = ChannelMemory(
                         name: "",
@@ -63,7 +65,14 @@ struct MemoriesView: View {
                         group: model.selectedGroup ?? ""
                     )
                 }
-                Button("Import RepeaterBook CSV…", systemImage: "square.and.arrow.down") { isImporting = true }
+                // iOS shows toolbar buttons as icons, so a menu names the import.
+                #if os(iOS)
+                    Menu("More", systemImage: "ellipsis") {
+                        importButton
+                    }
+                #else
+                    importButton.help(ControlHelp.importCSV)
+                #endif
             }
         }
         .sheet(item: $editing) { memory in
@@ -91,6 +100,10 @@ struct MemoriesView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+
+    private var importButton: some View {
+        Button("Import RepeaterBook CSV…", systemImage: "square.and.arrow.down") { isImporting = true }
     }
 
     private func tune(_ id: Int32?) {

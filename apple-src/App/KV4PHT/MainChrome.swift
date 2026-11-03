@@ -70,6 +70,7 @@ private struct RadioHeader: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("S-meter")
             .accessibilityValue(model.sMeterText)
+            .help(ControlHelp.meter)
             if !isCompact {
                 VolumeSlider(model: model)
             }
@@ -140,12 +141,14 @@ private struct RadioHeader: View {
                 Text(band).font(.caption.bold()).foregroundStyle(.secondary)
             }
             Spacer()
+            HelpButton(ControlHelp.meter)
             Label(
                 model.isReceiving ? "Open" : "Closed",
                 systemImage: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash"
             )
             .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
             .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
+            .help(ControlHelp.meter)
         }
     }
 }

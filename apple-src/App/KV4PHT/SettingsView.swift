@@ -31,19 +31,25 @@ struct SettingsView: View {
                     Text("12.5 kHz").tag(false)
                     Text("25 kHz").tag(true)
                 }
+                .explained(ControlHelp.bandwidth)
                 Stepper("Squelch \(model.squelch)", value: $model.squelch, in: 0...8)
+                    .explained(ControlHelp.squelch)
                 Picker("TX tone (CTCSS)", selection: $model.txTone) {
                     ForEach(CTCSS.labels, id: \.self) { Text($0) }
                 }
+                .explained(ControlHelp.txTone)
                 Picker("RX tone (CTCSS)", selection: $model.rxTone) {
                     ForEach(CTCSS.labels, id: \.self) { Text($0) }
                 }
+                .explained(ControlHelp.rxTone)
                 Toggle("High power", isOn: $model.isHighPower)
+                    .explained(ControlHelp.highPower)
                 Picker("Voice mode", selection: $model.isFreeDV) {
                     Text("Analog").tag(false)
                     Text("FreeDV 2400B").tag(true)
                 }
                 .disabled(!model.supportsFreeDV)
+                .explained(ControlHelp.voiceMode)
                 if model.isReady, !model.supportsFreeDV {
                     Text("The firmware of this radio has no FreeDV 2400B modem.").foregroundStyle(.secondary)
                 }
@@ -52,24 +58,33 @@ struct SettingsView: View {
 
             Section("Audio filters") {
                 Toggle("Pre-emphasis", isOn: $model.filters.preEmphasis)
+                    .explained(ControlHelp.preEmphasis)
                 Toggle("High-pass", isOn: $model.filters.highPass)
+                    .explained(ControlHelp.highPass)
                 Toggle("Low-pass", isOn: $model.filters.lowPass)
+                    .explained(ControlHelp.lowPass)
             }
             .disabled(!model.isReady)
 
             Section("Transmit") {
                 Toggle("Sticky PTT", isOn: $model.isStickyPTT)
+                    .explained(ControlHelp.stickyPTT)
                 Picker("Mic gain boost", selection: $model.micGain) {
                     ForEach(MicGain.allCases, id: \.self) { Text($0.label) }
                 }
+                .explained(ControlHelp.micGain)
             }
             .disabled(!model.isReady)
 
-            Section("TX limits") {
+            Section {
                 limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
                 limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
                 limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
                 limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
+            } header: {
+                Text("TX limits")
+            } footer: {
+                Text(ControlHelp.txLimits)
             }
 
             #if os(iOS)
@@ -117,24 +132,31 @@ struct SettingsView: View {
         Section("APRS position beacon") {
             Toggle("Position beacon", isOn: $model.isBeaconEnabled)
                 .disabled(!model.canBeacon || model.callsign.isEmpty)
+                .explained(ControlHelp.beacon)
             Picker("Symbol", selection: $model.beaconSymbol) {
                 ForEach(APRSSymbol.allCases, id: \.self) { Text($0.name) }
             }
+            .explained(ControlHelp.symbol)
             Toggle("Approximate position", isOn: $model.isBeaconApproximate)
+                .explained(ControlHelp.approximate)
             Picker("Beacon on", selection: $model.beaconFrequency) {
                 Text("Current frequency").tag(Float?.none)
                 ForEach(AppSettings.beaconFrequencyOptions, id: \.self) { frequency in
                     Text(HamFrequency.format(frequency) + " MHz").tag(Float?.some(frequency))
                 }
             }
+            .explained(ControlHelp.beaconFrequency)
         }
         Section("APRS network") {
             Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
                 .disabled(model.callsign.isEmpty)
+                .explained(ControlHelp.digipeat)
             Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
                 .disabled(!model.canUseInternet || model.callsign.isEmpty)
+                .explained(ControlHelp.iGate)
             Toggle("Show nearby APRS-IS packets", isOn: $model.isInternetFeedEnabled)
                 .disabled(!model.canUseInternet || model.callsign.isEmpty)
+                .explained(ControlHelp.internetFeed)
             if model.isIGateEnabled || model.isInternetFeedEnabled {
                 Label(
                     model.isInternetConnected ? "APRS-IS connected" : "Connecting to APRS-IS…",
