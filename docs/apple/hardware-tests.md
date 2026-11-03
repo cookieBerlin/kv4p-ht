@@ -28,6 +28,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-19](#hw-19) | Layouts on real devices | – | ⬜ |
 | [HW-20](#hw-20) | Permissions on first use | ⬜ | ⬜ |
 | [HW-21](#hw-21) | Choosing a radio over Bluetooth | ✅ | ✅ |
+| [HW-22](#hw-22) | Reporting a failed connection | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -156,3 +157,13 @@ With two radios on, or one radio and `swift run kv4p-sim-peripheral` on a second
 both appear under **Radio**. The app connects to the one you choose. After a restart
 of the app, that radio is still chosen and the app connects to it. A radio you
 switched off stays in the list, and connecting to it does not reach another radio.
+
+### HW-22
+
+Connect over Bluetooth, then switch the radio off. With the app in front, a dialog
+opens once. Connect again, then choose **Disconnect**: nothing is reported. On the
+Mac, with another app in front, switch the radio off: the dialog opens and the Dock
+icon bounces. On iPhone and iPad, allow notifications at the first connection, then
+lock the screen and switch the radio off: one notification arrives, and no dialog
+waits on return. With notifications denied, the app works and shows the failure as
+its status.

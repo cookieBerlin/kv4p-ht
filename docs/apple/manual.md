@@ -71,6 +71,14 @@ frequency range. *Connected, applying settings…* means the radio has not yet
 confirmed the latest change. **Disconnect** ends the session; the radio keeps its
 settings.
 
+If the connection fails or is lost, the app tells you once, and not when you
+disconnect yourself:
+
+- 🖥 A dialog opens. While the app is in the background, its Dock icon also bounces.
+- 📱 A dialog opens while the app is in the foreground. In the background, you get a
+  notification instead. The app asks for this permission when you first connect. It
+  works without it, but you then see the failure only when you return to the app.
+
 ## Receiving
 
 - **Frequency:** type it in MHz and press Return. As in the Android app, `1467`
