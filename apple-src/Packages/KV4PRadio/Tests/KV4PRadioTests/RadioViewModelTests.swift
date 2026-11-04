@@ -91,6 +91,15 @@ struct RadioViewModelTests {
         #expect(model.message == "\"inf\" is not a frequency.")
     }
 
+    @Test("squelch 0 warns that the speaker is always on")
+    func squelchWarning() async {
+        let model = await connected()
+        #expect(model.squelchWarning == "Squelch 0: the speaker is always on, also without a signal.")
+        model.squelch = 1
+        #expect(await eventually(model) { $0.squelch == 1 })
+        #expect(model.squelchWarning == nil)
+    }
+
     @Test("settings are sent to the radio")
     func settings() async {
         let model = await connected()
