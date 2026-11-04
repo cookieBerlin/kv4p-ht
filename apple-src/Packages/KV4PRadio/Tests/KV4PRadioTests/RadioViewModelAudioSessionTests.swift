@@ -59,6 +59,14 @@ final class FakeAudioSession: AudioSession {
         if fails || lowerFails { throw Failure() }
     }
 
+    func silenceOtherAudio() async throws {
+        log.append("silence")
+        if let lowering {
+            for await _ in lowering { break }
+        }
+        if fails || lowerFails { throw Failure() }
+    }
+
     func releaseOtherAudio() async {
         log.append("release")
     }

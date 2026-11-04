@@ -79,6 +79,7 @@ struct OtherAudioControllerTests {
         }
 
         static let lowering = ["stop", "lower pausePodcasts", "start", "prepare"]
+        static let silencing = ["stop", "silence", "start", "prepare"]
         static let mixing = ["mix", "start", "prepare"]
     }
 
@@ -179,19 +180,58 @@ struct OtherAudioControllerTests {
         #expect(await setup.until(Setup.mixing))
     }
 
-    @Test("PTT waits for the switch, so the microphone opens when other apps are lowered")
+    @Test("PTT pauses other apps entirely before the microphone opens, as lowered audio would still go on air")
     func transmitWaits() async {
         let setup = Setup()
         await setup.controller.readyToTransmit()
-        #expect(setup.calls == Setup.lowering)
+        #expect(setup.calls == Setup.silencing)
     }
 
-    @Test("PTT while the session is inactive activates it before the microphone opens")
+    @Test("PTT with Lower all also pauses other apps")
+    func transmitLowerAll() async {
+        let setup = Setup()
+        setup.controller.mode = .lower
+        await setup.controller.readyToTransmit()
+        #expect(setup.calls == Setup.silencing)
+    }
+
+    @Test("PTT during a signal switches from lowered to paused, as a lowered session may have no microphone")
+    func transmitWhileLowered() async {
+        let setup = Setup()
+        await setup.lowered()
+        setup.session.isOtherAudioPlaying = false  // a paused podcast does not count as playing
+        await setup.controller.readyToTransmit()
+        #expect(setup.calls == Setup.silencing)
+    }
+
+    @Test("PTT while the session is inactive pauses other apps before the microphone opens")
     func transmitWhileReleased() async {
         let setup = Setup()
         await setup.released()
         await setup.controller.readyToTransmit()
-        #expect(setup.calls == ["lower pausePodcasts", "start", "prepare"])
+        #expect(setup.calls == ["silence", "start", "prepare"])
+    }
+
+    @Test("once paused, more PTT presses and signals switch nothing, until the time is up")
+    func staysPaused() async {
+        let setup = Setup()
+        await setup.controller.readyToTransmit()
+        setup.controller.endKeying()
+        setup.clearLog()
+        setup.controller.update(isBusy: true)
+        await setup.controller.readyToTransmit()
+        setup.controller.endKeying()
+        #expect(setup.calls.isEmpty)
+        setup.controller.update(isBusy: false)
+        await setup.advance(by: .seconds(3))
+        #expect(await setup.until(["stop", "release"]))
+    }
+
+    @Test("if other apps cannot be paused, PTT still gets the session and the radio stays audible")
+    func silenceFails() async {
+        let setup = Setup(lowerFails: true)
+        await setup.controller.readyToTransmit()
+        #expect(setup.calls == ["stop", "silence", "mix", "start", "prepare"])
     }
 
     @Test("PTT waits until the microphone is prepared again, as the switch ended the engine prepared before")
@@ -203,7 +243,7 @@ struct OtherAudioControllerTests {
             await setup.controller.readyToTransmit()
             isReady.value = true
         }
-        #expect(await setup.until(Setup.lowering))
+        #expect(await setup.until(Setup.silencing))
         await Task.yield()
         #expect(isReady.value == nil)
         opener.yield()

@@ -117,28 +117,28 @@ struct RadioViewModelOtherAudioTests {
         #expect(setup.model.otherAudioHint == "While the squelch is 0, only transmitting does this.")
         #expect(!setup.log.calls.contains("lower pausePodcasts"))
         await setup.model.pressPTT()
-        #expect(setup.log.calls.contains("lower pausePodcasts"))
+        #expect(setup.log.calls.contains("silence"))
         await setup.model.releasePTT()
         setup.model.otherAudioMode = .keepPlaying
         #expect(setup.model.otherAudioHint == nil)
     }
 
-    @Test("PTT opens the microphone only after other apps are lowered")
+    @Test("PTT opens the microphone only after other apps are paused")
     func pttWaits() async {
         let setup = Setup()
         await setup.connected()
         await setup.model.pressPTT()
-        #expect(setup.log.calls == ["stop", "lower pausePodcasts", "start"])
+        #expect(setup.log.calls == ["stop", "silence", "start"])
         #expect(setup.model.isTransmitting)
         #expect(setup.microphone.starts == 1)
     }
 
-    @Test("a PTT released while other apps are being lowered does not transmit")
+    @Test("a PTT released while other apps are being paused does not transmit")
     func pttReleasedEarly() async {
         let setup = Setup(holdsLowering: true)
         await setup.connected()
         let press = Task { await setup.model.pressPTT() }
-        #expect(await setup.until("lower pausePodcasts"))
+        #expect(await setup.until("silence"))
         await setup.model.releasePTT()
         setup.session.finishLowering()
         await press.value
