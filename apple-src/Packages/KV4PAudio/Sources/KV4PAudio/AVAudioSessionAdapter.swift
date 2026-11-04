@@ -1,10 +1,13 @@
 #if os(iOS)
     import AVFoundation
+    import os
 
     /// Configures the shared `AVAudioSession` for play and record and forwards its notifications. All logic lives in
     /// `RadioViewModel`; this file is excluded from coverage (ADR-0011).
     public final class AVAudioSessionAdapter: AudioSession, @unchecked Sendable {
         public let events: AsyncStream<AudioSessionEvent>
+        private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "session")
+
         private let observers: [any NSObjectProtocol]
         private let queue = DispatchQueue(label: "kv4p.audio-session", qos: .userInitiated)
 
@@ -33,6 +36,12 @@
                 center.addObserver(forName: AVAudioSession.routeChangeNotification, object: session, queue: nil) {
                     let reason = ($0.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt)
                         .flatMap(AVAudioSession.RouteChangeReason.init)
+                    let route = session.currentRoute
+                    let inputs = route.inputs.map(\.portType.rawValue).joined(separator: ",")
+                    let outputs = route.outputs.map(\.portType.rawValue).joined(separator: ",")
+                    Self.log.info(
+                        "other audio: route inputs=[\(inputs, privacy: .public)] outputs=[\(outputs, privacy: .public)]"
+                    )
                     if reason == .oldDeviceUnavailable { continuation.yield(.deviceUnavailable) }
                 },
                 center.addObserver(

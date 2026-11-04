@@ -67,6 +67,9 @@ final class OtherAudioController {
 
     /// The radio receives something to play, or transmits.
     func update(isBusy: Bool) {
+        if isBusy != self.isBusy {
+            note(isBusy ? "busy" : "not busy")
+        }
         self.isBusy = isBusy
         advance()
     }
@@ -138,7 +141,7 @@ final class OtherAudioController {
 
     private func note(_ step: String) {
         Self.log.info(
-            "other audio: \(step, privacy: .public), playing=\(self.session.isOtherAudioPlaying, privacy: .public)"
+            "other audio: \(step, privacy: .public), playing=\(self.session.isOtherAudioPlaying, privacy: .public), buffered=\(self.player.statistics.buffered, privacy: .public), underruns=\(self.player.statistics.underruns, privacy: .public)"
         )
     }
 
