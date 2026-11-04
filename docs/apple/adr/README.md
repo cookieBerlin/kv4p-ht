@@ -45,3 +45,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0039](0039-error-alerts.md) | Reporting a failed connection | Proposed |
 | [0040](0040-screen-layout.md) | Screen layout and control explanations | Proposed |
 | [0041](0041-simulator-settings.md) | Simulator settings | Proposed |
+| [0042](0042-memory-editor.md) | Memory editor | Proposed |
