@@ -46,16 +46,12 @@ enum ControlHelp {
 }
 
 extension View {
-    /// For a row with room below it: a tooltip on the Mac, a short text below the row on iPhone and iPad.
-    @ViewBuilder func explained(_ text: String) -> some View {
-        #if os(macOS)
-            help(text)
-        #else
-            VStack(alignment: .leading, spacing: 4) {
-                self
-                Text(text).font(.footnote).foregroundStyle(.secondary)
-            }
-        #endif
+    /// For a row with room below it: a short text below the row, on every platform (ADR-0048).
+    func explained(_ text: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            self
+            Text(text).font(.footnote).foregroundStyle(.secondary)
+        }
     }
 }
 

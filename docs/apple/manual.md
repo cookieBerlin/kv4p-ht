@@ -81,7 +81,7 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
   `USB cu.usbserial-…`. The app restarts the radio when connecting, so it
   reports itself.
 - **Simulator:** a built-in simulated radio, to try the app without hardware. While it
-  is chosen, ⚙ **Settings** has a **Simulator** section: its band, its firmware, FreeDV,
+  is chosen, ⚙ **Settings** has a **Simulator** page: its band, its firmware, FreeDV,
   the power switch, the radio module and whether it answers, which apply at the next
   connection and are locked while connected. The app remembers that the simulator was
   chosen. Each connection starts with squelch 3, as with its fixed frequency. **Update firmware…** runs a simulated update
@@ -119,7 +119,7 @@ disconnect yourself:
 - **Squelch indicator:** a green speaker while a signal is received and played, a
   crossed-out speaker otherwise. The radio mutes the audio itself while the squelch
   is closed.
-- **Volume:** the slider in the header (📱 on an iPhone, in ⚙ **Settings**) sets the playback volume in the app; the
+- **Volume:** the slider in the header (📱 on an iPhone, in ⚙ **Settings** under *Audio*) sets the playback volume in the app; the
   Mac's own volume applies on top. The audio plays on the current output device
   and moves along when you plug in headphones.
 - 📱 On iPhone and iPad the audio plays on the speaker, or on a connected headset
@@ -152,7 +152,7 @@ disconnect yourself:
   - This needs no permission, and the app records nothing.
   - Other apps keep running silently, so a video or podcast goes on without being heard.
   - By default, on *Keep playing*, they go on, and the microphone can send them on air.
-- **Simulator:** *Received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
+- **Simulator:** *Received signal* in ⚙ **Settings** under *Simulator* plays a 1 kHz tone with the squelch
   open.
 
 ## Transmitting
@@ -167,7 +167,7 @@ Transmitting requires a license and an antenna or dummy load.
   app.
 - **Mic gain boost:** *None*, *Low* (×1.5), *Med* (×2) or *High* (×2.5); use it
   if others hear you too quietly.
-- **High power** is in ⚙ **Settings** under **Channel**.
+- **High power** is in ⚙ **Settings** under **Radio**.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
   Narrower limits can be chosen in ⚙ **Settings** under **Advanced**, **Frequency limits**. Otherwise the screen shows
@@ -198,7 +198,7 @@ licence.
 
 ## Opening a repeater
 
-Some repeaters open only on a tone. Choose it in ⚙ **Settings** under *Repeater access
+Some repeaters open only on a tone. Choose it in ⚙ **Settings** under *Transmit*, *Repeater access
 tone*: 1000, 1450, 1750 or 2100 Hz, off by default, its length, and the wait before it. A
 memory can have its own tone and length, or use the settings, which is the default.
 
@@ -237,13 +237,13 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   It skips memories marked *Skip during scan* and those outside the module
   range. With squelch 0 it scans with squelch 7, as in the Android app; **Stop
   scan** restores your squelch. Transmitting or tuning by hand ends the scan.
-- **Manage memories…** in ⚙ **Settings** shows the groups, and a group its memories.
+- **Memories** in ⚙ **Settings** shows the groups, and a group its memories.
   Drag a row by its handle to sort: the groups, or the memories inside a group. The main
   list, the **Group** picker and the scan follow this order. A group exists as long as
   it has a memory. A memory's ⋯ button moves it to another group, and **Select** in the
   ⋯ menu at the top moves or deletes several at once. The same menu renames or deletes
   the group; deleting asks whether its memories go too or stay without a group.
-- **RepeaterBook import:** **Import from RepeaterBook** in *Manage memories* asks for a
+- **RepeaterBook import:** **Import from RepeaterBook** in ⚙ **Settings** under *Memories* asks for a
   CSV export, which you download from [RepeaterBook](https://www.repeaterbook.com) in
   your browser (US or international format). It then shows how many repeaters it would
   add, and how many it leaves out because the radio cannot receive them or the group
@@ -264,7 +264,7 @@ me* hides messages between other stations; messages from or to you, to `ALL`,
 `QST`, `CQ` and bulletins stay, as do all positions, weather reports and
 objects.
 
-**Messages** (licence required): enter your callsign in ⚙ **Settings** (the app
+**Messages** (licence required): enter your callsign in ⚙ **Settings** under *Station* (the app
 ships with none and remembers yours), then a recipient and the text below the APRS list,
 then press Return or **Send**. Without a recipient the message goes out as the
 bulletin BLN1CQ.
@@ -281,7 +281,7 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
-**Position beacon** (licence required): turn on *Position beacon* in ⚙ **Settings**,
+**Position beacon** (licence required): turn on *Position beacon* in ⚙ **Settings** under *APRS*,
 where digipeating and the APRS-IS switches are too. The app sends your position right away and then every five
 minutes, as long as the radio is connected and receiving. Choose the symbol
 others see (phone, car, house, …) and, under *Position accuracy*, round the position
@@ -310,7 +310,7 @@ digipeater is useful.
 FreeDV 2400B is digital voice on FM radios: the radio's firmware runs the
 modem, the app encodes and decodes the speech with Codec2.
 
-- Set **Voice mode** to *FreeDV 2400B* in ⚙ **Settings**. The setting needs
+- Set **Voice mode** to *FreeDV 2400B* in ⚙ **Settings** under *Radio*. The setting needs
   firmware with the FreeDV modem; otherwise the app says so and stays analog.
 - Receiving: the squelch opens only for FreeDV signals; analog stations are not
   heard in this mode. The S-meter shows the signal quality.
@@ -319,21 +319,37 @@ modem, the app encodes and decodes the speech with Codec2.
 - The radio keeps the setting while it is on, also when the app reconnects;
   after a restart it is analog again. Switch back to *Analog* for normal FM.
 - Try it without a second radio: connect the **Simulator**, choose FreeDV 2400B
-  and choose a *Received signal* in ⚙ **Settings**; you hear a vowel-like test sound.
+  and choose a *Received signal* in ⚙ **Settings** under *Simulator*; you hear a vowel-like test sound.
 
 ## Settings
+
+⚙ **Settings** opens an overview of pages: a sidebar on the Mac, a list on iPhone and iPad.
+A short text below a setting explains it.
+
+| Page | What it holds |
+|---|---|
+| **Station** | Your callsign, listen only |
+| **Radio** | Bandwidth, squelch, tones, high power, voice mode, audio filters, firmware |
+| **Transmit** | Sticky PTT, mic gain boost, repeater access tone |
+| **Audio** | 📱 The volume on an iPhone, and what other apps do while the radio is busy |
+| **APRS** | Position beacon, digipeating, iGate, APRS-IS feed |
+| **Memories** | Groups and memories: sort, edit, import |
+| **Simulator** | The simulated radio; only while it is the chosen radio |
+| **Advanced** | Frequency limits |
+| **About kv4p HT** | 📱 Version and licences; on the Mac in the **kv4p HT** menu |
 
 The radio keeps its own settings (frequency, bandwidth, squelch, tones, power,
 filters, voice mode) and reports them when the app connects. The app remembers
 its settings between launches:
 
-- **⚙ Settings:** sticky PTT and mic gain boost; without a radio, the settings that
-  need one say that they are not available. Under **Advanced**, the **Frequency
-  limits**: 2 m from
+- **⚙ Settings → Transmit:** sticky PTT and mic gain boost; without a radio, the settings
+  that need one say that they are not available.
+- **⚙ Settings → Advanced:** the **Frequency limits**: 2 m from
   144 MHz to 148 or 146 MHz, 70 cm from 420 or 430 MHz to 450 or 440 MHz, as in
   the Android app. The app transmits only inside the band of the radio module.
-- **⚙ Settings:** your callsign, position beacon with symbol, accuracy and
-  frequency, digipeating, iGate and the APRS-IS feed.
+- **⚙ Settings → Station:** your callsign.
+- **⚙ Settings → APRS:** position beacon with symbol, accuracy and frequency, digipeating,
+  iGate and the APRS-IS feed.
 - **APRS list:** the list filter.
 - **Memories:** the group shown.
 
@@ -351,7 +367,7 @@ The app warns when the radio's firmware is older than required or missing
 (*The radio needs a firmware update.*).
 
 - 🖥 Connect the radio by USB, select it under **Radio** and choose **Update
-  firmware…** at the bottom of the window or in ⚙ **Settings**, then **Flash**. The app writes firmware 17, the version the
+  firmware…** at the bottom of the window or in ⚙ **Settings** under *Radio*, then **Flash**. The app writes firmware 17, the version the
   Android app ships, verifies it and reconnects, in less than a minute. Do
   not disconnect the cable until *Firmware updated and verified.* appears. If an
   update fails, simply start it again: the radio's bootloader is always there.
@@ -375,9 +391,9 @@ The app warns when the radio's firmware is older than required or missing
 | *… cannot be opened.* | Close other apps that use the USB port. |
 | *Microphone access is not allowed…* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
 | *The microphone could not be started.* | Press PTT again. If it stays, another app may be using the microphone, or restart the app. |
-| *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings**. |
-| *Set your callsign to transmit.* | Enter your callsign in ⚙ **Settings**. |
-| *Listen only: this app does not transmit.* | Turn *Listen only* off in ⚙ **Settings**. |
+| *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings** under *Station*. |
+| *Set your callsign to transmit.* | Enter your callsign in ⚙ **Settings** under *Station*. |
+| *Listen only: this app does not transmit.* | Turn *Listen only* off in ⚙ **Settings** under *Station*. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
 | *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |

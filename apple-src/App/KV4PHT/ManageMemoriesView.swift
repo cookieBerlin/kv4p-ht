@@ -11,7 +11,6 @@ struct ManageMemoriesView: View {
     @State private var isNamingGroup = false
     @State private var groupName = ""
     @State private var isImporting = false
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         List {
@@ -36,6 +35,8 @@ struct ManageMemoriesView: View {
                 .onMove { offsets, destination in
                     Task { await model.moveGroups(offsets, to: destination) }
                 }
+            } header: {
+                Text(ControlHelp.manageMemories)
             } footer: {
                 if model.memories.isEmpty {
                     Text("No memories yet.")
@@ -52,10 +53,6 @@ struct ManageMemoriesView: View {
             }
         }
         .sortableList()
-        .navigationTitle("Memories")
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-        }
         .navigationDestination(item: $opened) { name in
             GroupMemoriesView(model: model, name: name)
         }
