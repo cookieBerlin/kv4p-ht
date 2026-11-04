@@ -19,6 +19,13 @@ struct AccessToneTests {
         #expect(AccessTone.defaultWaitMs == 200)
     }
 
+    @Test("the lengths read as seconds")
+    func lengthLabels() {
+        #expect(
+            AccessTone.lengthsMs.map(AccessTone.lengthLabel) == ["0.25 s", "0.5 s", "1 s", "2 s", "3 s", "4 s", "5 s"]
+        )
+    }
+
     @Test("the time becomes samples at the rate of the radio")
     func durations() {
         let tone = AccessTone(frequency: 1750, lengthMs: 500, waitMs: 200)

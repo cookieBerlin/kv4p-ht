@@ -18,6 +18,8 @@ enum ControlHelp {
         static let otherAudio = "What other apps do while the radio receives or you transmit."
     #endif
     static let muteAll = "Other apps keep running silently, so a video or podcast goes on without being heard."
+    static let accessTone =
+        "Hold to send the tone that opens a repeater. It ends by itself; releasing it earlier stops it."
     static let squelch = "How strong a signal must be to be heard. 0 keeps the speaker always on."
     static let txTone = "A tone sent with your voice. Many repeaters open only with the right one."
     static let rxTone = "Hear only signals that carry this tone."

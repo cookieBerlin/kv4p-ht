@@ -165,6 +165,51 @@ struct AccessToneControllerTests {
         #expect(await !controller.snapshot.isSendingAccessTone)
     }
 
+    @Test("stopping during the wait sends no tone")
+    func stopsDuringWait() async throws {
+        var setup = Setup()
+        try await setup.ready()
+        let controller = setup.controller
+        let waiting = AccessTone(frequency: 1750, lengthMs: 250, waitMs: 1000)
+        let task = Task { try await controller.sendAccessTone(waiting) }
+        await setup.clock.waitForSleepers(1)
+        setup.reportOnAir()
+        _ = try #require(await setup.snapshots.next { $0.deviceState?.radio.flags.contains(.txActive) == true })
+        setup.clock.advance(by: Self.blockPeriod * 2)
+        await setup.clock.waitForSleepers(1)
+        await controller.stopTransmitting()
+        setup.clock.advance(by: Self.blockPeriod)
+        #expect(try await task.value == .stopped)
+        let peak = setup.sentAudio.flatMap { $0 }.map { abs(Int($0)) }.max() ?? 0
+        #expect(peak < 4000)
+    }
+
+    @Test("stopping during the tone ends it")
+    func stopsDuringTone() async throws {
+        var setup = Setup()
+        try await setup.ready()
+        var events = setup.sink.events.makeAsyncIterator()
+        let controller = setup.controller
+        let immediate = AccessTone(frequency: 1750, lengthMs: 5000, waitMs: 0)
+        let task = Task { try await controller.sendAccessTone(immediate) }
+        await setup.clock.waitForSleepers(1)
+        setup.reportOnAir()
+        let clock = setup.clock
+        let ticker = Task {
+            while !Task.isCancelled {
+                clock.advance(by: Self.blockPeriod)
+                await Task.yield()
+            }
+        }
+        while let event = await events.next() {
+            if case .tone = event { break }
+        }
+        ticker.cancel()
+        await controller.stopTransmitting()
+        setup.clock.advance(by: Self.blockPeriod)
+        #expect(try await task.value == .stopped)
+    }
+
     @Test("it needs a ready radio, a free transmitter, analog voice and an allowed frequency")
     func guards() async throws {
         let waiting = RadioController(transport: ScriptedTransport(), clock: ManualClock())

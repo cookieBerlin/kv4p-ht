@@ -14,6 +14,12 @@ public struct AccessTone: Equatable, Sendable {
     /// Keeps the edges from clicking, which would splatter on air.
     private static let rampSeconds = 0.005
 
+    /// For the choices of the length: `0.25 s`, `1 s`.
+    public static func lengthLabel(_ milliseconds: Int) -> String {
+        let seconds = Double(milliseconds) / 1000
+        return seconds == seconds.rounded() ? "\(Int(seconds)) s" : "\(seconds) s"
+    }
+
     public var frequency: Int
     public var lengthMs: Int
     public var waitMs: Int
