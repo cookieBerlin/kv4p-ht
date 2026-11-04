@@ -141,6 +141,11 @@ struct SettingsView: View {
             .explained(ControlHelp.bandwidth)
             Stepper("Squelch \(model.squelch)", value: $model.squelch, in: 0...8)
                 .explained(ControlHelp.squelch)
+            if let warning = model.squelchWarning {
+                Label(warning, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
             Picker("TX tone (CTCSS)", selection: $model.txTone) {
                 ForEach(CTCSS.labels, id: \.self) { Text($0) }
             }

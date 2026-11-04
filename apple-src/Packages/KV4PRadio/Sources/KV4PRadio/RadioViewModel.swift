@@ -1243,6 +1243,11 @@ public final class RadioViewModel {
         }
     }
 
+    /// A squelch of 0 sounds like a fault: noise without a signal.
+    public var squelchWarning: String? {
+        squelch == 0 ? "Squelch 0: the speaker is always on, also without a signal." : nil
+    }
+
     public var isHighPower: Bool {
         get { snapshot.desired.flags.contains(.highPower) }
         set { update { $0.setHighPower(newValue) } }

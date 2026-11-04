@@ -108,7 +108,8 @@ disconnect yourself:
   becomes 146.7 MHz and frequencies outside the module range are set to the
   nearest limit. RX and TX use the same frequency (simplex); repeater offsets come
   with memories.
-- **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8.
+- **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8. With 0, the speaker is always on, also without a
+  signal; the settings warn about it in red.
 - **TX/RX tone (CTCSS):** one of the 38 standard tones or *None*.
 - **High power** and the **audio filters** (pre-emphasis, high-pass, low-pass).
 - **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*, also as text. The bars are
