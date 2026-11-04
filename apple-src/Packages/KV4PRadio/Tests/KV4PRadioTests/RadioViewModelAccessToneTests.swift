@@ -156,6 +156,34 @@ struct RadioViewModelAccessToneTests {
         #expect(setup.model.message == "The tone was cut short, so the repeater may not have opened.")
     }
 
+    @Test("the next press removes the message of the tone before, but not other problems")
+    func nextPressClearsMessage() async {
+        let setup = Setup()
+        await setup.connected()
+        setup.model.accessToneHz = 1750
+        setup.model.accessToneLengthMs = 250
+        setup.model.accessToneWaitMs = 0
+        let cut = Task { await setup.model.pressAccessTone() }
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isSendingAccessTone })
+        await setup.model.releaseAccessTone()
+        await setup.run(until: cut)
+        #expect(setup.model.message != nil)
+
+        let again = Task { await setup.model.pressAccessTone() }
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isSendingAccessTone })
+        #expect(setup.model.message == nil)
+        await setup.run(until: again)
+
+        setup.model.frequencyText = "not a frequency"
+        await setup.model.applyFrequency()
+        let problem = setup.model.message
+        #expect(problem != nil)
+        let other = Task { await setup.model.pressAccessTone() }
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isSendingAccessTone })
+        #expect(setup.model.message == problem)
+        await setup.run(until: other)
+    }
+
     @Test("a radio that does not transmit within 2 s is reported")
     func notTransmitting() async {
         let setup = Setup(respond: false)
