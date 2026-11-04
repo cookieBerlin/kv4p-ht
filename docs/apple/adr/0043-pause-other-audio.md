@@ -22,6 +22,8 @@ and locked:
 | Inactive for 2 s after handing back | A podcast returns after about 1.15 s, and stays when the session is active again |
 | `interruptSpokenAudioAndMixWithOthers` with `duckOthers` | Podcasts pause, music gets quieter |
 | Non-mixable session | Not allowed locked, unless the app is the Now Playing app |
+| Microphone while podcasts pause | No input: `currentRoute.inputs` stays empty and the engine reports 0 Hz, also seconds later |
+| Microphone with `duckOthers` only | No failure seen, but lowered music from the speaker could go on air |
 
 The output stopped for 0.4 to 0.6 s to lower music, about 1 s to pause a podcast, and up
 to 1 s to hand back. No buffered audio was lost with a large enough buffer. The microphone
@@ -42,9 +44,11 @@ unlocking.
   about 2 s while `isHolding`. It comes late rather than not at all. When the squelch has
   been closed for as long as the audio that waited, the silence behind it is discarded and
   the normal latency returns. Without a switch, the limit stays as it was.
-- **PTT waits** for the switch before the microphone opens, as music from the speaker
-  would go on air. While nothing else plays there is no switch, and PTT stays instant. A
-  transmission never switches back, also with sticky PTT.
+- **PTT pauses all other apps** with a non-mixable session before the microphone opens,
+  whatever the setting says, except *Keep playing*. Lowered music from the speaker would
+  go on air, and the session that pauses podcasts has no microphone. PTT is only reachable
+  in the foreground, where this is allowed. While nothing else plays there is no switch,
+  and PTT stays instant. A transmission never switches back, also with sticky PTT.
 - **A signal during the wait** lowers other apps at once, also if the other app has not
   returned yet, so that it does not return into the signal.
 - **Settings:** *Pause podcasts, lower music* (default), *Lower all* and *Keep playing*,

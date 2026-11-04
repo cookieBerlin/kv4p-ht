@@ -134,8 +134,9 @@ disconnect yourself:
   *Other audio*: *Pause podcasts, lower music*, *Lower all* or *Keep playing*.
   - No received audio gets lost. While other apps play, it comes up to a second late,
     as the system stops the audio for each switch.
-  - PTT also waits for this, up to a second, so that no music goes on air. While no
-    other app plays, nothing changes.
+  - PTT pauses all other apps, also music and with *Lower all*, so that nothing goes on
+    air. This takes up to a second; while no other app plays, PTT stays instant. They
+    return after the same time.
   - A received APRS packet counts too, as the app cannot tell it from voice. With
     frequent packets, choose *Keep playing*.
   - With squelch 0 the squelch is always open, so only transmitting does this.
