@@ -199,6 +199,7 @@ struct RadioViewModelPermissionTests {
     func microphoneDenied() async {
         let permissions = FakePermissions()
         let model = Self.model(permissions, microphone: FakeMicrophone(fails: true))
+        model.callsign = "N0CALL"
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady && $0.snapshot.isInSync })
         model.frequencyText = "146.52"

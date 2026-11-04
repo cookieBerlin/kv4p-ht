@@ -49,6 +49,7 @@ struct RadioViewModelAccessToneTests {
                 settings: store,
                 permissions: permissions
             )
+            model.callsign = "N0CALL"
         }
 
         func connected() async {

@@ -47,6 +47,7 @@ struct RadioViewModelOtherAudioTests {
                 settings: store ?? self.store,
                 otherAudioSleep: { try await clock.sleep(for: $0) }
             )
+            model.callsign = "N0CALL"
         }
 
         func connected() async {
@@ -250,6 +251,7 @@ struct RadioViewModelOtherAudioTests {
                 otherAppsMute: mute,
                 settings: store
             )
+            model.callsign = "N0CALL"
         }
     }
 
