@@ -7,6 +7,7 @@ import SwiftUI
 struct MemoriesView: View {
     @Bindable var model: RadioViewModel
     @State private var editing: ChannelMemory?
+    @State private var deleting: [ChannelMemory]?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,11 +16,12 @@ struct MemoriesView: View {
         }
         .sheet(item: $editing) { memory in
             NavigationStack {
-                MemoryEditor(memory: memory) { saved in
+                MemoryForm(model: model, memory: memory) { saved in
                     Task { await model.save(saved) }
                 }
             }
         }
+        .confirmsDeletion(of: $deleting, model: model)
     }
 
     /// The group shown and what acts on the memories, above the list.
@@ -40,11 +42,7 @@ struct MemoriesView: View {
             .disabled(!model.isReady || model.visibleMemories.isEmpty)
             .help(ControlHelp.scan)
             Button("Add memory", systemImage: "plus") {
-                editing = ChannelMemory(
-                    name: "",
-                    frequency: Float(model.frequencyText) ?? 146.52,
-                    group: model.selectedGroup ?? ""
-                )
+                editing = model.draftMemory(group: model.selectedGroup ?? "")
             }
             .labelStyle(.iconOnly)
         }
@@ -86,7 +84,7 @@ struct MemoriesView: View {
                 #endif
                 .contextMenu { actions(memory) }
                 .swipeActions {
-                    Button("Delete", role: .destructive) { Task { await model.delete(memory) } }
+                    Button("Delete", role: .destructive) { deleting = [memory] }
                     Button("Edit…") { editing = memory }
                 }
             }
@@ -95,57 +93,11 @@ struct MemoriesView: View {
 
     @ViewBuilder private func actions(_ memory: ChannelMemory) -> some View {
         Button("Edit…") { editing = memory }
-        Button("Delete", role: .destructive) { Task { await model.delete(memory) } }
+        Button("Delete", role: .destructive) { deleting = [memory] }
     }
 
     private func tune(_ id: Int32?) {
         guard let memory = model.memories.first(where: { $0.id == id }) else { return }
         Task { await model.tune(to: memory) }
-    }
-}
-
-/// Add or edit a memory.
-private struct MemoryEditor: View {
-    @State var memory: ChannelMemory
-    let save: (ChannelMemory) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        Form {
-            TextField("Name", text: $memory.name)
-            TextField("Frequency (MHz)", value: $memory.frequency, format: .number.precision(.fractionLength(4)))
-            Picker("Offset", selection: $memory.offset) {
-                Text("None").tag(MemoryOffset.none)
-                Text("Down").tag(MemoryOffset.down)
-                Text("Up").tag(MemoryOffset.up)
-            }
-            TextField("Offset (kHz)", value: $memory.offsetKHz, format: .number)
-                .disabled(memory.offset == .none)
-            Picker("TX tone (CTCSS)", selection: $memory.txTone) {
-                ForEach(CTCSS.labels, id: \.self) { Text($0) }
-            }
-            Picker("RX tone (CTCSS)", selection: $memory.rxTone) {
-                ForEach(CTCSS.labels, id: \.self) { Text($0) }
-            }
-            TextField("Group", text: $memory.group)
-            Toggle("Skip during scan", isOn: $memory.skipDuringScan)
-        }
-        .formStyle(.grouped)
-        #if os(macOS)
-            .frame(minWidth: 360)
-        #else
-            .navigationTitle(memory.name.isEmpty ? "New memory" : memory.name)
-            .navigationBarTitleDisplayMode(.inline)
-        #endif
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    save(memory)
-                    dismiss()
-                }
-                .disabled(memory.name.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-        }
     }
 }
