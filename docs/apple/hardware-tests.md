@@ -208,5 +208,5 @@ On a Mac, choose *Mute other apps*: the system asks for System Audio Recording o
 music and a video in a browser. With a signal from a radio, both go silent while the radio
 stays audible, and return after the set time. Press PTT while they play: a second radio
 hears nothing of them. Change to headphones while they are muted: they stay silent. With
-nothing playing, a signal shows no recording dot. Refuse the permission, and check what the
-app shows. Force quit the app while they are muted: they become audible.
+all audio apps closed, a signal shows no recording dot. Refuse the permission: muting still
+works. Force quit the app while they are muted: they become audible.

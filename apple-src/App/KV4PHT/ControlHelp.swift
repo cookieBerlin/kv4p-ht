@@ -18,8 +18,9 @@ enum ControlHelp {
         static let otherAudio = "What other apps do while the radio receives or you transmit."
     #endif
     static let muteAll =
-        "While other apps are muted, macOS shows a recording dot in the menu bar. The app records nothing. If other "
-        + "apps stay audible, allow System Audio Recording under Privacy & Security."
+        "While other apps are muted, macOS can show a recording dot in the menu bar. The app records nothing, and "
+        + "muting also works if you refuse System Audio Recording. If other apps stay audible, allow it under "
+        + "Privacy & Security."
     static let squelch = "How strong a signal must be to be heard. 0 keeps the speaker always on."
     static let txTone = "A tone sent with your voice. Many repeaters open only with the right one."
     static let rxTone = "Hear only signals that carry this tone."

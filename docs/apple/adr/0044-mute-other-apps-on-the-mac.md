@@ -33,8 +33,10 @@ have. The options on a Mac, checked against the SDK, Apple's documentation and a
   apps return. The default differs from iOS, as muting needs the *System Audio Recording*
   permission, which should be a choice.
 - **The permission** is asked for when the user chooses muting: only a running tap makes
-  the system ask, so the tap runs for a moment then. There is no public way to read the
-  state of this permission, so the settings explain where to allow it.
+  the system ask, so the tap runs for a moment then. In a test on a Mac, muting also worked
+  after refusing it. As the app throws the audio away, this is enough, but Apple does not
+  document it. There is no public way to read the state of this permission, so the settings
+  say where to allow it if other apps stay audible.
 
 ## Consequences
 
@@ -42,6 +44,8 @@ have. The options on a Mac, checked against the SDK, Apple's documentation and a
   them is not possible for all apps.
 - macOS shows its recording dot in the menu bar while other apps are muted, and the app
   needs to explain that it records nothing.
+- A process that keeps its output open without playing counts as playing, so the dot can
+  show although nothing is heard. In a test, it was gone once all audio apps were closed.
 - A tap belongs to one output device, so the adapter builds a new one when the user changes
   it.
 - Hardware test HW-26 covers the permission, a change of output device, and a crash, which
