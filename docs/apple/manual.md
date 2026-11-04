@@ -193,6 +193,8 @@ memory can have its own tone and length, or use the settings, which is the defau
   passes in silence. Then the tone goes out for the set length, on air and on this device,
   and the transmitter stops by itself, also if you still hold the button.
 - Releasing earlier stops at once, and the app says that the repeater may not have opened.
+  The next press removes this message.
+- The button shows the frequency of the tone.
 - If the radio does not transmit within 2 s, the app stops and says so.
 - 📱 The iPhone vibrates all the time while the button is held.
 - The microphone stays closed, so other apps keep playing. Sticky PTT has no effect on the

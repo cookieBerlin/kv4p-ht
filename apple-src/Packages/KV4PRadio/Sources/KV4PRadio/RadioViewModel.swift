@@ -1066,6 +1066,9 @@ public final class RadioViewModel {
 
     // MARK: Access tone
 
+    private static let accessToneCutShort = "The tone was cut short, so the repeater may not have opened."
+    private static let accessToneNotSent = "The radio did not start transmitting, so no tone went out."
+
     /// The tone that opens a repeater: the settings, and what the memory tuned to says instead (ADR-0045).
     public var accessTone: AccessTone? {
         let memory = memories.first { $0.id == activeMemoryId }
@@ -1084,11 +1087,15 @@ public final class RadioViewModel {
     /// Sends the tone, and returns when it is over.
     public func pressAccessTone() async {
         guard let controller, let tone = accessTone else { return }
+        // What the last press reported no longer holds; another problem stays until dismissed.
+        if message == Self.accessToneCutShort || message == Self.accessToneNotSent {
+            message = nil
+        }
         do {
             switch try await controller.sendAccessTone(tone) {
             case .finished: break
-            case .stopped: message = "The tone was cut short, so the repeater may not have opened."
-            case .radioNotTransmitting: message = "The radio did not start transmitting, so no tone went out."
+            case .stopped: message = Self.accessToneCutShort
+            case .radioNotTransmitting: message = Self.accessToneNotSent
             }
         } catch {
             if error != .transmitNotAllowed { message = Self.message(for: error) }

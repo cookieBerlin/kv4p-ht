@@ -376,9 +376,10 @@ private struct AccessToneButton: View {
     @State private var isPressed = false
 
     var body: some View {
-        Label("Tone", systemImage: "waveform")
+        Label(title, systemImage: "waveform")
             .labelStyle(.titleAndIcon)
             .font(.headline)
+            .multilineTextAlignment(.center)
             .frame(minWidth: 96, minHeight: 64)
             .foregroundStyle(model.isSendingAccessTone ? Color.white : isEnabled ? Color.primary : Color.secondary)
             .background(
@@ -395,6 +396,11 @@ private struct AccessToneButton: View {
             .accessibilityAction {
                 Task { await model.isSendingAccessTone ? model.releaseAccessTone() : model.pressAccessTone() }
             }
+    }
+
+    /// Which tone goes out, as a memory can have its own.
+    private var title: String {
+        model.accessTone.map { "Tone\n\($0.frequency) Hz" } ?? "Tone"
     }
 
     private func pressed() {
