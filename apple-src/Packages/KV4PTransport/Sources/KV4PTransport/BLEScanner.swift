@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 
 /// A kv4p HT seen by a scan.
 public struct BLEDevice: Codable, Hashable, Sendable {
@@ -31,12 +32,16 @@ public struct BLEScanner: BLEScanning {
     public func scan() -> AsyncStream<[BLEDevice]> {
         let central = makeCentral()
         let (stream, continuation) = AsyncStream.makeStream(of: [BLEDevice].self, bufferingPolicy: .bufferingNewest(1))
+        let isScanning = Mutex(false)
         let task = Task {
             var devices: [UUID: BLEDevice] = [:]
             for await event in central.events {
                 switch event {
                 case .powerState(.poweredOn):
+                    isScanning.withLock { $0 = true }
                     central.perform(.scan)
+                case .powerState:
+                    isScanning.withLock { $0 = false }
                 case .advertised(let device) where devices[device.id] != device:
                     devices[device.id] = device
                     continuation.yield(devices.values.sorted { $0.label < $1.label })
@@ -47,7 +52,10 @@ public struct BLEScanner: BLEScanning {
         }
         continuation.onTermination = { _ in
             task.cancel()
-            central.perform(.stopScan)
+            // CoreBluetooth takes commands only while powered on.
+            if isScanning.withLock({ $0 }) {
+                central.perform(.stopScan)
+            }
         }
         return stream
     }
