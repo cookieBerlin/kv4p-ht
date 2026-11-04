@@ -128,6 +128,19 @@ disconnect yourself:
   APRS, digipeating and the iGate. Disconnect to save the battery. Position
   beacons wait until the app is on screen again, because iOS only gives the app
   your location while you use it.
+- 📱 **Other audio:** while the squelch is open or you transmit, podcasts of other apps
+  pause and music gets quieter. They return once the squelch has stayed closed for the
+  time set under **Resume after**, 3 s by default. Choose it in ⚙ **Settings** under
+  *Other audio*: *Pause podcasts, lower music*, *Lower all* or *Keep playing*.
+  - No received audio gets lost. While other apps play, it comes up to a second late,
+    as the system stops the audio for each switch.
+  - PTT also waits for this, up to a second, so that no music goes on air. While no
+    other app plays, nothing changes.
+  - A received APRS packet counts too, as the app cannot tell it from voice. With
+    frequent packets, choose *Keep playing*.
+  - With squelch 0 the squelch is always open, so only transmitting does this.
+  - Podcast apps decide themselves whether they continue. If one stays paused, choose
+    *Lower all*.
 - **Simulator:** *Received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
   open.
 
