@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>kv4p HT silences other apps while the radio receives or you transmit. It records nothing.</string>
 	<!-- The app uses no encryption beyond what the OS provides (HTTPS links open in the browser). -->
 	<key>KV4PCommit</key>
 	<string>$(KV4P_COMMIT)</string>

@@ -11,13 +11,19 @@ public enum AudioSessionEvent: Sendable, Equatable {
 
 /// What other apps do while the radio receives or the user transmits (ADR-0043).
 public enum OtherAudioMode: String, Codable, CaseIterable, Sendable {
-    case keepPlaying, lower, pausePodcasts
+    case keepPlaying, lower, pausePodcasts, muteAll
+
+    /// What a platform with an audio session can do: iPhone and iPad.
+    public static let withAudioSession: [OtherAudioMode] = [.keepPlaying, .lower, .pausePodcasts]
+    /// What a platform without one can do: the Mac (ADR-0044).
+    public static let withoutAudioSession: [OtherAudioMode] = [.keepPlaying, .muteAll]
 
     public var label: String {
         switch self {
         case .keepPlaying: "Keep playing"
         case .lower: "Lower all"
         case .pausePodcasts: "Pause podcasts, lower music"
+        case .muteAll: "Mute other apps"
         }
     }
 
@@ -30,21 +36,24 @@ public enum OtherAudioMode: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// Makes other apps get out of the way of the radio (ADR-0043, ADR-0044).
+public protocol OtherAudioSwitching: Sendable {
+    /// Another app plays audio that the radio should not compete with.
+    var isOtherAudioPlaying: Bool { get }
+    /// Makes other apps do what `mode` says, for a signal. With an audio session, the caller stops the audio first.
+    func lowerOtherAudio(_ mode: OtherAudioMode) async throws
+    /// Silences all other apps with the microphone available, for a transmission.
+    func silenceOtherAudio() async throws
+    /// Lets other apps go on. With an audio session, the caller stops the audio first.
+    func releaseOtherAudio() async
+    /// Plays next to other apps again, after `releaseOtherAudio()`.
+    func mixWithOtherAudio() async throws
+}
+
 /// The audio session of the app; implemented by the OS adapter (`AVAudioSessionAdapter`, iOS only).
-public protocol AudioSession: Sendable {
+public protocol AudioSession: OtherAudioSwitching {
     var events: AsyncStream<AudioSessionEvent> { get }
     /// Configures the session for receiving and transmitting, then activates it.
     func activate() throws
     func deactivate()
-    /// Another app plays audio that the radio should not compete with.
-    var isOtherAudioPlaying: Bool { get }
-    /// Deactivates the session, then activates it so that other apps do what `mode` says. The caller stops the audio
-    /// first, as the system requires.
-    func lowerOtherAudio(_ mode: OtherAudioMode) async throws
-    /// Like `lowerOtherAudio`, but all other apps pause and the microphone is available, for a transmission.
-    func silenceOtherAudio() async throws
-    /// Deactivates the session and tells other apps that they can resume. The caller stops the audio first.
-    func releaseOtherAudio() async
-    /// Activates the session again as in `activate()`, next to what other apps play.
-    func mixWithOtherAudio() async throws
 }

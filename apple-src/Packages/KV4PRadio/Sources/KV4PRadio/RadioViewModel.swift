@@ -163,6 +163,9 @@ public final class RadioViewModel {
         didSet {
             otherAudio?.mode = otherAudioMode
             saveSettings()
+            if otherAudioMode == .muteAll, !isRestoring {
+                otherAudio?.askForPermission()
+            }
         }
     }
     /// How long the squelch stays closed before other apps return.
@@ -173,6 +176,8 @@ public final class RadioViewModel {
         }
     }
     public static let otherAudioResumeOptions = [1, 2, 3, 5, 10]
+    /// What this platform can do with other apps.
+    public let otherAudioModes: [OtherAudioMode]
     /// The frequencies the app may transmit on, per band.
     public var txLimits = TXLimits() {
         didSet {
@@ -317,6 +322,7 @@ public final class RadioViewModel {
         serialDevices: @escaping () -> [String],
         audioOutput: (any AudioOutput)? = nil,
         audioSession: (any AudioSession)? = nil,
+        otherAppsMute: (any OtherAudioSwitching)? = nil,
         memories: (any MemoryRepository)? = nil,
         location: (any LocationProvider)? = nil,
         internet: (any APRSInternetLink)? = nil,
@@ -350,6 +356,9 @@ public final class RadioViewModel {
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
         self.audioSession = audioSession
+        otherAudioModes =
+            audioSession == nil && otherAppsMute != nil
+            ? OtherAudioMode.withoutAudioSession : OtherAudioMode.withAudioSession
         self.simulator = simulator
         self.simulatedFlashStep = simulatedFlashStep
         self.simulatedSignalStep = simulatedSignalStep
@@ -357,14 +366,15 @@ public final class RadioViewModel {
         observeInternet()
         observeAudioSession()
         observePermissions()
-        if let audioSession {
+        if let switching = audioSession ?? otherAppsMute {
             otherAudio = OtherAudioController(
-                session: audioSession,
-                output: audioOutput,
+                session: switching,
+                output: audioSession == nil ? nil : audioOutput,
                 player: rxAudio,
                 prepareMicrophone: { [weak self] in await self?.controller?.prepareMicrophone() },
                 reportFailure: { [weak self] in self?.message = $0 },
-                sleep: otherAudioSleep
+                sleep: otherAudioSleep,
+                releaseWait: audioSession == nil ? .zero : OtherAudioController.podcastReturnWait
             )
         }
         restore(AppSettings(data: settings?.load()))
@@ -404,7 +414,7 @@ public final class RadioViewModel {
         callsign = settings.callsign
         micGain = settings.micGain
         isStickyPTT = settings.isStickyPTT
-        otherAudioMode = settings.otherAudioMode
+        otherAudioMode = otherAudioModes.contains(settings.otherAudioMode) ? settings.otherAudioMode : .keepPlaying
         otherAudioResumeSeconds = settings.otherAudioResumeSeconds
         isBeaconEnabled = settings.isBeaconEnabled
         beaconSymbol = settings.beaconSymbol
@@ -786,7 +796,7 @@ public final class RadioViewModel {
         try await Task.sleep(for: $0)
     }
 
-    /// Only iOS has a session that can make other apps pause or get quieter.
+    /// iOS has a session for other apps, the Mac a tap on them; a platform without either offers nothing.
     public var canChooseOtherAudio: Bool { otherAudio != nil }
 
     /// Squelch 0 is always open, so the radio could never hand the sound back.

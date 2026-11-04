@@ -21,6 +21,7 @@ enum Composition {
             serialDevices: serialDevices,
             audioOutput: AVAudioEngineOutput(),
             audioSession: audioSession(),
+            otherAppsMute: otherAppsMute(),
             memories: memoryRepository(),
             location: CoreLocationProvider(),
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
@@ -37,6 +38,15 @@ enum Composition {
     private static func audioSession() -> (any AudioSession)? {
         #if os(iOS)
             AVAudioSessionAdapter()
+        #else
+            nil
+        #endif
+    }
+
+    /// The Mac has no session, but a tap can silence other apps.
+    private static func otherAppsMute() -> (any OtherAudioSwitching)? {
+        #if os(macOS)
+            CoreAudioOtherAppsMute()
         #else
             nil
         #endif
