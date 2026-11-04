@@ -60,6 +60,7 @@ struct SettingsSyncTests {
         _ cloud: MemorySyncedSettings,
         local: AppSettings? = nil,
         store: MemorySettingsStore? = nil,
+        time: TestTime = TestTime(),
         sleep: @escaping @Sendable (Duration) async throws -> Void = { _ in }
     ) -> RadioViewModel {
         RadioViewModel(
@@ -67,8 +68,13 @@ struct SettingsSyncTests {
             serialDevices: { [] },
             settings: store ?? MemorySettingsStore(local),
             syncedSettings: cloud,
-            settingsSyncSleep: sleep
+            settingsSyncSleep: sleep,
+            now: { time.ms }
         )
+    }
+
+    private static func date(_ time: TestTime) -> Date {
+        Date(timeIntervalSince1970: Double(time.ms) / 1000)
     }
 
     private static func settled(_ cloud: MemorySyncedSettings, writes: Int) async -> Bool {
@@ -305,6 +311,65 @@ struct SettingsSyncTests {
         model.isStickyPTT = true
         model.flushSettingsSync()
         #expect(model.settingsSyncHint == nil)
+    }
+
+    @Test("sending and receiving note the time, a change for this device alone does not")
+    func lastSync() async {
+        let cloud = MemorySyncedSettings()
+        let store = MemorySettingsStore()
+        let time = TestTime()
+        time.advance(by: 5_000)
+        let model = Self.model(cloud, store: store, time: time) { _ in try await Task.sleep(for: .seconds(60)) }
+        #expect(model.lastSettingsSync == nil)
+        model.micGain = .high
+        model.flushSettingsSync()
+        #expect(model.lastSettingsSync == nil)
+        model.isStickyPTT = true
+        model.flushSettingsSync()
+        #expect(model.lastSettingsSync == Self.date(time))
+        #expect(store.settings.lastSettingsSync == model.lastSettingsSync)
+        time.advance(by: 9_000)
+        var other = model.settings
+        other.beaconSymbol = .car
+        cloud.receive(other, keys: ["beaconSymbol"])
+        #expect(await RadioViewModelTests.eventually(model) { $0.beaconSymbol == .car })
+        #expect(model.lastSettingsSync == Self.date(time))
+    }
+
+    @Test("a notice from the cloud without a change also counts as a sync")
+    func lastSyncWithoutChange() async {
+        let cloud = MemorySyncedSettings()
+        let time = TestTime()
+        time.advance(by: 7_000)
+        let model = Self.model(cloud, time: time)
+        cloud.receive(AppSettings(), keys: [])
+        #expect(await RadioViewModelTests.eventually(model) { $0.lastSettingsSync != nil })
+    }
+
+    @Test("values taken or sent at the start count as a sync, nothing to do does not")
+    func lastSyncAtStart() {
+        let time = TestTime()
+        time.advance(by: 3_000)
+        #expect(Self.model(MemorySyncedSettings(), time: time).lastSettingsSync == nil)
+        var other = AppSettings()
+        other.callsign = "N0CALL"
+        let cloud = MemorySyncedSettings()
+        cloud.set(SettingsSync.values(of: other))
+        #expect(Self.model(cloud, time: time).lastSettingsSync == Self.date(time))
+        #expect(Self.model(MemorySyncedSettings(), local: other, time: time).lastSettingsSync != nil)
+    }
+
+    @Test("without iCloud nothing counts as synced, and the last time is kept across a restart")
+    func lastSyncWithoutICloud() {
+        let cloud = MemorySyncedSettings()
+        cloud.isAvailable = false
+        let model = Self.model(cloud) { _ in try await Task.sleep(for: .seconds(60)) }
+        model.isStickyPTT = true
+        model.flushSettingsSync()
+        #expect(model.lastSettingsSync == nil)
+        var local = AppSettings()
+        local.lastSettingsSync = Date(timeIntervalSince1970: 11)
+        #expect(Self.model(MemorySyncedSettings(), local: local).lastSettingsSync == Date(timeIntervalSince1970: 11))
     }
 
     @Test("a real wait is what the view model starts with")
