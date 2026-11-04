@@ -1,5 +1,6 @@
 import KV4PAudio
 import KV4PProtocol
+import os
 
 /// Lowers other apps while the radio receives or transmits, and hands their sound back afterwards (ADR-0043).
 ///
@@ -27,6 +28,7 @@ final class OtherAudioController {
     /// A podcast app was back after about 1.15 s in the tests on an iPhone.
     private static let releaseWait: Duration = .seconds(2)
     private static let audioFailure = "The audio output cannot be started."
+    private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "other-audio")
 
     var mode = OtherAudioMode.pausePodcasts
     var resumeAfter: Duration = .seconds(3)
@@ -134,6 +136,12 @@ final class OtherAudioController {
         }
     }
 
+    private func note(_ step: String) {
+        Self.log.info(
+            "other audio: \(step, privacy: .public), playing=\(self.session.isOtherAudioPlaying, privacy: .public)"
+        )
+    }
+
     private func run(_ body: @escaping @MainActor () async -> Void) {
         step = Task {
             await body()
@@ -158,6 +166,7 @@ final class OtherAudioController {
     }
 
     private func lower() async {
+        note("lower \(mode.rawValue)")
         do {
             try await session.lowerOtherAudio(mode)
         } catch {
@@ -168,6 +177,7 @@ final class OtherAudioController {
     }
 
     private func silence() async {
+        note("pause all")
         do {
             try await session.silenceOtherAudio()
         } catch {
@@ -200,6 +210,7 @@ final class OtherAudioController {
     }
 
     private func release() async {
+        note("hand back")
         output?.stop()
         await session.releaseOtherAudio()
         phase = .released
@@ -230,6 +241,7 @@ final class OtherAudioController {
     }
 
     private func mix() async {
+        note("mix again")
         do {
             try await session.mixWithOtherAudio()
         } catch {
