@@ -19,8 +19,8 @@ struct RadioViewModelOtherAudioTests {
         let simulator = Box<SimulatorTransport<ManualClock>>()
         let model: RadioViewModel
 
-        init(store: MemorySettingsStore? = nil, outputFails: Bool = false) {
-            let session = FakeAudioSession(log: log)
+        init(store: MemorySettingsStore? = nil, outputFails: Bool = false, holdsLowering: Bool = false) {
+            let session = FakeAudioSession(log: log, holdsLowering: holdsLowering)
             session.isOtherAudioPlaying = true
             self.session = session
             let simulator = simulator
@@ -135,11 +135,12 @@ struct RadioViewModelOtherAudioTests {
 
     @Test("a PTT released while other apps are being lowered does not transmit")
     func pttReleasedEarly() async {
-        let setup = Setup()
+        let setup = Setup(holdsLowering: true)
         await setup.connected()
         let press = Task { await setup.model.pressPTT() }
-        await Task.yield()
+        #expect(await setup.until("lower pausePodcasts"))
         await setup.model.releasePTT()
+        setup.session.finishLowering()
         await press.value
         #expect(!setup.model.isTransmitting)
         #expect(setup.microphone.starts == 0)

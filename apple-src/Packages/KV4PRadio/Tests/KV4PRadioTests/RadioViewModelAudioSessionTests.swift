@@ -18,7 +18,19 @@ final class FakeAudioSession: AudioSession {
     private let lowerFails: Bool
     private let otherAudio = Mutex(false)
 
-    init(log: CallLog, fails: Bool = false, lowerFails: Bool = false) {
+    /// With `holdsLowering`, `lowerOtherAudio` returns only after `finishLowering()`.
+    private let lowering: AsyncStream<Void>?
+    private let lowered: AsyncStream<Void>.Continuation?
+
+    init(log: CallLog, fails: Bool = false, lowerFails: Bool = false, holdsLowering: Bool = false) {
+        if holdsLowering {
+            let (lowering, lowered) = AsyncStream.makeStream(of: Void.self)
+            self.lowering = lowering
+            self.lowered = lowered
+        } else {
+            lowering = nil
+            lowered = nil
+        }
         (events, continuation) = AsyncStream.makeStream()
         self.log = log
         failing = Mutex(fails)
@@ -41,6 +53,9 @@ final class FakeAudioSession: AudioSession {
 
     func lowerOtherAudio(_ mode: OtherAudioMode) async throws {
         log.append("lower \(mode.rawValue)")
+        if let lowering {
+            for await _ in lowering { break }
+        }
         if fails || lowerFails { throw Failure() }
     }
 
@@ -54,6 +69,10 @@ final class FakeAudioSession: AudioSession {
     }
 
     private var fails: Bool { failing.withLock { $0 } }
+
+    func finishLowering() {
+        lowered?.yield()
+    }
 
     func startFailing() {
         failing.withLock { $0 = true }
