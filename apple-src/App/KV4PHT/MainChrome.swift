@@ -321,11 +321,13 @@ struct PTTBar: View {
             if let blocked = model.transmitBlockedText {
                 Text(blocked).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
-            HStack(spacing: 8) {
-                PTTButton(model: model).disabled(!model.isReady || model.isSendingAccessTone)
-                if model.canSendAccessTone {
-                    AccessToneButton(model: model)
-                        .disabled(!model.canTransmit || (model.isTransmitting && !model.isSendingAccessTone))
+            if model.canSendOnAir {
+                HStack(spacing: 8) {
+                    PTTButton(model: model).disabled(!model.isReady || model.isSendingAccessTone)
+                    if model.canSendAccessTone {
+                        AccessToneButton(model: model)
+                            .disabled(!model.canTransmit || (model.isTransmitting && !model.isSendingAccessTone))
+                    }
                 }
             }
         }

@@ -29,6 +29,8 @@ struct SettingsView: View {
                         #endif
                         .onChange(of: callsign) { model.callsign = callsign }
                 }
+                Toggle("Listen only", isOn: $model.isListenOnly)
+                    .explained(ControlHelp.listenOnly)
             }
 
             radio
@@ -91,6 +93,7 @@ struct SettingsView: View {
             if !isPage { NoticeBanner(model: model) }
         }
         .onAppear { callsign = model.callsign }
+        .onChange(of: model.callsign) { callsign = model.callsign }
         .sheet(isPresented: $isManagingMemories) {
             NavigationStack { ManageMemoriesView(model: model) }
                 #if os(macOS)
@@ -277,7 +280,7 @@ struct SettingsView: View {
     @ViewBuilder private var aprs: some View {
         Section("APRS position beacon") {
             Toggle("Position beacon", isOn: $model.isBeaconEnabled)
-                .disabled(!model.canBeacon || model.callsign.isEmpty)
+                .disabled(!model.canBeacon || !model.canSendOnAir)
                 .explained(ControlHelp.beacon)
             if model.isDenied(.location) {
                 PermissionNotice(permission: .location)
@@ -306,13 +309,13 @@ struct SettingsView: View {
         }
         Section("APRS network") {
             Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
-                .disabled(model.callsign.isEmpty)
+                .disabled(!model.canSendOnAir)
                 .explained(ControlHelp.digipeat)
             Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
-                .disabled(!model.canUseInternet || model.callsign.isEmpty)
+                .disabled(!model.canUseInternetWithCallsign)
                 .explained(ControlHelp.iGate)
             Toggle("Show nearby APRS-IS packets", isOn: $model.isInternetFeedEnabled)
-                .disabled(!model.canUseInternet || model.callsign.isEmpty)
+                .disabled(!model.canUseInternetWithCallsign)
                 .explained(ControlHelp.internetFeed)
             if model.isIGateEnabled || model.isInternetFeedEnabled {
                 Label(
