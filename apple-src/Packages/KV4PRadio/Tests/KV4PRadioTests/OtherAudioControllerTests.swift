@@ -22,7 +22,8 @@ struct OtherAudioControllerTests {
             isOtherAudioPlaying: Bool = true,
             sessionFails: Bool = false,
             lowerFails: Bool = false,
-            outputFails: Bool = false
+            outputFails: Bool = false,
+            prepareGate: AsyncStream<Void>? = nil
         ) {
             let log = log
             let clock = clock
@@ -34,7 +35,12 @@ struct OtherAudioControllerTests {
                 session: session,
                 output: RecordingOutput(log: log, fails: outputFails),
                 player: player,
-                prepareMicrophone: { log.append("prepare") },
+                prepareMicrophone: {
+                    log.append("prepare")
+                    if let prepareGate {
+                        for await _ in prepareGate { break }
+                    }
+                },
                 reportFailure: { failureLog.append($0) },
                 sleep: { try await clock.sleep(for: $0) }
             )
@@ -186,6 +192,23 @@ struct OtherAudioControllerTests {
         await setup.released()
         await setup.controller.readyToTransmit()
         #expect(setup.calls == ["lower pausePodcasts", "start", "prepare"])
+    }
+
+    @Test("PTT waits until the microphone is prepared again, as the switch ended the engine prepared before")
+    func transmitWaitsForMicrophone() async {
+        let (gate, opener) = AsyncStream.makeStream(of: Void.self)
+        let setup = Setup(prepareGate: gate)
+        let isReady = Box<Bool>()
+        let press = Task {
+            await setup.controller.readyToTransmit()
+            isReady.value = true
+        }
+        #expect(await setup.until(Setup.lowering))
+        await Task.yield()
+        #expect(isReady.value == nil)
+        opener.yield()
+        await press.value
+        #expect(isReady.value == true)
     }
 
     @Test("PTT that ends before transmitting lets the time run")

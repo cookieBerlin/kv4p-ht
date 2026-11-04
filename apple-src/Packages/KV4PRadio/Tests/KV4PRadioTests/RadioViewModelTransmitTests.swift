@@ -86,15 +86,12 @@ struct RadioViewModelTransmitTests {
         #expect(!setup.model.isTransmitting)
     }
 
-    @Test("a missing microphone permission is explained")
-    func microphoneDenied() async {
+    @Test("a microphone that does not start says so, without blaming the permission")
+    func microphoneFails() async {
         let setup = Setup(microphone: FakeMicrophone(fails: true))
         await setup.tuned()
         await setup.model.pressPTT()
-        #expect(
-            setup.model.message
-                == "The microphone is not available. Allow access under Privacy & Security → Microphone in the settings."
-        )
+        #expect(setup.model.message == "The microphone could not be started. Press PTT again.")
     }
 
     @Test("PTT before connecting does nothing")
