@@ -14,13 +14,15 @@ final class FakeAudioSession: AudioSession {
     let events: AsyncStream<AudioSessionEvent>
     private let continuation: AsyncStream<AudioSessionEvent>.Continuation
     private let log: CallLog
-    private let fails: Bool
+    private let failing: Mutex<Bool>
+    private let lowerFails: Bool
     private let otherAudio = Mutex(false)
 
-    init(log: CallLog, fails: Bool = false) {
+    init(log: CallLog, fails: Bool = false, lowerFails: Bool = false) {
         (events, continuation) = AsyncStream.makeStream()
         self.log = log
-        self.fails = fails
+        failing = Mutex(fails)
+        self.lowerFails = lowerFails
     }
 
     func activate() throws {
@@ -39,7 +41,7 @@ final class FakeAudioSession: AudioSession {
 
     func lowerOtherAudio(_ mode: OtherAudioMode) async throws {
         log.append("lower \(mode.rawValue)")
-        if fails { throw Failure() }
+        if fails || lowerFails { throw Failure() }
     }
 
     func releaseOtherAudio() async {
@@ -49,6 +51,12 @@ final class FakeAudioSession: AudioSession {
     func mixWithOtherAudio() async throws {
         log.append("mix")
         if fails { throw Failure() }
+    }
+
+    private var fails: Bool { failing.withLock { $0 } }
+
+    func startFailing() {
+        failing.withLock { $0 = true }
     }
 
     func send(_ event: AudioSessionEvent) {

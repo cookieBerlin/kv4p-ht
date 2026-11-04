@@ -16,29 +16,35 @@ struct OtherAudioControllerTests {
         let player = RXAudioPlayer(fadesIn: false)
         let session: FakeAudioSession
         let controller: OtherAudioController
-        private(set) var failures: [String] = []
+        private let failureLog = CallLog()
 
-        init(isOtherAudioPlaying: Bool = true, sessionFails: Bool = false, outputFails: Bool = false) {
+        init(
+            isOtherAudioPlaying: Bool = true,
+            sessionFails: Bool = false,
+            lowerFails: Bool = false,
+            outputFails: Bool = false
+        ) {
             let log = log
             let clock = clock
-            let session = FakeAudioSession(log: log, fails: sessionFails)
+            let session = FakeAudioSession(log: log, fails: sessionFails, lowerFails: lowerFails)
             session.isOtherAudioPlaying = isOtherAudioPlaying
             self.session = session
-            let failure = Box<(String) -> Void>()
+            let failureLog = failureLog
             controller = OtherAudioController(
                 session: session,
                 output: RecordingOutput(log: log, fails: outputFails),
                 player: player,
                 prepareMicrophone: { log.append("prepare") },
-                reportFailure: { failure.value?($0) },
+                reportFailure: { failureLog.append($0) },
                 sleep: { try await clock.sleep(for: $0) }
             )
-            failure.value = { [weak self] in self?.failures.append($0) }
         }
 
-        var calls: [String] { log.entries }
+        var calls: [String] { log.calls }
 
-        func clearLog() { log.clear() }
+        var failures: [String] { failureLog.calls }
+
+        func clearLog() { log.removeAll() }
 
         func until(_ expected: [String]) async -> Bool {
             await KV4PTestSupport.eventually { self.calls == expected }
@@ -149,17 +155,22 @@ struct OtherAudioControllerTests {
         #expect(await setup.until(["lower pausePodcasts", "start", "prepare"]))
     }
 
-    @Test("a signal while the session is inactive and nothing plays yet activates it, and lowers once something plays")
-    func signalWhileNothingBack() async {
+    @Test("a signal right after handing back lowers again, also before the other app has returned")
+    func signalBeforeReturn() async {
         let setup = Setup()
         await setup.released()
         setup.session.isOtherAudioPlaying = false
         setup.controller.update(isBusy: true)
-        #expect(await setup.until(Setup.mixing))
-        setup.clearLog()
-        setup.session.isOtherAudioPlaying = true
+        #expect(await setup.until(["lower pausePodcasts", "start", "prepare"]))
+    }
+
+    @Test("with Keep playing chosen in the meantime, a signal only activates the session again")
+    func signalAfterKeepPlaying() async {
+        let setup = Setup()
+        await setup.released()
+        setup.controller.mode = .keepPlaying
         setup.controller.update(isBusy: true)
-        #expect(await setup.until(Setup.lowering))
+        #expect(await setup.until(Setup.mixing))
     }
 
     @Test("PTT waits for the switch, so the microphone opens when other apps are lowered")
@@ -250,8 +261,16 @@ struct OtherAudioControllerTests {
 
     // MARK: Failures and stopping
 
-    @Test("if the session cannot switch, the radio stays audible and it is reported only if the audio fails")
+    @Test("if other apps cannot be lowered, the radio stays audible")
     func lowerFails() async {
+        let setup = Setup(lowerFails: true)
+        setup.controller.update(isBusy: true)
+        #expect(await setup.until(["stop", "lower pausePodcasts", "mix", "start", "prepare"]))
+        #expect(setup.failures.isEmpty)
+    }
+
+    @Test("if the session cannot be activated at all, it is reported")
+    func sessionFails() async {
         let setup = Setup(sessionFails: true)
         setup.controller.update(isBusy: true)
         #expect(await setup.until(["stop", "lower pausePodcasts", "mix", "start", "prepare"]))
@@ -260,8 +279,9 @@ struct OtherAudioControllerTests {
 
     @Test("if the session cannot be activated after handing back, it is reported")
     func mixFails() async {
-        let setup = Setup(sessionFails: true)
+        let setup = Setup()
         await setup.released()
+        setup.session.startFailing()
         await setup.advance(by: .seconds(2))
         #expect(await setup.until(Setup.mixing))
         #expect(setup.failures == ["The audio output cannot be started."])
