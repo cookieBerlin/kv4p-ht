@@ -135,17 +135,21 @@ struct RadioSettings: View {
                 Toggle("Low-pass", isOn: $model.filters.lowPass)
                     .explained(ControlHelp.lowPass)
             }
-            if model.firmwareText != nil || model.canUpdateFirmware || model.firmwareUpdate != .idle {
+            if model.firmwareText != nil || showsFirmwareUpdate {
                 Section("Firmware") {
                     if let firmware = model.firmwareText {
                         Text(firmware).foregroundStyle(.secondary)
                     }
-                    if model.canUpdateFirmware || model.firmwareUpdate != .idle {
+                    if showsFirmwareUpdate {
                         FirmwareUpdateRow(model: model)
                     }
                 }
             }
         }
+    }
+
+    private var showsFirmwareUpdate: Bool {
+        model.canUpdateFirmware || model.firmwareUpdate != .idle || model.offersFirmwareSettings
     }
 }
 

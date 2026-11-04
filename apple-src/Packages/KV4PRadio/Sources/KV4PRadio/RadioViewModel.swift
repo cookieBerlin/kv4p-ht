@@ -616,7 +616,27 @@ public final class RadioViewModel {
         }
     }
 
-    public var statusText: String { Self.statusText(for: snapshot) }
+    /// A running or ended firmware update comes first, as there is no connection meanwhile.
+    public var statusText: String { Self.statusLine(for: firmwareUpdate) ?? Self.statusText(for: snapshot) }
+
+    /// Whether `statusText` reports a failure.
+    public var isStatusFailure: Bool {
+        switch firmwareUpdate {
+        case .failed: true
+        case .connecting, .flashing, .finishedForAndroid: false
+        case .idle, .finished: hasFailed
+        }
+    }
+
+    static func statusLine(for update: FirmwareUpdate) -> String? {
+        switch update {
+        case .idle, .finished: nil
+        case .connecting: "Starting the bootloader…"
+        case .flashing(let percent): "Updating firmware… \(percent) %"
+        case .finishedForAndroid: "Firmware updated and verified. The radio is now set up for the Android app."
+        case .failed(let message): message
+        }
+    }
 
     /// E.g. `Firmware 17 · VHF 134–174 MHz`.
     public var firmwareText: String? {
@@ -734,11 +754,32 @@ public final class RadioViewModel {
         }
     }
 
-    /// Firmware that this app cannot update itself (iOS), which includes firmware without Bluetooth LE: a Mac or the
-    /// Android nightly app can.
-    public var needsFirmwareUpdateElsewhere: Bool {
-        guard firmware == nil else { return false }
-        return isFirmwareOutdated || snapshot.status == .failed(.transport(.serviceNotFound))
+    /// The radio's firmware keeps it from working with this app, which includes firmware without Bluetooth LE.
+    private var hasFirmwareProblem: Bool {
+        isFirmwareOutdated || snapshot.status == .failed(.transport(.serviceNotFound))
+    }
+
+    /// Firmware that this app cannot update itself (iOS): a Mac or the Android nightly app can.
+    public var needsFirmwareUpdateElsewhere: Bool { firmware == nil && hasFirmwareProblem }
+
+    /// Firmware that the settings can update (the Mac), so the app offers the way there.
+    public var offersFirmwareSettings: Bool { firmware != nil && hasFirmwareProblem && !firmwareUpdate.isRunning }
+
+    /// Why the update cannot start yet: it needs the radio on USB.
+    public var firmwareUpdateHint: String? {
+        offersFirmwareSettings && flashTarget == nil
+            ? "Connect the radio by USB and choose it under Radio." : nil
+    }
+
+    /// The settings should open on the page with the firmware update.
+    public private(set) var isFirmwareSettingsRequested = false
+
+    public func requestFirmwareSettings() {
+        isFirmwareSettingsRequested = true
+    }
+
+    public func firmwareSettingsShown() {
+        isFirmwareSettingsRequested = false
     }
 
     /// `startFirmwareActivity`: disconnects and flashes `choice` into the radio on the selected USB device. Once it is
@@ -772,6 +813,10 @@ public final class RadioViewModel {
     // MARK: Connection
 
     public func connect() async {
+        switch firmwareUpdate {
+        case .failed, .finishedForAndroid: firmwareUpdate = .idle
+        case .idle, .connecting, .flashing, .finished: break
+        }
         bluetoothScan?.cancel()
         bluetoothScan = nil
         await tearDown()

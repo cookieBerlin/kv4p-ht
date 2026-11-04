@@ -365,10 +365,11 @@ Mac.
 ## Firmware updates
 
 The app needs the firmware for this app, and warns when the radio has another or none
-(*The radio needs a firmware update.*).
+(*The radio needs a firmware update.*). 🖥 The dialog and the main window then offer **Open
+Settings**, which leads straight to the update.
 
 - 🖥 Connect the radio by USB, select it under **Radio** and choose **Update
-  firmware…** at the bottom of the window or in ⚙ **Settings** under *Radio*, then choose a firmware and **Flash**. The app verifies it, in less than a minute. Do
+  firmware…** in ⚙ **Settings** under *Radio*, then choose a firmware and **Flash**. The app verifies it, in less than a minute, and the status bar shows the progress. Do
   not disconnect the cable until *Firmware updated and verified.* appears. If an
   update fails, simply start it again: the radio's bootloader is always there.
 - 🖥 The app contains two firmwares, and neither needs an internet connection:

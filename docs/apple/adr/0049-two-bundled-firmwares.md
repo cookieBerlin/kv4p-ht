@@ -57,6 +57,10 @@ tested once cannot be fetched again.
   accepted, as they were never released.
 - **After flashing firmware 17** the app does not reconnect, and says that the radio is now
   set up for Android.
+- **The update is in the settings only.** The main window shows its state in the status line,
+  with no area of its own. On a firmware problem, the failure dialog and a notice in the main
+  window offer *Open Settings*, which opens the page with the update, also if the radio is
+  not on USB yet. iPhone and iPad keep their notice, as their settings have no update.
 - **iPhone and iPad point to a Mac or the Android nightly app,** as the web flasher can only
   write v17, which the app refuses.
 - **The simulator supports both firmwares** through one choice (for this app, for Android, too

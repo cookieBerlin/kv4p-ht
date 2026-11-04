@@ -9,6 +9,8 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
+    #else
+        @Environment(\.openSettings) private var openSettings
     #endif
 
     var body: some View {
@@ -21,6 +23,14 @@ struct RootView: View {
                 )
             ) {
                 Button("OK", role: .cancel) {}
+                #if os(macOS)
+                    if model.offersFirmwareSettings {
+                        Button("Open Settings") {
+                            model.requestFirmwareSettings()
+                            openSettings()
+                        }
+                    }
+                #endif
             } message: {
                 Text(model.alertMessage ?? "")
             }

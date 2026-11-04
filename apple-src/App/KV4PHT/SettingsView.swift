@@ -29,6 +29,11 @@ struct SettingsView: View {
                 .id(selection)
             }
             .safeAreaInset(edge: .bottom, spacing: 0) { NoticeBanner(model: model) }
+            .task(id: model.isFirmwareSettingsRequested) {
+                guard model.isFirmwareSettingsRequested else { return }
+                selection = .radio
+                model.firmwareSettingsShown()
+            }
             .onChange(of: pages) {
                 if let selection, !pages.contains(selection) { self.selection = .station }
             }
@@ -125,8 +130,11 @@ struct FirmwareUpdateRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if model.isFirmwareOutdated {
+            if model.offersFirmwareSettings {
                 Text("The radio needs a firmware update.").foregroundStyle(.orange)
+            }
+            if let hint = model.firmwareUpdateHint {
+                Text(hint).font(.footnote).foregroundStyle(.secondary)
             }
             switch model.firmwareUpdate {
             case .idle: EmptyView()

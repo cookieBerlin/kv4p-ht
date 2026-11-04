@@ -123,6 +123,74 @@ struct RadioViewModelFirmwareTests {
         #expect(RadioViewModel.FirmwareUpdate.flashing(percent: 5).isRunning)
     }
 
+    @Test("the status line reports the update, and the next connection ends a message about it")
+    func statusLine() async {
+        let model = Self.model(flasher: FakeFirmwareFlasher())
+        await model.updateFirmware(to: Self.forAndroid)
+        #expect(model.statusText == "Firmware updated and verified. The radio is now set up for the Android app.")
+        #expect(!model.isStatusFailure)
+        await model.connect()
+        #expect(model.firmwareUpdate == .idle)
+        #expect(model.statusText != "Firmware updated and verified. The radio is now set up for the Android app.")
+        let failing = Self.model(flasher: FakeFirmwareFlasher(error: .noAnswer))
+        #expect(!failing.isStatusFailure)
+        await failing.updateFirmware(to: Self.forThisApp)
+        #expect(failing.statusText == RadioViewModel.message(for: FlashError.noAnswer))
+        #expect(failing.isStatusFailure)
+        await failing.connect()
+        #expect(failing.firmwareUpdate == .idle)
+    }
+
+    @Test("while the update runs, the status line shows its progress, also after a failed connection")
+    func statusLineRunning() async {
+        var scenario = Scenario.ble
+        scenario.firmwareVersion = 16
+        let model = Self.model(scenario, flasher: FakeFirmwareFlasher())
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isStatusFailure })
+        var texts: [String] = []
+        var failures: [Bool] = []
+        let watcher = Task { @MainActor in
+            while !Task.isCancelled {
+                if model.firmwareUpdate.isRunning {
+                    texts.append(model.statusText)
+                    failures.append(model.isStatusFailure)
+                }
+                await Task.yield()
+            }
+        }
+        #expect(!model.statusText.isEmpty)
+        await model.updateFirmware(to: Self.forThisApp)
+        watcher.cancel()
+        #expect(texts.allSatisfy { $0 == "Starting the bootloader…" || $0.hasPrefix("Updating firmware… ") })
+        #expect(failures.allSatisfy { !$0 })
+        #expect(RadioViewModel.statusLine(for: .connecting) == "Starting the bootloader…")
+        #expect(RadioViewModel.statusLine(for: .flashing(percent: 40)) == "Updating firmware… 40 %")
+        #expect(RadioViewModel.statusLine(for: .idle) == nil)
+        #expect(RadioViewModel.statusLine(for: .finished) == nil)
+    }
+
+    @Test("with a firmware problem, the Mac offers the way to the settings, and asks for USB if needed")
+    func wayToSettings() async {
+        let model = Self.model(.androidFirmware, flasher: FakeFirmwareFlasher())
+        #expect(!model.offersFirmwareSettings)
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.offersFirmwareSettings })
+        #expect(model.firmwareUpdateHint == nil)
+        model.selectedConnection = .bluetooth
+        #expect(model.firmwareUpdateHint == "Connect the radio by USB and choose it under Radio.")
+        #expect(!model.isFirmwareSettingsRequested)
+        model.requestFirmwareSettings()
+        #expect(model.isFirmwareSettingsRequested)
+        model.firmwareSettingsShown()
+        #expect(!model.isFirmwareSettingsRequested)
+        let phone = Self.model(.androidFirmware, flasher: nil)
+        await phone.connect()
+        #expect(await RadioViewModelTests.eventually(phone) { $0.needsFirmwareUpdateElsewhere })
+        #expect(!phone.offersFirmwareSettings)
+        #expect(phone.firmwareUpdateHint == nil)
+    }
+
     @Test("a failed update says why and leaves the radio disconnected")
     func failed() async {
         let model = Self.model(flasher: FakeFirmwareFlasher(events: [.connected, .progress(40)], error: .noAnswer))
