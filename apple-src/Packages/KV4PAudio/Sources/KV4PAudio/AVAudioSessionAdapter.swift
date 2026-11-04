@@ -88,6 +88,13 @@
             }
         }
 
+        public func silenceOtherAudio() async throws {
+            try await onSessionQueue { [self] in
+                try AVAudioSession.sharedInstance().setActive(false)
+                try activate(otherAudio: [])
+            }
+        }
+
         public func releaseOtherAudio() async {
             try? await onSessionQueue {
                 try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)

@@ -35,6 +35,8 @@ public protocol AudioSession: Sendable {
     /// Deactivates the session, then activates it so that other apps do what `mode` says. The caller stops the audio
     /// first, as the system requires.
     func lowerOtherAudio(_ mode: OtherAudioMode) async throws
+    /// Like `lowerOtherAudio`, but all other apps pause and the microphone is available, for a transmission.
+    func silenceOtherAudio() async throws
     /// Deactivates the session and tells other apps that they can resume. The caller stops the audio first.
     func releaseOtherAudio() async
     /// Activates the session again as in `activate()`, next to what other apps play.

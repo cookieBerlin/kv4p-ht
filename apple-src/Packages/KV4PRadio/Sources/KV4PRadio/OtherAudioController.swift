@@ -3,6 +3,9 @@ import KV4PProtocol
 
 /// Lowers other apps while the radio receives or transmits, and hands their sound back afterwards (ADR-0043).
 ///
+/// PTT pauses all other apps instead: lowered audio from the speaker would go on air, and a session that pauses only
+/// podcasts has no microphone.
+///
 /// Each switch needs the session to be inactive, so the output stops for up to a second. Received audio waits in the
 /// player's buffer meanwhile. After handing back, the session stays inactive for a moment: a podcast app returns only
 /// then.
@@ -13,8 +16,10 @@ final class OtherAudioController {
     private enum Phase {
         /// Other apps play next to the radio, as usual.
         case mixing
-        /// Other apps are lowered or paused.
+        /// Other apps are lowered, or podcasts paused. The microphone may not be available.
         case lowered
+        /// All other apps are paused, and the microphone is available, for a transmission.
+        case silenced
         /// The session is inactive, so that other apps can return.
         case released
     }
@@ -64,7 +69,7 @@ final class OtherAudioController {
         advance()
     }
 
-    /// Returns once the microphone can open: other apps are lowered if they play, so they do not go on air.
+    /// Returns once the microphone can open: other apps are paused if they play, so they do not go on air.
     func readyToTransmit() async {
         isKeying = true
         advance()
@@ -99,10 +104,18 @@ final class OtherAudioController {
                 run {
                     self.player.holdAudio(true)
                     self.output?.stop()
-                    await self.lower()
+                    await self.quietOthers()
                 }
             }
-        case .lowered:
+        case .lowered where isKeying:
+            timer?.cancel()
+            timer = nil
+            run {
+                self.player.holdAudio(true)
+                self.output?.stop()
+                await self.silence()
+            }
+        case .lowered, .silenced:
             if isWanted {
                 timer?.cancel()
                 timer = nil
@@ -135,6 +148,15 @@ final class OtherAudioController {
         resumed.forEach { $0.resume() }
     }
 
+    /// What the moment asks for: PTT needs other apps paused, a signal only lowered.
+    private func quietOthers() async {
+        if isKeying {
+            await silence()
+        } else {
+            await lower()
+        }
+    }
+
     private func lower() async {
         do {
             try await session.lowerOtherAudio(mode)
@@ -143,6 +165,16 @@ final class OtherAudioController {
         }
         await restartOutput()
         phase = .lowered
+    }
+
+    private func silence() async {
+        do {
+            try await session.silenceOtherAudio()
+        } catch {
+            await mix()
+        }
+        await restartOutput()
+        phase = .silenced
     }
 
     /// The audio that waits still has to play; what follows it is the silence of a closed squelch.
@@ -194,7 +226,7 @@ final class OtherAudioController {
             return
         }
         player.holdAudio(true)
-        await lower()
+        await quietOthers()
     }
 
     private func mix() async {

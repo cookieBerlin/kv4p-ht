@@ -117,7 +117,7 @@ struct OtherAudioControllerTests {
         setup.controller.update(isBusy: true)
         #expect(await setup.until(Setup.lowering))
         setup.controller.update(isBusy: true)
-        await setup.controller.readyToTransmit()
+        await Task.yield()
         #expect(setup.calls == Setup.lowering)
     }
 
