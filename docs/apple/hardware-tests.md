@@ -19,7 +19,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-10](#hw-10) | APRS-IS feed and iGate | ⬜ | ⬜ |
 | [HW-11](#hw-11) | Position beacon and digipeating | ⬜ | ⬜ |
 | [HW-12](#hw-12) | Memory with offset and tone, scan | ⬜ | ⬜ |
-| [HW-13](#hw-13) | Firmware update over USB | ⬜ | – |
+| [HW-13](#hw-13) | Firmware update over USB | ✅ | – |
 | [HW-14](#hw-14) | FreeDV 2400B | ⬜ | ⬜ |
 | [HW-15](#hw-15) | Audio session | – | ⬜ |
 | [HW-16](#hw-16) | Background operation | – | ⬜ |
