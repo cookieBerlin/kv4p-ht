@@ -67,4 +67,20 @@ struct MemoryRepositoryTests {
         let second = try SwiftDataMemoryRepository(storeURL: url)
         #expect(try await second.all() == inserted)
     }
+
+    @Test("a memory can store its own access tone and length, and follows the settings by default")
+    func accessTone() async throws {
+        let repository = try SwiftDataMemoryRepository.inMemory()
+        var memory = try #require(try await repository.insert([Self.repeater]).first)
+        #expect(memory.accessToneHz == nil)
+        #expect(memory.accessToneLengthMs == nil)
+        memory.accessToneHz = 1750
+        memory.accessToneLengthMs = 2000
+        try await repository.update(memory)
+        #expect(try await repository.all() == [memory])
+        let inserted = try await repository.insert([
+            ChannelMemory(name: "Off", frequency: 145, accessToneHz: 0, accessToneLengthMs: 500)
+        ])
+        #expect(try await repository.all().last == inserted.first)
+    }
 }
