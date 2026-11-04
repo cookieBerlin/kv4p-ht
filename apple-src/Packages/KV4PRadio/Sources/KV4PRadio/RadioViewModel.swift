@@ -245,6 +245,8 @@ public final class RadioViewModel {
             }
         }
     }
+    /// When this device last exchanged settings with iCloud; the system decides when they travel on.
+    public private(set) var lastSettingsSync: Date?
     /// Why the sync cannot work at the moment, though it is on.
     public private(set) var settingsSyncHint: String?
     /// iGate: pass received RF packets and our own packets to APRS-IS.
@@ -454,7 +456,7 @@ public final class RadioViewModel {
         }
         restore(AppSettings(data: settings?.load()))
         syncedSettings?.observeChanges { [weak self] in
-            Task { @MainActor [weak self] in self?.receiveSettings() }
+            Task { @MainActor [weak self] in self?.receiveSettings(fromCloud: true) }
         }
         startSettingsSync()
         refreshPermissions()
@@ -468,6 +470,7 @@ public final class RadioViewModel {
         settings.callsign = callsign
         settings.isListenOnly = isListenOnly
         settings.isSettingsSyncEnabled = isSettingsSyncEnabled
+        settings.lastSettingsSync = lastSettingsSync
         settings.micGain = micGain
         settings.isStickyPTT = isStickyPTT
         settings.accessToneHz = accessToneHz
@@ -497,6 +500,7 @@ public final class RadioViewModel {
         defer { isRestoring = false }
         applySynced(settings)
         isSettingsSyncEnabled = settings.isSettingsSyncEnabled
+        lastSettingsSync = settings.lastSettingsSync
         isListenOnly = settings.isListenOnly
         isStationSetupPending = callsign.isEmpty && !isListenOnly
         micGain = settings.micGain
@@ -558,7 +562,14 @@ public final class RadioViewModel {
         let changed = settingsSync?.outgoing(settings) ?? [:]
         if !changed.isEmpty {
             syncedSettings?.set(changed)
+            noteSettingsSynced()
         }
+    }
+
+    private func noteSettingsSynced() {
+        guard syncedSettings?.isAvailable == true else { return }
+        lastSettingsSync = Date(timeIntervalSince1970: Double(now()) / 1000)
+        saveSettings()
     }
 
     private func startSettingsSync() {
@@ -571,14 +582,18 @@ public final class RadioViewModel {
         let unknown = SettingsSync.unknownToCloud(settings, remote: syncedSettings.values())
         if !unknown.isEmpty {
             syncedSettings.set(unknown)
+            noteSettingsSynced()
         }
     }
 
-    private func receiveSettings() {
+    private func receiveSettings(fromCloud: Bool = false) {
         guard settingsSync != nil, let syncedSettings else { return }
         settingsSyncHint =
             syncedSettings.isAvailable ? nil : "iCloud is not available, so these settings stay on this device."
         guard let merged = settingsSync?.incoming(syncedSettings.values(), into: settings), merged != settings else {
+            if fromCloud {
+                noteSettingsSynced()
+            }
             return
         }
         isRestoring = true
@@ -587,6 +602,7 @@ public final class RadioViewModel {
         // The question at the start closes with a callsign; it does not open while the app is in use.
         isStationSetupPending = isStationSetupPending && callsign.isEmpty
         saveSettings()
+        noteSettingsSynced()
     }
 
     /// Bluetooth with the radios found or remembered, the USB serial devices present, and the built-in simulator.

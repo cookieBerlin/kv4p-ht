@@ -29,8 +29,11 @@ holds 1 MB and 1024 keys, and these settings take a few hundred bytes in ten key
   the device has received the cloud's values, it can win over them, once.
 - **A callsign is always synced, also when it is removed.** An incoming callsign closes the
   question at the start, and its removal does not open it during use.
-- **A switch *iCloud sync* on the Station page,** on by default. Without iCloud the app
-  works as before, with a hint below the switch.
+- **A group of its own on the Station page,** with a switch *iCloud sync*, on by default.
+  Without iCloud the app works as before, with a hint below the switch.
+- **It shows when this device last exchanged settings with iCloud:** a write, a value taken
+  or a notice from iCloud. The system does not say when values have reached other devices,
+  so the time cannot say that. It is stored locally and not synced.
 - **Entitlements:** a Mac refuses to start an app that claims iCloud and has no team, so a
   build without a team, as for a contributor, uses the entitlements without iCloud. The build
   setting chooses by `DEVELOPMENT_TEAM`, so a Mac has a second entitlements file. iOS builds

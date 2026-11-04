@@ -39,6 +39,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isListenOnly = false
     /// The settings for all devices follow the user through iCloud (ADR-0051).
     public var isSettingsSyncEnabled = true
+    /// When this device last exchanged settings with iCloud.
+    public var lastSettingsSync: Date?
     public var micGain = MicGain.none
     public var isStickyPTT = false
     /// The tone that opens a repeater, in Hz; 0 for none (ADR-0045).
@@ -88,6 +90,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         callsign = values.value(.callsign, or: defaults.callsign)
         isListenOnly = values.value(.isListenOnly, or: defaults.isListenOnly)
         isSettingsSyncEnabled = values.value(.isSettingsSyncEnabled, or: defaults.isSettingsSyncEnabled)
+        lastSettingsSync = values.value(.lastSettingsSync, or: defaults.lastSettingsSync)
         micGain = values.value(.micGain, or: defaults.micGain)
         isStickyPTT = values.value(.isStickyPTT, or: defaults.isStickyPTT)
         accessToneHz = values.value(.accessToneHz, or: defaults.accessToneHz)
