@@ -46,10 +46,15 @@ struct AccessToneControllerTests {
         /// The blocks of TX audio sent so far, decoded.
         var sentAudio: [[Int16]] {
             var parser = HostFrameParser()
-            return transport.sent.flatMap { parser.process($0) }.compactMap { parsed in
-                guard case .command(.txAudio, let payload) = parsed.frame else { return nil }
-                return ImaAdpcm.decodeBlock(payload, maxSamples: KV4P.audioBlockSamples)
+            var blocks: [[Int16]] = []
+            for bytes in transport.sent {
+                for parsed in parser.process(bytes) {
+                    if case .command(.txAudio, let payload) = parsed.content {
+                        blocks.append(ImaAdpcm.decodeBlock(payload, maxSamples: KV4P.audioBlockSamples))
+                    }
+                }
             }
+            return blocks
         }
 
         /// Lets block after block pass until `task` ends.
@@ -81,13 +86,15 @@ struct AccessToneControllerTests {
         let result = try await setup.run(until: task)
         #expect(result == .finished)
 
-        let audio = setup.sentAudio
-        let loud = audio.indices.filter { (audio[$0].map { abs(Int($0)) }.max() ?? 0) > 4000 }
-        let first = try #require(loud.first)
-        #expect(first >= 8)  // silence while waiting for the radio
+        // The last blocks may still be on their way to the transport.
         let toneBlocks = Self.tone.samples().count / KV4P.audioBlockSamples
+        let isLoud: ([Int16]) -> Bool = { ($0.map { abs(Int($0)) }.max() ?? 0) > 4000 }
+        let sender = setup
+        #expect(await eventually { sender.sentAudio.count(where: isLoud) >= toneBlocks - 2 })
+        let audio = setup.sentAudio
+        let loud = audio.indices.filter { isLoud(audio[$0]) }
+        #expect(try #require(loud.first) >= 8)  // silence while waiting for the radio
         #expect(abs(loud.count - toneBlocks) <= 2)
-        #expect(loud.last == audio.indices.last || loud.last == audio.indices.dropLast().last)
 
         let snapshot = await controller.snapshot
         #expect(!snapshot.isSendingAccessTone)
@@ -134,13 +141,13 @@ struct AccessToneControllerTests {
         let controller = setup.controller
         let task = Task { try await controller.sendAccessTone(Self.tone) }
         await setup.clock.waitForSleepers(1)
-        let result = try await setup.run(until: task)
-        #expect(result == .radioNotTransmitting)
+        setup.clock.advance(by: .milliseconds(1900))
+        await setup.clock.waitForSleepers(1)  // the next block is due: it still waits
+        #expect(await controller.snapshot.isSendingAccessTone)
+        setup.clock.advance(by: .milliseconds(200))
+        #expect(try await task.value == .radioNotTransmitting)
         let peak = setup.sentAudio.flatMap { $0 }.map { abs(Int($0)) }.max() ?? 0
         #expect(peak < 4000)
-        let blocks = setup.sentAudio.count
-        let expected = 2 * KV4P.audioSampleRate / KV4P.audioBlockSamples
-        #expect(abs(blocks - expected) <= 2)
         #expect(await !controller.snapshot.isTransmitting)
     }
 

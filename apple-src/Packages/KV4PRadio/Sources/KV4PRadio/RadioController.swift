@@ -38,6 +38,15 @@ public enum RadioError: Error, Equatable, Sendable {
     case invalidPacket
 }
 
+/// How sending the tone that opens a repeater ended.
+public enum AccessToneResult: Sendable {
+    case finished
+    /// The transmission ended before the tone did.
+    case stopped
+    /// The radio did not report that it transmits, so no tone went out.
+    case radioNotTransmitting
+}
+
 /// Everything the UI shows about the radio.
 public struct RadioSnapshot: Equatable, Sendable {
     public var status: RadioStatus
@@ -49,6 +58,8 @@ public struct RadioSnapshot: Equatable, Sendable {
     public var isInSync: Bool
     /// Scanning the memories (`startScan`).
     public var isScanning = false
+    /// The tone that opens a repeater goes out (`sendAccessTone`).
+    public var isSendingAccessTone = false
     /// Counts the snapshots of one controller, so a reader can drop stale ones.
     public var revision = 0
 
@@ -78,6 +89,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     public static var scanAdvanceDelay: Duration { .milliseconds(250) }
     /// `DEFAULT_SCAN_SQUELCH`: used while scanning when the squelch is open (0).
     public static var defaultScanSquelch: UInt8 { 7 }
+    /// How long the radio has to report that it transmits, before the access tone gives up.
+    public static var accessToneOnAirTimeout: Duration { .seconds(2) }
 
     public nonisolated let snapshots: AsyncStream<RadioSnapshot>
     /// AX.25 frames (without FCS) the radio decoded on air, e.g. APRS; the newest are kept if nobody reads.
@@ -100,6 +113,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private var isCapturing = false
     /// PTT is requested for the current transmission (after the microphone started).
     private var isKeyed = false
+    private var isSendingAccessTone = false
     private var capture: Task<Void, Never>?
     private var runawayTimer: Task<Void, Never>?
     /// The memories being scanned; `nil` while not scanning.
@@ -444,6 +458,76 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
     }
 
+    /// Sends `tone` instead of the microphone (ADR-0045): the transmitter starts; once the radio reports that it
+    /// transmits, the wait passes in silence; then the tone goes out and the transmitter stops. It returns when that is
+    /// over, and `stopTransmitting()` ends it early.
+    public func sendAccessTone(_ tone: AccessTone) async throws(RadioError) -> AccessToneResult {
+        guard snapshot.status == .ready else { throw .notReady }
+        guard !isCapturing, !snapshot.isFreeDV else { throw .busy }
+        guard desiredState.desired.flags.contains(.txAllowed) else { throw .transmitNotAllowed }
+        stopScan()
+        transmission += 1
+        let current = transmission
+        isCapturing = true
+        isKeyed = true
+        isSendingAccessTone = true
+        let gain = txEncoder.gain
+        txEncoder.gain = .none
+        txEncoder.reset()
+        rxAudio?.reset()
+        defer {
+            txEncoder.gain = gain
+            isSendingAccessTone = false
+            publish(snapshot.status)
+        }
+        update { $0.setPTT(true) }
+
+        let blockSize = KV4P.audioBlockSamples
+        let silence = [Int16](repeating: 0, count: blockSize)
+        let period = Duration.seconds(Double(blockSize) / Double(KV4P.audioSampleRate))
+        var deadline = clock.now
+        var waited = Duration.zero
+        while desiredState.deviceState?.radio.flags.contains(.txActive) != true {
+            guard waited < Self.accessToneOnAirTimeout else {
+                stopTransmitting()
+                return .radioNotTransmitting
+            }
+            guard await sendPaced(silence, transmission: current, deadline: &deadline, period: period) else {
+                return .stopped
+            }
+            waited += period
+        }
+        for _ in stride(from: 0, to: tone.waitSamples, by: blockSize) {
+            guard await sendPaced(silence, transmission: current, deadline: &deadline, period: period) else {
+                return .stopped
+            }
+        }
+        let samples = tone.samples()
+        for start in stride(from: 0, to: samples.count, by: blockSize) {
+            let part = Array(samples[start..<min(start + blockSize, samples.count)])
+            let block = part + [Int16](repeating: 0, count: blockSize - part.count)
+            rxAudio?.receive(tone: block)
+            guard await sendPaced(block, transmission: current, deadline: &deadline, period: period) else {
+                return .stopped
+            }
+        }
+        stopTransmitting()
+        return .finished
+    }
+
+    /// Sends one block and waits until the next is due; `false` if the transmission has ended meanwhile.
+    private func sendPaced(
+        _ block: [Int16],
+        transmission sending: Int,
+        deadline: inout C.Instant,
+        period: Duration
+    ) async -> Bool {
+        send(block, transmission: sending)
+        deadline = deadline.advanced(by: period)
+        try? await clock.sleep(until: deadline, tolerance: nil)
+        return sending == transmission
+    }
+
     /// `RadioAudioService.endPtt`.
     public func stopTransmitting() {
         guard isCapturing else { return }
@@ -591,6 +675,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             desired: desiredState.desired,
             isInSync: desiredState.isAppliedStateInSync,
             isScanning: scanList != nil,
+            isSendingAccessTone: isSendingAccessTone,
             revision: snapshot.revision
         )
         guard next != snapshot else { return }
