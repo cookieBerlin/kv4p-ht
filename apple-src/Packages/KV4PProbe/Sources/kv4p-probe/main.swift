@@ -41,6 +41,8 @@
             }
         }
 
+        func receive(tone: [Int16]) {}
+
         func reset() {}
 
         var summary: String {

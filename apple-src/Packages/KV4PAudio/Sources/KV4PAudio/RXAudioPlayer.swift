@@ -6,6 +6,8 @@ public protocol RXAudioSink: Sendable {
     func receive(block: [UInt8])
     /// 16 kHz samples, e.g. decoded Codec2 frames.
     func receive(samples: [Int16])
+    /// 16 kHz samples of a tone this app makes, which needs no fade-in to hide a transient of the radio.
+    func receive(tone: [Int16])
     /// Discards buffered audio, e.g. when the connection ends.
     func reset()
 }
@@ -68,6 +70,13 @@ public final class RXAudioPlayer: RXAudioSink {
         state.withLock { state in
             state.buffer.push(samples)
             state.fade = Self.fadeStep + (1 - Self.fadeStep) * state.fade
+        }
+    }
+
+    public func receive(tone: [Int16]) {
+        state.withLock { state in
+            state.buffer.push(tone)
+            state.fade = 1
         }
     }
 
