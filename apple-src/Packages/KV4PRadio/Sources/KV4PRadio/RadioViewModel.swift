@@ -328,7 +328,7 @@ public final class RadioViewModel {
         simulator: (any SimulatorControlling)? = nil,
         simulatedFlashStep: Duration = .milliseconds(400),
         simulatedSignalStep: Duration = .seconds(1),
-        otherAudioSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        otherAudioSleep: @escaping @Sendable (Duration) async throws -> Void = RadioViewModel.systemSleep,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -779,6 +779,10 @@ public final class RadioViewModel {
         } catch {
             message = "The audio output cannot be started."
         }
+    }
+
+    public nonisolated static let systemSleep: @Sendable (Duration) async throws -> Void = {
+        try await Task.sleep(for: $0)
     }
 
     /// Only iOS has a session that can make other apps pause or get quieter.

@@ -19,7 +19,7 @@ struct RadioViewModelOtherAudioTests {
         let simulator = Box<SimulatorTransport<ManualClock>>()
         let model: RadioViewModel
 
-        init(store: MemorySettingsStore? = nil) {
+        init(store: MemorySettingsStore? = nil, outputFails: Bool = false) {
             let session = FakeAudioSession(log: log)
             session.isOtherAudioPlaying = true
             self.session = session
@@ -42,7 +42,7 @@ struct RadioViewModelOtherAudioTests {
                     )
                 },
                 serialDevices: { [] },
-                audioOutput: RecordingOutput(log: log),
+                audioOutput: RecordingOutput(log: log, fails: outputFails),
                 audioSession: session,
                 settings: store ?? self.store,
                 otherAudioSleep: { try await clock.sleep(for: $0) }
@@ -164,6 +164,22 @@ struct RadioViewModelOtherAudioTests {
         #expect(setup.model.isTransmitting)
         await setup.model.pressPTT()
         #expect(!setup.model.isTransmitting)
+    }
+
+    @Test("an output that does not start again after a switch is reported")
+    func outputFails() async {
+        let setup = Setup(outputFails: true)
+        await setup.connected()
+        setup.model.dismissNotice()
+        await setup.signal()
+        #expect(
+            await RadioViewModelTests.eventually(setup.model) { $0.message == "The audio output cannot be started." }
+        )
+    }
+
+    @Test("the real sleep waits")
+    func systemSleep() async throws {
+        try await RadioViewModel.systemSleep(.zero)
     }
 
     @Test("disconnecting ends the timers, and an interruption starts over")

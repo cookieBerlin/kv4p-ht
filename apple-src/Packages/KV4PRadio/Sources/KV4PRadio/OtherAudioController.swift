@@ -48,7 +48,7 @@ final class OtherAudioController {
         player: RXAudioPlayer,
         prepareMicrophone: @escaping () -> Void,
         reportFailure: @escaping (String) -> Void,
-        sleep: @escaping Sleep = { try await Task.sleep(for: $0) }
+        sleep: @escaping Sleep
     ) {
         self.session = session
         self.output = output
