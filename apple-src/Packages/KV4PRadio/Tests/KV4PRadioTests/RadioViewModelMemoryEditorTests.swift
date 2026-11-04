@@ -99,7 +99,7 @@ struct RadioViewModelMemoryEditorTests {
             serialDevices: { [] },
             memories: FailingRepository()
         )
-        await model.moveGroups(IndexSet(integer: 0), to: 0)
+        await model.renameGroup("One", to: "First")
         #expect(model.message == "The memories could not be loaded or saved.")
     }
 
