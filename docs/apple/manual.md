@@ -23,9 +23,9 @@
 
 - 🖥 Mac with Apple Silicon, macOS 26 or later.
 - 📱 iPhone or iPad with iOS/iPadOS 26 or later.
-- A kv4p HT radio with firmware version 17 or later. Bluetooth LE needs a build
-  that includes the BLE service; the version 17 image of the Android app does not
-  (see [FAQ](faq.md#which-firmware-do-i-need)). USB works with both.
+- A kv4p HT radio with the firmware for this app, the nightly build. The released firmware 17
+  is for the Android app, and this app does not connect to it
+  (see [FAQ](faq.md#which-firmware-do-i-need)). 🖥 The Mac app can write it over USB.
 - A valid amateur radio license to transmit.
 
 ## Installation
@@ -81,11 +81,12 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
   `USB cu.usbserial-…`. The app restarts the radio when connecting, so it
   reports itself.
 - **Simulator:** a built-in simulated radio, to try the app without hardware. While it
-  is chosen, ⚙ **Settings** has a **Simulator** page: its band, its firmware, FreeDV,
+  is chosen, ⚙ **Settings** has a **Simulator** page: its band, its firmware,
   the power switch, the radio module and whether it answers, which apply at the next
   connection and are locked while connected. The app remembers that the simulator was
-  chosen. Each connection starts with squelch 3, as with its fixed frequency. **Update firmware…** runs a simulated update
-  that gives it the current firmware. **Simulator actions** are greyed out until it is connected. Then they set a received signal, ramp it through all
+  chosen. Each connection starts with squelch 3, as with its fixed frequency. It behaves like a real radio: 🖥 on the Mac,
+  **Update firmware…** runs a simulated update with the chosen firmware; 📱 on iPhone and iPad, a firmware other than the one
+  for this app fails the connection and shows the same messages as a real radio, without an update. **Simulator actions** are greyed out until it is connected. Then they set a received signal, ramp it through all
   strengths up and down, lose the connection and receive APRS test packets. A weak signal
   is quiet noise, out of which the tone grows up to S9; a real FM signal stays equally
   loud and only gets less noisy. Each squelch level opens from the same S value on.
@@ -310,8 +311,8 @@ digipeater is useful.
 FreeDV 2400B is digital voice on FM radios: the radio's firmware runs the
 modem, the app encodes and decodes the speech with Codec2.
 
-- Set **Voice mode** to *FreeDV 2400B* in ⚙ **Settings** under *Radio*. The setting needs
-  firmware with the FreeDV modem; otherwise the app says so and stays analog.
+- Set **Voice mode** to *FreeDV 2400B* in ⚙ **Settings** under *Radio*. The firmware for this app has the
+  modem it needs.
 - Receiving: the squelch opens only for FreeDV signals; analog stations are not
   heard in this mode. The S-meter shows the signal quality.
 - Transmitting (licence required) works like analog voice: PTT, mic gain and the
@@ -354,7 +355,7 @@ its settings between launches:
 - **Memories:** the group shown.
 
 **kv4p HT → About kv4p HT** (📱 at the end of ⚙ **Settings**) shows the version, build and commit of the app, the
-firmware it ships for USB updates, and the licences of everything it contains
+firmwares it contains for USB updates, and the licences of everything it contains
 or is ported from, with the licence texts.
 
 For reduced motion and live captions use the system settings (System Settings →
@@ -363,30 +364,36 @@ Mac.
 
 ## Firmware updates
 
-The app warns when the radio's firmware is older than required or missing
+The app needs the firmware for this app, and warns when the radio has another or none
 (*The radio needs a firmware update.*).
 
 - 🖥 Connect the radio by USB, select it under **Radio** and choose **Update
-  firmware…** at the bottom of the window or in ⚙ **Settings** under *Radio*, then **Flash**. The app writes firmware 17, the version the
-  Android app ships, verifies it and reconnects, in less than a minute. Do
+  firmware…** at the bottom of the window or in ⚙ **Settings** under *Radio*, then choose a firmware and **Flash**. The app verifies it, in less than a minute. Do
   not disconnect the cable until *Firmware updated and verified.* appears. If an
   update fails, simply start it again: the radio's bootloader is always there.
-- Firmware built from the current source has Bluetooth LE; the version the app
-  ships does not ([FAQ](faq.md#which-firmware-do-i-need)). Updating such a radio
-  removes Bluetooth LE, so update only if the radio needs it.
-- 📱 Updating from iPhone or iPad is not possible. The warning at the bottom of the screen
-  links to the [web flasher](https://kv4p.com/firmware.html) on the project
-  website, which runs in desktop Chrome or Edge, and to this section. The
-  Android app or a Mac can update the radio too.
+- 🖥 The app contains two firmwares, and neither needs an internet connection:
+  - **Nightly build, for this app** (preselected): sound, USB and Bluetooth LE work. It is a
+    development build of the kv4p HT project. The window shows its build time, commit and
+    SHA-256; the app offers it only if the checksum matches. The app reconnects afterwards.
+  - **Firmware 17, only for the Android app:** for going back to the Android app. It has no
+    Bluetooth LE, and this app does not connect to it, as it would have no sound and
+    PTT would transmit silence. The app stays disconnected and says that the radio is set up for
+    Android; you can come back at any time with the nightly build.
+- Neither changes the radio's board configuration.
+- 📱 Updating from iPhone or iPad is not possible. As such a radio has no Bluetooth LE, the app
+  cannot connect to it and points to a Mac with this app, the Android nightly app and this
+  section. The project's [web flasher](https://kv4p.com/firmware.html) offers only firmware 17,
+  which does not help here.
 
 ## Troubleshooting
 
 | Message | What to do |
 |---|---|
-| *The radio did not answer.* | Switch the radio on; it needs firmware 17 or later. |
+| *The radio did not answer.* | Switch the radio on; it needs the firmware for this app. |
 | *Firmware … is too old.* | Update the firmware (see [Firmware updates](#firmware-updates)). |
+| *This radio has the firmware for the Android app…* | Update it to the firmware for this app (see [Firmware updates](#firmware-updates)). |
 | *The SA818 radio module did not respond.* | Restart the radio. The app sends no settings in this state, because the firmware would stop responding. |
-| *This device is not a kv4p HT, or its firmware has no Bluetooth LE service.* | Use USB, or update to firmware with Bluetooth LE ([FAQ](faq.md#which-firmware-do-i-need)). |
+| *This device is not a kv4p HT, or its firmware has no Bluetooth LE service…* | Update to the firmware for this app ([Firmware updates](#firmware-updates)). |
 | *Bluetooth access is not allowed.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
 | *Microphone access is not allowed…* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |

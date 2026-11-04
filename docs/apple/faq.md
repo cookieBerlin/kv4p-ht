@@ -22,24 +22,33 @@ devices without certification. On a Mac, both Bluetooth LE and USB work.
 
 ## Which firmware do I need?
 
-Firmware with Bluetooth LE support. The app shows a notice if your firmware is
-too old.
+The nightly build of the kv4p HT project, which the Mac app contains. The app shows a notice
+if your radio has another one.
 
-Careful with version 17: the firmware image shipped with the Android app
-(`firmware_v17.bin`) reports version 17 but has **no** Bluetooth LE service; BLE
-was added to the source later without a new version number. Such a radio works
-over USB (Mac) but cannot be found over Bluetooth. Firmware built from the
-current source sets the FreeDV feature flag, which the older image lacks.
+Careful with version 17: two firmwares report it. The released one, which the Android app 2.0
+ships, sends its voice as Opus and has no Bluetooth LE. The nightly build sends it as ADPCM, has
+Bluetooth LE and FreeDV, and works with this app. The feature flag for FreeDV tells them
+apart, which is how the app recognises and refuses the released one: with it, the app would
+play nothing and PTT would transmit silence.
+
+| App | Firmware 15 | Firmware 17 | Nightly build |
+|---|---|---|---|
+| This app | no connection | refused | ✅ USB and Bluetooth LE |
+| Android 1.9.5–1.9.9.3 | ✅ | no connection | no connection |
+| Android 2.0 | no connection, offers an update | ✅ USB | connects, no voice |
+| Android nightly | no connection, offers an update | connects, no voice | ✅ USB and Bluetooth LE |
+
+This comes from the source and the published firmware; only this app with the current source has
+been tried on a radio.
 
 ## Can I update the firmware from the Apple app?
 
 On a Mac, yes: connect the radio by USB and choose **Update firmware…**
-([Firmware updates](manual.md#firmware-updates)). It writes the firmware the
-Android app ships, which has no Bluetooth LE. On iPhone and iPad this is not possible because iOS does not allow
-access to the radio's USB port; use the [web flasher](https://kv4p.com/firmware.html)
-on the project website with desktop Chrome or Edge, the Android app, or a Mac.
-When the firmware is too old, the app links to both. See
-[Firmware updates](manual.md#firmware-updates).
+([Firmware updates](manual.md#firmware-updates)). You choose between the nightly build for this
+app and firmware 17, to go back to the Android app. On iPhone and iPad this is not possible because
+iOS does not allow access to the radio's USB port; use a Mac or the Android nightly app. The
+project's [web flasher](https://kv4p.com/firmware.html) offers only firmware 17, which this app
+refuses.
 
 ## Which Macs are supported?
 
@@ -72,8 +81,7 @@ itself; use a second Mac, iPhone/iPad or the Android app.
 FreeDV 2400B only, the mode the firmware's modem implements, as in the Android
 app. The app uses Codec2 1.2.0 in mode 1300, built from the same upstream
 source as the Android app ([ADR-0027](adr/0027-freedv-voice-and-codec2-vendoring.md)).
-The firmware image shipped with the Android app has no FreeDV modem; firmware
-built from the current source has it ([Which firmware do I need?](#which-firmware-do-i-need)).
+The firmware for this app has the modem ([Which firmware do I need?](#which-firmware-do-i-need)).
 
 ## Why do I hear audio a moment after the squelch opens?
 

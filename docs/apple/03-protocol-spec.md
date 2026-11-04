@@ -261,6 +261,10 @@ Reference implementation: `ImaAdpcm.java`.
 
 ## 9. Firmware behaviour (firmware 17)
 
+This describes the current source and the nightly build, which report version 17 like the released
+firmware 17. The released one differs: Opus voice on `0x07`, no `0x0C`–`0x0F`, no BLE and no
+FreeDV ([ADR-0049](adr/0049-two-bundled-firmwares.md)).
+
 Observed in `kv4p_ht_esp32_wroom_32.ino` and `txAudio.h`; the simulator
 reproduces it and its tests pin it.
 

@@ -113,11 +113,12 @@ frequency with the tone. The scan stops on a busy memory.
 
 ### HW-13
 
-Choose *Update firmware…*, or run `swift run kv4p-probe --flash <directory>` with
-images built from `microcontroller-src`. The update flashes and verifies, and the
-radio answers afterwards. The image the app ships has no Bluetooth LE, so the
-radio answers over USB only until images built from `microcontroller-src` are
-flashed again.
+Choose *Update firmware…*. The nightly build is preselected, with its build time, commit and
+SHA-256. It flashes and verifies, and the radio answers over USB and Bluetooth LE, with sound
+in both directions into a dummy load. Then flash firmware 17: the app stays disconnected and says
+so, the Android app 2.0 works with the radio, and connecting from this app is refused without
+anything going on air. Flash the nightly build again: a radio with a board configuration
+keeps it throughout. Firmware 17 uses the larger partition table here, unlike the release.
 
 ### HW-14
 
@@ -144,8 +145,8 @@ After a restart of the app, they are unchanged.
 
 ### HW-18
 
-Connect a radio with outdated firmware. The bottom of the screen shows the notice, with links
-to the web flasher and the manual.
+Try to connect to a radio with firmware 17, which has no Bluetooth LE. The bottom of the screen
+shows the notice, which points to a Mac and the Android nightly app, with a link to the manual.
 
 ### HW-19
 

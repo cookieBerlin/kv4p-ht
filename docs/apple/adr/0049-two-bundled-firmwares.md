@@ -59,9 +59,14 @@ tested once cannot be fetched again.
   set up for Android.
 - **iPhone and iPad point to a Mac or the Android nightly app,** as the web flasher can only
   write v17, which the app refuses.
-- **The simulator** has one firmware choice (current, for Android, too old) instead of two
-  switches, as *current without FreeDV* no longer exists. It offers placeholder firmwares,
-  also on iOS, so that App Review can try the update screens.
+- **The simulator supports both firmwares** through one choice (for this app, for Android, too
+  old) instead of two switches, as *current without FreeDV* no longer exists. It behaves like
+  real hardware on each platform:
+  - **On the Mac,** it reports the chosen firmware in `HELLO`, and an update runs a simulated
+    flash with the real choice. It writes nothing to a radio.
+  - **On iPhone and iPad,** which reach a radio over Bluetooth only, firmware without BLE fails
+    the connection with the same message as a real radio. The app shows only its messages and
+    offers no update.
 
 ## Consequences
 
