@@ -72,6 +72,17 @@ struct RadioViewModelListenOnlyTests {
         #expect(!model.canSendOnAir)
     }
 
+    @Test("the settings warn only about a missing callsign without listen-only")
+    func stationWarning() {
+        let model = Self.plain()
+        #expect(model.stationWarning == "Without a callsign, nothing goes out. Enter one, or choose Listen only.")
+        model.isListenOnly = true
+        #expect(model.stationWarning == nil)
+        model.isListenOnly = false
+        model.callsign = "N0CALL"
+        #expect(model.stationWarning == nil)
+    }
+
     @Test("the text instead of PTT says why")
     func blockedText() {
         let model = Self.plain()
