@@ -115,4 +115,25 @@ struct RXAudioPlayerTests {
         player.receive(block: block)
         #expect(player.render(1) == [0])
     }
+
+    @Test("holding keeps audio while nothing renders, and discarding does not fade in again")
+    func holdAndDiscard() {
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 2, holdCapacity: 6))
+        player.receive(samples: [Int16](repeating: 16384, count: 1))
+        player.holdAudio(true)
+        for _ in 0..<80 {
+            player.receive(samples: [])
+        }
+        player.receive(samples: [1000, 1000, 1000, 1000])
+        #expect(player.statistics.buffered == 5)
+        player.holdAudio(false)
+        player.discardBuffered()
+        #expect(player.statistics.buffered == 0)
+        player.receive(samples: [16384])
+        var sample: Float = 0
+        withUnsafeMutablePointer(to: &sample) { pointer in
+            player.render(into: UnsafeMutableBufferPointer(start: pointer, count: 1))
+        }
+        #expect(sample > 0.3)  // still faded in; a reset would have muted it
+    }
 }
