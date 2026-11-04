@@ -64,10 +64,27 @@
         /// The output never stopped, so there is nothing to bring back.
         public func mixWithOtherAudio() async throws {}
 
+        /// Who counts as playing, for the log.
+        private static func playingProcesses() -> String {
+            let own = getpid()
+            return processes().compactMap { process -> String? in
+                guard let pid: pid_t = value(of: process, kAudioProcessPropertyPID), pid != own,
+                    let isRunning: UInt32 = value(of: process, kAudioProcessPropertyIsRunningOutput), isRunning != 0
+                else { return nil }
+                var property = address(kAudioProcessPropertyBundleID)
+                var bundle: Unmanaged<CFString>?
+                var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+                _ = AudioObjectGetPropertyData(process, &property, 0, nil, &size, &bundle)
+                return "\(bundle?.takeRetainedValue() as String? ?? "?") (\(pid))"
+            }
+            .joined(separator: ", ")
+        }
+
         private func startIfNeeded() async throws {
             try await withCheckedThrowingContinuation { (done: CheckedContinuation<Void, any Error>) in
                 queue.async { [self] in
                     do {
+                        Self.log.info("other audio: playing: \(Self.playingProcesses(), privacy: .public)")
                         try startTap()
                         done.resume()
                     } catch {
