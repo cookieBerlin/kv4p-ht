@@ -29,7 +29,7 @@ final class OtherAudioController {
     private let session: any AudioSession
     private let output: (any AudioOutput)?
     private let player: RXAudioPlayer
-    private let prepareMicrophone: () -> Void
+    private let prepareMicrophone: () async -> Void
     private let reportFailure: (String) -> Void
     private let sleep: Sleep
 
@@ -46,7 +46,7 @@ final class OtherAudioController {
         session: any AudioSession,
         output: (any AudioOutput)?,
         player: RXAudioPlayer,
-        prepareMicrophone: @escaping () -> Void,
+        prepareMicrophone: @escaping () async -> Void,
         reportFailure: @escaping (String) -> Void,
         sleep: @escaping Sleep
     ) {
@@ -141,7 +141,7 @@ final class OtherAudioController {
         } catch {
             await mix()
         }
-        restartOutput()
+        await restartOutput()
         phase = .lowered
     }
 
@@ -177,7 +177,7 @@ final class OtherAudioController {
             run {
                 self.player.discardBuffered()
                 await self.mix()
-                self.restartOutput()
+                await self.restartOutput()
                 self.phase = .mixing
             }
         }
@@ -189,7 +189,7 @@ final class OtherAudioController {
         player.discardBuffered()
         guard mode.changesOtherAudio else {
             await mix()
-            restartOutput()
+            await restartOutput()
             phase = .mixing
             return
         }
@@ -206,12 +206,12 @@ final class OtherAudioController {
     }
 
     /// Every switch stops the engines, and the microphone needs a new one that is prepared.
-    private func restartOutput() {
+    private func restartOutput() async {
         do {
             try output?.start(player)
         } catch {
             reportFailure(Self.audioFailure)
         }
-        prepareMicrophone()
+        await prepareMicrophone()
     }
 }

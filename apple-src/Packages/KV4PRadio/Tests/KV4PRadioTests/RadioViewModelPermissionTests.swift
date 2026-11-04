@@ -45,13 +45,14 @@ struct RadioViewModelPermissionTests {
         _ permissions: FakePermissions,
         scanner: FakeBLEScanner? = nil,
         location: (any LocationProvider)? = nil,
-        settings: MemorySettingsStore? = nil
+        settings: MemorySettingsStore? = nil,
+        microphone: FakeMicrophone? = nil
     ) -> RadioViewModel {
         RadioViewModel(
             makeController: { _, rxAudio in
                 let clock = ManualClock()
                 let transport = SimulatorTransport(simulator: RadioSimulator(scenario: .ble), clock: clock)
-                return RadioController(transport: transport, clock: clock, rxAudio: rxAudio)
+                return RadioController(transport: transport, clock: clock, rxAudio: rxAudio, microphone: microphone)
             },
             serialDevices: { ["/dev/cu.usbserial-0001"] },
             location: location,
@@ -192,5 +193,19 @@ struct RadioViewModelPermissionTests {
     @Test("each refused permission says what it stops", arguments: Permission.allCases)
     func messages(permission: Permission) {
         #expect(permission.deniedMessage.contains("not allowed"))
+    }
+
+    @Test("a microphone that does not start because access is denied says so")
+    func microphoneDenied() async {
+        let permissions = FakePermissions()
+        let model = Self.model(permissions, microphone: FakeMicrophone(fails: true))
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isReady && $0.snapshot.isInSync })
+        model.frequencyText = "146.52"
+        await model.applyFrequency()
+        #expect(await RadioViewModelTests.eventually(model) { $0.canTransmit && $0.snapshot.isInSync })
+        permissions.setQuietly(.microphone, .denied)
+        await model.pressPTT()
+        #expect(model.message == Permission.microphone.deniedMessage)
     }
 }

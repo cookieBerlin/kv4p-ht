@@ -362,10 +362,7 @@ public final class RadioViewModel {
                 session: audioSession,
                 output: audioOutput,
                 player: rxAudio,
-                prepareMicrophone: { [weak self] in
-                    let controller = self?.controller
-                    Task { await controller?.prepareMicrophone() }
-                },
+                prepareMicrophone: { [weak self] in await self?.controller?.prepareMicrophone() },
                 reportFailure: { [weak self] in self?.message = $0 },
                 sleep: otherAudioSleep
             )
@@ -1015,7 +1012,12 @@ public final class RadioViewModel {
                 do {
                     try await controller.startTransmitting()
                 } catch {
-                    if error != .transmitNotAllowed { message = Self.message(for: error) }
+                    refreshPermissions()
+                    if isDenied(.microphone) {
+                        message = Permission.microphone.deniedMessage
+                    } else if error != .transmitNotAllowed {
+                        message = Self.message(for: error)
+                    }
                 }
             }
         }
@@ -1330,7 +1332,7 @@ public final class RadioViewModel {
         switch error {
         case .transmitNotAllowed: "Can't transmit outside the ham band."
         case .microphoneUnavailable:
-            "The microphone is not available. Allow access under Privacy & Security → Microphone in the settings."
+            "The microphone could not be started. Press PTT again."
         case .notReady, .frequencyOutOfRange: "The radio is not ready."
         case .busy: "The radio is busy transmitting or scanning."
         case .invalidPacket: "The packet cannot be sent."

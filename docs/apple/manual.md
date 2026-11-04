@@ -325,7 +325,8 @@ The app warns when the radio's firmware is older than required or missing
 | *This device is not a kv4p HT, or its firmware has no Bluetooth LE service.* | Use USB, or update to firmware with Bluetooth LE ([FAQ](faq.md#which-firmware-do-i-need)). |
 | *Bluetooth access is not allowed.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
-| *The microphone is not available.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
+| *Microphone access is not allowed…* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
+| *The microphone could not be started.* | Press PTT again. If it stays, another app may be using the microphone, or restart the app. |
 | *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings**. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
