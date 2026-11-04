@@ -1,3 +1,5 @@
+import Foundation
+
 /// The repeater offset of a memory; raw values as in the Android `ChannelMemory`.
 public enum MemoryOffset: Int, CaseIterable, Codable, Sendable {
     case none = 0
@@ -41,19 +43,75 @@ public struct ChannelMemory: Equatable, Identifiable, Sendable {
         self.skipDuringScan = skipDuringScan
     }
 
-    /// The distinct, non-empty group names, sorted.
+    /// The distinct, non-empty group names, in the order of their memories.
     public static func groups(in memories: [ChannelMemory]) -> [String] {
-        Set(memories.map(\.group)).filter { !$0.isEmpty }.sorted()
+        blocks(in: memories).map(\.name).filter { !$0.isEmpty }
+    }
+
+    /// The memories group by group; a group stands where its first memory is (ADR-0042).
+    public static func blocks(in memories: [ChannelMemory]) -> [MemoryGroup] {
+        var blocks: [MemoryGroup] = []
+        for memory in memories {
+            if let index = blocks.firstIndex(where: { $0.name == memory.group }) {
+                blocks[index].memories.append(memory)
+            } else {
+                blocks.append(MemoryGroup(name: memory.group, memories: [memory]))
+            }
+        }
+        return blocks
+    }
+
+    /// The memories with those of a group next to each other.
+    public static func arranged(_ memories: [ChannelMemory]) -> [ChannelMemory] {
+        blocks(in: memories).flatMap(\.memories)
+    }
+
+    /// The ids of all memories after moving whole groups, with `destination` as in SwiftUI's `onMove`.
+    public static func order(ofBlocks blocks: [MemoryGroup], movingGroups offsets: IndexSet, to destination: Int)
+        -> [Int32]
+    {
+        blocks.moved(offsets, to: destination).flatMap(\.memories).map(\.id)
+    }
+
+    /// The ids of all memories after moving some inside the group `name`.
+    public static func order(
+        ofBlocks blocks: [MemoryGroup],
+        inGroup name: String,
+        moving offsets: IndexSet,
+        to destination: Int
+    ) -> [Int32] {
+        blocks.flatMap { $0.name == name ? $0.memories.moved(offsets, to: destination) : $0.memories }.map(\.id)
+    }
+}
+
+/// A group and its memories; an empty name means the memories without a group.
+public struct MemoryGroup: Equatable, Identifiable, Sendable {
+    public let name: String
+    public var memories: [ChannelMemory]
+
+    public var id: String { name }
+}
+
+extension Array {
+    /// The elements at `offsets` moved before the element at `destination`, as SwiftUI's `onMove` reports it.
+    fileprivate func moved(_ offsets: IndexSet, to destination: Int) -> [Element] {
+        let rest = indices.filter { !offsets.contains($0) }.map { self[$0] }
+        let insertion = destination - offsets.count { $0 < destination }
+        return Array(rest[..<insertion] + offsets.map { self[$0] } + rest[insertion...])
     }
 }
 
 /// Stores the channel memories (ADR-0007).
 public protocol MemoryRepository: Sendable {
-    /// All memories in the order they were added.
+    /// All memories in their stored order, those of a group next to each other.
     func all() async throws -> [ChannelMemory]
     /// Stores new memories and returns them with their assigned ids.
     func insert(_ memories: [ChannelMemory]) async throws -> [ChannelMemory]
-    /// Replaces the memory with the same id; unknown ids are ignored.
+    /// Replaces the memory with the same id; unknown ids are ignored. A new group puts it at the end of that group.
     func update(_ memory: ChannelMemory) async throws
     func delete(id: Int32) async throws
+    /// Puts the memories into the order of `ids`; those not named follow in their order.
+    func reorder(_ ids: [Int32]) async throws
+    /// Gives the memories of `group` the name `newName`; they keep their place.
+    func renameGroup(_ group: String, to newName: String) async throws
 }
