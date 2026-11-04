@@ -28,25 +28,41 @@ have. The options on a Mac, checked against the SDK, Apple's documentation and a
   also extends. The rules are those of ADR-0043. As the radio's output never stops, nothing
   waits in the buffer, and other apps need no wait before the app goes on.
 - **Only while something plays:** the Core Audio process list says whether another process
-  puts out audio. Otherwise there is no tap, and no dot in the menu bar.
+  puts out audio.
 - **Settings:** *Keep playing* (default) and *Mute other apps*, and the time before other
-  apps return. The default differs from iOS, as muting needs the *System Audio Recording*
-  permission, which should be a choice.
-- **The permission** is asked for when the user chooses muting: only a running tap makes
-  the system ask, so the tap runs for a moment then. In a test on a Mac, muting also worked
-  after refusing it. As the app throws the audio away, this is enough, but Apple does not
-  document it. There is no public way to read the state of this permission, so the settings
-  say where to allow it if other apps stay audible.
+  apps return.
+- **No permission:** the app leaves out `NSAudioCaptureUsageDescription`. In a test on a Mac,
+  the system then asked nothing and showed no recording dot, and muting still worked; the
+  app did not crash. With the key, the system asks for *System Audio Recording* when a tap
+  starts, and shows the dot, although refusing did not stop the muting. As the app throws
+  the audio away, it does not need the permission, and each new permission is a cost.
 
 ## Consequences
 
 - Other apps run on silently, so a video or podcast goes on without being heard. Pausing
   them is not possible for all apps.
-- macOS shows its recording dot in the menu bar while other apps are muted, and the app
-  needs to explain that it records nothing.
-- A process that keeps its output open without playing counts as playing, so the dot can
-  show although nothing is heard. In a test, it was gone once all audio apps were closed.
+- Apple documents the key as needed to capture audio with a tap, and does not document
+  muting without it. If Apple changes this, muting can stop or the app can need the key
+  again, which would bring back the question and the dot. Whether App Review objects is
+  unknown until the first release to the App Store.
 - A tap belongs to one output device, so the adapter builds a new one when the user changes
   it.
 - Hardware test HW-26 covers the permission, a change of output device, and a crash, which
   should bring other apps back.
+
+## If this stops working
+
+This way rests on behaviour Apple does not document, and is the choice for now, not for good.
+Signs that it has to change: other apps stay audible after a macOS update, the app crashes
+when a tap starts, or App Review objects to the tap. HW-26 notices the first two.
+
+The way back is small, as it stays inside the adapter and the settings:
+
+1. Add `NSAudioCaptureUsageDescription` to `KV4PHT-macOS-Info.plist` again. The test build
+   showed that macOS then asks for *System Audio Recording* when a tap starts, and shows the
+   recording dot, and that muting works.
+2. Ask when the user chooses *Mute other apps*, by running the tap for a moment, so that
+   the question does not come up during a call. Say in the settings where to allow it.
+3. If taps cannot be used at all, AppleScript can still pause Apple Music, which publishes
+   the `com.apple.Music.playback` access group for the `scripting-targets` entitlement.
+   *Keep playing* stays available in any case.

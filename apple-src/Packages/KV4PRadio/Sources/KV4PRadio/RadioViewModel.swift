@@ -163,9 +163,6 @@ public final class RadioViewModel {
         didSet {
             otherAudio?.mode = otherAudioMode
             saveSettings()
-            if otherAudioMode == .muteAll, !isRestoring {
-                otherAudio?.askForPermission()
-            }
         }
     }
     /// How long the squelch stays closed before other apps return.

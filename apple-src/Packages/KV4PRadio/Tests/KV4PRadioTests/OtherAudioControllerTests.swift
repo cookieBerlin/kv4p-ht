@@ -480,22 +480,4 @@ struct OtherAudioControllerTests {
         #expect(await setup.until(["release", "mix", "prepare"]))
         #expect(setup.player.statistics.buffered == JitterBuffer().capacity)  // nothing thrown away
     }
-
-    @Test("asking for the permission mutes for a moment, as only a running tap makes the system ask")
-    func asksForPermission() async {
-        let setup = MacSetup()
-        setup.controller.askForPermission()
-        #expect(await setup.until(["lower muteAll", "release"]))
-    }
-
-    @Test("while other apps are muted or a switch runs, asking changes nothing")
-    func asksOnlyWhenIdle() async {
-        let setup = MacSetup()
-        setup.controller.update(isBusy: true)
-        setup.controller.askForPermission()
-        #expect(await setup.until(["lower muteAll", "prepare"]))
-        setup.controller.askForPermission()
-        await Task.yield()
-        #expect(setup.log.calls == ["lower muteAll", "prepare"])
-    }
 }

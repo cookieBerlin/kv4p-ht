@@ -94,15 +94,6 @@ final class OtherAudioController {
         advance()
     }
 
-    /// Only a running tap makes the system ask for its permission, which should not wait for the first signal.
-    func askForPermission() {
-        guard step == nil, phase == .mixing else { return }
-        run {
-            try? await self.session.lowerOtherAudio(.muteAll)
-            await self.session.releaseOtherAudio()
-        }
-    }
-
     /// Ends all timers and a running switch, for a connection that ends or an interrupted session.
     func stop() async {
         note("stop")

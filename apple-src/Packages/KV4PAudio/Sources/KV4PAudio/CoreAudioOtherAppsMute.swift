@@ -3,8 +3,8 @@
     import Foundation
     import os
 
-    /// Silences all other apps on a Mac through a Core Audio tap, which silences them only while it is read. The audio
-    /// read here is thrown away. All logic lives in `OtherAudioController`; this file is excluded from coverage (ADR-0044).
+    /// Silences all other apps on a Mac through a Core Audio tap, which silences them only while it is read. Without
+    /// `NSAudioCaptureUsageDescription` in the app, the system asks nothing and the tap delivers no audio to throw away. All logic lives in `OtherAudioController`; this file is excluded from coverage (ADR-0044).
     public final class CoreAudioOtherAppsMute: OtherAudioSwitching, @unchecked Sendable {
         private struct Failure: Error, CustomStringConvertible {
             let call: String

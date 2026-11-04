@@ -262,17 +262,15 @@ struct RadioViewModelOtherAudioTests {
         #expect(Setup().model.otherAudioModes == [.keepPlaying, .lower, .pausePodcasts])
     }
 
-    @Test("choosing to mute asks for the permission at once, and a stored choice does not ask again")
-    func macAsksWhenChosen() async {
+    @Test("choosing to mute is stored and switches nothing yet")
+    func macChooses() async {
         let setup = MacSetup()
         setup.log.removeAll()
         setup.model.otherAudioMode = .muteAll
-        #expect(await KV4PTestSupport.eventually { setup.log.calls == ["lower muteAll", "release"] })
         #expect(setup.store.settings.otherAudioMode == .muteAll)
-        let restored = MacSetup(store: setup.store)
-        #expect(restored.model.otherAudioMode == .muteAll)
+        #expect(MacSetup(store: setup.store).model.otherAudioMode == .muteAll)
         await Task.yield()
-        #expect(restored.log.calls.isEmpty)
+        #expect(setup.log.calls.isEmpty)
     }
 
     @Test("a signal mutes other apps without touching the radio's own output")
@@ -281,7 +279,6 @@ struct RadioViewModelOtherAudioTests {
         await setup.model.connect()
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.isReady && $0.snapshot.isInSync })
         setup.model.otherAudioMode = .muteAll
-        #expect(await KV4PTestSupport.eventually { setup.log.calls.contains("release") })
         setup.log.removeAll()
         await setup.model.pressPTT()
         #expect(setup.log.calls.contains("silence"))

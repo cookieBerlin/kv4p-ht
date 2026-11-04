@@ -204,9 +204,8 @@ how long the first words take.
 
 ### HW-26
 
-On a Mac, choose *Mute other apps*: the system asks for System Audio Recording once. Play
-music and a video in a browser. With a signal from a radio, both go silent while the radio
-stays audible, and return after the set time. Press PTT while they play: a second radio
-hears nothing of them. Change to headphones while they are muted: they stay silent. With
-all audio apps closed, a signal shows no recording dot. Refuse the permission: muting still
-works. Force quit the app while they are muted: they become audible.
+On a Mac, choose *Mute other apps*: the system asks nothing, and no recording dot shows.
+Play music and a video in a browser. With a signal from a radio, both go silent while the
+radio stays audible, and return after the set time. Press PTT while they play: a second
+radio hears nothing of them. Change to headphones while they are muted: they stay silent.
+Force quit the app while they are muted: they become audible.

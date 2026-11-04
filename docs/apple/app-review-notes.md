@@ -15,10 +15,9 @@ radio first) and tap **Connect**. Tuning, receiving,
 transmitting, memories and APRS can then be used without hardware.
 Source code: https://github.com/cookieBerlin/kv4p-ht
 
-**System Audio Recording (Mac):** the permission is only requested if the user chooses
-*Mute other apps* in the settings. The app then uses a Core Audio tap to silence other
-apps while the radio receives or transmits. Everything the tap delivers is thrown away:
-nothing is recorded, stored or sent.
+**Mute other apps (Mac):** if the user chooses this in the settings, the app uses a
+Core Audio tap to silence other apps while the radio receives or transmits. It requests
+no permission and records, stores and sends nothing.
 
 **Licence:** transmitting on air requires an amateur radio licence. The simulator
 sends nothing on air.

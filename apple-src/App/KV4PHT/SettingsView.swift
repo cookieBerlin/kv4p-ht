@@ -12,7 +12,6 @@ struct SettingsView: View {
     @State private var callsign = ""
     @State private var areLimitsShown = false
     @State private var isManagingMemories = false
-    @Environment(\.openURL) private var openURL
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
@@ -124,17 +123,7 @@ struct SettingsView: View {
             Text(hint).font(.footnote).foregroundStyle(.secondary)
         }
         if model.otherAudioMode == .muteAll {
-            HStack(alignment: .firstTextBaseline) {
-                Text(ControlHelp.muteAll).font(.footnote).foregroundStyle(.secondary)
-                Spacer()
-                if let settings = URL(
-                    string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AudioCapture"
-                ) {
-                    Button("Open Settings") { openURL(settings) }
-                        .font(.footnote)
-                        .buttonStyle(.borderless)
-                }
-            }
+            Text(ControlHelp.muteAll).font(.footnote).foregroundStyle(.secondary)
         }
     }
 

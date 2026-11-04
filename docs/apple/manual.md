@@ -149,12 +149,7 @@ disconnect yourself:
   the squelch is open or you transmit and another app plays, all other apps are silent,
   also browsers; the radio stays audible. They return after the time set under **Resume
   after**, 3 s by default.
-  - The first time, macOS asks for *System Audio Recording*. The app records nothing, and
-    in our tests muting also worked after refusing it. macOS can show its recording dot
-    in the menu bar meanwhile.
-  - An app that keeps its audio output open without playing, such as a paused player, can
-    count as playing. Other apps are then muted although nothing is heard, and the dot
-    shows.
+  - This needs no permission, and the app records nothing.
   - Other apps keep running silently, so a video or podcast goes on without being heard.
   - By default, on *Keep playing*, they go on, and the microphone can send them on air.
 - **Simulator:** *Received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
