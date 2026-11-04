@@ -37,6 +37,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var callsign = ""
     /// The app does not transmit, by the user's choice (ADR-0047).
     public var isListenOnly = false
+    /// The settings for all devices follow the user through iCloud (ADR-0051).
+    public var isSettingsSyncEnabled = true
     public var micGain = MicGain.none
     public var isStickyPTT = false
     /// The tone that opens a repeater, in Hz; 0 for none (ADR-0045).
@@ -85,6 +87,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         let defaults = AppSettings()
         callsign = values.value(.callsign, or: defaults.callsign)
         isListenOnly = values.value(.isListenOnly, or: defaults.isListenOnly)
+        isSettingsSyncEnabled = values.value(.isSettingsSyncEnabled, or: defaults.isSettingsSyncEnabled)
         micGain = values.value(.micGain, or: defaults.micGain)
         isStickyPTT = values.value(.isStickyPTT, or: defaults.isStickyPTT)
         accessToneHz = values.value(.accessToneHz, or: defaults.accessToneHz)

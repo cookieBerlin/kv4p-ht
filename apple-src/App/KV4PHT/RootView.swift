@@ -41,6 +41,7 @@ struct RootView: View {
                     model.startBluetoothScan()
                 } else {
                     model.stopBluetoothScan()
+                    model.flushSettingsSync()
                 }
             }
             .task { await model.loadMemories() }

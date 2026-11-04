@@ -40,6 +40,7 @@ enum Composition {
             firmware: firmwareFlasher(),
             firmwareChoices: firmwareChoices,
             settings: settingsStore(),
+            syncedSettings: UbiquitousSettingsStore(),
             bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
             failureAlerts: PlatformFailureAlerts(),
             permissions: SystemPermissions(),

@@ -64,6 +64,11 @@ struct StationSettings: View {
                 }
                 Toggle("Listen only", isOn: $model.isListenOnly)
                     .explained(ControlHelp.listenOnly)
+                Toggle("iCloud sync", isOn: $model.isSettingsSyncEnabled)
+                    .explained(ControlHelp.settingsSync)
+                if let hint = model.settingsSyncHint {
+                    Text(hint).font(.footnote).foregroundStyle(.secondary)
+                }
             }
         }
         .onAppear { callsign = model.callsign }

@@ -33,8 +33,11 @@ INFOPLIST_FILE[sdk=macosx*] = KV4PHT-macOS-Info.plist
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 
-// App Sandbox with Bluetooth and USB serial access; signed to run locally, no team.
-CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = KV4PHT.entitlements
+// App Sandbox with Bluetooth and USB serial access; signed to run locally, no team. iCloud needs a team: a Mac does not
+// start an app that claims it without one, so only a build with a team gets it (ADR-0051).
+KV4P_MAC_ENTITLEMENTS_ = KV4PHT.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = $(KV4P_MAC_ENTITLEMENTS_$(DEVELOPMENT_TEAM):default=KV4PHT-iCloud.entitlements)
+CODE_SIGN_ENTITLEMENTS[sdk=iphone*] = KV4PHT-iOS.entitlements
 CODE_SIGN_STYLE = Automatic
 CODE_SIGN_IDENTITY[sdk=macosx*] = -
 ENABLE_HARDENED_RUNTIME = YES

@@ -89,6 +89,14 @@ struct SettingsSyncTests {
         )
     }
 
+    @Test("the same settings always give the same values, or they would look changed")
+    func stable() {
+        let first = SettingsSync.values(of: AppSettings())
+        for _ in 0..<50 {
+            #expect(SettingsSync.values(of: AppSettings()) == first)
+        }
+    }
+
     @Test("a value survives the way through the cloud, also no beacon frequency")
     func roundTrip() {
         var settings = AppSettings()
