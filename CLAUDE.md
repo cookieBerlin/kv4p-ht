@@ -56,8 +56,10 @@ These rules apply to all work on the Apple port (`apple-src/`, `docs/apple/`,
   `feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `ci:`, `build:`, `chore:`,
   optionally scoped, e.g. `feat(protocol): parse HELLO frame`.
 - Remotes: `upstream` is the original project, `origin` is the fork.
-  Keep `main` in sync with `upstream/main`; work on feature branches
-  (`apple/<topic>`) and merge via pull request.
+  Local `main` tracks `origin/main`, which also holds the merged Apple work, so it
+  differs from `upstream/main`. Work on feature branches (`apple/<topic>`) and merge
+  via pull request into the fork; run `gh repo set-default` with the fork, as `gh`
+  may otherwise target `upstream`.
 - Pull requests must pass the Apple CI gate (tests, 100 % coverage, lint,
   test vector consistency, personal data check) before merging.
 
