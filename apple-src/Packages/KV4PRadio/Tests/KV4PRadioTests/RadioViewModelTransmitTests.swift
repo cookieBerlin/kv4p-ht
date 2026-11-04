@@ -49,6 +49,21 @@ struct RadioViewModelTransmitTests {
         }
     }
 
+    @Test("the squelch stays as it is while transmitting")
+    func squelchLocked() async {
+        let setup = Setup()
+        await setup.tuned()
+        setup.model.changeSquelch(to: 2)
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.squelch == 2 })
+        await setup.model.pressPTT()
+        #expect(!setup.model.canChangeSquelch)
+        setup.model.changeSquelch(to: 6)
+        await Task.yield()
+        #expect(setup.model.squelch == 2)
+        await setup.model.releasePTT()
+        #expect(setup.model.canChangeSquelch)
+    }
+
     @Test("holding PTT transmits until it is released")
     func hold() async {
         let setup = Setup()

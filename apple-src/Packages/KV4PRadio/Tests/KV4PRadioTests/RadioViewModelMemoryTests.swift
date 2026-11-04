@@ -100,6 +100,22 @@ struct RadioViewModelMemoryTests {
         #expect(!model.isScanning)
     }
 
+    @Test("the squelch stays as it is during a scan")
+    func squelchLockedDuringScan() async throws {
+        let repository = try SwiftDataMemoryRepository.inMemory()
+        let model = await connected(repository)
+        await model.save(Self.local)
+        model.changeSquelch(to: 2)
+        #expect(await RadioViewModelTests.eventually(model) { $0.squelch == 2 })
+        await model.toggleScan()
+        #expect(!model.canChangeSquelch)
+        model.changeSquelch(to: 6)
+        await Task.yield()
+        #expect(model.squelch == 2)
+        await model.toggleScan()
+        #expect(model.canChangeSquelch)
+    }
+
     @Test("a RepeaterBook export becomes a group of memories")
     func importCSV() async throws {
         let repository = try SwiftDataMemoryRepository.inMemory()
