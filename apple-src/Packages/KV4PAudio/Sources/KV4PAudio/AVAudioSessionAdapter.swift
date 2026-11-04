@@ -19,6 +19,11 @@
             observers = [
                 center.addObserver(forName: AVAudioSession.interruptionNotification, object: session, queue: nil) {
                     let info = $0.userInfo ?? [:]
+                    let details = info.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
+                    let other = session.isOtherAudioPlaying
+                    Self.log.info(
+                        "other audio: INTERRUPTION \(details, privacy: .public) other=\(other, privacy: .public)"
+                    )
                     switch (info[AVAudioSessionInterruptionTypeKey] as? UInt).flatMap(
                         AVAudioSession.InterruptionType.init
                     ) {

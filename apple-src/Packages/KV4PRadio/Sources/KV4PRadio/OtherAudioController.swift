@@ -90,6 +90,7 @@ final class OtherAudioController {
 
     /// Ends all timers and a running switch, for a connection that ends or an interrupted session.
     func stop() async {
+        note("stop")
         isBusy = false
         isKeying = false
         await step?.value
