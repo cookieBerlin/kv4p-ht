@@ -49,6 +49,10 @@ struct SettingsView: View {
                         otherAudio
                     }
                 }
+            #else
+                if model.canChooseOtherAudio {
+                    Section("Audio") { otherAudio }
+                }
             #endif
 
             aprs
@@ -99,28 +103,29 @@ struct SettingsView: View {
         #endif
     }
 
-    #if os(iOS)
-        /// What other apps do while the radio is busy (ADR-0043).
-        @ViewBuilder private var otherAudio: some View {
-            Picker("Other audio", selection: $model.otherAudioMode) {
-                ForEach(OtherAudioMode.allCases, id: \.self) { Text($0.label) }
-            }
-            .explained(ControlHelp.otherAudio)
-            if model.otherAudioMode.changesOtherAudio {
-                Picker("Resume after", selection: $model.otherAudioResumeSeconds) {
-                    ForEach(RadioViewModel.otherAudioResumeOptions, id: \.self) { Text("\($0) s") }
-                }
-            }
-            if let warning = model.otherAudioMode.warning {
-                Label(warning, systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
-            }
-            if let hint = model.otherAudioHint {
-                Text(hint).font(.footnote).foregroundStyle(.secondary)
+    /// What other apps do while the radio is busy (ADR-0043, ADR-0044).
+    @ViewBuilder private var otherAudio: some View {
+        Picker("Other audio", selection: $model.otherAudioMode) {
+            ForEach(model.otherAudioModes, id: \.self) { Text($0.label) }
+        }
+        .explained(ControlHelp.otherAudio)
+        if model.otherAudioMode.changesOtherAudio {
+            Picker("Resume after", selection: $model.otherAudioResumeSeconds) {
+                ForEach(RadioViewModel.otherAudioResumeOptions, id: \.self) { Text("\($0) s") }
             }
         }
-    #endif
+        if let warning = model.otherAudioMode.warning {
+            Label(warning, systemImage: "exclamationmark.triangle")
+                .font(.footnote)
+                .foregroundStyle(.orange)
+        }
+        if let hint = model.otherAudioHint {
+            Text(hint).font(.footnote).foregroundStyle(.secondary)
+        }
+        if model.otherAudioMode == .muteAll {
+            Text(ControlHelp.muteAll).font(.footnote).foregroundStyle(.secondary)
+        }
+    }
 
     /// On a phone, the screen around the settings page shows the notices.
     private var isPage: Bool {

@@ -26,19 +26,21 @@ final class OtherAudioController {
     }
 
     /// A podcast app was back after about 1.15 s in the tests on an iPhone.
-    private static let releaseWait: Duration = .seconds(2)
+    static let podcastReturnWait: Duration = .seconds(2)
     private static let audioFailure = "The audio output cannot be started."
     private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "other-audio")
 
     var mode = OtherAudioMode.pausePodcasts
     var resumeAfter: Duration = .seconds(3)
 
-    private let session: any AudioSession
+    private let session: any OtherAudioSwitching
     private let output: (any AudioOutput)?
     private let player: RXAudioPlayer
     private let prepareMicrophone: () async -> Void
     private let reportFailure: (String) -> Void
     private let sleep: Sleep
+    /// How long other apps get to come back before the session is active again.
+    private let releaseWait: Duration
 
     private var phase = Phase.mixing
     private var isBusy = false
@@ -52,12 +54,13 @@ final class OtherAudioController {
     private var waiters: [CheckedContinuation<Void, Never>] = []
 
     init(
-        session: any AudioSession,
+        session: any OtherAudioSwitching,
         output: (any AudioOutput)?,
         player: RXAudioPlayer,
         prepareMicrophone: @escaping () async -> Void,
         reportFailure: @escaping (String) -> Void,
-        sleep: @escaping Sleep
+        sleep: @escaping Sleep,
+        releaseWait: Duration = OtherAudioController.podcastReturnWait
     ) {
         self.session = session
         self.output = output
@@ -65,6 +68,7 @@ final class OtherAudioController {
         self.prepareMicrophone = prepareMicrophone
         self.reportFailure = reportFailure
         self.sleep = sleep
+        self.releaseWait = releaseWait
     }
 
     /// The radio receives something to play, or transmits.
@@ -130,7 +134,7 @@ final class OtherAudioController {
         case .mixing:
             if isWanted, mode.changesOtherAudio, session.isOtherAudioPlaying {
                 run {
-                    self.player.holdAudio(true)
+                    self.holdAudio(true)
                     self.output?.stop()
                     await self.quietOthers()
                 }
@@ -139,7 +143,7 @@ final class OtherAudioController {
             timer?.cancel()
             timer = nil
             run {
-                self.player.holdAudio(true)
+                self.holdAudio(true)
                 self.output?.stop()
                 await self.silence()
             }
@@ -215,15 +219,16 @@ final class OtherAudioController {
 
     /// The audio that waits still has to play; what follows it is the silence of a closed squelch.
     private func startHandBackTimer() {
-        let lag = Duration.seconds(Double(player.statistics.buffered) / Double(KV4P.audioSampleRate))
+        let lag =
+            output == nil ? .zero : Duration.seconds(Double(player.statistics.buffered) / Double(KV4P.audioSampleRate))
         let rest = resumeAfter - lag
         timer = Task {
             do {
                 if lag > .zero {
                     try await sleep(lag)
                 }
-                player.discardBuffered()
-                player.holdAudio(false)
+                discardWaitingAudio()
+                holdAudio(false)
                 if rest > .zero {
                     try await sleep(rest)
                 }
@@ -241,10 +246,10 @@ final class OtherAudioController {
         await session.releaseOtherAudio()
         phase = .released
         timer = Task {
-            guard (try? await sleep(Self.releaseWait)) != nil else { return }  // cancelled
+            guard (try? await sleep(releaseWait)) != nil else { return }  // cancelled
             timer = nil
             run {
-                self.player.discardBuffered()
+                self.discardWaitingAudio()
                 await self.mix()
                 await self.restartOutput()
                 self.phase = .mixing
@@ -255,15 +260,28 @@ final class OtherAudioController {
     /// A signal or PTT during the wait. What came in so far is silence; the other app may not be back yet, and lowering
     /// now keeps it from returning into the signal.
     private func returnFromRelease() async {
-        player.discardBuffered()
+        discardWaitingAudio()
         guard mode.changesOtherAudio else {
             await mix()
             await restartOutput()
             phase = .mixing
             return
         }
-        player.holdAudio(true)
+        holdAudio(true)
         await quietOthers()
+    }
+
+    /// Only an output that stops makes audio wait; without one, the normal latency stays.
+    private func holdAudio(_ isHolding: Bool) {
+        if output != nil {
+            player.holdAudio(isHolding)
+        }
+    }
+
+    private func discardWaitingAudio() {
+        if output != nil {
+            player.discardBuffered()
+        }
     }
 
     private func mix() async {

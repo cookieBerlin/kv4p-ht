@@ -16,7 +16,17 @@ struct OtherAudioModeTests {
 
     @Test("each mode names itself, and only keeping them playing leaves other apps alone")
     func labels() {
-        #expect(OtherAudioMode.allCases.map(\.label) == ["Keep playing", "Lower all", "Pause podcasts, lower music"])
-        #expect(OtherAudioMode.allCases.map(\.changesOtherAudio) == [false, true, true])
+        #expect(
+            OtherAudioMode.allCases.map(\.label) == [
+                "Keep playing", "Lower all", "Pause podcasts, lower music", "Mute other apps",
+            ]
+        )
+        #expect(OtherAudioMode.allCases.map(\.changesOtherAudio) == [false, true, true, true])
+    }
+
+    @Test("each platform offers what it can do")
+    func platforms() {
+        #expect(OtherAudioMode.withAudioSession == [.keepPlaying, .lower, .pausePodcasts])
+        #expect(OtherAudioMode.withoutAudioSession == [.keepPlaying, .muteAll])
     }
 }

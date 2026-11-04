@@ -224,4 +224,64 @@ struct RadioViewModelOtherAudioTests {
         #expect(await setup.until("release"))
         #expect(setup.model.message == "The audio was interrupted. Connect again to listen.")
     }
+
+    // MARK: Mac
+
+    @MainActor
+    final class MacSetup {
+        let log = CallLog()
+        let mute: FakeAudioSession
+        let store: MemorySettingsStore
+        let model: RadioViewModel
+
+        init(store: MemorySettingsStore = MemorySettingsStore()) {
+            self.store = store
+            let mute = FakeAudioSession(log: log)
+            mute.isOtherAudioPlaying = true
+            self.mute = mute
+            model = RadioViewModel(
+                makeController: { _, rxAudio in
+                    let clock = ManualClock()
+                    let transport = SimulatorTransport(simulator: RadioSimulator(scenario: .ble), clock: clock)
+                    return RadioController(transport: transport, clock: clock, rxAudio: rxAudio)
+                },
+                serialDevices: { [] },
+                audioOutput: RecordingOutput(log: log),
+                otherAppsMute: mute,
+                settings: store
+            )
+        }
+    }
+
+    @Test("a Mac offers muting, and starts with Keep playing, also with what an older version stored")
+    func macModes() {
+        let setup = MacSetup()
+        #expect(setup.model.canChooseOtherAudio)
+        #expect(setup.model.otherAudioModes == [.keepPlaying, .muteAll])
+        #expect(setup.model.otherAudioMode == .keepPlaying)
+        #expect(Setup().model.otherAudioModes == [.keepPlaying, .lower, .pausePodcasts])
+    }
+
+    @Test("choosing to mute is stored and switches nothing yet")
+    func macChooses() async {
+        let setup = MacSetup()
+        setup.log.removeAll()
+        setup.model.otherAudioMode = .muteAll
+        #expect(setup.store.settings.otherAudioMode == .muteAll)
+        #expect(MacSetup(store: setup.store).model.otherAudioMode == .muteAll)
+        await Task.yield()
+        #expect(setup.log.calls.isEmpty)
+    }
+
+    @Test("a signal mutes other apps without touching the radio's own output")
+    func macMutes() async {
+        let setup = MacSetup()
+        await setup.model.connect()
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isReady && $0.snapshot.isInSync })
+        setup.model.otherAudioMode = .muteAll
+        setup.log.removeAll()
+        await setup.model.pressPTT()
+        #expect(setup.log.calls.contains("silence"))
+        #expect(!setup.log.calls.contains("stop"))
+    }
 }

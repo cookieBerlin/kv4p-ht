@@ -10,9 +10,14 @@ enum ControlHelp {
     static let importCSV = "Adds repeaters from a CSV file exported from RepeaterBook."
     static let recipient = "The callsign to send to. Leave it empty to send a bulletin to everyone."
     static let bandwidth = "Use the bandwidth of the channel: 12.5 kHz is narrow FM, 25 kHz is wide FM."
-    static let otherAudio =
-        "What other apps do while the radio receives or you transmit. Podcast apps decide themselves whether they "
-        + "continue."
+    #if os(iOS)
+        static let otherAudio =
+            "What other apps do while the radio receives or you transmit. Podcast apps decide themselves whether they "
+            + "continue."
+    #else
+        static let otherAudio = "What other apps do while the radio receives or you transmit."
+    #endif
+    static let muteAll = "Other apps keep running silently, so a video or podcast goes on without being heard."
     static let squelch = "How strong a signal must be to be heard. 0 keeps the speaker always on."
     static let txTone = "A tone sent with your voice. Many repeaters open only with the right one."
     static let rxTone = "Hear only signals that carry this tone."
