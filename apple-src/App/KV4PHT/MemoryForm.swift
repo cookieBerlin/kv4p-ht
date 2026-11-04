@@ -1,3 +1,4 @@
+import KV4PAudio
 import KV4PPersistence
 import KV4PProtocol
 import KV4PRadio
@@ -66,6 +67,19 @@ struct MemoryForm: View {
                     ForEach(CTCSS.labels, id: \.self) { Text($0) }
                 }
                 Toggle("Skip during scan", isOn: $memory.skipDuringScan)
+            }
+            Section {
+                Picker("Access tone", selection: $memory.accessToneHz) {
+                    Text("Use settings").tag(Int?.none)
+                    Text("Off").tag(Int?.some(0))
+                    ForEach(AccessTone.frequencies, id: \.self) { Text("\($0) Hz").tag(Int?.some($0)) }
+                }
+                Picker("Tone length", selection: $memory.accessToneLengthMs) {
+                    Text("Use settings").tag(Int?.none)
+                    ForEach(AccessTone.lengthsMs, id: \.self) { Text(AccessTone.lengthLabel($0)).tag(Int?.some($0)) }
+                }
+            } header: {
+                Text("Repeater access tone")
             } footer: {
                 if let problem = model.memoryProblem(entered) {
                     Text(problem)

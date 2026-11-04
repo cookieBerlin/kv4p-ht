@@ -43,4 +43,15 @@ struct MemoryMigrationTests {
         _ = try await repository.insert([ChannelMemory(name: "F", frequency: 145, group: "Alpha")])
         #expect(try await repository.all().map(\.name) == ["C", "F", "A", "D", "B", "E"])
     }
+
+    @Test("memories of an earlier version follow the settings for the access tone")
+    func accessTone() async throws {
+        let url = try Self.earlierStore()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let repository = try SwiftDataMemoryRepository(storeURL: url)
+        for memory in try await repository.all() {
+            #expect(memory.accessToneHz == nil)
+            #expect(memory.accessToneLengthMs == nil)
+        }
+    }
 }

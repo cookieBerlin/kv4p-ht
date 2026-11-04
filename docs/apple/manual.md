@@ -181,6 +181,28 @@ Transmitting requires a license and an antenna or dummy load.
 - After a transmission the received audio fades in again over about one second,
   as in the Android app.
 
+## Opening a repeater
+
+Some repeaters open only on a tone. Choose it in ⚙ **Settings** under *Repeater access
+tone*: 1000, 1450, 1750 or 2100 Hz, off by default, its length, and the wait before it. A
+memory can have its own tone and length, or use the settings, which is the default.
+
+**Hold** the **Tone** button next to PTT on the memories page:
+
+- The transmitter starts, and once the radio reports that it transmits, the set wait
+  passes in silence. Then the tone goes out for the set length, on air and on this device,
+  and the transmitter stops by itself, also if you still hold the button.
+- Releasing earlier stops at once, and the app says that the repeater may not have opened.
+  The next press removes this message.
+- The button shows the frequency of the tone.
+- If the radio does not transmit within 2 s, the app stops and says so.
+- 📱 The iPhone vibrates all the time while the button is held.
+- The microphone stays closed, so other apps keep playing. Sticky PTT has no effect on the
+  button, and the frequency limits apply.
+
+The button shows with a tone chosen, a connected radio, the microphone permission and
+analog voice.
+
 ## Memories and scanning
 
 The memory list is next to APRS (on an iPhone, in the **Memories** tab).

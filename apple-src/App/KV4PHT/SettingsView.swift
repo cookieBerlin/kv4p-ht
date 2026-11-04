@@ -55,6 +55,8 @@ struct SettingsView: View {
                 }
             #endif
 
+            accessTone
+
             aprs
 
             Section("Memories") {
@@ -101,6 +103,25 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+
+    /// The tone that opens a repeater (ADR-0045); a memory can have its own.
+    private var accessTone: some View {
+        Section("Repeater access tone") {
+            Picker("Tone", selection: $model.accessToneHz) {
+                Text("Off").tag(0)
+                ForEach(AccessTone.frequencies, id: \.self) { Text("\($0) Hz").tag($0) }
+            }
+            .explained(ControlHelp.accessTone)
+            if model.accessToneHz > 0 {
+                Picker("Length", selection: $model.accessToneLengthMs) {
+                    ForEach(AccessTone.lengthsMs, id: \.self) { Text(AccessTone.lengthLabel($0)).tag($0) }
+                }
+                Picker("Wait before the tone", selection: $model.accessToneWaitMs) {
+                    ForEach(AccessTone.waitsMs, id: \.self) { Text("\($0) ms").tag($0) }
+                }
+            }
+        }
     }
 
     /// What other apps do while the radio is busy (ADR-0043, ADR-0044).

@@ -33,6 +33,8 @@ open until the maintainer marks it as done for that platform.
 | [HW-24](#hw-24) | Memory editor | ⬜ | ⬜ |
 | [HW-25](#hw-25) | Other audio on a real radio | – | ⬜ |
 | [HW-26](#hw-26) | Mute other apps on a Mac | ⬜ | – |
+| [HW-27](#hw-27) | Repeater access tone | ⬜ | ⬜ |
+| [HW-28](#hw-28) | Deviation of the access tone | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -209,3 +211,17 @@ Play music and a video in a browser. With a signal from a radio, both go silent 
 radio stays audible, and return after the set time. Press PTT while they play: a second
 radio hears nothing of them. Change to headphones while they are muted: they stay silent.
 Force quit the app while they are muted: they become audible.
+
+### HW-27
+
+Choose a tone in the settings. Hold **Tone** next to PTT, listening with a second radio:
+first silence, then the tone for the set time, then the transmitter stops, also if the
+button is still held. The microphone indicator stays off, and the tone plays on the device.
+On an iPhone it vibrates all the time while held. Release early: the transmitter stops at
+once and a message says so. A real repeater opens. Music in another app keeps playing.
+
+### HW-28
+
+With a deviation meter or a service monitor, measure each tone with and without
+pre-emphasis at the 50 % level. Note whether the level should change, and whether the first
+or last moments of the tone get lost at the transmitter.

@@ -321,7 +321,13 @@ struct PTTBar: View {
             if let blocked = model.transmitBlockedText {
                 Text(blocked).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
-            PTTButton(model: model).disabled(!model.isReady)
+            HStack(spacing: 8) {
+                PTTButton(model: model).disabled(!model.isReady || model.isSendingAccessTone)
+                if model.canSendAccessTone {
+                    AccessToneButton(model: model)
+                        .disabled(!model.canTransmit || (model.isTransmitting && !model.isSendingAccessTone))
+                }
+            }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -343,19 +349,7 @@ private struct PTTButton: View {
                 model.isTransmitting ? Color.red : Color.secondary.opacity(isEnabled ? 0.2 : 0.08),
                 in: .rect(cornerRadius: 8)
             )
-            .contentShape(.rect)
-            #if os(iOS)
-                // SwiftUI reports a held touch late, only UIKit reports it when the finger lands.
-                .overlay {
-                    TouchArea(onDown: pressed, onUp: released)
-                }
-            #else
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { _ in pressed() }
-                        .onEnded { _ in released() }
-                )
-            #endif
+            .holdable(onDown: pressed, onUp: released)
             .sensoryFeedback(.impact(weight: .light), trigger: isPressed) { _, pressed in pressed }
             .sensoryFeedback(.impact, trigger: model.isTransmitting)
             .accessibilityAddTraits(.isButton)
@@ -372,6 +366,84 @@ private struct PTTButton: View {
         guard isPressed else { return }
         isPressed = false
         Task { await model.releasePTT() }
+    }
+}
+
+/// Press and hold to send the tone that opens a repeater (ADR-0045). It ends by itself, also if still held.
+private struct AccessToneButton: View {
+    let model: RadioViewModel
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var isPressed = false
+
+    var body: some View {
+        Label(title, systemImage: "waveform")
+            .labelStyle(.titleAndIcon)
+            .font(.headline)
+            .multilineTextAlignment(.center)
+            .frame(minWidth: 96, minHeight: 64)
+            .foregroundStyle(model.isSendingAccessTone ? Color.white : isEnabled ? Color.primary : Color.secondary)
+            .background(
+                model.isSendingAccessTone ? Color.red : Color.secondary.opacity(isEnabled ? 0.2 : 0.08),
+                in: .rect(cornerRadius: 8)
+            )
+            .holdable(onDown: pressed, onUp: released)
+            #if os(iOS)
+                .task(id: isPressed && model.isSendingAccessTone) { await vibrateWhileSending() }
+            #endif
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint(ControlHelp.accessTone)
+            .help(ControlHelp.accessTone)
+            .accessibilityAction {
+                Task { await model.isSendingAccessTone ? model.releaseAccessTone() : model.pressAccessTone() }
+            }
+    }
+
+    /// Which tone goes out, as a memory can have its own.
+    private var title: String {
+        model.accessTone.map { "Tone\n\($0.frequency) Hz" } ?? "Tone"
+    }
+
+    private func pressed() {
+        guard isEnabled, !isPressed else { return }
+        isPressed = true
+        Task { await model.pressAccessTone() }
+    }
+
+    private func released() {
+        guard isPressed else { return }
+        isPressed = false
+        Task { await model.releaseAccessTone() }
+    }
+
+    #if os(iOS)
+        /// Only here the iPhone vibrates all the time: the finger has to stay, unlike with PTT.
+        private func vibrateWhileSending() async {
+            guard isPressed, model.isSendingAccessTone else { return }
+            let generator = UIImpactFeedbackGenerator(style: .rigid)
+            while !Task.isCancelled {
+                generator.impactOccurred()
+                try? await Task.sleep(for: .milliseconds(80))
+            }
+        }
+    #endif
+}
+
+extension View {
+    /// Reports when a press starts and when it ends.
+    fileprivate func holdable(onDown: @escaping () -> Void, onUp: @escaping () -> Void) -> some View {
+        contentShape(.rect)
+            #if os(iOS)
+                // SwiftUI reports a held touch late, only UIKit reports it when the finger lands.
+                .overlay {
+                    TouchArea(onDown: onDown, onUp: onUp)
+                }
+            #else
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in onDown() }
+                        .onEnded { _ in onUp() }
+                )
+            #endif
     }
 }
 
