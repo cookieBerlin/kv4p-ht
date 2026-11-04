@@ -47,3 +47,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0041](0041-simulator-settings.md) | Simulator settings | Proposed |
 | [0042](0042-memory-editor.md) | Memory editor | Proposed |
 | [0043](0043-pause-other-audio.md) | Pause other audio | Proposed |
+| [0044](0044-mute-other-apps-on-the-mac.md) | Mute other apps on the Mac | Proposed |

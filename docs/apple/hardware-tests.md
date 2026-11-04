@@ -32,6 +32,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-23](#hw-23) | PTT starts quickly | ⬜ | ✅ |
 | [HW-24](#hw-24) | Memory editor | ⬜ | ⬜ |
 | [HW-25](#hw-25) | Other audio on a real radio | – | ⬜ |
+| [HW-26](#hw-26) | Mute other apps on a Mac | ⬜ | – |
 
 ## TestFlight
 
@@ -200,3 +201,12 @@ pauses, the music gets quieter, and both return after the set time. Press PTT wh
 play: a third radio hears no music. Unlock after a locked reception: PTT works at once. With
 *Keep playing*, nothing changes. With a Bluetooth headset, repeat all of this and note
 how long the first words take.
+
+### HW-26
+
+On a Mac, choose *Mute other apps*: the system asks for System Audio Recording once. Play
+music and a video in a browser. With a signal from a radio, both go silent while the radio
+stays audible, and return after the set time. Press PTT while they play: a second radio
+hears nothing of them. Change to headphones while they are muted: they stay silent. With
+nothing playing, a signal shows no recording dot. Refuse the permission, and check what the
+app shows. Force quit the app while they are muted: they become audible.
