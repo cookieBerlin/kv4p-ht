@@ -23,7 +23,9 @@ explanations appear only as tooltips, which nobody finds without hovering over a
   the way, instead of in a closed group.
 - **Explanations are visible on every platform.** `explained` puts the text below the row
   on the Mac as well, and has no tooltip any more, as it would say the same.
-- **No function changes:** every setting keeps its model property, and its conditions.
+- **The simulator actions stay visible without a connection,** greyed out and with a note
+  that they need one, so that one can see that they exist.
+- **No other function changes:** every setting keeps its model property, and its conditions.
 
 ## Consequences
 

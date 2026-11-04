@@ -313,22 +313,28 @@ struct SimulatorSettings: View {
                 )
             }
             .disabled(!model.canConnect)
-            if model.canSimulateSignal {
-                Section("Simulator actions") {
-                    Picker("Received signal", selection: $model.simulatedSignal) {
-                        Text("None").tag(SimulatedSignal?.none)
-                        ForEach(SimulatedSignal.allCases, id: \.self) { Text($0.label).tag(SimulatedSignal?.some($0)) }
-                    }
-                    .disabled(model.isSignalRampRunning)
-                    Button(model.isSignalRampRunning ? "Stop signal ramp" : "Ramp signal up and down") {
-                        model.toggleSignalRamp()
-                    }
-                    Button("Lose connection") { model.loseSimulatedConnection() }
-                    ForEach(SimulatedPacket.allCases, id: \.self) { packet in
-                        Button("Receive APRS \(packet.label.lowercased())") { model.simulatePacket(packet) }
-                    }
+            // The actions stay visible without a connection, so that one can see that they exist.
+            Section {
+                Picker("Received signal", selection: $model.simulatedSignal) {
+                    Text("None").tag(SimulatedSignal?.none)
+                    ForEach(SimulatedSignal.allCases, id: \.self) { Text($0.label).tag(SimulatedSignal?.some($0)) }
+                }
+                .disabled(model.isSignalRampRunning)
+                Button(model.isSignalRampRunning ? "Stop signal ramp" : "Ramp signal up and down") {
+                    model.toggleSignalRamp()
+                }
+                Button("Lose connection") { model.loseSimulatedConnection() }
+                ForEach(SimulatedPacket.allCases, id: \.self) { packet in
+                    Button("Receive APRS \(packet.label.lowercased())") { model.simulatePacket(packet) }
+                }
+            } header: {
+                Text("Simulator actions")
+            } footer: {
+                if !model.canSimulateSignal {
+                    Text("Available while the simulated radio is connected.")
                 }
             }
+            .disabled(!model.canSimulateSignal)
         }
     }
 }
