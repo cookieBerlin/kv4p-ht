@@ -506,7 +506,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         for start in stride(from: 0, to: samples.count, by: blockSize) {
             let part = Array(samples[start..<min(start + blockSize, samples.count)])
             let block = part + [Int16](repeating: 0, count: blockSize - part.count)
-            rxAudio?.receive(tone: block)
+            rxAudio?.receive(tone: AccessTone.forDevice(block))
             guard await sendPaced(block, transmission: current, deadline: &deadline, period: period) else {
                 return .stopped
             }

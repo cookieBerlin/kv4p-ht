@@ -17,9 +17,11 @@ that, and it must not be mistaken for a transmission with the microphone open.
   2 s without that report. The audio stays paced by the clock, like the microphone.
 - **A held button:** releasing stops at once with a message that the repeater may not have
   opened. Sticky PTT has no effect on it.
-- **The level is half of full scale,** on air and on the device, for now. The microphone
-  gain does not apply. Hardware test HW-28 checks the deviation per tone. A 5 ms ramp at
-  both ends avoids a click, which would splatter on air.
+- **The level is half of full scale on air,** for now. The microphone gain does not apply.
+  Hardware test HW-28 checks the deviation per tone. A 5 ms ramp at both ends avoids a
+  click, which would splatter on air.
+- **On the device it is 2 % of full scale,** and the volume of the app applies too. This
+  level was found by ear on an iPhone, where half of full scale was unpleasantly loud.
 - **On the device:** the tone skips the fade-in of `RXAudioPlayer`, as that hides a transient
   of the radio that a tone made here does not have.
 - **Settings:** tone (off by default), length and wait. A memory can have its own tone,

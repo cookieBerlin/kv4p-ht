@@ -11,8 +11,16 @@ public struct AccessTone: Equatable, Sendable {
 
     /// Half of full scale, for now: the deviation it causes is for a hardware test to check.
     private static let level = 0.5
+    /// On the device, close to the ear: a tone sounds far louder than speech at the same level. Found by ear on an
+    /// iPhone with the volume of the app at full.
+    private static let deviceLevel = 0.02
     /// Keeps the edges from clicking, which would splatter on air.
     private static let rampSeconds = 0.005
+
+    /// The samples of `samples()` for the speaker of the device.
+    public static func forDevice(_ samples: [Int16]) -> [Int16] {
+        samples.map { Int16(Double($0) * deviceLevel / level) }
+    }
 
     /// For the choices of the length: `0.25 s`, `1 s`.
     public static func lengthLabel(_ milliseconds: Int) -> String {
