@@ -199,4 +199,29 @@ struct RadioViewModelOtherAudioTests {
         await Task.yield()
         #expect(!setup.log.calls.contains("release"))
     }
+
+    @Test("after a call, other apps get their sound back")
+    func afterInterruption() async {
+        let setup = Setup()
+        await setup.connected()
+        await setup.signal()
+        #expect(await setup.until("lower pausePodcasts"))
+        await setup.model.handle(.interruptionBegan)
+        setup.log.removeAll()
+        await setup.model.handle(.interruptionEnded(shouldResume: true))
+        #expect(await setup.until("release"))
+    }
+
+    @Test("after a call that does not let the radio resume, other apps get their sound back too")
+    func afterInterruptionNoResume() async {
+        let setup = Setup()
+        await setup.connected()
+        await setup.signal()
+        #expect(await setup.until("lower pausePodcasts"))
+        await setup.model.handle(.interruptionBegan)
+        setup.log.removeAll()
+        await setup.model.handle(.interruptionEnded(shouldResume: false))
+        #expect(await setup.until("release"))
+        #expect(setup.model.message == "The audio was interrupted. Connect again to listen.")
+    }
 }

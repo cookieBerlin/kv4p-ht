@@ -379,4 +379,46 @@ struct OtherAudioControllerTests {
         await Task.yield()
         #expect(setup.calls == Setup.lowering)
     }
+
+    // MARK: Interruptions
+
+    @Test("after an interruption, other apps still get their sound back")
+    func interruptionHandsBack() async {
+        let setup = Setup()
+        await setup.lowered()
+        await setup.controller.interrupted()
+        setup.controller.interruptionEnded(canResume: true)
+        #expect(await setup.until(["stop", "release"]))
+        await setup.advance(by: .seconds(2))
+        #expect(await setup.until(["stop", "release"] + Setup.mixing))
+    }
+
+    @Test("an interruption that does not let the radio resume still hands back, and starts no audio")
+    func interruptionNoResume() async {
+        let setup = Setup()
+        await setup.lowered()
+        await setup.controller.interrupted()
+        setup.controller.interruptionEnded(canResume: false)
+        #expect(await setup.until(["release"]))
+    }
+
+    @Test("an interruption while other apps play next to the radio changes nothing")
+    func interruptionWhileMixing() async {
+        let setup = Setup()
+        await setup.controller.interrupted()
+        setup.controller.interruptionEnded(canResume: true)
+        await Task.yield()
+        #expect(setup.calls.isEmpty)
+    }
+
+    @Test("a connection that ends after an interruption has nothing left to hand back")
+    func stopAfterInterruption() async {
+        let setup = Setup()
+        await setup.lowered()
+        await setup.controller.interrupted()
+        await setup.controller.stop()
+        setup.controller.interruptionEnded(canResume: true)
+        await Task.yield()
+        #expect(setup.calls.isEmpty)
+    }
 }

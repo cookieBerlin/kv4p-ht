@@ -123,4 +123,10 @@ struct SimulatorRadioTests {
         #expect(last == .failed(.connectionLost))
         await #expect(throws: TransportError.notConnected) { try await transport.send([1]) }
     }
+
+    @Test("the simulated radio starts with squelch 3; other scenarios as a new device")
+    func squelch() {
+        #expect(SimulatorSettings().scenario.startSquelch == 3)
+        #expect(Scenario().startSquelch == 0)
+    }
 }
