@@ -53,9 +53,26 @@
             do {
                 return try capture(on: AVAudioEngine())
             } catch {
-                Self.log.error("The microphone did not start: \(error, privacy: .public)")
+                Self.log.error(
+                    "The microphone did not start: \(error, privacy: .public) \(Self.sessionState, privacy: .public)"
+                )
                 throw error
             }
+        }
+
+        /// What the system says about the input when it does not start.
+        private static var sessionState: String {
+            #if os(iOS)
+                let session = AVAudioSession.sharedInstance()
+                let inputs = session.currentRoute.inputs.map(\.portType.rawValue).joined(separator: ",")
+                let outputs = session.currentRoute.outputs.map(\.portType.rawValue).joined(separator: ",")
+                return "category=\(session.category.rawValue) options=\(session.categoryOptions.rawValue) "
+                    + "inputAvailable=\(session.isInputAvailable) channels=\(session.inputNumberOfChannels) "
+                    + "rate=\(session.sampleRate) inputs=[\(inputs)] outputs=[\(outputs)] "
+                    + "other=\(session.isOtherAudioPlaying) hint=\(session.secondaryAudioShouldBeSilencedHint)"
+            #else
+                return ""
+            #endif
         }
 
         private func capture(on engine: AVAudioEngine) throws -> AsyncStream<[Int16]> {
