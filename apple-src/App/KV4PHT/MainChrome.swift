@@ -219,8 +219,8 @@ struct BottomBar: View {
     }
 
     @ViewBuilder private var firmware: some View {
-        if model.isWebFlasherNeeded {
-            WebFlasherNotice().padding(.horizontal).padding(.vertical, 8)
+        if model.needsFirmwareUpdateElsewhere {
+            FirmwareElsewhereNotice().padding(.horizontal).padding(.vertical, 8)
         } else if model.isFirmwareOutdated || model.firmwareUpdate != .idle {
             FirmwareUpdateRow(model: model).padding(.horizontal).padding(.vertical, 8)
         }

@@ -10,7 +10,10 @@ struct AboutInfoTests {
     func version() {
         let about = AboutInfo(info: ["CFBundleShortVersionString": "0.1", "CFBundleVersion": "7"])
         #expect(about.version == "Version 0.1 (7)")
-        #expect(about.firmware == "Firmware \(KV4P.packagedFirmwareVersion) for USB updates")
+        #expect(
+            about.firmware
+                == "USB updates: nightly firmware for this app, firmware \(KV4P.packagedFirmwareVersion) for Android"
+        )
         #expect(AboutInfo(info: [:]).version == "Version unknown")
         #expect(AboutInfo(info: ["CFBundleShortVersionString": "0.1"]).version == "Version 0.1")
     }

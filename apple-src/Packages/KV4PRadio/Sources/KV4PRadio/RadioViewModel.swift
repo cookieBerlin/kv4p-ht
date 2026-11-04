@@ -92,12 +92,14 @@ public final class RadioViewModel {
         case flashing(percent: Int)
         /// Flashed and verified; the app reconnects.
         case finished
+        /// The firmware for the Android app is flashed and verified; this app stays disconnected from it.
+        case finishedForAndroid
         case failed(String)
 
         public var isRunning: Bool {
             switch self {
             case .connecting, .flashing: true
-            case .idle, .finished, .failed: false
+            case .idle, .finished, .finishedForAndroid, .failed: false
             }
         }
     }
@@ -354,6 +356,8 @@ public final class RadioViewModel {
     private var signalRamp: Task<Void, Never>?
     private let repository: (any MemoryRepository)?
     private let firmware: (any FirmwareFlashing)?
+    /// What the flasher can write, the one for this app first (ADR-0049).
+    public let firmwareChoices: [FirmwareChoice]
     private let settingsStore: (any SettingsStore)?
     /// Restoring the settings, which must not save them again.
     private var isRestoring = false
@@ -375,6 +379,7 @@ public final class RadioViewModel {
         location: (any LocationProvider)? = nil,
         internet: (any APRSInternetLink)? = nil,
         firmware: (any FirmwareFlashing)? = nil,
+        firmwareChoices: [FirmwareChoice] = [],
         settings: (any SettingsStore)? = nil,
         bluetoothScanner: (any BLEScanning)? = nil,
         failureAlerts: (any FailureAlerting)? = nil,
@@ -388,6 +393,7 @@ public final class RadioViewModel {
     ) {
         repository = memories
         self.firmware = firmware
+        self.firmwareChoices = firmwareChoices
         settingsStore = settings
         self.bluetoothScanner = bluetoothScanner
         self.failureAlerts = failureAlerts
@@ -703,17 +709,19 @@ public final class RadioViewModel {
 
     // MARK: Firmware
 
-    /// Flashing needs USB (macOS) and the packaged firmware.
+    /// Flashing needs USB and the bundled firmware, so only the Mac can.
     public var canUpdateFirmware: Bool {
-        flashTarget != nil && !firmwareUpdate.isRunning && !isTransmitting
+        flashTarget != nil && !firmwareChoices.isEmpty && !firmwareUpdate.isRunning && !isTransmitting
     }
 
-    /// What flashes the chosen radio: the flasher over USB, or a stand-in for the simulator.
+    /// What flashes the chosen radio: the flasher over USB, or on the Mac a stand-in for the simulator. Without a
+    /// flasher (iOS), the simulator offers no update either, as with a real radio.
     private var flashTarget: (flasher: any FirmwareFlashing, path: String)? {
+        guard let firmware else { return nil }
         switch selectedConnection {
-        case .serial(let path): firmware.map { ($0, path) }
-        case .simulator: simulator.map { _ in (SimulatedFirmwareFlasher(step: simulatedFlashStep), "") }
-        case .bluetooth, .bluetoothDevice: nil
+        case .serial(let path): return (firmware, path)
+        case .simulator: return simulator.map { _ in (SimulatedFirmwareFlasher(step: simulatedFlashStep), "") }
+        case .bluetooth, .bluetoothDevice: return nil
         }
     }
 
@@ -726,12 +734,16 @@ public final class RadioViewModel {
         }
     }
 
-    /// Outdated firmware that this app cannot update itself (iOS): the web flasher on a computer can.
-    public var isWebFlasherNeeded: Bool { isFirmwareOutdated && firmware == nil && !canConfigureSimulator }
+    /// Firmware that this app cannot update itself (iOS), which includes firmware without Bluetooth LE: a Mac or the
+    /// Android nightly app can.
+    public var needsFirmwareUpdateElsewhere: Bool {
+        guard firmware == nil else { return false }
+        return isFirmwareOutdated || snapshot.status == .failed(.transport(.serviceNotFound))
+    }
 
-    /// `startFirmwareActivity`: disconnects, flashes the packaged firmware into the radio on the selected USB
-    /// device, and reconnects once it is verified (`renegotiateAfterFlashing`).
-    public func updateFirmware() async {
+    /// `startFirmwareActivity`: disconnects and flashes `choice` into the radio on the selected USB device. Once it is
+    /// verified, the app reconnects to the firmware for this app (`renegotiateAfterFlashing`), not to the other.
+    public func updateFirmware(to choice: FirmwareChoice) async {
         guard canUpdateFirmware, let target = flashTarget else { return }
         await disconnect()
         firmwareUpdate = .connecting
@@ -743,12 +755,13 @@ public final class RadioViewModel {
             }
         }
         do throws(FlashError) {
-            try await target.flasher.flash(serialPath: target.path) { reporter.yield($0) }
+            try await target.flasher.flash(choice.images, serialPath: target.path) { reporter.yield($0) }
             reporter.finish()
             await progress.value
-            firmwareUpdate = .finished
-            if canConfigureSimulator { simulatorSettings.firmware = .current }
-            await connect()
+            let isForThisApp = choice.edition == .forThisApp
+            firmwareUpdate = isForThisApp ? .finished : .finishedForAndroid
+            if canConfigureSimulator { simulatorSettings.firmware = isForThisApp ? .current : .android }
+            if isForThisApp { await connect() }
         } catch {
             reporter.finish()
             await progress.value

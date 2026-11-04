@@ -4,7 +4,11 @@ import KV4PFlasher
 struct SimulatedFirmwareFlasher: FirmwareFlashing {
     let step: Duration
 
-    func flash(serialPath: String, events: @Sendable (FlashEvent) -> Void) async throws(FlashError) {
+    func flash(
+        _ images: FirmwareImages,
+        serialPath: String,
+        events: @Sendable (FlashEvent) -> Void
+    ) async throws(FlashError) {
         events(.connected)
         for percent in stride(from: 0, through: 100, by: 10) {
             try? await Task.sleep(for: step)

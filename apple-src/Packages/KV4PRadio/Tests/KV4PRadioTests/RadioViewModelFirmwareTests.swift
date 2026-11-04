@@ -10,6 +10,7 @@ import Testing
 /// A flasher that reports `events` and then fails with `error`, if any.
 final class FakeFirmwareFlasher: FirmwareFlashing {
     private let flashed = Mutex<[String]>([])
+    private let written = Mutex<[FirmwareImages]>([])
     private let events: [FlashEvent]
     private let error: FlashError?
 
@@ -19,9 +20,15 @@ final class FakeFirmwareFlasher: FirmwareFlashing {
     }
 
     var paths: [String] { flashed.withLock { $0 } }
+    var images: [FirmwareImages] { written.withLock { $0 } }
 
-    func flash(serialPath: String, events report: @Sendable (FlashEvent) -> Void) async throws(FlashError) {
+    func flash(
+        _ images: FirmwareImages,
+        serialPath: String,
+        events report: @Sendable (FlashEvent) -> Void
+    ) async throws(FlashError) {
         flashed.withLock { $0.append(serialPath) }
+        written.withLock { $0.append(images) }
         events.forEach(report)
         if let error { throw error }
     }
@@ -32,6 +39,18 @@ final class FakeFirmwareFlasher: FirmwareFlashing {
 @Suite("Radio view model firmware")
 struct RadioViewModelFirmwareTests {
     static let path = RadioViewModelTests.serialDevice
+    static let forThisApp = FirmwareChoice(
+        edition: .forThisApp,
+        images: FirmwareImages(bootloader: [1], partitions: [2], bootApp0: [3], app: [9]),
+        sha256: "aa11",
+        build: .init(commit: "a7c6b4d4790a", built: "2026-10-17 07:52 UTC")
+    )
+    static let forAndroid = FirmwareChoice(
+        edition: .forAndroid,
+        images: FirmwareImages(bootloader: [1], partitions: [2], bootApp0: [3], app: [4]),
+        sha256: "bb22"
+    )
+    static let choices = [forThisApp, forAndroid]
 
     static func model(_ scenario: Scenario = .ble, flasher: FakeFirmwareFlasher?) -> RadioViewModel {
         let model = RadioViewModel(
@@ -41,20 +60,41 @@ struct RadioViewModelFirmwareTests {
                 return RadioController(transport: transport, clock: clock, rxAudio: rxAudio)
             },
             serialDevices: { [path] },
-            firmware: flasher
+            firmware: flasher,
+            firmwareChoices: flasher == nil ? [] : choices
         )
         model.selectedConnection = .serial(path)
         return model
     }
 
-    @Test("updates are offered for a USB radio when the app has a flasher")
+    @Test("updates are offered for a USB radio when the app has a flasher and firmware")
     func offered() {
         #expect(!Self.model(flasher: nil).canUpdateFirmware)
+        let empty = RadioViewModel(
+            makeController: { _, rxAudio in RadioController(transport: SimulatorTransport(), rxAudio: rxAudio) },
+            serialDevices: { [Self.path] },
+            firmware: FakeFirmwareFlasher()
+        )
+        empty.selectedConnection = .serial(Self.path)
+        #expect(!empty.canUpdateFirmware)
         let model = Self.model(flasher: FakeFirmwareFlasher())
         #expect(model.canUpdateFirmware)
         #expect(model.firmwareUpdate == .idle)
         model.selectedConnection = .bluetooth
         #expect(!model.canUpdateFirmware)
+    }
+
+    @Test("the firmware for Android is written, and the app stays disconnected and says so")
+    func updateForAndroid() async {
+        let flasher = FakeFirmwareFlasher()
+        let model = Self.model(flasher: flasher)
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
+        await model.updateFirmware(to: Self.forAndroid)
+        #expect(flasher.images == [Self.forAndroid.images])
+        #expect(model.firmwareUpdate == .finishedForAndroid)
+        #expect(!model.firmwareUpdate.isRunning)
+        #expect(!model.isReady)
     }
 
     @Test("an update disconnects, flashes with progress and reconnects")
@@ -70,8 +110,9 @@ struct RadioViewModelFirmwareTests {
                 await Task.yield()
             }
         }
-        await model.updateFirmware()
+        await model.updateFirmware(to: Self.forThisApp)
         #expect(flasher.paths == [Self.path])
+        #expect(flasher.images == [Self.forThisApp.images])
         #expect(model.firmwareUpdate == .finished)
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
         watcher.cancel()
@@ -85,7 +126,7 @@ struct RadioViewModelFirmwareTests {
     @Test("a failed update says why and leaves the radio disconnected")
     func failed() async {
         let model = Self.model(flasher: FakeFirmwareFlasher(events: [.connected, .progress(40)], error: .noAnswer))
-        await model.updateFirmware()
+        await model.updateFirmware(to: Self.forThisApp)
         #expect(model.firmwareUpdate == .failed(RadioViewModel.message(for: FlashError.noAnswer)))
         #expect(!model.isReady)
     }
@@ -119,21 +160,29 @@ struct RadioViewModelFirmwareTests {
         #expect(await RadioViewModelTests.eventually(silent) { $0.isFirmwareOutdated })
     }
 
-    @Test("without a flasher (iOS), outdated firmware points to the web flasher and the manual")
-    func webFlasher() async {
+    @Test("the firmware for Android counts as outdated and can be updated")
+    func android() async {
+        let model = Self.model(.androidFirmware, flasher: FakeFirmwareFlasher())
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isFirmwareOutdated })
+        #expect(model.canUpdateFirmware)
+        #expect(!model.needsFirmwareUpdateElsewhere)
+    }
+
+    @Test("without a flasher (iOS), outdated firmware and firmware without BLE point elsewhere")
+    func elsewhere() async {
         var scenario = Scenario.ble
         scenario.firmwareVersion = 16
         let model = Self.model(scenario, flasher: nil)
         model.selectedConnection = .bluetooth
-        #expect(!model.isWebFlasherNeeded)
+        #expect(!model.needsFirmwareUpdateElsewhere)
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isFirmwareOutdated })
-        #expect(model.isWebFlasherNeeded)
+        #expect(model.needsFirmwareUpdateElsewhere)
         let flashing = Self.model(scenario, flasher: FakeFirmwareFlasher())
         await flashing.connect()
         #expect(await RadioViewModelTests.eventually(flashing) { $0.isFirmwareOutdated })
-        #expect(!flashing.isWebFlasherNeeded)
-        #expect(FirmwareHelp.webFlasherAddress == "https://kv4p.com/firmware.html")
+        #expect(!flashing.needsFirmwareUpdateElsewhere)
         #expect(
             FirmwareHelp.manualAddress
                 == "https://github.com/cookieBerlin/kv4p-ht/blob/main/docs/apple/manual.md#firmware-updates"

@@ -11,18 +11,23 @@ import Testing
 struct RadioViewModelSimulatorTests {
     @MainActor
     final class Setup {
-        let radio = SimulatorRadio(clock: ManualClock())
+        let radio: SimulatorRadio<ManualClock>
         let store: MemorySettingsStore
         let model: RadioViewModel
 
-        init(store: MemorySettingsStore = MemorySettingsStore()) {
+        /// `mac`: with a flasher and firmware; otherwise over Bluetooth only, as on iOS.
+        init(store: MemorySettingsStore = MemorySettingsStore(), mac: Bool = false, flasher: FakeFirmwareFlasher? = nil)
+        {
             self.store = store
-            let radio = radio
+            let radio = SimulatorRadio(clock: ManualClock(), isOverBluetooth: !mac)
+            self.radio = radio
             model = RadioViewModel(
                 makeController: { _, rxAudio in
                     RadioController(transport: radio.makeTransport(), clock: ManualClock(), rxAudio: rxAudio)
                 },
                 serialDevices: { [] },
+                firmware: mac ? (flasher ?? FakeFirmwareFlasher()) : nil,
+                firmwareChoices: mac ? RadioViewModelFirmwareTests.choices : [],
                 settings: store,
                 simulator: radio,
                 simulatedFlashStep: .zero
@@ -198,30 +203,66 @@ struct RadioViewModelSimulatorTests {
         #expect(!setup.model.canSimulateSignal)
     }
 
-    @Test("the simulator offers a firmware update, also without a flasher")
+    @Test("on the Mac the simulator offers a firmware update; on iOS it does not, as with a real radio")
     func offersUpdate() {
-        let setup = Setup()
-        #expect(!setup.model.canUpdateFirmware)
-        setup.model.selectedConnection = .simulator
-        #expect(setup.model.canUpdateFirmware)
+        let mac = Setup(mac: true)
+        mac.model.selectedConnection = .simulator
+        #expect(mac.model.canUpdateFirmware)
+        let phone = Setup()
+        phone.model.selectedConnection = .simulator
+        #expect(!phone.model.canUpdateFirmware)
         let plain = RadioViewModelTests.model()
         plain.selectedConnection = .simulator
         #expect(!plain.canUpdateFirmware)
     }
 
-    @Test("too old firmware offers the update, not the web flasher, and the update fixes it")
+    @Test(
+        "on the Mac, too old firmware offers the update, and the firmware for this app fixes it; no real radio is written"
+    )
     func update() async {
-        let setup = Setup()
+        let flasher = FakeFirmwareFlasher()
+        let setup = Setup(mac: true, flasher: flasher)
         setup.model.simulatorSettings.firmware = .tooOld
         setup.model.selectedConnection = .simulator
         await setup.model.connect()
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.isFirmwareOutdated })
-        #expect(!setup.model.isWebFlasherNeeded)
+        #expect(!setup.model.needsFirmwareUpdateElsewhere)
         #expect(setup.model.canUpdateFirmware)
-        await setup.model.updateFirmware()
+        await setup.model.updateFirmware(to: RadioViewModelFirmwareTests.forThisApp)
         #expect(setup.model.firmwareUpdate == .finished)
         #expect(setup.model.simulatorSettings.firmware == .current)
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.isReady })
+        #expect(flasher.paths.isEmpty)
+    }
+
+    @Test("on the Mac, the firmware for Android reaches the simulator, and the app stays disconnected from it")
+    func updateForAndroid() async {
+        let setup = Setup(mac: true)
+        setup.model.selectedConnection = .simulator
+        await setup.model.updateFirmware(to: RadioViewModelFirmwareTests.forAndroid)
+        #expect(setup.model.firmwareUpdate == .finishedForAndroid)
+        #expect(setup.model.simulatorSettings.firmware == .android)
+        #expect(!setup.model.isReady)
+        await setup.model.connect()
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isFirmwareOutdated })
+        #expect(setup.model.statusText == RadioViewModel.message(for: RadioFailure.firmwareForAndroid))
+    }
+
+    @Test(
+        "on iOS, firmware without BLE fails the connection and only shows messages, as with a real radio",
+        arguments: [SimulatedFirmware.android, .tooOld]
+    )
+    func messagesOnly(firmware: SimulatedFirmware) async {
+        let setup = Setup()
+        setup.model.simulatorSettings.firmware = firmware
+        setup.model.selectedConnection = .simulator
+        #expect(!setup.model.needsFirmwareUpdateElsewhere)
+        await setup.model.connect()
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.needsFirmwareUpdateElsewhere })
+        #expect(setup.model.statusText == RadioViewModel.message(for: RadioFailure.transport(.serviceNotFound)))
+        #expect(!setup.model.canUpdateFirmware)
+        await setup.model.updateFirmware(to: RadioViewModelFirmwareTests.forThisApp)
+        #expect(setup.model.firmwareUpdate == .idle)
     }
 
     @Test("losing the connection is reported as a failure")

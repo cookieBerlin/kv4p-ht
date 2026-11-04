@@ -49,7 +49,8 @@ public struct AboutInfo: Sendable {
     ]
 
     public let version: String
-    public let firmware = "Firmware \(KV4P.packagedFirmwareVersion) for USB updates"
+    public let firmware =
+        "USB updates: nightly firmware for this app, firmware \(KV4P.packagedFirmwareVersion) for Android"
 
     /// `info`: the bundle's info dictionary.
     public init(info: [String: Any]) {
