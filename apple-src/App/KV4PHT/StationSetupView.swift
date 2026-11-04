@@ -12,7 +12,7 @@ struct StationSetupView: View {
         Form {
             Section {
                 LabeledContent("Your callsign") {
-                    TextField("Your callsign", text: $callsign, prompt: Text("N0CALL"))
+                    TextField("Your callsign", text: $callsign, prompt: Text("Enter callsign"))
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
                         #if os(iOS)
@@ -26,17 +26,38 @@ struct StationSetupView: View {
                 Text("Transmitting needs an amateur radio licence. Without one, choose Listen only.")
             }
             Section {
-                Button("Continue") { model.completeStationSetup(callsign: callsign) }
-                    .disabled(!isEntered)
-                Button("Listen only") { model.chooseListenOnly() }
-            } footer: {
-                Text(ControlHelp.listenOnly)
+                explanation("Continue", ControlHelp.transmitWithCallsign)
+                explanation("Listen only", ControlHelp.listenOnly)
             }
         }
         .formStyle(.grouped)
+        .safeAreaInset(edge: .bottom, spacing: 0) { buttons }
         .interactiveDismissDisabled()
         #if os(macOS)
-            .frame(minWidth: 420, minHeight: 300)
+            .frame(minWidth: 460, minHeight: 360)
         #endif
+    }
+
+    private func explanation(_ title: String, _ text: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.subheadline.weight(.semibold))
+            Text(text).font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+    /// Next to each other, with the main choice on the right, as in the system's own dialogs.
+    private var buttons: some View {
+        HStack(spacing: 12) {
+            Button("Listen only") { model.chooseListenOnly() }
+                .buttonStyle(.bordered)
+            Button("Continue") { model.completeStationSetup(callsign: callsign) }
+                .buttonStyle(.borderedProminent)
+                .disabled(!isEntered)
+                .keyboardShortcut(.defaultAction)
+        }
+        .controlSize(.large)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding()
+        .background(.bar)
     }
 }

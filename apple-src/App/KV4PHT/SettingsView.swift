@@ -20,7 +20,7 @@ struct SettingsView: View {
         Form {
             Section("Station") {
                 LabeledContent("Your callsign") {
-                    TextField("Your callsign", text: $callsign, prompt: Text("N0CALL"))
+                    TextField("Your callsign", text: $callsign, prompt: Text("Enter callsign"))
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
                         #if os(iOS)
@@ -29,8 +29,15 @@ struct SettingsView: View {
                         #endif
                         .onChange(of: callsign) { model.callsign = callsign }
                 }
-                Toggle("Listen only", isOn: $model.isListenOnly)
-                    .explained(ControlHelp.listenOnly)
+                if let warning = model.stationWarning {
+                    Label(warning, systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("Listen only", isOn: $model.isListenOnly)
+                    Text(ControlHelp.listenOnly).font(.footnote).foregroundStyle(.secondary)
+                }
             }
 
             radio

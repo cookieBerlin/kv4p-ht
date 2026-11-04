@@ -260,6 +260,12 @@ public final class RadioViewModel {
     /// Anything may go out on air: the one rule in front of every way to transmit (ADR-0047).
     public var canSendOnAir: Bool { !callsign.isEmpty && !isListenOnly }
 
+    /// Neither of the two choices is made, so nothing goes out, which may not be what the user wants.
+    public var stationWarning: String? {
+        callsign.isEmpty && !isListenOnly
+            ? "Without a callsign, nothing goes out. Enter one, or choose Listen only." : nil
+    }
+
     /// Takes what the user entered; only an empty field keeps asking.
     public func completeStationSetup(callsign entered: String) {
         callsign = entered

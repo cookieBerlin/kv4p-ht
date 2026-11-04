@@ -193,7 +193,8 @@ licence.
   With a callsign, the iGate and the APRS-IS feed stay available. A beacon or digipeating
   you turned on stays set, and works again once you turn *Listen only* off.
 - **Without a callsign:** nothing goes out at all, also not to the iGate. Removing the
-  callsign ends a transmission at once.
+  callsign ends a transmission at once, and unless *Listen only* is on, the settings warn
+  in red.
 
 ## Opening a repeater
 

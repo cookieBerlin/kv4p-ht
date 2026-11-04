@@ -18,6 +18,7 @@ enum ControlHelp {
         static let otherAudio = "What other apps do while the radio receives or you transmit."
     #endif
     static let muteAll = "Other apps keep running silently, so a video or podcast goes on without being heard."
+    static let transmitWithCallsign = "The app can transmit, under this callsign."
     static let listenOnly =
         "The app does not transmit: no PTT, access tone, APRS messages, beacons or digipeating. With a callsign, the "
         + "iGate and the APRS-IS feed stay available."
