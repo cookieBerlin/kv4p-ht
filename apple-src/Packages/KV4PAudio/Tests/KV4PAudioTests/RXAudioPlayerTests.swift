@@ -136,4 +136,15 @@ struct RXAudioPlayerTests {
         }
         #expect(sample > 0.3)  // still faded in; a reset would have muted it
     }
+
+    @Test("a tone is heard at once, without the fade-in that hides the transient of the radio")
+    func toneSkipsFade() {
+        let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 8))
+        player.receive(tone: [16384])
+        var sample: Float = 0
+        withUnsafeMutablePointer(to: &sample) { pointer in
+            player.render(into: UnsafeMutableBufferPointer(start: pointer, count: 1))
+        }
+        #expect(sample > 0.3)
+    }
 }
