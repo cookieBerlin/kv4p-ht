@@ -19,6 +19,7 @@ public protocol RadioControlling: Actor {
     var snapshot: RadioSnapshot { get }
     func setMicGain(_ gain: MicGain)
     func setTXLimits(_ limits: TXLimits)
+    func prepareMicrophone()
     func setFreeDV(_ on: Bool)
     func startTransmitting() async throws(RadioError)
     func stopTransmitting()
@@ -157,6 +158,21 @@ public final class RadioViewModel {
     public var isStickyPTT = false {
         didSet { saveSettings() }
     }
+    /// What other apps do while the radio is busy.
+    public var otherAudioMode = OtherAudioMode.pausePodcasts {
+        didSet {
+            otherAudio?.mode = otherAudioMode
+            saveSettings()
+        }
+    }
+    /// How long the squelch stays closed before other apps return.
+    public var otherAudioResumeSeconds = 3 {
+        didSet {
+            otherAudio?.resumeAfter = .seconds(otherAudioResumeSeconds)
+            saveSettings()
+        }
+    }
+    public static let otherAudioResumeOptions = [1, 2, 3, 5, 10]
     /// The frequencies the app may transmit on, per band.
     public var txLimits = TXLimits() {
         didSet {
@@ -276,6 +292,9 @@ public final class RadioViewModel {
     private let audioOutput: (any AudioOutput)?
     private let audioSession: (any AudioSession)?
     private var audioSessionObserver: Task<Void, Never>?
+    private var otherAudio: OtherAudioController?
+    /// The finger is on PTT, or a sticky PTT was pressed; lowering other apps takes a moment.
+    private var isPTTHeld = false
     private let simulator: (any SimulatorControlling)?
     private let simulatedFlashStep: Duration
     private let simulatedSignalStep: Duration
@@ -309,6 +328,7 @@ public final class RadioViewModel {
         simulator: (any SimulatorControlling)? = nil,
         simulatedFlashStep: Duration = .milliseconds(400),
         simulatedSignalStep: Duration = .seconds(1),
+        otherAudioSleep: @escaping @Sendable (Duration) async throws -> Void = RadioViewModel.systemSleep,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -337,6 +357,16 @@ public final class RadioViewModel {
         observeInternet()
         observeAudioSession()
         observePermissions()
+        if let audioSession {
+            otherAudio = OtherAudioController(
+                session: audioSession,
+                output: audioOutput,
+                player: rxAudio,
+                prepareMicrophone: { [weak self] in await self?.controller?.prepareMicrophone() },
+                reportFailure: { [weak self] in self?.message = $0 },
+                sleep: otherAudioSleep
+            )
+        }
         restore(AppSettings(data: settings?.load()))
         refreshPermissions()
     }
@@ -349,6 +379,8 @@ public final class RadioViewModel {
         settings.callsign = callsign
         settings.micGain = micGain
         settings.isStickyPTT = isStickyPTT
+        settings.otherAudioMode = otherAudioMode
+        settings.otherAudioResumeSeconds = otherAudioResumeSeconds
         settings.isBeaconEnabled = isBeaconEnabled
         settings.beaconSymbol = beaconSymbol
         settings.beaconAccuracy = beaconAccuracy
@@ -360,6 +392,7 @@ public final class RadioViewModel {
         settings.txLimits = txLimits
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
+        settings.isSimulatorChosen = selectedConnection == .simulator
         settings.simulator = simulatorSettings
         return settings
     }
@@ -371,6 +404,8 @@ public final class RadioViewModel {
         callsign = settings.callsign
         micGain = settings.micGain
         isStickyPTT = settings.isStickyPTT
+        otherAudioMode = settings.otherAudioMode
+        otherAudioResumeSeconds = settings.otherAudioResumeSeconds
         isBeaconEnabled = settings.isBeaconEnabled
         beaconSymbol = settings.beaconSymbol
         beaconAccuracy = settings.beaconAccuracy
@@ -384,6 +419,9 @@ public final class RadioViewModel {
         simulatorSettings = settings.simulator
         if let radio = settings.bluetoothRadio {
             selectedConnection = .bluetoothDevice(radio)
+        }
+        if settings.isSimulatorChosen {
+            selectedConnection = .simulator
         }
     }
 
@@ -695,6 +733,7 @@ public final class RadioViewModel {
         packetObserver = nil
         aprsTicker?.cancel()
         aprsTicker = nil
+        await otherAudio?.stop()
         await controller?.disconnect()
         audioOutput?.stop()
         audioSession?.deactivate()
@@ -718,6 +757,7 @@ public final class RadioViewModel {
             frequency = reported
             frequencyText = HamFrequency.format(reported)
         }
+        otherAudio?.update(isBusy: isTransmitting || (isReceiving && squelch > 0))
     }
 
     private func report(_ text: String) {
@@ -742,6 +782,19 @@ public final class RadioViewModel {
         }
     }
 
+    public nonisolated static let systemSleep: @Sendable (Duration) async throws -> Void = {
+        try await Task.sleep(for: $0)
+    }
+
+    /// Only iOS has a session that can make other apps pause or get quieter.
+    public var canChooseOtherAudio: Bool { otherAudio != nil }
+
+    /// Squelch 0 is always open, so the radio could never hand the sound back.
+    public var otherAudioHint: String? {
+        guard isReady, squelch == 0, otherAudioMode.changesOtherAudio else { return nil }
+        return "While the squelch is 0, only transmitting does this."
+    }
+
     private func observeAudioSession() {
         guard let events = audioSession?.events else { return }
         audioSessionObserver = Task { [weak self] in
@@ -757,6 +810,7 @@ public final class RadioViewModel {
         guard let controller else { return }
         switch event {
         case .interruptionBegan:
+            await otherAudio?.interrupted()
             await controller.stopTransmitting()
             audioOutput?.stop()
         case .interruptionEnded(let shouldResume):
@@ -765,9 +819,11 @@ public final class RadioViewModel {
             } else {
                 message = "The audio was interrupted. Connect again to listen."
             }
+            otherAudio?.interruptionEnded(canResume: shouldResume)
         case .deviceUnavailable:
             await controller.stopTransmitting()
         case .mediaServicesReset:
+            await otherAudio?.stop()
             await controller.stopTransmitting()
             audioOutput?.stop()
             startAudio()
@@ -954,19 +1010,30 @@ public final class RadioViewModel {
         if isStickyPTT, isTransmitting {
             await controller.stopTransmitting()
         } else {
-            await controller.setMicGain(micGain)
-            do {
-                try await controller.startTransmitting()
-            } catch {
-                if error != .transmitNotAllowed { message = Self.message(for: error) }
+            isPTTHeld = true
+            await otherAudio?.readyToTransmit()
+            if isPTTHeld {
+                await controller.setMicGain(micGain)
+                do {
+                    try await controller.startTransmitting()
+                } catch {
+                    refreshPermissions()
+                    if isDenied(.microphone) {
+                        message = Permission.microphone.deniedMessage
+                    } else if error != .transmitNotAllowed {
+                        message = Self.message(for: error)
+                    }
+                }
             }
         }
         show(await controller.snapshot)
+        otherAudio?.endKeying()
     }
 
     /// `MainActivity.handlePttRelease`: ends the transmission unless PTT is sticky.
     public func releasePTT() async {
         guard !isStickyPTT, let controller else { return }
+        isPTTHeld = false
         await controller.stopTransmitting()
         show(await controller.snapshot)
     }
@@ -1181,6 +1248,11 @@ public final class RadioViewModel {
         }
     }
 
+    /// A squelch of 0 sounds like a fault: noise without a signal.
+    public var squelchWarning: String? {
+        squelch == 0 ? "Squelch 0: the speaker is always on, also without a signal." : nil
+    }
+
     public var isHighPower: Bool {
         get { snapshot.desired.flags.contains(.highPower) }
         set { update { $0.setHighPower(newValue) } }
@@ -1270,7 +1342,7 @@ public final class RadioViewModel {
         switch error {
         case .transmitNotAllowed: "Can't transmit outside the ham band."
         case .microphoneUnavailable:
-            "The microphone is not available. Allow access under Privacy & Security → Microphone in the settings."
+            "The microphone could not be started. Press PTT again."
         case .notReady, .frequencyOutOfRange: "The radio is not ready."
         case .busy: "The radio is busy transmitting or scanning."
         case .invalidPacket: "The packet cannot be sent."

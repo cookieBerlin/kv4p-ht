@@ -2,6 +2,7 @@
     import AVFoundation
     import KV4PProtocol
     import Synchronization
+    import os
 
     /// Captures the default input device and converts it to 16 kHz mono 16-bit samples. All logic lives in
     /// `TXAudioEncoder` and `RadioController`; this file is excluded from coverage (ADR-0011).
@@ -16,6 +17,8 @@
         private struct PreparedEngine: @unchecked Sendable {
             let engine: AVAudioEngine
         }
+
+        private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "microphone")
 
         private let session = Mutex<Session?>(nil)
         /// A new engine takes long to start, which PTT would feel. It is kept between transmissions.
@@ -39,7 +42,40 @@
             if AVAudioApplication.shared.recordPermission != .granted {
                 guard await AVAudioApplication.requestRecordPermission() else { throw Unavailable() }
             }
-            let engine = prepared.withLock { $0.take() }?.engine ?? AVAudioEngine()
+            if let engine = prepared.withLock({ $0.take() })?.engine {
+                do {
+                    return try capture(on: engine)
+                } catch {
+                    // A prepared engine does not survive every change of the audio session.
+                    Self.log.error("A prepared microphone engine did not start: \(error, privacy: .public)")
+                }
+            }
+            do {
+                return try capture(on: AVAudioEngine())
+            } catch {
+                Self.log.error(
+                    "The microphone did not start: \(error, privacy: .public) \(Self.sessionState, privacy: .public)"
+                )
+                throw error
+            }
+        }
+
+        /// What the system says about the input when it does not start.
+        private static var sessionState: String {
+            #if os(iOS)
+                let session = AVAudioSession.sharedInstance()
+                let inputs = session.currentRoute.inputs.map(\.portType.rawValue).joined(separator: ",")
+                let outputs = session.currentRoute.outputs.map(\.portType.rawValue).joined(separator: ",")
+                return "category=\(session.category.rawValue) options=\(session.categoryOptions.rawValue) "
+                    + "inputAvailable=\(session.isInputAvailable) channels=\(session.inputNumberOfChannels) "
+                    + "rate=\(session.sampleRate) inputs=[\(inputs)] outputs=[\(outputs)] "
+                    + "other=\(session.isOtherAudioPlaying) hint=\(session.secondaryAudioShouldBeSilencedHint)"
+            #else
+                return ""
+            #endif
+        }
+
+        private func capture(on engine: AVAudioEngine) throws -> AsyncStream<[Int16]> {
             let input = engine.inputNode
             let inputFormat = input.outputFormat(forBus: 0)
             guard inputFormat.sampleRate > 0,
@@ -75,7 +111,7 @@
                 try engine.start()
             } catch {
                 input.removeTap(onBus: 0)
-                throw Unavailable()
+                throw error
             }
             session.withLock { $0 = Session(engine: engine, continuation: continuation) }
             return samples

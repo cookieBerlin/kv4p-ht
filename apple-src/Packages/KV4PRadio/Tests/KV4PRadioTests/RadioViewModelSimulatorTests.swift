@@ -262,4 +262,27 @@ struct RadioViewModelSimulatorTests {
         unnamed.model.simulatePacket(.message)
         #expect(await RadioViewModelTests.eventually(unnamed.model) { $0.aprsEvents.first?.toCallsign == "N0CALL" })
     }
+
+    @Test("the simulator stays the chosen radio after a restart")
+    func staysChosen() {
+        let setup = Setup()
+        setup.model.selectedConnection = .simulator
+        #expect(setup.store.settings.isSimulatorChosen)
+        #expect(Setup(store: setup.store).model.selectedConnection == .simulator)
+        setup.model.selectedConnection = .bluetooth
+        #expect(!setup.store.settings.isSimulatorChosen)
+        #expect(Setup(store: setup.store).model.selectedConnection == .bluetooth)
+    }
+
+    @Test("every connection to the simulator starts with squelch 3, like its fixed frequency")
+    func startsWithSquelch() async {
+        let setup = Setup()
+        await setup.connect()
+        #expect(setup.model.squelch == 3)
+        setup.model.squelch = 5
+        #expect(await RadioViewModelTests.eventually(setup.model) { $0.squelch == 5 && $0.snapshot.isInSync })
+        await setup.model.disconnect()
+        await setup.connect()
+        #expect(setup.model.squelch == 3)
+    }
 }

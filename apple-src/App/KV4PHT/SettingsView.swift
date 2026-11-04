@@ -40,9 +40,14 @@ struct SettingsView: View {
             radioSettings
 
             #if os(iOS)
-                // A phone has no room for the volume in the header.
-                if sizeClass == .compact {
-                    Section("Audio") { VolumeSlider(model: model) }
+                Section("Audio") {
+                    // A phone has no room for the volume in the header.
+                    if sizeClass == .compact {
+                        VolumeSlider(model: model)
+                    }
+                    if model.canChooseOtherAudio {
+                        otherAudio
+                    }
                 }
             #endif
 
@@ -94,6 +99,29 @@ struct SettingsView: View {
         #endif
     }
 
+    #if os(iOS)
+        /// What other apps do while the radio is busy (ADR-0043).
+        @ViewBuilder private var otherAudio: some View {
+            Picker("Other audio", selection: $model.otherAudioMode) {
+                ForEach(OtherAudioMode.allCases, id: \.self) { Text($0.label) }
+            }
+            .explained(ControlHelp.otherAudio)
+            if model.otherAudioMode.changesOtherAudio {
+                Picker("Resume after", selection: $model.otherAudioResumeSeconds) {
+                    ForEach(RadioViewModel.otherAudioResumeOptions, id: \.self) { Text("\($0) s") }
+                }
+            }
+            if let warning = model.otherAudioMode.warning {
+                Label(warning, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+            if let hint = model.otherAudioHint {
+                Text(hint).font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+    #endif
+
     /// On a phone, the screen around the settings page shows the notices.
     private var isPage: Bool {
         #if os(iOS)
@@ -113,6 +141,11 @@ struct SettingsView: View {
             .explained(ControlHelp.bandwidth)
             Stepper("Squelch \(model.squelch)", value: $model.squelch, in: 0...8)
                 .explained(ControlHelp.squelch)
+            if let warning = model.squelchWarning {
+                Label(warning, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
             Picker("TX tone (CTCSS)", selection: $model.txTone) {
                 ForEach(CTCSS.labels, id: \.self) { Text($0) }
             }

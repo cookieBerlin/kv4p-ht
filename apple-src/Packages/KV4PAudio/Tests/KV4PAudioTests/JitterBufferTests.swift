@@ -100,4 +100,60 @@ struct JitterBufferTests {
         buffer.push([7])
         #expect(buffer.pull(1) == [7])
     }
+
+    @Test("while holding, audio that does not play yet stays up to the larger capacity, and nothing is dropped")
+    func holding() {
+        var buffer = JitterBuffer(prefill: 1, capacity: 2, holdCapacity: 6)
+        buffer.isHolding = true
+        buffer.push([1, 2, 3, 4, 5])
+        #expect(buffer.count == 5)
+        #expect(buffer.droppedSamples == 0)
+        #expect(buffer.pull(5) == [1, 2, 3, 4, 5])
+    }
+
+    @Test("even a held buffer drops the oldest samples above its larger capacity")
+    func holdingOverflow() {
+        var buffer = JitterBuffer(prefill: 1, capacity: 2, holdCapacity: 4)
+        buffer.isHolding = true
+        buffer.push([1, 2, 3, 4, 5, 6])
+        #expect(buffer.droppedSamples == 2)
+        #expect(buffer.pull(4) == [3, 4, 5, 6])
+    }
+
+    @Test("without holding, the latency stays at the normal capacity")
+    func notHolding() {
+        var buffer = JitterBuffer(prefill: 1, capacity: 2, holdCapacity: 6)
+        buffer.isHolding = true
+        buffer.push([1, 2, 3])
+        buffer.isHolding = false
+        buffer.push([4])
+        #expect(buffer.pull(2) == [3, 4])
+    }
+
+    @Test("by default about two seconds can be held, and a small capacity keeps its own limit")
+    func holdCapacity() {
+        #expect(JitterBuffer().holdCapacity == 128 * KV4P.audioBlockSamples)
+        #expect(JitterBuffer(prefill: 1, capacity: 8, holdCapacity: 2).holdCapacity == 8)
+    }
+
+    @Test("discarding empties the buffer, plays the prefill again and keeps the statistics")
+    func discard() {
+        var buffer = JitterBuffer(prefill: 2, capacity: 8)
+        buffer.push([1, 2, 3])
+        _ = buffer.pull(4)
+        buffer.push([4, 5, 6])
+        buffer.discard()
+        #expect(buffer.count == 0)
+        #expect(!buffer.isPlaying)
+        #expect(buffer.underruns == 1)
+        buffer.push([7])
+        #expect(buffer.pull(1) == [0])
+    }
+
+    @Test("a reset keeps the capacities")
+    func resetKeepsCapacities() {
+        var buffer = JitterBuffer(prefill: 1, capacity: 2, holdCapacity: 6)
+        buffer.reset()
+        #expect(buffer.holdCapacity == 6)
+    }
 }

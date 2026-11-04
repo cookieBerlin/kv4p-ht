@@ -178,6 +178,11 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
     }
 
+    /// The session switched, which ends what `prepare()` did for a quick PTT.
+    public func prepareMicrophone() {
+        microphone?.prepare()
+    }
+
     public func disconnect() async {
         helloTimer?.cancel()
         await transport.disconnect()

@@ -400,7 +400,8 @@ public struct RadioSimulator: Sendable {
                 flags: [.highPower, .rssiEnabled],
                 bandwidth: 1,
                 freqTx: frequency,
-                freqRx: frequency
+                freqRx: frequency,
+                squelch: scenario.startSquelch
             )
         state.sequence = 0
         state.flags = state.flags.intersection(Firmware.persistedFlags).union(.radioConfigValid)

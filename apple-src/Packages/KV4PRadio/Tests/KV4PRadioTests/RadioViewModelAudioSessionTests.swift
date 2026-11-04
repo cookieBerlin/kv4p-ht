@@ -14,12 +14,27 @@ final class FakeAudioSession: AudioSession {
     let events: AsyncStream<AudioSessionEvent>
     private let continuation: AsyncStream<AudioSessionEvent>.Continuation
     private let log: CallLog
-    private let fails: Bool
+    private let failing: Mutex<Bool>
+    private let lowerFails: Bool
+    private let otherAudio = Mutex(false)
 
-    init(log: CallLog, fails: Bool = false) {
+    /// With `holdsLowering`, `lowerOtherAudio` returns only after `finishLowering()`.
+    private let lowering: AsyncStream<Void>?
+    private let lowered: AsyncStream<Void>.Continuation?
+
+    init(log: CallLog, fails: Bool = false, lowerFails: Bool = false, holdsLowering: Bool = false) {
+        if holdsLowering {
+            let (lowering, lowered) = AsyncStream.makeStream(of: Void.self)
+            self.lowering = lowering
+            self.lowered = lowered
+        } else {
+            lowering = nil
+            lowered = nil
+        }
         (events, continuation) = AsyncStream.makeStream()
         self.log = log
-        self.fails = fails
+        failing = Mutex(fails)
+        self.lowerFails = lowerFails
     }
 
     func activate() throws {
@@ -29,6 +44,46 @@ final class FakeAudioSession: AudioSession {
 
     func deactivate() {
         log.append("deactivate")
+    }
+
+    var isOtherAudioPlaying: Bool {
+        get { otherAudio.withLock { $0 } }
+        set { otherAudio.withLock { $0 = newValue } }
+    }
+
+    func lowerOtherAudio(_ mode: OtherAudioMode) async throws {
+        log.append("lower \(mode.rawValue)")
+        if let lowering {
+            for await _ in lowering { break }
+        }
+        if fails || lowerFails { throw Failure() }
+    }
+
+    func silenceOtherAudio() async throws {
+        log.append("silence")
+        if let lowering {
+            for await _ in lowering { break }
+        }
+        if fails || lowerFails { throw Failure() }
+    }
+
+    func releaseOtherAudio() async {
+        log.append("release")
+    }
+
+    func mixWithOtherAudio() async throws {
+        log.append("mix")
+        if fails { throw Failure() }
+    }
+
+    private var fails: Bool { failing.withLock { $0 } }
+
+    func finishLowering() {
+        lowered?.yield()
+    }
+
+    func startFailing() {
+        failing.withLock { $0 = true }
     }
 
     func send(_ event: AudioSessionEvent) {

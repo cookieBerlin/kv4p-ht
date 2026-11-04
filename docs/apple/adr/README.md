@@ -46,3 +46,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0040](0040-screen-layout.md) | Screen layout and control explanations | Proposed |
 | [0041](0041-simulator-settings.md) | Simulator settings | Proposed |
 | [0042](0042-memory-editor.md) | Memory editor | Proposed |
+| [0043](0043-pause-other-audio.md) | Pause other audio | Proposed |

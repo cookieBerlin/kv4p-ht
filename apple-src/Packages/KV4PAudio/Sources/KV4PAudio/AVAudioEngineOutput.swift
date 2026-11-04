@@ -2,6 +2,7 @@
     import AVFoundation
     import KV4PProtocol
     import Synchronization
+    import os
 
     /// Pulls `RXAudioPlayer` samples from an `AVAudioSourceNode`; the engine resamples to the output device.
     /// All logic lives in `RXAudioPlayer`; this file is excluded from coverage (ADR-0011).
@@ -12,6 +13,8 @@
         }
 
         private struct UnsupportedFormat: Error {}
+
+        private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "output")
 
         private let session = Mutex<Session?>(nil)
 
@@ -41,7 +44,12 @@
                 object: engine,
                 queue: nil
             ) { [engine] _ in
-                try? engine.start()
+                do {
+                    try engine.start()
+                    Self.log.info("other audio: output restarted after a configuration change")
+                } catch {
+                    Self.log.error("other audio: output did not restart: \(error, privacy: .public)")
+                }
             }
             try engine.start()
             session.withLock { $0 = Session(engine: engine, observer: observer) }

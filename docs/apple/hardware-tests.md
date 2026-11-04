@@ -31,6 +31,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-22](#hw-22) | Reporting a failed connection | ⬜ | ⬜ |
 | [HW-23](#hw-23) | PTT starts quickly | ⬜ | ✅ |
 | [HW-24](#hw-24) | Memory editor | ⬜ | ⬜ |
+| [HW-25](#hw-25) | Other audio on a real radio | – | ⬜ |
 
 ## TestFlight
 
@@ -190,3 +191,12 @@ and the main list and the scan follow it. A tap opens a group or a memory. Every
 the memory form shows its label. Move and delete several memories, rename and delete a
 group. Import a RepeaterBook CSV twice into the same group: the second time, the
 assistant says that the repeaters are already there.
+
+### HW-25
+
+Play music, then a podcast, on an iPhone connected to the radio over Bluetooth, unlocked
+and locked. A second radio transmits a counted sentence: every word arrives, the podcast
+pauses, the music gets quieter, and both return after the set time. Press PTT while they
+play: a third radio hears no music. Unlock after a locked reception: PTT works at once. With
+*Keep playing*, nothing changes. With a Bluetooth headset, repeat all of this and note
+how long the first words take.

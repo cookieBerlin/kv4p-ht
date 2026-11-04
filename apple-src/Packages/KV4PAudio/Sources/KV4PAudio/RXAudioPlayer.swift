@@ -78,6 +78,16 @@ public final class RXAudioPlayer: RXAudioSink {
         }
     }
 
+    /// Keeps audio while the output cannot play it, or goes back to the normal latency (ADR-0043).
+    public func holdAudio(_ isHolding: Bool) {
+        state.withLock { $0.buffer.isHolding = isHolding }
+    }
+
+    /// Drops what is buffered without the fade-in of `reset()`, as the audio keeps going.
+    public func discardBuffered() {
+        state.withLock { $0.buffer.discard() }
+    }
+
     /// Fills `output` with samples in -1…1, silence where no audio is buffered.
     public func render(into output: UnsafeMutableBufferPointer<Float>) {
         state.withLock { state in

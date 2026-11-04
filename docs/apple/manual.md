@@ -83,7 +83,8 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
 - **Simulator:** a built-in simulated radio, to try the app without hardware. While it
   is chosen, ⚙ **Settings** has a **Simulator** section: its band, its firmware, FreeDV,
   the power switch, the radio module and whether it answers, which apply at the next
-  connection and are locked while connected. **Update firmware…** runs a simulated update
+  connection and are locked while connected. The app remembers that the simulator was
+  chosen. Each connection starts with squelch 3, as with its fixed frequency. **Update firmware…** runs a simulated update
   that gives it the current firmware. While it is connected, **Simulator actions** set a received signal, ramp it through all
   strengths up and down, lose the connection and receive APRS test packets. A weak signal
   is quiet noise, out of which the tone grows up to S9; a real FM signal stays equally
@@ -108,7 +109,8 @@ disconnect yourself:
   becomes 146.7 MHz and frequencies outside the module range are set to the
   nearest limit. RX and TX use the same frequency (simplex); repeater offsets come
   with memories.
-- **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8.
+- **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8. With 0, the speaker is always on, also without a
+  signal; the settings warn about it in red.
 - **TX/RX tone (CTCSS):** one of the 38 standard tones or *None*.
 - **High power** and the **audio filters** (pre-emphasis, high-pass, low-pass).
 - **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*, also as text. The bars are
@@ -128,6 +130,21 @@ disconnect yourself:
   APRS, digipeating and the iGate. Disconnect to save the battery. Position
   beacons wait until the app is on screen again, because iOS only gives the app
   your location while you use it.
+- 📱 **Other audio:** while the squelch is open or you transmit, podcasts of other apps
+  pause and music gets quieter. They return once the squelch has stayed closed for the
+  time set under **Resume after**, 3 s by default. Choose it in ⚙ **Settings** under
+  *Other audio*: *Pause podcasts, lower music*, *Lower all* or *Keep playing*.
+  - No received audio gets lost. While other apps play, it comes up to a second late,
+    as the system stops the audio for each switch.
+  - PTT pauses all other apps, also music and with *Lower all*, so that nothing goes on
+    air. This takes up to a second; while no other app plays, PTT stays instant. They
+    return after the same time. With *Keep playing* they go on, and the microphone can
+    send them on air, so the settings warn about it.
+  - A received APRS packet counts too, as the app cannot tell it from voice. With
+    frequent packets, choose *Keep playing*.
+  - With squelch 0 the squelch is always open, so only transmitting does this.
+  - Podcast apps decide themselves whether they continue. If one stays paused, choose
+    *Lower all*.
 - **Simulator:** *Received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
   open.
 
@@ -312,7 +329,8 @@ The app warns when the radio's firmware is older than required or missing
 | *This device is not a kv4p HT, or its firmware has no Bluetooth LE service.* | Use USB, or update to firmware with Bluetooth LE ([FAQ](faq.md#which-firmware-do-i-need)). |
 | *Bluetooth access is not allowed.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Bluetooth. |
 | *… cannot be opened.* | Close other apps that use the USB port. |
-| *The microphone is not available.* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
+| *Microphone access is not allowed…* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
+| *The microphone could not be started.* | Press PTT again. If it stays, another app may be using the microphone, or restart the app. |
 | *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings**. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
