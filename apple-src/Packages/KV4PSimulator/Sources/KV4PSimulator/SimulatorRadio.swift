@@ -72,6 +72,7 @@ public struct SimulatorSettings: Codable, Equatable, Sendable {
         if !hasPowerSwitch { scenario.features.remove(.highLowPower) }
         scenario.radioModuleStatus = hasRadioModule ? .found : .notFound
         scenario.faults.omitsHello = !answers
+        scenario.startSquelch = 3  // shows the squelch at work; 0 would keep the speaker on
         return scenario
     }
 }

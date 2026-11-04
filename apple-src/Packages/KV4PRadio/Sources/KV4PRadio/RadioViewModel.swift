@@ -392,6 +392,7 @@ public final class RadioViewModel {
         settings.txLimits = txLimits
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
+        settings.isSimulatorChosen = selectedConnection == .simulator
         settings.simulator = simulatorSettings
         return settings
     }
@@ -418,6 +419,9 @@ public final class RadioViewModel {
         simulatorSettings = settings.simulator
         if let radio = settings.bluetoothRadio {
             selectedConnection = .bluetoothDevice(radio)
+        }
+        if settings.isSimulatorChosen {
+            selectedConnection = .simulator
         }
     }
 
@@ -806,7 +810,7 @@ public final class RadioViewModel {
         guard let controller else { return }
         switch event {
         case .interruptionBegan:
-            await otherAudio?.stop()
+            await otherAudio?.interrupted()
             await controller.stopTransmitting()
             audioOutput?.stop()
         case .interruptionEnded(let shouldResume):
@@ -815,6 +819,7 @@ public final class RadioViewModel {
             } else {
                 message = "The audio was interrupted. Connect again to listen."
             }
+            otherAudio?.interruptionEnded(canResume: shouldResume)
         case .deviceUnavailable:
             await controller.stopTransmitting()
         case .mediaServicesReset:

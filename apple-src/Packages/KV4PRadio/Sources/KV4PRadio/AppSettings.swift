@@ -55,6 +55,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var selectedGroup: String?
     /// The radio chosen over Bluetooth; `nil` for the first one found (ADR-0038).
     public var bluetoothRadio: BLEDevice?
+    /// The simulator was the chosen radio, so the next start has it chosen again.
+    public var isSimulatorChosen = false
     /// How the simulated radio behaves, for testing; local to the device (ADR-0041).
     public var simulator = SimulatorSettings()
 
@@ -93,6 +95,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)
+        isSimulatorChosen = values.value(.isSimulatorChosen, or: defaults.isSimulatorChosen)
         simulator = values.value(.simulator, or: defaults.simulator)
     }
 

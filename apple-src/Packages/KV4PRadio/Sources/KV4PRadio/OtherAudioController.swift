@@ -42,6 +42,8 @@ final class OtherAudioController {
 
     private var phase = Phase.mixing
     private var isBusy = false
+    /// An interruption ended what this controller would have handed back.
+    private var owesHandBack = false
     /// PTT is waiting to open the microphone.
     private var isKeying = false
     /// The switch being made; there is only ever one.
@@ -93,12 +95,32 @@ final class OtherAudioController {
         note("stop")
         isBusy = false
         isKeying = false
+        owesHandBack = false
         await step?.value
         timer?.cancel()
         timer = nil
         phase = .mixing
         player.holdAudio(false)
         resumeWaiters()
+    }
+
+    /// The system took the audio. Other apps that this app lowered or paused still wait for their sound.
+    func interrupted() async {
+        await step?.value  // a switch may be under way
+        let owesHandBack = phase != .mixing
+        await stop()
+        self.owesHandBack = owesHandBack
+    }
+
+    /// The system gave the audio back. Without `canResume` the radio stays silent, but other apps can go on.
+    func interruptionEnded(canResume: Bool) {
+        guard owesHandBack else { return }
+        owesHandBack = false
+        if canResume {
+            run { await self.release() }
+        } else {
+            run { await self.session.releaseOtherAudio() }
+        }
     }
 
     private func advance() {

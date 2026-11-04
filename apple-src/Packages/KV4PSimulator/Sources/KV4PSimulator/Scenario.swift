@@ -8,6 +8,8 @@ public struct Scenario: Equatable, Sendable {
     public var moduleType = RFModuleType.sa818VHF
     /// MHz; `nil` for the default of the firmware.
     public var startFrequency: Float?
+    /// The squelch of a new device, 0 as in the firmware.
+    public var startSquelch: UInt8 = 0
     public var features: FirmwareFeatures = [.highLowPower, .esp32AFSK]
     public var windowSize = Firmware.usbWindowSize
     /// Desired state stored in flash; `nil` for a new device.
