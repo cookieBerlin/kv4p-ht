@@ -37,6 +37,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var callsign = ""
     public var micGain = MicGain.none
     public var isStickyPTT = false
+    /// What other apps do while the radio is busy; local to the device, also for settings sync (3.8).
+    public var otherAudioMode = OtherAudioMode.pausePodcasts
+    /// How long the squelch stays closed before other apps return.
+    public var otherAudioResumeSeconds = 3
     public var isBeaconEnabled = false
     public var beaconSymbol = APRSSymbol.phone
     public var beaconAccuracy = BeaconAccuracy.exact
@@ -74,6 +78,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         callsign = values.value(.callsign, or: defaults.callsign)
         micGain = values.value(.micGain, or: defaults.micGain)
         isStickyPTT = values.value(.isStickyPTT, or: defaults.isStickyPTT)
+        otherAudioMode = values.value(.otherAudioMode, or: defaults.otherAudioMode)
+        otherAudioResumeSeconds = values.value(.otherAudioResumeSeconds, or: defaults.otherAudioResumeSeconds)
         isBeaconEnabled = values.value(.isBeaconEnabled, or: defaults.isBeaconEnabled)
         beaconSymbol = values.value(.beaconSymbol, or: defaults.beaconSymbol)
         let former = try decoder.container(keyedBy: FormerKeys.self)
