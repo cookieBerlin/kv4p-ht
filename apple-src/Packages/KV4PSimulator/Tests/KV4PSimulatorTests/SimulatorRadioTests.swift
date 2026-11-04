@@ -26,8 +26,7 @@ struct SimulatorRadioTests {
     func changes() {
         var settings = SimulatorSettings()
         settings.band = .uhf
-        settings.hasCurrentFirmware = false
-        settings.hasFreeDVModem = false
+        settings.firmware = .tooOld
         settings.hasPowerSwitch = false
         settings.hasRadioModule = false
         settings.answers = false
@@ -39,6 +38,40 @@ struct SimulatorRadioTests {
         #expect(!scenario.features.contains(.highLowPower))
         #expect(scenario.radioModuleStatus == .notFound)
         #expect(scenario.faults.omitsHello)
+    }
+
+    @Test("the firmware choices report what the real firmware reports")
+    func firmwares() {
+        var settings = SimulatorSettings()
+        #expect(settings.firmware == .current)
+        settings.firmware = .android
+        #expect(settings.scenario.firmwareVersion == Firmware.version)
+        #expect(!settings.scenario.features.contains(.freeDV2400B))
+        #expect(SimulatedFirmware.allCases.map(\.label) == ["For this app", "For Android", "Too old"])
+    }
+
+    @Test(
+        "over Bluetooth, firmware without BLE fails the connection like a real radio",
+        arguments: [SimulatedFirmware.android, .tooOld]
+    )
+    func noBluetoothService(firmware: SimulatedFirmware) async {
+        let radio = SimulatorRadio(clock: ManualClock(), isOverBluetooth: true)
+        radio.settings.firmware = firmware
+        let transport = radio.makeTransport()
+        await #expect(throws: TransportError.serviceNotFound) { try await transport.connect() }
+    }
+
+    @Test("over Bluetooth, the firmware for this app connects; over USB, every firmware does")
+    func connects() async throws {
+        let bluetooth = SimulatorRadio(clock: ManualClock(), isOverBluetooth: true)
+        let transport = bluetooth.makeTransport()
+        try await transport.connect()
+        await transport.disconnect()
+        let usb = SimulatorRadio(clock: ManualClock())
+        usb.settings.firmware = .android
+        let cable = usb.makeTransport()
+        try await cable.connect()
+        await cable.disconnect()
     }
 
     @Test("each strength shows as its value on the S-meter", arguments: SimulatedSignal.allCases)

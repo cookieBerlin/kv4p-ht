@@ -113,7 +113,7 @@ struct RadioViewModelAccessToneTests {
 
     @Test("the button needs a tone, a radio, the microphone permission and analog voice")
     func offered() async {
-        let setup = Setup(scenario: .freeDV)
+        let setup = Setup(scenario: .ble)
         #expect(!setup.model.canSendAccessTone)
         setup.model.accessToneHz = 1750
         #expect(!setup.model.canSendAccessTone)  // no radio

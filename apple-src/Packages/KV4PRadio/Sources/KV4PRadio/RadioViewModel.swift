@@ -720,7 +720,8 @@ public final class RadioViewModel {
     /// `outdatedFirmware` / `missingFirmware`: the radio's firmware is older than required, or it did not answer.
     public var isFirmwareOutdated: Bool {
         switch snapshot.status {
-        case .failed(.firmwareTooOld), .failed(.invalidHello), .failed(.helloTimeout): true
+        case .failed(.firmwareTooOld), .failed(.firmwareForAndroid), .failed(.invalidHello), .failed(.helloTimeout):
+            true
         default: false
         }
     }
@@ -746,7 +747,7 @@ public final class RadioViewModel {
             reporter.finish()
             await progress.value
             firmwareUpdate = .finished
-            if canConfigureSimulator { simulatorSettings.hasCurrentFirmware = true }
+            if canConfigureSimulator { simulatorSettings.firmware = .current }
             await connect()
         } catch {
             reporter.finish()
@@ -1443,9 +1444,12 @@ public final class RadioViewModel {
 
     static func message(for failure: RadioFailure) -> String {
         switch failure {
-        case .helloTimeout: "The radio did not answer. Check that it is on and has firmware 17 or later."
-        case .invalidHello: "The firmware of the radio is too old. Update it to version 17 or later."
-        case .firmwareTooOld(let version): "Firmware \(version) is too old. Update the radio to version 17 or later."
+        case .helloTimeout: "The radio did not answer. Check that it is on and has the firmware for this app."
+        case .invalidHello: "The firmware of the radio is too old. Update it to the firmware for this app."
+        case .firmwareTooOld(let version): "Firmware \(version) is too old. Update it to the firmware for this app."
+        case .firmwareForAndroid:
+            "This radio has the firmware for the Android app, with which this app has no sound. "
+                + "Update it to the firmware for this app."
         case .radioModuleNotFound: "The SA818 radio module did not respond. Restart the radio."
         case .transport(let error): message(for: error)
         }
@@ -1479,7 +1483,9 @@ public final class RadioViewModel {
             "Bluetooth access is not allowed. Allow it under Privacy & Security → Bluetooth in the settings."
         case .bluetoothUnavailable(.poweredOff): "Bluetooth is off."
         case .bluetoothUnavailable: "Bluetooth is not available."
-        case .serviceNotFound: "This device is not a kv4p HT, or its firmware has no Bluetooth LE service."
+        case .serviceNotFound:
+            "This device is not a kv4p HT, or its firmware has no Bluetooth LE service. "
+                + "Update it to the firmware for this app."
         case .connectionLost: "The connection to the radio was lost."
         case .portUnavailable(let path, _): "\(path) cannot be opened."
         default: "The connection failed."

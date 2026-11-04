@@ -212,7 +212,7 @@ struct RadioViewModelSimulatorTests {
     @Test("too old firmware offers the update, not the web flasher, and the update fixes it")
     func update() async {
         let setup = Setup()
-        setup.model.simulatorSettings.hasCurrentFirmware = false
+        setup.model.simulatorSettings.firmware = .tooOld
         setup.model.selectedConnection = .simulator
         await setup.model.connect()
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.isFirmwareOutdated })
@@ -220,7 +220,7 @@ struct RadioViewModelSimulatorTests {
         #expect(setup.model.canUpdateFirmware)
         await setup.model.updateFirmware()
         #expect(setup.model.firmwareUpdate == .finished)
-        #expect(setup.model.simulatorSettings.hasCurrentFirmware)
+        #expect(setup.model.simulatorSettings.firmware == .current)
         #expect(await RadioViewModelTests.eventually(setup.model) { $0.isReady })
     }
 

@@ -30,7 +30,7 @@ struct RadioControllerTests {
 
     @Test("the controller runs on the continuous clock by default, with FreeDV available")
     func continuousClock() async throws {
-        let controller = RadioController(transport: SimulatorTransport(simulator: RadioSimulator(scenario: .freeDV)))
+        let controller = RadioController(transport: SimulatorTransport(simulator: RadioSimulator(scenario: .ble)))
         var snapshots = controller.snapshots.makeAsyncIterator()
         await controller.connect()
         _ = try #require(await snapshots.next { $0.status == .ready })
@@ -82,6 +82,20 @@ struct RadioControllerTests {
         let setup = Setup()
         await #expect(throws: RadioError.notReady) { try await setup.controller.tune(rx: 146.52, tx: 146.52) }
         #expect(await setup.controller.snapshot.sMeter == 0)
+    }
+
+    @Test("firmware 17 without the FreeDV modem is the Android firmware and is refused, as it has no sound here")
+    func firmwareForAndroid() async throws {
+        var setup = Setup(.androidFirmware)
+        await setup.controller.connect()
+        #expect(await setup.snapshots.next { $0.status == .failed(.firmwareForAndroid) } != nil)
+    }
+
+    @Test("a later firmware without the FreeDV modem is accepted")
+    func laterWithoutFreeDV() async throws {
+        var setup = Setup(.noFreeDVModem)
+        await setup.controller.connect()
+        #expect(await setup.snapshots.next { $0.status == .ready } != nil)
     }
 
     @Test("old firmware is refused")

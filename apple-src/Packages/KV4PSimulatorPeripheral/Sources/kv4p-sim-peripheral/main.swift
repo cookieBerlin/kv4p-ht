@@ -50,7 +50,7 @@
         print(usage)
         exit(1)
     }
-    var scenario = Scenario.freeDV
+    var scenario = Scenario.ble
     if arguments.contains("--uhf") {
         scenario.moduleType = .sa818UHF
     }

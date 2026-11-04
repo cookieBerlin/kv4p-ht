@@ -296,11 +296,9 @@ struct SimulatorSettings: View {
                 Picker("Band", selection: $model.simulatorSettings.band) {
                     ForEach(SimulatedBand.allCases, id: \.self) { Text($0.label) }
                 }
-                Picker("Firmware", selection: $model.simulatorSettings.hasCurrentFirmware) {
-                    Text("Current").tag(true)
-                    Text("Too old").tag(false)
+                Picker("Firmware", selection: $model.simulatorSettings.firmware) {
+                    ForEach(SimulatedFirmware.allCases, id: \.self) { Text($0.label) }
                 }
-                Toggle("FreeDV modem", isOn: $model.simulatorSettings.hasFreeDVModem)
                 Toggle("Power switch", isOn: $model.simulatorSettings.hasPowerSwitch)
                 Toggle("SA818 module found", isOn: $model.simulatorSettings.hasRadioModule)
                 Toggle("Radio answers", isOn: $model.simulatorSettings.answers)

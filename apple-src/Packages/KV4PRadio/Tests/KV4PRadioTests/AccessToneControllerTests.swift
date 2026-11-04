@@ -230,9 +230,7 @@ struct AccessToneControllerTests {
         await #expect(throws: RadioError.busy) { try await setup.controller.sendAccessTone(Self.tone) }
         await setup.controller.stopTransmitting()
 
-        var scenario = Scenario.ble
-        scenario.features.insert(.freeDV2400B)
-        var digital = Setup(scenario: scenario)
+        var digital = Setup(scenario: .ble)
         try await digital.ready()
         await digital.controller.update { $0.setFreeDV(true) }
         await #expect(throws: RadioError.busy) { try await digital.controller.sendAccessTone(Self.tone) }

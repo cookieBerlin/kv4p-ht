@@ -10,7 +10,7 @@ public struct Scenario: Equatable, Sendable {
     public var startFrequency: Float?
     /// The squelch of a new device, 0 as in the firmware.
     public var startSquelch: UInt8 = 0
-    public var features: FirmwareFeatures = [.highLowPower, .esp32AFSK]
+    public var features: FirmwareFeatures = [.highLowPower, .esp32AFSK, .freeDV2400B]
     public var windowSize = Firmware.usbWindowSize
     /// Desired state stored in flash; `nil` for a new device.
     public var storedState: RadioState?
@@ -23,8 +23,13 @@ public struct Scenario: Equatable, Sendable {
     public static let uhf = Scenario().with { $0.moduleType = .sa818UHF }
     public static let ble = Scenario().with { $0.windowSize = Firmware.bleWindowSize }
     public static let noRadioModule = Scenario().with { $0.radioModuleStatus = .notFound }
-    /// The current firmware source, which has the FreeDV 2400B modem (`getFirmwareFeatures`), over BLE.
-    public static let freeDV = ble.with { $0.features.insert(.freeDV2400B) }
+    /// A later firmware that happens to lack the FreeDV 2400B modem, which firmware 17 for this app always has.
+    public static let noFreeDVModem = ble.with {
+        $0.firmwareVersion = Firmware.version + 1
+        $0.features.remove(.freeDV2400B)
+    }
+    /// The released firmware 17: Opus voice for the Android app, without the FreeDV bit (ADR-0049).
+    public static let androidFirmware = ble.with { $0.features.remove(.freeDV2400B) }
 
     /// `moduleMinRadioFreq()` … `moduleMaxRadioFreq()`, MHz.
     var frequencyRange: ClosedRange<Float> { moduleType == .sa818UHF ? 400...480 : 134...174 }
@@ -97,6 +102,8 @@ public struct Faults: Equatable, Sendable {
     public var dropsWindowUpdates = false
     /// The SA818 answers at boot but not afterwards, so the next radio command stalls the firmware.
     public var radioModuleStopsResponding = false
+    /// Over Bluetooth, the firmware offers no BLE service, so that the connection fails as with a real radio.
+    public var hasNoBluetoothService = false
 
     public init() {}
 }
