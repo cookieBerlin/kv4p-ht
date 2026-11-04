@@ -2,6 +2,7 @@ import KV4PAudio
 import KV4PPersistence
 import KV4PSimulator
 import KV4PTestSupport
+import KV4PTransport
 import Testing
 
 @testable import KV4PProtocol

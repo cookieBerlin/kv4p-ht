@@ -25,6 +25,7 @@ public protocol RadioControlling: Actor {
     func stopTransmitting()
     func tune(to memory: ChannelMemory) throws(RadioError)
     func transmitAX25(_ frame: [UInt8], frequency: Float) throws(RadioError)
+    func sendAccessTone(_ tone: AccessTone) async throws(RadioError) -> AccessToneResult
     func startScan(_ memories: [ChannelMemory]) throws(RadioError)
     func stopScan()
 }
@@ -156,6 +157,16 @@ public final class RadioViewModel {
     }
     /// A PTT press starts transmitting, the next one ends it (Android "Sticky PTT").
     public var isStickyPTT = false {
+        didSet { saveSettings() }
+    }
+    /// The tone that opens a repeater, in Hz; 0 for none.
+    public var accessToneHz = 0 {
+        didSet { saveSettings() }
+    }
+    public var accessToneLengthMs = AccessTone.defaultLengthMs {
+        didSet { saveSettings() }
+    }
+    public var accessToneWaitMs = AccessTone.defaultWaitMs {
         didSet { saveSettings() }
     }
     /// What other apps do while the radio is busy.
@@ -386,6 +397,9 @@ public final class RadioViewModel {
         settings.callsign = callsign
         settings.micGain = micGain
         settings.isStickyPTT = isStickyPTT
+        settings.accessToneHz = accessToneHz
+        settings.accessToneLengthMs = accessToneLengthMs
+        settings.accessToneWaitMs = accessToneWaitMs
         settings.otherAudioMode = otherAudioMode
         settings.otherAudioResumeSeconds = otherAudioResumeSeconds
         settings.isBeaconEnabled = isBeaconEnabled
@@ -411,6 +425,9 @@ public final class RadioViewModel {
         callsign = settings.callsign
         micGain = settings.micGain
         isStickyPTT = settings.isStickyPTT
+        accessToneHz = settings.accessToneHz
+        accessToneLengthMs = settings.accessToneLengthMs
+        accessToneWaitMs = settings.accessToneWaitMs
         otherAudioMode = otherAudioModes.contains(settings.otherAudioMode) ? settings.otherAudioMode : .keepPlaying
         otherAudioResumeSeconds = settings.otherAudioResumeSeconds
         isBeaconEnabled = settings.isBeaconEnabled
@@ -764,7 +781,9 @@ public final class RadioViewModel {
             frequency = reported
             frequencyText = HamFrequency.format(reported)
         }
-        otherAudio?.update(isBusy: isTransmitting || (isReceiving && squelch > 0))
+        // The access tone keeps the microphone closed, so nothing of other apps goes on air.
+        let isUsingMicrophone = isTransmitting && !snapshot.isSendingAccessTone
+        otherAudio?.update(isBusy: isUsingMicrophone || (isReceiving && squelch > 0))
     }
 
     private func report(_ text: String) {
@@ -1041,6 +1060,45 @@ public final class RadioViewModel {
     public func releasePTT() async {
         guard !isStickyPTT, let controller else { return }
         isPTTHeld = false
+        await controller.stopTransmitting()
+        show(await controller.snapshot)
+    }
+
+    // MARK: Access tone
+
+    /// The tone that opens a repeater: the settings, and what the memory tuned to says instead (ADR-0045).
+    public var accessTone: AccessTone? {
+        let memory = memories.first { $0.id == activeMemoryId }
+        let frequency = memory?.accessToneHz ?? accessToneHz
+        guard frequency > 0 else { return nil }
+        let length = memory?.accessToneLengthMs ?? accessToneLengthMs
+        return AccessTone(frequency: frequency, lengthMs: length, waitMs: accessToneWaitMs)
+    }
+
+    public var canSendAccessTone: Bool {
+        accessTone != nil && isReady && !isDenied(.microphone) && !isFreeDV
+    }
+
+    public var isSendingAccessTone: Bool { snapshot.isSendingAccessTone }
+
+    /// Sends the tone, and returns when it is over.
+    public func pressAccessTone() async {
+        guard let controller, let tone = accessTone else { return }
+        do {
+            switch try await controller.sendAccessTone(tone) {
+            case .finished: break
+            case .stopped: message = "The tone was cut short, so the repeater may not have opened."
+            case .radioNotTransmitting: message = "The radio did not start transmitting, so no tone went out."
+            }
+        } catch {
+            if error != .transmitNotAllowed { message = Self.message(for: error) }
+        }
+        show(await controller.snapshot)
+    }
+
+    /// A tone that is still going out ends at once; a finished one has nothing left to end.
+    public func releaseAccessTone() async {
+        guard let controller else { return }
         await controller.stopTransmitting()
         show(await controller.snapshot)
     }

@@ -12,6 +12,8 @@ final class StoredMemory {
     var rxTone: String
     var group: String
     var skipDuringScan: Bool
+    var accessToneHz: Int?
+    var accessToneLengthMs: Int?
     /// The place in the stored order, from 1; 0 in a store of an earlier version, until it is migrated.
     var position: Int = 0
 
@@ -26,6 +28,8 @@ final class StoredMemory {
         rxTone = memory.rxTone
         group = memory.group
         skipDuringScan = memory.skipDuringScan
+        accessToneHz = memory.accessToneHz
+        accessToneLengthMs = memory.accessToneLengthMs
     }
 
     func update(from memory: ChannelMemory) {
@@ -37,6 +41,8 @@ final class StoredMemory {
         rxTone = memory.rxTone
         group = memory.group
         skipDuringScan = memory.skipDuringScan
+        accessToneHz = memory.accessToneHz
+        accessToneLengthMs = memory.accessToneLengthMs
     }
 
     var memory: ChannelMemory {
@@ -49,7 +55,9 @@ final class StoredMemory {
             txTone: txTone,
             rxTone: rxTone,
             group: group,
-            skipDuringScan: skipDuringScan
+            skipDuringScan: skipDuringScan,
+            accessToneHz: accessToneHz,
+            accessToneLengthMs: accessToneLengthMs
         )
     }
 }

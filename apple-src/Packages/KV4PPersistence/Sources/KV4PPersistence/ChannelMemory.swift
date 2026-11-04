@@ -20,6 +20,10 @@ public struct ChannelMemory: Equatable, Identifiable, Sendable {
     /// Empty for no group.
     public var group: String
     public var skipDuringScan: Bool
+    /// The tone that opens the repeater, in Hz: 0 for none, `nil` to follow the settings.
+    public var accessToneHz: Int?
+    /// How long that tone lasts, in ms; `nil` to follow the settings.
+    public var accessToneLengthMs: Int?
 
     public init(
         id: Int32 = 0,
@@ -30,7 +34,9 @@ public struct ChannelMemory: Equatable, Identifiable, Sendable {
         txTone: String = "None",
         rxTone: String = "None",
         group: String = "",
-        skipDuringScan: Bool = false
+        skipDuringScan: Bool = false,
+        accessToneHz: Int? = nil,
+        accessToneLengthMs: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -41,6 +47,8 @@ public struct ChannelMemory: Equatable, Identifiable, Sendable {
         self.rxTone = rxTone
         self.group = group
         self.skipDuringScan = skipDuringScan
+        self.accessToneHz = accessToneHz
+        self.accessToneLengthMs = accessToneLengthMs
     }
 
     /// The distinct, non-empty group names, in the order of their memories.
