@@ -9,6 +9,10 @@ public struct JitterBuffer: Sendable {
     /// Samples buffered before playback starts or resumes.
     public let prefill: Int
     public let capacity: Int
+    /// The limit while `isHolding`, as long as the longest switch of the audio session takes (ADR-0043).
+    public let holdCapacity: Int
+    /// Keeps audio that cannot play yet instead of dropping it above `capacity`.
+    public var isHolding = false
     public private(set) var count = 0
     public private(set) var isPlaying = false
     public private(set) var underruns = 0
@@ -17,21 +21,27 @@ public struct JitterBuffer: Sendable {
     private var ring: [Int16]
     private var head = 0
 
-    public init(prefill: Int = 4 * KV4P.audioBlockSamples, capacity: Int = 16 * KV4P.audioBlockSamples) {
+    public init(
+        prefill: Int = 4 * KV4P.audioBlockSamples,
+        capacity: Int = 16 * KV4P.audioBlockSamples,
+        holdCapacity: Int = 128 * KV4P.audioBlockSamples
+    ) {
         self.prefill = min(prefill, capacity)
         self.capacity = capacity
-        ring = Array(repeating: 0, count: capacity)
+        self.holdCapacity = max(capacity, holdCapacity)
+        ring = Array(repeating: 0, count: self.holdCapacity)
     }
 
     public mutating func push(_ samples: some Collection<Int16>) {
-        let kept = samples.suffix(capacity)
+        let limit = isHolding ? holdCapacity : capacity
+        let kept = samples.suffix(limit)
         droppedSamples += samples.count - kept.count
-        let overflow = max(0, count + kept.count - capacity)
+        let overflow = max(0, count + kept.count - limit)
         droppedSamples += overflow
-        head = (head + overflow) % capacity
+        head = (head + overflow) % ring.count
         count -= overflow
         for sample in kept {
-            ring[(head + count) % capacity] = sample
+            ring[(head + count) % ring.count] = sample
             count += 1
         }
     }
@@ -43,9 +53,9 @@ public struct JitterBuffer: Sendable {
         }
         let available = isPlaying ? min(count, output.count) : 0
         for index in 0..<available {
-            output[index] = ring[(head + index) % capacity]
+            output[index] = ring[(head + index) % ring.count]
         }
-        head = (head + available) % capacity
+        head = (head + available) % ring.count
         count -= available
         if available < output.count {
             UnsafeMutableBufferPointer(rebasing: output[available...]).update(repeating: 0)
@@ -57,6 +67,12 @@ public struct JitterBuffer: Sendable {
     }
 
     public mutating func reset() {
-        self = JitterBuffer(prefill: prefill, capacity: capacity)
+        self = JitterBuffer(prefill: prefill, capacity: capacity, holdCapacity: holdCapacity)
+    }
+
+    /// Drops what is buffered, e.g. the silence of a closed squelch; the statistics stay.
+    public mutating func discard() {
+        count = 0
+        isPlaying = false
     }
 }

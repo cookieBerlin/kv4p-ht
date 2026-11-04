@@ -6,6 +6,7 @@
     public final class AVAudioSessionAdapter: AudioSession, @unchecked Sendable {
         public let events: AsyncStream<AudioSessionEvent>
         private let observers: [any NSObjectProtocol]
+        private let queue = DispatchQueue(label: "kv4p.audio-session", qos: .userInitiated)
 
         public init() {
             let (events, continuation) = AsyncStream.makeStream(of: AudioSessionEvent.self)
@@ -49,16 +50,52 @@
         }
 
         public func activate() throws {
+            // Other apps keep playing.
+            try activate(otherAudio: .mixWithOthers)
+        }
+
+        private func activate(otherAudio: AVAudioSession.CategoryOptions) throws {
             let session = AVAudioSession.sharedInstance()
-            // The speaker instead of the earpiece; Bluetooth headsets for both directions; other apps keep playing.
+            // The speaker instead of the earpiece; Bluetooth headsets for both directions.
             try session.setCategory(
                 .playAndRecord,
                 mode: .default,
-                options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .mixWithOthers]
+                options: otherAudio.union([.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP])
             )
             // iOS mutes haptics during a recording session by default, and PTT confirms a press with one.
             try session.setAllowHapticsAndSystemSoundsDuringRecording(true)
             try session.setActive(true)
+        }
+
+        /// Session calls block for up to a second, too long for the main thread.
+        private func onSessionQueue<T: Sendable>(_ call: @escaping @Sendable () throws -> T) async throws -> T {
+            try await withCheckedThrowingContinuation { continuation in
+                queue.async { continuation.resume(with: Result(catching: call)) }
+            }
+        }
+
+        public var isOtherAudioPlaying: Bool {
+            AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
+        }
+
+        public func lowerOtherAudio(_ mode: OtherAudioMode) async throws {
+            let options: AVAudioSession.CategoryOptions =
+                mode == .pausePodcasts ? [.interruptSpokenAudioAndMixWithOthers, .duckOthers] : .duckOthers
+            try await onSessionQueue { [self] in
+                // Locked, iOS refuses a new category for an active session (`cannotInterruptOthers`).
+                try AVAudioSession.sharedInstance().setActive(false)
+                try activate(otherAudio: options)
+            }
+        }
+
+        public func releaseOtherAudio() async {
+            try? await onSessionQueue {
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            }
+        }
+
+        public func mixWithOtherAudio() async throws {
+            try await onSessionQueue { [self] in try activate(otherAudio: .mixWithOthers) }
         }
 
         public func deactivate() {

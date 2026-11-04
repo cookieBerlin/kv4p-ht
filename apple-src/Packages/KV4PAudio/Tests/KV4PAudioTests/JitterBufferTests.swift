@@ -108,7 +108,7 @@ struct JitterBufferTests {
         buffer.push([1, 2, 3, 4, 5])
         #expect(buffer.count == 5)
         #expect(buffer.droppedSamples == 0)
-        #expect(pull(&buffer, count: 5) == [1, 2, 3, 4, 5])
+        #expect(buffer.pull(5) == [1, 2, 3, 4, 5])
     }
 
     @Test("even a held buffer drops the oldest samples above its larger capacity")
@@ -117,7 +117,7 @@ struct JitterBufferTests {
         buffer.isHolding = true
         buffer.push([1, 2, 3, 4, 5, 6])
         #expect(buffer.droppedSamples == 2)
-        #expect(pull(&buffer, count: 4) == [3, 4, 5, 6])
+        #expect(buffer.pull(4) == [3, 4, 5, 6])
     }
 
     @Test("without holding, the latency stays at the normal capacity")
@@ -127,7 +127,7 @@ struct JitterBufferTests {
         buffer.push([1, 2, 3])
         buffer.isHolding = false
         buffer.push([4])
-        #expect(pull(&buffer, count: 2) == [3, 4])
+        #expect(buffer.pull(2) == [3, 4])
     }
 
     @Test("by default about two seconds can be held, and a small capacity keeps its own limit")
@@ -140,14 +140,14 @@ struct JitterBufferTests {
     func discard() {
         var buffer = JitterBuffer(prefill: 2, capacity: 8)
         buffer.push([1, 2, 3])
-        _ = pull(&buffer, count: 4)
+        _ = buffer.pull(4)
         buffer.push([4, 5, 6])
         buffer.discard()
         #expect(buffer.count == 0)
         #expect(!buffer.isPlaying)
         #expect(buffer.underruns == 1)
         buffer.push([7])
-        #expect(pull(&buffer, count: 1) == [0])
+        #expect(buffer.pull(1) == [0])
     }
 
     @Test("a reset keeps the capacities")
