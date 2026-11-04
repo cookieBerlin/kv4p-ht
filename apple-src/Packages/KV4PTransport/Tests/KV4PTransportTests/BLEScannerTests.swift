@@ -59,6 +59,35 @@ struct BLEScannerTests {
         #expect(await eventually { central.commands.contains(.stopScan) })
     }
 
+    @Test("ending a scan that never started sends nothing, as CoreBluetooth takes commands only while powered on")
+    func endsBeforePower() async {
+        let central = FakeCentral(power: .unknown, responses: { _ in [] })
+        let scanner = BLEScanner { central }
+        let task = Task {
+            for await _ in scanner.scan() {}
+        }
+        await Task.yield()
+        task.cancel()
+        await task.value
+        #expect(central.commands.isEmpty)
+    }
+
+    @Test("ending a scan after Bluetooth went off sends nothing")
+    func endsAfterPowerOff() async {
+        let central = FakeCentral(responses: { _ in [] })
+        let scanner = BLEScanner { central }
+        let task = Task {
+            for await devices in scanner.scan() where !devices.isEmpty {
+                return
+            }
+        }
+        await central.waitFor(.scan)
+        central.emit(.powerState(.poweredOff))
+        central.emit(.advertised(Self.first))  // comes after the state, and ends the task
+        await task.value
+        #expect(central.commands == [.scan])
+    }
+
     @Test("the link ignores what the scanner needs")
     func linkIgnoresAdvertisement() {
         var link = BLELink()
