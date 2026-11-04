@@ -193,10 +193,7 @@ private struct SMeterBars: View {
                         Rectangle().fill(Color.primary).frame(width: Self.markWidth, height: geometry.size.height)
                         arrow(pointingDown: false)
                     }
-                    .offset(
-                        x: markOffset(level, width: geometry.size.width) - (Self.arrowWidth - Self.markWidth) / 2,
-                        y: -Self.arrowHeight
-                    )
+                    .offset(x: markOffset(level, width: geometry.size.width), y: -Self.arrowHeight)
                 }
             }
         }
@@ -261,7 +258,7 @@ private struct SMeterBars: View {
     }
 
     private func markOffset(_ squelch: Int, width: CGFloat) -> CGFloat {
-        max(0, SquelchMark.position(of: squelch, width: width, spacing: Self.spacing) - Self.markWidth)
+        SquelchMark.position(of: squelch, width: width, spacing: Self.spacing) - Self.arrowWidth / 2
     }
 }
 

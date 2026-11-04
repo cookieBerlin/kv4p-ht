@@ -13,12 +13,12 @@ struct SquelchMarkTests {
         SquelchMark.level(at: position, width: width, spacing: spacing)
     }
 
-    @Test("level n stands at the end of bar n")
+    @Test("level n stands in the gap after bar n")
     func position() {
-        #expect(SquelchMark.position(of: 0, width: Self.width, spacing: Self.spacing) == -2)
-        // Each of the 13 bars takes 20 points with its gap.
-        #expect(SquelchMark.position(of: 1, width: Self.width, spacing: Self.spacing) == 18)
-        #expect(SquelchMark.position(of: 8, width: Self.width, spacing: Self.spacing) == 158)
+        // Each of the 13 bars takes 20 points with its gap of 2, so a gap's middle is at 19, 39, …
+        #expect(SquelchMark.position(of: 0, width: Self.width, spacing: Self.spacing) == -1)
+        #expect(SquelchMark.position(of: 1, width: Self.width, spacing: Self.spacing) == 19)
+        #expect(SquelchMark.position(of: 8, width: Self.width, spacing: Self.spacing) == 159)
     }
 
     @Test("every level is found again at its own position", arguments: SquelchMark.levels)
@@ -28,8 +28,8 @@ struct SquelchMarkTests {
 
     @Test("a position counts for the nearest level")
     func nearest() {
-        #expect(Self.level(at: 27) == 1)
-        #expect(Self.level(at: 29) == 2)
+        #expect(Self.level(at: 28) == 1)
+        #expect(Self.level(at: 30) == 2)
     }
 
     @Test("beyond the levels, the mark stays at the last one")
