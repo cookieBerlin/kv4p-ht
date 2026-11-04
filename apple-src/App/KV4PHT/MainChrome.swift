@@ -39,6 +39,8 @@ struct RadioHeader: View {
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
+    /// The level while the squelch mark is being dragged (ADR-0050).
+    @State private var draggedSquelch: Int?
 
     private var isCompact: Bool {
         #if os(iOS)
@@ -56,15 +58,31 @@ struct RadioHeader: View {
             }
             frequency
             HStack {
-                SMeterBars(value: model.sMeter, squelch: model.isReady ? model.squelch : nil)
-                Text(model.sMeterText)
+                SMeterBars(
+                    value: model.sMeter,
+                    squelch: model.isReady ? model.squelch : nil,
+                    canDrag: model.canChangeSquelch,
+                    draggedSquelch: $draggedSquelch,
+                    onRelease: model.changeSquelch(to:)
+                )
+                // Here the finger does not cover the level. The width stays, so that the bars do not move under it.
+                Text(draggedSquelch.map { "Squelch \($0)" } ?? model.sMeterText)
                     .font(.footnote.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .frame(minWidth: 58, alignment: .trailing)
+                    .fontWeight(draggedSquelch == nil ? .regular : .semibold)
+                    .foregroundStyle(draggedSquelch == nil ? .secondary : .primary)
+                    .lineLimit(1)
+                    .frame(width: 68, alignment: .trailing)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("S-meter")
             .accessibilityValue(model.isReady ? "\(model.sMeterText), squelch \(model.squelch)" : model.sMeterText)
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: model.changeSquelch(to: model.squelch + 1)
+                case .decrement: model.changeSquelch(to: model.squelch - 1)
+                @unknown default: break
+                }
+            }
             .help(ControlHelp.meter)
             if !isCompact {
                 VolumeSlider(model: model)
@@ -133,15 +151,29 @@ struct RadioHeader: View {
     }
 }
 
-/// The S-meter as a row of bars, as in the Android app. A line a little higher than the bars shows the squelch level: level n
-/// stands at the end of bar n, as a signal of S n lights n bars.
+/// The S-meter as a row of bars, as in the Android app. A line a little higher than the bars shows the squelch level, and
+/// dragging on the bars moves it (ADR-0050).
 private struct SMeterBars: View {
     private static let spacing: CGFloat = 2
     private static let markWidth: CGFloat = 2
     private static let markOverhang: CGFloat = 6
+    private static let arrowWidth: CGFloat = 8
+    private static let arrowHeight: CGFloat = 5
+    /// A larger mark shows that it is held, also where nothing vibrates.
+    private static let heldArrowScale: CGFloat = 1.3
+    /// On a touch screen, a short hold tells the drag from a touch that only passes by.
+    private static let holdSeconds = 0.3
 
     let value: Int
     let squelch: Int?
+    let canDrag: Bool
+    @Binding var draggedSquelch: Int?
+    let onRelease: (Int) -> Void
+    /// Ends by itself when the drag ends, also when it is cancelled.
+    @GestureState private var dragLevel: Int?
+    /// The released level, until the model has it, so that the mark does not jump back in between.
+    @State private var releasedLevel: Int?
+    @State private var barsWidth: CGFloat = 0
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -155,14 +187,67 @@ private struct SMeterBars: View {
         .overlay {
             GeometryReader { geometry in
                 if let squelch {
-                    Rectangle()
-                        .fill(Color.primary)
-                        .frame(width: Self.markWidth, height: geometry.size.height + 2 * Self.markOverhang)
-                        .offset(x: markOffset(squelch, width: geometry.size.width), y: -Self.markOverhang)
+                    let level = dragLevel ?? releasedLevel ?? squelch
+                    VStack(spacing: 0) {
+                        arrow(pointingDown: true)
+                        Rectangle().fill(Color.primary).frame(width: Self.markWidth, height: geometry.size.height)
+                        arrow(pointingDown: false)
+                    }
+                    .offset(
+                        x: markOffset(level, width: geometry.size.width) - (Self.arrowWidth - Self.markWidth) / 2,
+                        y: -Self.arrowHeight
+                    )
                 }
             }
         }
+        .onGeometryChange(for: CGFloat.self, of: \.size.width) { barsWidth = $0 }
         .padding(.vertical, Self.markOverhang)
+        .contentShape(.rect)
+        .gesture(
+            markGesture
+                .updating($dragLevel) { level, state, _ in state = level }
+                .onEnded { level in
+                    guard let level else { return }
+                    releasedLevel = level == squelch ? nil : level
+                    onRelease(level)
+                },
+            isEnabled: canDrag
+        )
+        .onChange(of: dragLevel) { draggedSquelch = dragLevel }
+        .onChange(of: squelch) { releasedLevel = nil }
+        .onChange(of: canDrag) { releasedLevel = nil }
+        .sensoryFeedback(trigger: dragLevel) { old, new in
+            guard new != nil else { return nil }
+            return old == nil ? .impact : .selection
+        }
+    }
+
+    /// The level the drag stands on, or nil while it has not begun.
+    private var markGesture: some Gesture<Int?> {
+        #if os(iOS)
+            LongPressGesture(minimumDuration: Self.holdSeconds)
+                .sequenced(before: DragGesture(minimumDistance: 0))
+                .map { stage -> Int? in
+                    guard case .second(true, let drag) = stage else { return nil }
+                    return drag.map { level(at: $0.location.x) } ?? squelch
+                }
+        #else
+            DragGesture(minimumDistance: 0).map { drag -> Int? in level(at: drag.location.x) }
+        #endif
+    }
+
+    private func level(at position: CGFloat) -> Int {
+        SquelchMark.level(at: position, width: barsWidth, spacing: Self.spacing)
+    }
+
+    /// An arrow above or below the line, with its tip on the line; it grows away from there.
+    private func arrow(pointingDown: Bool) -> some View {
+        SquelchArrow()
+            .fill(Color.primary)
+            .frame(width: Self.arrowWidth, height: Self.arrowHeight)
+            .rotationEffect(pointingDown ? .zero : .degrees(180))
+            .scaleEffect(dragLevel == nil ? 1 : Self.heldArrowScale, anchor: pointingDown ? .bottom : .top)
+            .animation(.easeOut(duration: 0.1), value: dragLevel == nil)
     }
 
     /// Plain yellow is hard to read on a light background.
@@ -176,8 +261,19 @@ private struct SMeterBars: View {
     }
 
     private func markOffset(_ squelch: Int, width: CGFloat) -> CGFloat {
-        let barEnd = (width + Self.spacing) * CGFloat(squelch) / CGFloat(RadioViewModel.sMeterBarCount) - Self.spacing
-        return max(0, barEnd - Self.markWidth)
+        max(0, SquelchMark.position(of: squelch, width: width, spacing: Self.spacing) - Self.markWidth)
+    }
+}
+
+/// A filled triangle with its tip at the bottom.
+private struct SquelchArrow: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.closeSubpath()
+        }
     }
 }
 

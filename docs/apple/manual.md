@@ -117,6 +117,9 @@ disconnect yourself:
 - **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*, also as text. The bars are
   yellow up to S3, green up to S9, orange above S9 and red at overload. The mark over
   the bars shows the squelch level you set.
+  Drag on the bars to change it: 📱 hold for a moment until it vibrates, then drag;
+  🖥 drag or click directly. The level shows to the right of the bars and applies when
+  you let go. While you transmit or scan, the squelch cannot change.
 - **Squelch indicator:** a green speaker while a signal is received and played, a
   crossed-out speaker otherwise. The radio mutes the audio itself while the squelch
   is closed.
