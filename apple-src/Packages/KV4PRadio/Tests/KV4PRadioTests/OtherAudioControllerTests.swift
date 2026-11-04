@@ -421,4 +421,81 @@ struct OtherAudioControllerTests {
         await Task.yield()
         #expect(setup.calls.isEmpty)
     }
+
+    // MARK: Without an audio session (Mac)
+
+    @MainActor
+    final class MacSetup {
+        let log = CallLog()
+        let clock = ManualClock()
+        let player = RXAudioPlayer(fadesIn: false)
+        let session: FakeAudioSession
+        let controller: OtherAudioController
+
+        init() {
+            let log = log
+            let clock = clock
+            session = FakeAudioSession(log: log)
+            session.isOtherAudioPlaying = true
+            controller = OtherAudioController(
+                session: session,
+                output: nil,
+                player: player,
+                prepareMicrophone: { log.append("prepare") },
+                reportFailure: { _ in },
+                sleep: { try await clock.sleep(for: $0) },
+                releaseWait: .zero
+            )
+            controller.mode = .muteAll
+        }
+
+        func until(_ expected: [String]) async -> Bool {
+            await KV4PTestSupport.eventually { self.log.calls == expected }
+        }
+    }
+
+    @Test("muting leaves the output alone, and other apps are back without a wait")
+    func macSwitches() async {
+        let setup = MacSetup()
+        setup.controller.update(isBusy: true)
+        #expect(await setup.until(["lower muteAll", "prepare"]))
+        setup.log.removeAll()
+        setup.controller.update(isBusy: false)
+        await setup.clock.waitForSleepers(1)
+        setup.clock.advance(by: .seconds(3))
+        #expect(await setup.until(["release", "mix", "prepare"]))
+    }
+
+    @Test("audio stays at its normal latency, as the output never stops")
+    func macKeepsLatency() async {
+        let setup = MacSetup()
+        setup.controller.update(isBusy: true)
+        #expect(await setup.until(["lower muteAll", "prepare"]))
+        setup.player.receive(samples: Self.second)
+        #expect(setup.player.statistics.buffered == JitterBuffer().capacity)
+        setup.log.removeAll()
+        setup.controller.update(isBusy: false)
+        await setup.clock.waitForSleepers(1)
+        setup.clock.advance(by: .seconds(3))
+        #expect(await setup.until(["release", "mix", "prepare"]))
+        #expect(setup.player.statistics.buffered == JitterBuffer().capacity)  // nothing thrown away
+    }
+
+    @Test("asking for the permission mutes for a moment, as only a running tap makes the system ask")
+    func asksForPermission() async {
+        let setup = MacSetup()
+        setup.controller.askForPermission()
+        #expect(await setup.until(["lower muteAll", "release"]))
+    }
+
+    @Test("while other apps are muted or a switch runs, asking changes nothing")
+    func asksOnlyWhenIdle() async {
+        let setup = MacSetup()
+        setup.controller.update(isBusy: true)
+        setup.controller.askForPermission()
+        #expect(await setup.until(["lower muteAll", "prepare"]))
+        setup.controller.askForPermission()
+        await Task.yield()
+        #expect(setup.log.calls == ["lower muteAll", "prepare"])
+    }
 }
