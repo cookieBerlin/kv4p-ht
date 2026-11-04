@@ -36,7 +36,8 @@ holds 1 MB and 1024 keys, and these settings take a few hundred bytes in ten key
   so the time cannot say that. It is stored locally and not synced.
 - **Entitlements:** a Mac refuses to start an app that claims iCloud and has no team, so a
   build without a team, as for a contributor, uses the entitlements without iCloud. The build
-  setting chooses by `DEVELOPMENT_TEAM`, so a Mac has a second entitlements file. iOS builds
+  setting chooses by `DEVELOPMENT_TEAM`, so a Mac has a second entitlements file, and with a
+  team it signs as *Apple Development*, as signing to run locally drops the iCloud entitlement. iOS builds
   on a device always need a team, and have one file.
 
 ## Consequences
