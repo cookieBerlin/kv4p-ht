@@ -18,6 +18,14 @@ public enum HamFrequency {
         return Float((Double(clamped) * 10_000).rounded() / 10_000)
     }
 
+    /// A limit of the allowed range: at least four decimals, five when half of 12.5 kHz needs them.
+    public static func formatLimit(_ frequency: Float) -> String {
+        let step = 0.00125  // the limits are multiples of it, which a `Float` only comes close to
+        let exact = (Double(frequency) / step).rounded() * step
+        let text = String(format: "%.5f", locale: Locale(identifier: "en_US_POSIX"), exact)
+        return text.hasSuffix("0") ? String(text.dropLast()) : text
+    }
+
     /// Four decimals, as in the Android app.
     public static func format(_ frequency: Float) -> String {
         String(format: "%.4f", locale: Locale(identifier: "en_US_POSIX"), Double(frequency))

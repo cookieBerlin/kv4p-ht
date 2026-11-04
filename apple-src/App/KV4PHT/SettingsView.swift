@@ -2,6 +2,7 @@ import KV4PAPRS
 import KV4PAudio
 import KV4PProtocol
 import KV4PRadio
+import KV4PSimulator
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -34,6 +35,10 @@ struct SettingsView: View {
             }
 
             radio
+
+            if model.canConfigureSimulator {
+                simulator
+            }
 
             radioSettings
 
@@ -172,9 +177,7 @@ struct SettingsView: View {
     }
 
     @ViewBuilder private var radio: some View {
-        if model.firmwareText != nil || model.canUpdateFirmware || model.firmwareUpdate != .idle
-            || model.canSimulateSignal
-        {
+        if model.firmwareText != nil || model.canUpdateFirmware || model.firmwareUpdate != .idle {
             Section("Radio") {
                 if let firmware = model.firmwareText {
                     Text(firmware).foregroundStyle(.secondary)
@@ -182,8 +185,46 @@ struct SettingsView: View {
                 if model.canUpdateFirmware || model.firmwareUpdate != .idle {
                     FirmwareUpdateRow(model: model)
                 }
-                if model.canSimulateSignal {
-                    Toggle("Simulate a received signal", isOn: $model.isSignalSimulated)
+            }
+        }
+    }
+
+    /// The radio's properties take effect at the next connection; the rest acts on the running one.
+    @ViewBuilder private var simulator: some View {
+        Section {
+            Picker("Band", selection: $model.simulatorSettings.band) {
+                ForEach(SimulatedBand.allCases, id: \.self) { Text($0.label) }
+            }
+            Picker("Firmware", selection: $model.simulatorSettings.hasCurrentFirmware) {
+                Text("Current").tag(true)
+                Text("Too old").tag(false)
+            }
+            Toggle("FreeDV modem", isOn: $model.simulatorSettings.hasFreeDVModem)
+            Toggle("Power switch", isOn: $model.simulatorSettings.hasPowerSwitch)
+            Toggle("SA818 module found", isOn: $model.simulatorSettings.hasRadioModule)
+            Toggle("Radio answers", isOn: $model.simulatorSettings.answers)
+        } header: {
+            Text("Simulator")
+        } footer: {
+            Text(
+                model.canConnect
+                    ? "These take effect at the next connection." : "Disconnect to change these settings."
+            )
+        }
+        .disabled(!model.canConnect)
+        if model.canSimulateSignal {
+            Section("Simulator actions") {
+                Picker("Received signal", selection: $model.simulatedSignal) {
+                    Text("None").tag(SimulatedSignal?.none)
+                    ForEach(SimulatedSignal.allCases, id: \.self) { Text($0.label).tag(SimulatedSignal?.some($0)) }
+                }
+                .disabled(model.isSignalRampRunning)
+                Button(model.isSignalRampRunning ? "Stop signal ramp" : "Ramp signal up and down") {
+                    model.toggleSignalRamp()
+                }
+                Button("Lose connection") { model.loseSimulatedConnection() }
+                ForEach(SimulatedPacket.allCases, id: \.self) { packet in
+                    Button("Receive APRS \(packet.label.lowercased())") { model.simulatePacket(packet) }
                 }
             }
         }
@@ -272,10 +313,14 @@ struct FirmwareUpdateRow: View {
             Button("Flash") { Task { await model.updateFirmware() } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(
-                "This replaces the firmware on your kv4p HT with the version the app ships. Keep the USB cable "
-                    + "connected until the update is finished."
-            )
+            if model.canConfigureSimulator {
+                Text("This gives the simulated radio the current firmware. No real radio is changed.")
+            } else {
+                Text(
+                    "This replaces the firmware on your kv4p HT with the version the app ships. Keep the USB cable "
+                        + "connected until the update is finished."
+                )
+            }
         }
     }
 }

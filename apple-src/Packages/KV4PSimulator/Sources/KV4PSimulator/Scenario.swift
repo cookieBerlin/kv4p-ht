@@ -6,6 +6,8 @@ public struct Scenario: Equatable, Sendable {
     public var firmwareVersion = Firmware.version
     public var radioModuleStatus = RadioModuleStatus.found
     public var moduleType = RFModuleType.sa818VHF
+    /// MHz; `nil` for the default of the firmware.
+    public var startFrequency: Float?
     public var features: FirmwareFeatures = [.highLowPower, .esp32AFSK]
     public var windowSize = Firmware.usbWindowSize
     /// Desired state stored in flash; `nil` for a new device.
@@ -26,7 +28,7 @@ public struct Scenario: Equatable, Sendable {
     var frequencyRange: ClosedRange<Float> { moduleType == .sa818UHF ? 400...480 : 134...174 }
 
     /// `moduleDefaultRadioFreq()`, MHz.
-    var defaultFrequency: Float { moduleType == .sa818UHF ? 435 : 144 }
+    var defaultFrequency: Float { startFrequency ?? (moduleType == .sa818UHF ? 435 : 144) }
 
     private func with(_ change: (inout Scenario) -> Void) -> Scenario {
         var scenario = self
@@ -40,6 +42,10 @@ public struct Scenario: Equatable, Sendable {
 public struct Carrier: Equatable, Sendable {
     public var toneHz: Int
     public var amplitude: Int16
+    /// The level of the noise added to the tone; 0 for a clean signal.
+    public var noiseAmplitude: Int16 = 0
+    /// The tone is clipped, as in an overloaded receiver.
+    public var isDistorted = false
     /// Raw SA818 RSSI, reported with `RSSI_ENABLED`.
     public var rssi: UInt8
     /// Codec2 1300 frames, repeated; empty for an analog signal.
@@ -51,6 +57,9 @@ public struct Carrier: Equatable, Sendable {
         self.rssi = rssi
         self.voiceFrames = voiceFrames
     }
+
+    /// How far an overload drives the tone beyond the level it is clipped to.
+    private static let overdrive = 3.0
 
     /// A FreeDV 2400B signal: in FreeDV mode a voiced sound with rising pitch, analog the tone. The frames are the
     /// "voiced" vector of `tools/codec2-vectors`, which pins them.
@@ -70,7 +79,9 @@ public struct Carrier: Equatable, Sendable {
     /// Sample `index` of the tone; `index` counts from 0 to `KV4P.audioSampleRate`, so the phase never drifts.
     func sample(_ index: Int) -> Int16 {
         let phase = 2 * Double.pi * Double(toneHz) * Double(index) / Double(KV4P.audioSampleRate)
-        return Int16((Double(amplitude) * sin(phase)).rounded())
+        let level = Double(amplitude)
+        let tone = level * sin(phase)
+        return Int16((isDistorted ? min(max(tone * Self.overdrive, -level), level) : tone).rounded())
     }
 }
 

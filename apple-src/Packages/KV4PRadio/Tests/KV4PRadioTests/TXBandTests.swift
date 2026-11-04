@@ -6,6 +6,13 @@ import Testing
 /// `RadioAudioService.canTransmitOnFrequency` with the default band limits of the Android app.
 @Suite("TX band")
 struct TXBandTests {
+    @Test("the allowed range leaves half the bandwidth at both edges")
+    func allowedRange() {
+        let band = TXBand.default(for: .sa818VHF)
+        #expect(band.allowedRange(bandwidth: 1) == 144.0125...147.9875)
+        #expect(band.allowedRange(bandwidth: 0) == 144.00625...147.99375)
+    }
+
     @Test("defaults: 2 m for VHF, 70 cm for UHF modules")
     func defaults() {
         #expect(TXBand.default(for: .sa818VHF).range == 144...148)

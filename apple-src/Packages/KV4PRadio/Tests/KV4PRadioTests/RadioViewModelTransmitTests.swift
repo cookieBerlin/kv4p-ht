@@ -82,7 +82,7 @@ struct RadioViewModelTransmitTests {
         await setup.tuned("150")
         #expect(!setup.model.canTransmit)
         await setup.model.pressPTT()
-        #expect(setup.model.message == "Can't transmit outside the ham band.")
+        #expect(setup.model.message == nil)  // `transmitBlockedText` is already on screen
         #expect(!setup.model.isTransmitting)
     }
 

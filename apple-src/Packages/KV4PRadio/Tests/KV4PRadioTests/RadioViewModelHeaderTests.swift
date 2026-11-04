@@ -31,6 +31,16 @@ struct RadioViewModelHeaderTests {
         #expect(model.activeMemoryName == "Simplex")
     }
 
+    @Test("each bar of the S-meter belongs to a zone: S1 to S3, S4 to S9, above S9 and overload")
+    func zones() {
+        let zones = (0..<RadioViewModel.sMeterBarCount).map(SMeterZone.init(bar:))
+        #expect(zones.prefix(3).allSatisfy { $0 == .weak })
+        #expect(zones.dropFirst(3).prefix(6).allSatisfy { $0 == .normal })
+        #expect(zones.dropFirst(9).prefix(3).allSatisfy { $0 == .strong })
+        #expect(zones.last == .overload)
+        #expect(zones.count == 13)
+    }
+
     @Test("the S-meter has a bar for each value up to overload")
     func bars() {
         #expect(RadioViewModel.sMeterBarCount == SMeter.overload)

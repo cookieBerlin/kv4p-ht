@@ -10,8 +10,8 @@ import KV4PTransport
 /// Composition root: wires the OS adapters to the radio stack. All behaviour lives in the packages.
 @MainActor
 enum Composition {
-    /// The simulator of the current connection, for the simulated signal.
-    private static let simulator = SimulatorBox()
+    /// The simulated radio, which the settings configure.
+    private static let simulator = SimulatorRadio(clock: ContinuousClock())
 
     static func makeViewModel() -> RadioViewModel {
         RadioViewModel(
@@ -21,7 +21,6 @@ enum Composition {
             serialDevices: serialDevices,
             audioOutput: AVAudioEngineOutput(),
             audioSession: audioSession(),
-            simulateSignal: { [simulator] in await simulator.transport?.setCarrier($0 ? .freeDVVoice : nil) },
             memories: memoryRepository(),
             location: CoreLocationProvider(),
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
@@ -29,7 +28,8 @@ enum Composition {
             settings: settingsStore(),
             bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
             failureAlerts: PlatformFailureAlerts(),
-            permissions: SystemPermissions()
+            permissions: SystemPermissions(),
+            simulator: simulator
         )
     }
 
@@ -74,9 +74,7 @@ enum Composition {
         case .serial(let path):
             return serialTransport(path)
         case .simulator:
-            let transport = SimulatorTransport(simulator: RadioSimulator(scenario: .freeDV))
-            simulator.transport = transport
-            return transport
+            return simulator.makeTransport()
         }
     }
 
@@ -127,9 +125,4 @@ private struct AwakeFirmwareFlasher: FirmwareFlashing {
         defer { ProcessInfo.processInfo.endActivity(activity) }
         try await flasher.flash(serialPath: serialPath, events: events)
     }
-}
-
-@MainActor
-private final class SimulatorBox: Sendable {
-    var transport: SimulatorTransport<ContinuousClock>?
 }

@@ -19,7 +19,7 @@ public struct TransmittedPacket: Equatable, Sendable {
 /// RX audio follows `carrier`: without one the squelch is closed and the audio muted. In FreeDV 2400B mode the
 /// carrier's voice frames replace the RX audio, and a signal without them keeps the squelch closed.
 ///
-/// Not simulated yet: the squelch level, the FreeDV modem itself, the AX.25 TX scheduler (accepted
+/// Not simulated yet: the FreeDV modem itself, the AX.25 TX scheduler (accepted
 /// packets are recorded in `transmittedPackets`) and the physical PTT button.
 public struct RadioSimulator: Sendable {
     public let scenario: Scenario
@@ -56,6 +56,7 @@ public struct RadioSimulator: Sendable {
     private var toneIndex = 0
     /// The next of the carrier's voice frames.
     private var voiceFrameIndex = 0
+    private var noise = NoiseGenerator()
 
     /// Boots the device at time zero.
     public init(scenario: Scenario = Scenario()) {
@@ -212,9 +213,10 @@ public struct RadioSimulator: Sendable {
 
     private var isFreeDV: Bool { desired.flags.contains(.freeDV2400B) }
 
-    /// The squelch: any carrier opens it, in FreeDV mode only one with voice frames (`freeDvSquelch.open()`).
+    /// The squelch: a carrier opens it from the set level on, taken as the same as the S-meter value; in FreeDV mode
+    /// only one with voice frames (`freeDvSquelch.open()`).
     private var isSignalOpen: Bool {
-        guard let carrier else { return false }
+        guard let carrier, SMeter.value(rssi: carrier.rssi) >= Int(applied.squelch) else { return false }
         return !isFreeDV || !carrier.voiceFrames.isEmpty
     }
 
@@ -228,11 +230,13 @@ public struct RadioSimulator: Sendable {
         return DeviceFrameEncoder.rxDigital(frames[voiceFrameIndex % frames.count])
     }
 
-    /// The tone of the carrier; silence while squelched (`mute.setActive(squelched)`).
+    /// The tone of the carrier with its noise; silence while squelched (`mute.setActive(squelched)`).
     private mutating func nextRXSamples() -> [Int16] {
         (0..<KV4P.audioBlockSamples).map { _ in
             defer { toneIndex = (toneIndex + 1) % KV4P.audioSampleRate }
-            return carrier?.sample(toneIndex) ?? 0
+            guard isSignalOpen, let carrier else { return 0 }
+            let noisy = Int(carrier.sample(toneIndex)) + noise.next(level: carrier.noiseAmplitude)
+            return Int16(clamping: noisy)
         }
     }
 
@@ -407,5 +411,23 @@ public struct RadioSimulator: Sendable {
             state.memoryId = -1
         }
         return state
+    }
+}
+
+/// Repeatable noise with less of the highest frequencies, closer to the hiss of a weak FM signal than plain white
+/// noise: a SplitMix64 generator through a one-pole low-pass filter.
+private struct NoiseGenerator: Sendable {
+    private var state: UInt64 = 0x4B56_3450
+    private var filtered = 0.0
+
+    mutating func next(level: Int16) -> Int {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var mixed = state
+        mixed = (mixed ^ (mixed >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        mixed = (mixed ^ (mixed >> 27)) &* 0x94D0_49BB_1331_11EB
+        mixed ^= mixed >> 31
+        let white = Double(mixed >> 11) / Double(1 << 53) * 2 - 1
+        filtered = filtered * 0.5 + white * 0.5
+        return Int((filtered * Double(level)).rounded())
     }
 }

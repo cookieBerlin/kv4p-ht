@@ -68,8 +68,7 @@ struct RadioViewModelAudioTests {
                     return RadioController(transport: transport, clock: clock, rxAudio: rxAudio)
                 },
                 serialDevices: { [] },
-                audioOutput: output,
-                simulateSignal: { await simulator.value?.setCarrier($0 ? Carrier() : nil) }
+                audioOutput: output
             )
         }
 
@@ -116,32 +115,5 @@ struct RadioViewModelAudioTests {
         model.volume = 0.25
         #expect(model.volume == 0.25)
         #expect(model.rxAudio.volume == 0.25)
-    }
-
-    @Test("the simulator can simulate a received signal")
-    func simulatedSignal() async {
-        let setup = Setup()
-        #expect(!setup.model.canSimulateSignal)
-        await setup.connect()
-        #expect(setup.model.canSimulateSignal)
-        setup.model.isSignalSimulated = true
-        #expect(await RadioViewModelTests.eventually(setup.model) { $0.isReceiving })
-        setup.model.isSignalSimulated = false
-        #expect(await RadioViewModelTests.eventually(setup.model) { !$0.isReceiving })
-        setup.model.isSignalSimulated = true
-        await setup.model.disconnect()
-        #expect(!setup.model.isSignalSimulated)
-    }
-
-    @Test("a real radio cannot simulate a signal")
-    func noSimulatedSignal() async {
-        let setup = Setup()
-        await setup.connect(.bluetooth)
-        #expect(!setup.model.canSimulateSignal)
-        let plain = RadioViewModelTests.model()
-        plain.selectedConnection = .simulator
-        await plain.connect()
-        #expect(await RadioViewModelTests.eventually(plain) { $0.isReady })
-        #expect(!plain.canSimulateSignal)
     }
 }

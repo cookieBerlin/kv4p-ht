@@ -118,7 +118,7 @@ let package = Package(
             name: "KV4PRadio",
             dependencies: [
                 "KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital",
-                "KV4PFlasher",
+                "KV4PFlasher", "KV4PSimulator",
             ],
             path: "Packages/KV4PRadio/Sources/KV4PRadio"
         ),

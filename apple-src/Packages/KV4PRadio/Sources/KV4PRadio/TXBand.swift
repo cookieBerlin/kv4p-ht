@@ -16,8 +16,13 @@ public struct TXBand: Equatable, Sendable {
 
     /// The whole channel, `frequency` ± half the bandwidth (`0x01` = 25 kHz, else 12.5 kHz), lies within the band.
     public func allows(_ frequency: Float, bandwidth: UInt8) -> Bool {
+        allowedRange(bandwidth: bandwidth).contains(frequency)
+    }
+
+    /// The channel centres that keep the whole channel inside the band.
+    public func allowedRange(bandwidth: UInt8) -> ClosedRange<Float> {
         let halfBandwidth: Float = (bandwidth == 1 ? 0.025 : 0.0125) / 2
-        return frequency >= range.lowerBound + halfBandwidth && frequency <= range.upperBound - halfBandwidth
+        return (range.lowerBound + halfBandwidth)...(range.upperBound - halfBandwidth)
     }
 }
 

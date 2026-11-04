@@ -4,6 +4,7 @@ import KV4PAudio
 import KV4PFlasher
 import KV4PPersistence
 import KV4PProtocol
+import KV4PSimulator
 import KV4PTransport
 import Observation
 
@@ -39,6 +40,21 @@ public struct AudioFilters: Equatable, Sendable {
         self.preEmphasis = preEmphasis
         self.highPass = highPass
         self.lowPass = lowPass
+    }
+}
+
+/// What a bar of the S-meter stands for; red is only for the one real problem, overload (ADR-0040).
+public enum SMeterZone: Sendable {
+    case weak, normal, strong, overload
+
+    /// `bar` counts from 0: bar 0 lights at S1, and the last one at overload.
+    public init(bar: Int) {
+        switch bar {
+        case 0..<3: self = .weak
+        case 3..<9: self = .normal
+        case 9..<SMeter.overload - 1: self = .strong
+        default: self = .overload
+        }
     }
 }
 
@@ -118,12 +134,19 @@ public final class RadioViewModel {
     public var volume: Float = 1 {
         didSet { rxAudio.volume = volume }
     }
-    /// The simulator receives a signal (`canSimulateSignal`).
-    public var isSignalSimulated = false {
+    /// The signal the simulator receives (`canSimulateSignal`).
+    public var simulatedSignal: SimulatedSignal? {
         didSet {
-            guard isSignalSimulated != oldValue, let simulateSignal else { return }
-            let isOn = isSignalSimulated
-            Task { await simulateSignal(isOn) }
+            guard simulatedSignal != oldValue, let simulator else { return }
+            let signal = simulatedSignal
+            Task { await simulator.setSignal(signal) }
+        }
+    }
+    /// How the simulator behaves from the next connection.
+    public var simulatorSettings = SimulatorSettings() {
+        didSet {
+            simulator?.settings = simulatorSettings
+            saveSettings()
         }
     }
 
@@ -253,7 +276,10 @@ public final class RadioViewModel {
     private let audioOutput: (any AudioOutput)?
     private let audioSession: (any AudioSession)?
     private var audioSessionObserver: Task<Void, Never>?
-    private let simulateSignal: (@Sendable (Bool) async -> Void)?
+    private let simulator: (any SimulatorControlling)?
+    private let simulatedFlashStep: Duration
+    private let simulatedSignalStep: Duration
+    private var signalRamp: Task<Void, Never>?
     private let repository: (any MemoryRepository)?
     private let firmware: (any FirmwareFlashing)?
     private let settingsStore: (any SettingsStore)?
@@ -272,7 +298,6 @@ public final class RadioViewModel {
         serialDevices: @escaping () -> [String],
         audioOutput: (any AudioOutput)? = nil,
         audioSession: (any AudioSession)? = nil,
-        simulateSignal: (@Sendable (Bool) async -> Void)? = nil,
         memories: (any MemoryRepository)? = nil,
         location: (any LocationProvider)? = nil,
         internet: (any APRSInternetLink)? = nil,
@@ -281,6 +306,9 @@ public final class RadioViewModel {
         bluetoothScanner: (any BLEScanning)? = nil,
         failureAlerts: (any FailureAlerting)? = nil,
         permissions: (any PermissionChecking)? = nil,
+        simulator: (any SimulatorControlling)? = nil,
+        simulatedFlashStep: Duration = .milliseconds(400),
+        simulatedSignalStep: Duration = .seconds(1),
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -302,7 +330,9 @@ public final class RadioViewModel {
         self.serialDevices = serialDevices
         self.audioOutput = audioOutput
         self.audioSession = audioSession
-        self.simulateSignal = simulateSignal
+        self.simulator = simulator
+        self.simulatedFlashStep = simulatedFlashStep
+        self.simulatedSignalStep = simulatedSignalStep
         refreshConnections()
         observeInternet()
         observeAudioSession()
@@ -330,6 +360,7 @@ public final class RadioViewModel {
         settings.txLimits = txLimits
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
+        settings.simulator = simulatorSettings
         return settings
     }
 
@@ -350,6 +381,7 @@ public final class RadioViewModel {
         aprsDestinationFilter = settings.aprsDestinationFilter
         txLimits = settings.txLimits
         selectedGroup = settings.selectedGroup
+        simulatorSettings = settings.simulator
         if let radio = settings.bluetoothRadio {
             selectedConnection = .bluetoothDevice(radio)
         }
@@ -512,14 +544,70 @@ public final class RadioViewModel {
     /// The TX frequency is inside the ham band.
     public var canTransmit: Bool { isReady && snapshot.desired.flags.contains(.txAllowed) }
 
-    public var canSimulateSignal: Bool { isReady && connection == .simulator && simulateSignal != nil }
+    /// Why PTT cannot transmit on this frequency, with the range for the bandwidth.
+    public var transmitBlockedText: String? {
+        guard isReady, !canTransmit, let firmware = snapshot.firmware else { return nil }
+        let bandwidth = snapshot.desired.bandwidth
+        let allowed = txLimits.band(for: firmware.moduleType).allowedRange(bandwidth: bandwidth)
+        let lower = HamFrequency.formatLimit(allowed.lowerBound)
+        let upper = HamFrequency.formatLimit(allowed.upperBound)
+        return
+            "Can't transmit here: with \(bandwidth == 1 ? "25" : "12.5") kHz, the allowed range is \(lower)–\(upper) MHz."
+    }
+
+    public var canSimulateSignal: Bool { isReady && connection == .simulator && simulator != nil }
+
+    /// The simulator is the chosen radio, so its settings apply.
+    public var canConfigureSimulator: Bool { selectedConnection == .simulator && simulator != nil }
+
+    public var isSignalRampRunning: Bool { signalRamp != nil }
+
+    /// Starts the signal through all strengths, up and down, then off; or ends it early.
+    public func toggleSignalRamp() {
+        guard signalRamp == nil else { return stopSignalRamp() }
+        let step = simulatedSignalStep
+        signalRamp = Task { [weak self] in
+            for signal in SimulatedSignal.ramp {
+                self?.simulatedSignal = signal
+                try? await Task.sleep(for: step)
+                guard !Task.isCancelled else { return }
+            }
+            self?.stopSignalRamp()
+        }
+    }
+
+    private func stopSignalRamp() {
+        signalRamp?.cancel()
+        signalRamp = nil
+        simulatedSignal = nil
+    }
+
+    public func loseSimulatedConnection() {
+        guard let simulator else { return }
+        Task { await simulator.loseConnection() }
+    }
+
+    public func simulatePacket(_ packet: SimulatedPacket) {
+        guard let simulator, let frame = try? APRSParser.parse(tnc2: packet.tnc2(to: callsign)).ax25Frame() else {
+            return
+        }
+        Task { await simulator.hear(frame) }
+    }
 
     // MARK: Firmware
 
     /// Flashing needs USB (macOS) and the packaged firmware.
     public var canUpdateFirmware: Bool {
-        guard case .serial = selectedConnection, firmware != nil else { return false }
-        return !firmwareUpdate.isRunning && !isTransmitting
+        flashTarget != nil && !firmwareUpdate.isRunning && !isTransmitting
+    }
+
+    /// What flashes the chosen radio: the flasher over USB, or a stand-in for the simulator.
+    private var flashTarget: (flasher: any FirmwareFlashing, path: String)? {
+        switch selectedConnection {
+        case .serial(let path): firmware.map { ($0, path) }
+        case .simulator: simulator.map { _ in (SimulatedFirmwareFlasher(step: simulatedFlashStep), "") }
+        case .bluetooth, .bluetoothDevice: nil
+        }
     }
 
     /// `outdatedFirmware` / `missingFirmware`: the radio's firmware is older than required, or it did not answer.
@@ -531,12 +619,12 @@ public final class RadioViewModel {
     }
 
     /// Outdated firmware that this app cannot update itself (iOS): the web flasher on a computer can.
-    public var isWebFlasherNeeded: Bool { isFirmwareOutdated && firmware == nil }
+    public var isWebFlasherNeeded: Bool { isFirmwareOutdated && firmware == nil && !canConfigureSimulator }
 
     /// `startFirmwareActivity`: disconnects, flashes the packaged firmware into the radio on the selected USB
     /// device, and reconnects once it is verified (`renegotiateAfterFlashing`).
     public func updateFirmware() async {
-        guard canUpdateFirmware, case .serial(let path) = selectedConnection, let firmware else { return }
+        guard canUpdateFirmware, let target = flashTarget else { return }
         await disconnect()
         firmwareUpdate = .connecting
         let (events, reporter) = AsyncStream.makeStream(of: FlashEvent.self)
@@ -547,10 +635,11 @@ public final class RadioViewModel {
             }
         }
         do throws(FlashError) {
-            try await firmware.flash(serialPath: path) { reporter.yield($0) }
+            try await target.flasher.flash(serialPath: target.path) { reporter.yield($0) }
             reporter.finish()
             await progress.value
             firmwareUpdate = .finished
+            if canConfigureSimulator { simulatorSettings.hasCurrentFirmware = true }
             await connect()
         } catch {
             reporter.finish()
@@ -611,7 +700,7 @@ public final class RadioViewModel {
         audioSession?.deactivate()
         controller = nil
         connection = nil
-        isSignalSimulated = false
+        stopSignalRamp()
         snapshot = Self.disconnected
     }
 
@@ -869,7 +958,7 @@ public final class RadioViewModel {
             do {
                 try await controller.startTransmitting()
             } catch {
-                message = Self.message(for: error)
+                if error != .transmitNotAllowed { message = Self.message(for: error) }
             }
         }
         show(await controller.snapshot)

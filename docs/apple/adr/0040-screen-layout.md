@@ -30,6 +30,10 @@ Several controls do not say what they do.
   *Advanced*. The RepeaterBook import moves here, as a phone has no room for it.
 - **Memory actions:** each memory shows a button with its actions, because the pages
   take a sideways swipe and a touch and hold cannot be discovered.
+- **S-meter colours:** yellow for S1 to S3, green for S4 to S9, orange above S9 and red
+  for overload. Radios follow no common standard, but most show the range above S9
+  differently. Red stays for the one real problem, as a strong signal is good. The value
+  also shows as text, so the colours are not the only information.
 - **Notices:** problems other than a failed connection show as a line at the bottom of
   every screen until dismissed, on a phone above the page bar. They were not visible at
   all before.

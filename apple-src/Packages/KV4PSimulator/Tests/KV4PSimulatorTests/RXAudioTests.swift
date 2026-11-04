@@ -53,6 +53,60 @@ struct RXAudioTests {
         #expect((990...1000).contains(crossings))
     }
 
+    /// One second of audio from a radio set to `squelch` that receives `signal`.
+    static func heard(_ signal: SimulatedSignal, squelch: UInt8 = 0) throws -> (RadioSimulator, [Int16]) {
+        var scenario = Scenario()
+        scenario.carrier = signal.carrier
+        var simulator = RadioSimulator(scenario: scenario)
+        _ = simulator.connect(at: .zero)
+        var state = desiredState(sequence: 1, flags: [.rxAudioOpen, .rssiEnabled])
+        state.squelch = squelch
+        _ = simulator.receive(FrameEncoder.desiredState(state), at: .zero)
+        return (simulator, decoded(try events(simulator.advance(to: .seconds(1))).audioBlocks))
+    }
+
+    @Test("a signal opens the squelch from the set level on, and the S-meter still shows a weaker one")
+    func squelchLevel() throws {
+        let (open, heard) = try Self.heard(.s5, squelch: 5)
+        #expect(!open.deviceState.radio.flags.contains(.squelched))
+        #expect(heard.contains { $0 != 0 })
+        let (closed, muted) = try Self.heard(.s4, squelch: 5)
+        #expect(closed.deviceState.radio.flags.contains(.squelched))
+        #expect(closed.deviceState.latestRssi == SimulatedSignal.s4.rssi)
+        #expect(muted.allSatisfy { $0 == 0 })
+    }
+
+    @Test("squelch 0 stays open even for noise alone")
+    func squelchOff() throws {
+        let (simulator, heard) = try Self.heard(.s0)
+        #expect(!simulator.deviceState.radio.flags.contains(.squelched))
+        #expect(heard.contains { $0 != 0 })
+    }
+
+    @Test("a weak signal is noise at a low level, a strong one a clean full tone")
+    func noise() throws {
+        let weak = try Self.heard(.s0).1.map { abs(Int($0)) }.max() ?? 0
+        #expect((500...2600).contains(weak))
+        let strong = try Self.heard(.s9).1
+        #expect((7200...8800).contains(strong.map { abs(Int($0)) }.max() ?? 0))
+        let crossings = zip(strong, strong.dropFirst()).filter { $0 < 0 && $1 >= 0 }.count
+        #expect((990...1000).contains(crossings))
+    }
+
+    @Test("the noise is not random between runs, so that tests can repeat")
+    func repeatable() throws {
+        #expect(try Self.heard(.s3).1 == Self.heard(.s3).1)
+    }
+
+    @Test("overload is clipped, which sounds distorted, but stays within the level")
+    func overload() {
+        let carrier = SimulatedSignal.overload.carrier
+        let samples = (0..<KV4P.audioSampleRate).map(carrier.sample)
+        #expect(samples.map { abs(Int($0)) }.max() == Int(carrier.amplitude))
+        let flat = samples.filter { abs(Int($0)) == Int(carrier.amplitude) }.count
+        #expect(flat > KV4P.audioSampleRate / 4)
+    }
+
     @Test("the RSSI is reported only with RSSI_ENABLED")
     func rssiDisabled() {
         var scenario = Scenario()

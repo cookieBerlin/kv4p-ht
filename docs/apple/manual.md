@@ -80,7 +80,14 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
 - **USB (🖥 only):** connect the radio by USB cable; it appears as
   `USB cu.usbserial-…`. The app restarts the radio when connecting, so it
   reports itself.
-- **Simulator:** a built-in simulated radio, to try the app without hardware.
+- **Simulator:** a built-in simulated radio, to try the app without hardware. While it
+  is chosen, ⚙ **Settings** has a **Simulator** section: its band, its firmware, FreeDV,
+  the power switch, the radio module and whether it answers, which apply at the next
+  connection and are locked while connected. **Update firmware…** runs a simulated update
+  that gives it the current firmware. While it is connected, **Simulator actions** set a received signal, ramp it through all
+  strengths up and down, lose the connection and receive APRS test packets. A weak signal
+  is quiet noise, out of which the tone grows up to S9; a real FM signal stays equally
+  loud and only gets less noisy. Each squelch level opens from the same S value on.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
@@ -104,8 +111,9 @@ disconnect yourself:
 - **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8.
 - **TX/RX tone (CTCSS):** one of the 38 standard tones or *None*.
 - **High power** and the **audio filters** (pre-emphasis, high-pass, low-pass).
-- **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*. The mark above the bars
-  shows the squelch level you set.
+- **S-meter:** S0…S9, then S9+20 to S9+60, and *Overload*, also as text. The bars are
+  yellow up to S3, green up to S9, orange above S9 and red at overload. The mark over
+  the bars shows the squelch level you set.
 - **Squelch indicator:** a green speaker while a signal is received and played, a
   crossed-out speaker otherwise. The radio mutes the audio itself while the squelch
   is closed.
@@ -120,7 +128,7 @@ disconnect yourself:
   APRS, digipeating and the iGate. Disconnect to save the battery. Position
   beacons wait until the app is on screen again, because iOS only gives the app
   your location while you use it.
-- **Simulator:** *Simulate a received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
+- **Simulator:** *Received signal* in ⚙ **Settings** plays a 1 kHz tone with the squelch
   open.
 
 ## Transmitting
@@ -139,7 +147,8 @@ Transmitting requires a license and an antenna or dummy load.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
   Narrower limits can be chosen in ⚙ **Settings** under **Advanced**, **Frequency limits**. Otherwise the screen shows
-  *Can't transmit outside the ham band.*
+  *Can't transmit here*, with the allowed range. On 144.0000 MHz, half of the channel
+  would lie outside the band, so with 25 kHz the first allowed frequency is 144.0125 MHz.
 - 📱 A phone call, or a headset that is unplugged or switched off, ends the
   transmission.
 - Safety stops: the app ends a transmission after 3 minutes; the radio itself
@@ -241,7 +250,7 @@ modem, the app encodes and decodes the speech with Codec2.
 - The radio keeps the setting while it is on, also when the app reconnects;
   after a restart it is analog again. Switch back to *Analog* for normal FM.
 - Try it without a second radio: connect the **Simulator**, choose FreeDV 2400B
-  and turn on *Simulate a received signal* in ⚙ **Settings**; you hear a vowel-like test sound.
+  and choose a *Received signal* in ⚙ **Settings**; you hear a vowel-like test sound.
 
 ## Settings
 

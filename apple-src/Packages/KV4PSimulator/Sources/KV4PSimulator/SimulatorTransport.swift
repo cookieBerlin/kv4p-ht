@@ -51,6 +51,15 @@ public actor SimulatorTransport<C: Clock>: RadioTransport where C.Duration == Du
         streams.publish(.disconnected)
     }
 
+    /// The link fails, as when a radio goes out of range.
+    public func loseConnection() {
+        guard streams.state == .connected else { return }
+        ticker?.cancel()
+        ticker = nil
+        _ = simulator.disconnect(at: elapsed)
+        streams.publish(.failed(.connectionLost))
+    }
+
     /// An AX.25 packet (without FCS) received on air.
     public func hear(_ packet: [UInt8]) {
         streams.deliver(simulator.hear(packet, at: elapsed))
