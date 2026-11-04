@@ -14,6 +14,8 @@ struct FailingRepository: MemoryRepository {
     func insert(_ memories: [ChannelMemory]) async throws -> [ChannelMemory] { throw Failure() }
     func update(_ memory: ChannelMemory) async throws { throw Failure() }
     func delete(id: Int32) async throws { throw Failure() }
+    func reorder(_ ids: [Int32]) async throws { throw Failure() }
+    func renameGroup(_ group: String, to newName: String) async throws { throw Failure() }
 }
 
 /// Memories, groups, scan and the RepeaterBook import of the radio screen.

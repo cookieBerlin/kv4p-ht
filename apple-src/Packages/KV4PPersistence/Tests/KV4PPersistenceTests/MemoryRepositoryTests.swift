@@ -67,11 +67,4 @@ struct MemoryRepositoryTests {
         let second = try SwiftDataMemoryRepository(storeURL: url)
         #expect(try await second.all() == inserted)
     }
-
-    @Test("groups are the distinct non-empty group names, sorted")
-    func groups() {
-        var other = Self.simplex
-        other.group = "Contest"
-        #expect(ChannelMemory.groups(in: [Self.repeater, Self.simplex, other, Self.repeater]) == ["Contest", "Local"])
-    }
 }

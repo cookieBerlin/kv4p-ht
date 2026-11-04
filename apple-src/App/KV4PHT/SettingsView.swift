@@ -4,7 +4,6 @@ import KV4PProtocol
 import KV4PRadio
 import KV4PSimulator
 import SwiftUI
-import UniformTypeIdentifiers
 
 /// All settings on one screen, as in the Android app; the Mac shows them in its settings window.
 struct SettingsView: View {
@@ -12,9 +11,7 @@ struct SettingsView: View {
     /// The callsign as typed; the model keeps it normalised in the settings.
     @State private var callsign = ""
     @State private var areLimitsShown = false
-    @State private var isImporting = false
-    @State private var importedCSV: String?
-    @State private var importGroup = ""
+    @State private var isManagingMemories = false
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
@@ -52,8 +49,8 @@ struct SettingsView: View {
             aprs
 
             Section("Memories") {
-                Button("Import RepeaterBook CSV…", systemImage: "square.and.arrow.down") { isImporting = true }
-                    .explained(ControlHelp.importCSV)
+                Button("Manage memories…", systemImage: "list.bullet") { isManagingMemories = true }
+                    .explained(ControlHelp.manageMemories)
             }
 
             Section("Advanced") {
@@ -83,23 +80,11 @@ struct SettingsView: View {
             if !isPage { NoticeBanner(model: model) }
         }
         .onAppear { callsign = model.callsign }
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
-            guard case .success(let url) = result else { return }
-            let scoped = url.startAccessingSecurityScopedResource()
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            importedCSV = try? String(contentsOf: url, encoding: .utf8)
-            importGroup = url.deletingPathExtension().lastPathComponent
-        }
-        .alert(
-            "Save repeaters as group",
-            isPresented: Binding(get: { importedCSV != nil }, set: { if !$0 { importedCSV = nil } })
-        ) {
-            TextField("Group", text: $importGroup)
-            Button("Import") {
-                let csv = importedCSV ?? ""
-                Task { await model.importRepeaterBook(csv, group: importGroup) }
-            }
-            Button("Cancel", role: .cancel) {}
+        .sheet(isPresented: $isManagingMemories) {
+            NavigationStack { ManageMemoriesView(model: model) }
+                #if os(macOS)
+                    .frame(minWidth: 480, minHeight: 480)
+                #endif
         }
         #if os(macOS)
             .frame(minWidth: 480, minHeight: 560)

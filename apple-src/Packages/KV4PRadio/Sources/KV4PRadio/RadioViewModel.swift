@@ -166,7 +166,7 @@ public final class RadioViewModel {
         }
     }
 
-    /// All stored memories, in the order they were added.
+    /// All stored memories, in their stored order.
     public private(set) var memories: [ChannelMemory] = []
     /// The group shown; `nil` for all memories.
     public var selectedGroup: String? {
@@ -973,6 +973,9 @@ public final class RadioViewModel {
 
     // MARK: Memories
 
+    /// `makeSafeHamFreq` takes larger numbers for a mistyped decimal point; a memory must not hold one.
+    private static let highestFrequency: Float = 500
+
     public var groups: [String] { ChannelMemory.groups(in: memories) }
 
     public var visibleMemories: [ChannelMemory] {
@@ -993,10 +996,11 @@ public final class RadioViewModel {
 
     public var isScanning: Bool { snapshot.isScanning }
 
+    /// Every memory by group, with those without a group as a block of their own.
+    public var memoryBlocks: [MemoryGroup] { ChannelMemory.blocks(in: memories) }
+
     public func loadMemories() async {
-        await store { repository in
-            memories = try await repository.all()
-        }
+        await store { _ in }
     }
 
     /// Adds a new memory (id 0) or replaces the one with the same id.
@@ -1007,15 +1011,85 @@ public final class RadioViewModel {
             } else {
                 try await repository.update(memory)
             }
-            memories = try await repository.all()
         }
     }
 
     public func delete(_ memory: ChannelMemory) async {
+        await delete([memory])
+    }
+
+    public func delete(_ memories: [ChannelMemory]) async {
         await store { repository in
-            try await repository.delete(id: memory.id)
-            memories = try await repository.all()
+            for memory in memories {
+                try await repository.delete(id: memory.id)
+            }
         }
+    }
+
+    /// Moves whole groups; `destination` is as in SwiftUI's `onMove`.
+    public func moveGroups(_ offsets: IndexSet, to destination: Int) async {
+        let order = ChannelMemory.order(ofBlocks: memoryBlocks, movingGroups: offsets, to: destination)
+        await store { try await $0.reorder(order) }
+    }
+
+    /// Moves memories inside their group; `destination` is as in SwiftUI's `onMove`.
+    public func moveMemories(inGroup group: String, _ offsets: IndexSet, to destination: Int) async {
+        let order = ChannelMemory.order(ofBlocks: memoryBlocks, inGroup: group, moving: offsets, to: destination)
+        await store { try await $0.reorder(order) }
+    }
+
+    /// Moves memories to the end of `group`.
+    public func move(_ memories: [ChannelMemory], toGroup group: String) async {
+        await store { repository in
+            for var memory in memories {
+                memory.group = group
+                try await repository.update(memory)
+            }
+        }
+    }
+
+    /// Gives a group a new name; a name in use joins the two groups, a blank one changes nothing.
+    public func renameGroup(_ group: String, to newName: String) async {
+        let name = newName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        if selectedGroup == group {
+            selectedGroup = name
+        }
+        await store { try await $0.renameGroup(group, to: name) }
+    }
+
+    /// Deletes a group with its memories, or keeps them without a group.
+    public func deleteGroup(_ group: String, keepingMemories: Bool) async {
+        let members = memories.filter { $0.group == group }
+        if keepingMemories {
+            await move(members, toGroup: "")
+        } else {
+            await delete(members)
+        }
+    }
+
+    /// What keeps `memory` from being saved; `nil` if it can be.
+    public func memoryProblem(_ memory: ChannelMemory) -> String? {
+        if memory.name.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "Enter a name."
+        }
+        guard memory.frequency.isFinite, memory.frequency > 0, memory.frequency <= Self.highestFrequency else {
+            return "Enter a frequency in MHz."
+        }
+        if let firmware = snapshot.firmware, !(firmware.minRadioFreq...firmware.maxRadioFreq).contains(memory.frequency)
+        {
+            let lowest = HamFrequency.format(firmware.minRadioFreq)
+            let highest = HamFrequency.format(firmware.maxRadioFreq)
+            return "This radio receives from \(lowest) to \(highest) MHz."
+        }
+        return memory.offset != .none && memory.offsetKHz < 0 ? "Enter the offset in kHz." : nil
+    }
+
+    /// Where a memory with an offset transmits; the radio may still limit it when tuning.
+    public func transmitText(for memory: ChannelMemory) -> String? {
+        guard memory.offset != .none else { return nil }
+        let frequency = memory.txFrequency(in: 0...Self.highestFrequency)
+        return "Transmits on \(HamFrequency.format(frequency)) MHz"
     }
 
     public func tune(to memory: ChannelMemory) async {
@@ -1035,29 +1109,42 @@ public final class RadioViewModel {
         show(await controller.snapshot)
     }
 
-    /// Adds the repeaters of a RepeaterBook CSV export that the radio can receive as memories of `group`.
+    /// The app knows the radio's frequency range, which an import needs.
+    public var canImportRepeaters: Bool { snapshot.firmware != nil }
+
+    /// What importing a RepeaterBook CSV export into `group` would do; `nil` if the file is not one or no radio is known.
+    public func importPreview(_ csv: String, group: String) -> RepeaterBookPreview? {
+        guard let firmware = snapshot.firmware else { return nil }
+        let range = firmware.minRadioFreq...firmware.maxRadioFreq
+        return RepeaterBookImport.preview(fromCSV: csv, group: group, range: range, existing: memories)
+    }
+
+    /// Adds the repeaters of a RepeaterBook CSV export that the radio can receive and `group` does not have yet.
     public func importRepeaterBook(_ csv: String, group: String) async {
-        guard let firmware = snapshot.firmware else {
+        guard canImportRepeaters else {
             message = "Connect the radio first, so that only repeaters it can receive are imported."
             return
         }
-        let range = firmware.minRadioFreq...firmware.maxRadioFreq
-        guard let imported = RepeaterBookImport.memories(fromCSV: csv, group: group, range: range) else {
+        guard let imported = importPreview(csv, group: group)?.memories else {
             message = "This file is not a RepeaterBook CSV export."
             return
         }
         await store { repository in
             _ = try await repository.insert(imported)
-            memories = try await repository.all()
             message = "Imported \(imported.count) repeater\(imported.count == 1 ? "" : "s")."
             isNoticeSuccess = true
         }
     }
 
+    /// Runs `change` and shows the stored memories afterwards.
     private func store(_ change: (any MemoryRepository) async throws -> Void) async {
         guard let repository else { return }
         do {
             try await change(repository)
+            memories = try await repository.all()
+            if let group = selectedGroup, !groups.contains(group) {
+                selectedGroup = nil
+            }
         } catch {
             message = "The memories could not be loaded or saved."
         }

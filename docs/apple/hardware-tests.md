@@ -30,6 +30,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-21](#hw-21) | Choosing a radio over Bluetooth | ✅ | ✅ |
 | [HW-22](#hw-22) | Reporting a failed connection | ⬜ | ⬜ |
 | [HW-23](#hw-23) | PTT starts quickly | ⬜ | ✅ |
+| [HW-24](#hw-24) | Memory editor | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -180,3 +181,12 @@ Connect the radio and press PTT. The press gives a light vibration at once (iPho
 The button turns red without a noticeable delay, and the microphone indicator of iOS
 lights only while PTT is on, not while merely connected. Moving the finger on the
 button does not end the transmission.
+
+### HW-24
+
+Memories from an earlier version are still there after the update. In **Manage
+memories…**, drag groups and memories by their handles: the order stays after a restart,
+and the main list and the scan follow it. A tap opens a group or a memory. Every field of
+the memory form shows its label. Move and delete several memories, rename and delete a
+group. Import a RepeaterBook CSV twice into the same group: the second time, the
+assistant says that the repeaters are already there.

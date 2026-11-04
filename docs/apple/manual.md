@@ -165,9 +165,10 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   offset (TX = RX ± offset) and tones. Frequencies outside the module range are
   set to the nearest limit, as in the Android app.
 - **Add:** **+** creates a memory from the current frequency. **Edit…** and
-  **Delete** are behind the ⋯ button of each memory. A memory has a name,
-  frequency, offset (none, down or up, in kHz, default 600), TX and RX tone, an
-  optional group and *Skip during scan*.
+  **Delete** are behind the ⋯ button of each memory. Deleting always asks first. A
+  memory has a name, frequency, offset (none, down or up, in kHz, default 600), TX and
+  RX tone, an optional group and *Skip during scan*. With an offset, the form shows
+  where the memory transmits.
 - **Groups:** the **Group** picker above the list shows one group or all memories.
   **Scan** and **+** are next to it.
 - **Scan:** steps through the memories shown, in order, and stays on a memory
@@ -175,11 +176,18 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   It skips memories marked *Skip during scan* and those outside the module
   range. With squelch 0 it scans with squelch 7, as in the Android app; **Stop
   scan** restores your squelch. Transmitting or tuning by hand ends the scan.
-- **RepeaterBook import:** download a CSV export from
-  [RepeaterBook](https://www.repeaterbook.com) in your browser (US or
-  international format), then choose **Import RepeaterBook CSV…** in ⚙ **Settings** and enter a
-  group name. The app adds the repeaters the connected radio can receive, with
-  offset and uplink tone. Connect the radio first.
+- **Manage memories…** in ⚙ **Settings** shows the groups, and a group its memories.
+  Drag a row by its handle to sort: the groups, or the memories inside a group. The main
+  list, the **Group** picker and the scan follow this order. A group exists as long as
+  it has a memory. A memory's ⋯ button moves it to another group, and **Select** in the
+  ⋯ menu at the top moves or deletes several at once. The same menu renames or deletes
+  the group; deleting asks whether its memories go too or stay without a group.
+- **RepeaterBook import:** **Import from RepeaterBook** in *Manage memories* asks for a
+  CSV export, which you download from [RepeaterBook](https://www.repeaterbook.com) in
+  your browser (US or international format). It then shows how many repeaters it would
+  add, and how many it leaves out because the radio cannot receive them or the group
+  already has them (same name and frequency). You choose the group. Connect the radio
+  first.
 - Memories are stored on this device.
 
 ## APRS

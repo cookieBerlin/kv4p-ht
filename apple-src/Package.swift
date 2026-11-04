@@ -48,7 +48,8 @@ let package = Package(
         .testTarget(
             name: "KV4PPersistenceTests",
             dependencies: ["KV4PPersistence"],
-            path: "Packages/KV4PPersistence/Tests/KV4PPersistenceTests"
+            path: "Packages/KV4PPersistence/Tests/KV4PPersistenceTests",
+            resources: [.copy("Fixtures")]
         ),
         .target(
             name: "KV4PAPRS",
