@@ -112,12 +112,13 @@ struct AccessToneControllerTests {
         await setup.clock.waitForSleepers(1)
         setup.reportOnAir()
         _ = try await setup.run(until: task)
-        var heard = 0
+        var heard: [Int16] = []
         while let event = await events.next() {
-            if case .tone(let samples) = event { heard += samples.count }
-            if heard >= Self.tone.samples().count { break }
+            if case .tone(let samples) = event { heard += samples }
+            if heard.count >= Self.tone.samples().count { break }
         }
-        #expect(heard >= Self.tone.samples().count)
+        #expect(heard.count >= Self.tone.samples().count)
+        #expect((heard.map { abs(Int($0)) }.max() ?? 0) < 1000)  // far quieter than on air
     }
 
     @Test("the microphone gain does not raise the level of the tone")

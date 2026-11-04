@@ -49,6 +49,13 @@ struct AccessToneTests {
         #expect((16300...16384).contains(peak))
     }
 
+    @Test("on the device it is far quieter than on air, at 2 % of full scale")
+    func deviceLevel() {
+        let samples = AccessTone(frequency: 1750, lengthMs: 250, waitMs: 0).samples()
+        let peak = AccessTone.forDevice(samples).map { abs(Int($0)) }.max() ?? 0
+        #expect((630...670).contains(peak))
+    }
+
     @Test("it starts and ends at silence, without a click")
     func edges() {
         let samples = AccessTone(frequency: 1750, lengthMs: 250, waitMs: 0).samples()
