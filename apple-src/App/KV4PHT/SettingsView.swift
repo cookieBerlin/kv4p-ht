@@ -40,9 +40,14 @@ struct SettingsView: View {
             radioSettings
 
             #if os(iOS)
-                // A phone has no room for the volume in the header.
-                if sizeClass == .compact {
-                    Section("Audio") { VolumeSlider(model: model) }
+                Section("Audio") {
+                    // A phone has no room for the volume in the header.
+                    if sizeClass == .compact {
+                        VolumeSlider(model: model)
+                    }
+                    if model.canChooseOtherAudio {
+                        otherAudio
+                    }
                 }
             #endif
 
@@ -93,6 +98,24 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
         #endif
     }
+
+    #if os(iOS)
+        /// What other apps do while the radio is busy (ADR-0043).
+        @ViewBuilder private var otherAudio: some View {
+            Picker("Other audio", selection: $model.otherAudioMode) {
+                ForEach(OtherAudioMode.allCases, id: \.self) { Text($0.label) }
+            }
+            .explained(ControlHelp.otherAudio)
+            if model.otherAudioMode.changesOtherAudio {
+                Picker("Resume after", selection: $model.otherAudioResumeSeconds) {
+                    ForEach(RadioViewModel.otherAudioResumeOptions, id: \.self) { Text("\($0) s") }
+                }
+            }
+            if let hint = model.otherAudioHint {
+                Text(hint).font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+    #endif
 
     /// On a phone, the screen around the settings page shows the notices.
     private var isPage: Bool {
