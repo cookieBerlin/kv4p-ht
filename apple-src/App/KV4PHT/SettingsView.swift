@@ -111,6 +111,11 @@ struct SettingsView: View {
                     ForEach(RadioViewModel.otherAudioResumeOptions, id: \.self) { Text("\($0) s") }
                 }
             }
+            if let warning = model.otherAudioMode.warning {
+                Label(warning, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
             if let hint = model.otherAudioHint {
                 Text(hint).font(.footnote).foregroundStyle(.secondary)
             }

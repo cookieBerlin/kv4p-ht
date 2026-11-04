@@ -136,7 +136,8 @@ disconnect yourself:
     as the system stops the audio for each switch.
   - PTT pauses all other apps, also music and with *Lower all*, so that nothing goes on
     air. This takes up to a second; while no other app plays, PTT stays instant. They
-    return after the same time.
+    return after the same time. With *Keep playing* they go on, and the microphone can
+    send them on air, so the settings warn about it.
   - A received APRS packet counts too, as the app cannot tell it from voice. With
     frequent packets, choose *Keep playing*.
   - With squelch 0 the squelch is always open, so only transmitting does this.

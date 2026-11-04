@@ -22,6 +22,12 @@ public enum OtherAudioMode: String, Codable, CaseIterable, Sendable {
     }
 
     public var changesOtherAudio: Bool { self != .keepPlaying }
+
+    /// What the user should know before choosing this mode.
+    public var warning: String? {
+        guard self == .keepPlaying else { return nil }
+        return "Other apps also keep playing while you transmit. The microphone can pick them up and send them on air."
+    }
 }
 
 /// The audio session of the app; implemented by the OS adapter (`AVAudioSessionAdapter`, iOS only).
