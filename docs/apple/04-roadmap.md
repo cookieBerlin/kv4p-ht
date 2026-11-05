@@ -83,13 +83,18 @@ box. Hardware test results are in [hardware-tests.md](hardware-tests.md).
 | ✅ | 4.7b | **APRS chats: writing** | **+** starts a chat with a callsign that has not sent anything yet. Typing sends to that callsign, with a counter and a stop at the limit, so that nothing is cut off: 61 characters, as the number of the message takes the rest of the 67. A message not delivered offers *Send again*, which replaces it in the chat, and is never sent again by itself. A single message or, after a confirmation, a whole chat can be deleted, which also removes those packets from the packet list. Without a callsign or in listen-only mode (3.6), chats can be read but have no input ([ADR-0061](adr/0061-aprs-chats.md)). |
 | ✅ | 4.7c | **APRS chats: notifications** | A tap on a notification of a message opens its chat ([ADR-0061](adr/0061-aprs-chats.md)). |
 
-## Phase 5 — RepeaterBook and SSTV
+## Phase 5 — RepeaterBook
 
 |   | # | Milestone | Acceptance criteria |
 |---|---|---|---|
 | ⬜ | 5.1 | **RepeaterBook download** | The options are evaluated first: embedded web page as in the Android app, official API, stored login. The evaluation covers RepeaterBook's terms. The chosen option replaces the manual CSV download where possible, and the password does not enter the repository. ADR. |
-| ⬜ | 5.2 | **SSTV receive** | The milestone starts with two decisions: which modes the app supports, and whether an existing library can be reused or the decoder is written from scratch (including its licence). The app then decodes SSTV images from the received audio and shows and saves them. The decoder is tested with generated test signals, as the Android app has no SSTV to serve as an oracle. ADR. |
-| ⬜ | 5.3 | **SSTV transmit** | The user chooses an image, and the app sends it as it is in the chosen modes; the callsign is part of the image. The app's own TX time limit does not apply to it, and the transmission can be stopped at any time. Listen-only mode blocks it, and the frequency limits stay in force. Encoder and decoder pass a round trip in the tests. The firmware ends a transmission after 200 s: longer modes wait until the firmware allows them, as a separate step later. ADR, or part of the ADR of 5.2. |
+
+## Phase 6 — SSTV
+
+|   | # | Milestone | Acceptance criteria |
+|---|---|---|---|
+| ⬜ | 6.1 | **SSTV receive** | The milestone starts with two decisions: which modes the app supports, and whether an existing library can be reused or the decoder is written from scratch (including its licence). The app then decodes SSTV images from the received audio and shows and saves them. The decoder is tested with generated test signals, as the Android app has no SSTV to serve as an oracle. ADR. |
+| ⬜ | 6.2 | **SSTV transmit** | The user chooses an image, and the app sends it as it is in the chosen modes; the callsign is part of the image. The app's own TX time limit does not apply to it, and the transmission can be stopped at any time. Listen-only mode blocks it, and the frequency limits stay in force. Encoder and decoder pass a round trip in the tests. The firmware ends a transmission after 200 s: longer modes wait until the firmware allows them, as a separate step later. ADR, or part of the ADR of 6.1. |
 
 ## Phase 99 — App Store release
 
