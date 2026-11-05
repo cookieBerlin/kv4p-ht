@@ -117,6 +117,16 @@ struct StationPositionTests {
         #expect(object.contains("q=TEST%20OBJ"))
     }
 
+    @Test("the map names an object by its summary")
+    func mapLabel() throws {
+        var event = Self.event(latitude: 49, longitude: -72)
+        event.kind = .object
+        event.objectName = "145.500-R"
+        event.comment = "145.500MHz"
+        let link = try #require(Self.model().position(of: event)?.mapURL?.absoluteString)
+        #expect(link.contains("q=145.500-R%20%C2%B7%20145.5%20MHz"))
+    }
+
     @Test("a coordinate of 0 alone is a position")
     func onEquator() {
         #expect(Self.model().position(of: Self.event(latitude: 0, longitude: 10)) != nil)

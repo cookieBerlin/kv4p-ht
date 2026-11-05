@@ -1,0 +1,259 @@
+{
+  "generator": "tools/test-vectors",
+  "source": "AprsObjectSummary.from",
+  "vectors": [
+    {
+      "name": "N0CALL  B / RNG0001/A=000010 70cm Voice (D-Star) 439.12500MHz +0.0000MHz, APRS for ircDDBGateway",
+      "input": {
+        "name": "N0CALL  B",
+        "comment": "RNG0001/A=000010 70cm Voice (D-Star) 439.12500MHz +0.0000MHz, APRS for ircDDBGateway"
+      },
+      "expected": {
+        "card": "70cm Voice D-Star \u00b7 APRS for ircDDBGateway\n439.125 MHz \u00b7 Simplex\nRange 1 mi \u00b7 Altitude 10 ft",
+        "label": "N0CALL B \u00b7 439.125 MHz \u00b7 D-Star"
+      }
+    },
+    {
+      "name": "N0CALL C / RNG0070 2m Voice 146.9125 -0.600 MHz",
+      "input": {
+        "name": "N0CALL C",
+        "comment": "RNG0070 2m Voice 146.9125 -0.600 MHz"
+      },
+      "expected": {
+        "card": "2m Voice\n146.9125 MHz \u00b7 Offset -0.6 MHz\nRange 70 mi",
+        "label": "N0CALL C \u00b7 146.9125 MHz \u00b7 Voice"
+      }
+    },
+    {
+      "name": "N0CALL-4 / #145.175/439.100 N0CALL-10 Winlink Packet Gateway",
+      "input": {
+        "name": "N0CALL-4",
+        "comment": "#145.175/439.100 N0CALL-10 Winlink Packet Gateway"
+      },
+      "expected": {
+        "card": "N0CALL-10 Winlink Packet Gateway\n145.175 / 439.1 MHz",
+        "label": "N0CALL-4 \u00b7 145.175 / 439.1 MHz \u00b7 Winlink"
+      }
+    },
+    {
+      "name": "MEETING / Club picnic",
+      "input": {
+        "name": "MEETING",
+        "comment": "Club picnic"
+      },
+      "expected": {
+        "card": "Club picnic",
+        "label": "MEETING"
+      }
+    },
+    {
+      "name": "145.500-R / 145.500MHz -0.600 MHz T100 R10k",
+      "input": {
+        "name": "145.500-R",
+        "comment": "145.500MHz -0.600 MHz T100 R10k"
+      },
+      "expected": {
+        "card": "T100\n145.5 MHz \u00b7 Offset -0.6 MHz\nRange 10 km",
+        "label": "145.500-R \u00b7 145.5 MHz"
+      }
+    },
+    {
+      "name": "N0CALL / R25m 145.500MHz",
+      "input": {
+        "name": "N0CALL",
+        "comment": "R25m 145.500MHz"
+      },
+      "expected": {
+        "card": "145.5 MHz\nRange 25 mi",
+        "label": "N0CALL \u00b7 145.5 MHz"
+      }
+    },
+    {
+      "name": "N0CALL / i RNG0010 BBS node",
+      "input": {
+        "name": "N0CALL",
+        "comment": "i RNG0010 BBS node"
+      },
+      "expected": {
+        "card": "BBS node\nRange 10 mi",
+        "label": "N0CALL \u00b7 BBS"
+      }
+    },
+    {
+      "name": "N0CALL / aR5k Data port",
+      "input": {
+        "name": "N0CALL",
+        "comment": "aR5k Data port"
+      },
+      "expected": {
+        "card": "Data port\nRange 5 km",
+        "label": "N0CALL \u00b7 Data"
+      }
+    },
+    {
+      "name": "N0CALL / /145.500 +0.6 MHz",
+      "input": {
+        "name": "N0CALL",
+        "comment": "/145.500 +0.6 MHz"
+      },
+      "expected": {
+        "card": "145.5 MHz \u00b7 Offset 0.6 MHz",
+        "label": "N0CALL \u00b7 145.5 MHz"
+      }
+    },
+    {
+      "name": "N0CALL / 1450 MHz, , Voice",
+      "input": {
+        "name": "N0CALL",
+        "comment": "1450 MHz, , Voice"
+      },
+      "expected": {
+        "card": "Voice\n1450 MHz",
+        "label": "N0CALL \u00b7 1450 MHz \u00b7 Voice"
+      }
+    },
+    {
+      "name": "N0CALL / 1234.5MHz",
+      "input": {
+        "name": "N0CALL",
+        "comment": "1234.5MHz"
+      },
+      "expected": {
+        "card": "1234.5 MHz",
+        "label": "N0CALL \u00b7 1234.5 MHz"
+      }
+    },
+    {
+      "name": "N0CALL / 12345 MHz",
+      "input": {
+        "name": "N0CALL",
+        "comment": "12345 MHz"
+      },
+      "expected": {
+        "card": "12345 MHz",
+        "label": "N0CALL"
+      }
+    },
+    {
+      "name": "N0CALL / +145.500 MHz",
+      "input": {
+        "name": "N0CALL",
+        "comment": "+145.500 MHz"
+      },
+      "expected": {
+        "card": "145.5 MHz",
+        "label": "N0CALL \u00b7 145.5 MHz"
+      }
+    },
+    {
+      "name": "N0CALL / (Very long mode name that does not fit) 145.500MHz",
+      "input": {
+        "name": "N0CALL",
+        "comment": "(Very long mode name that does not fit) 145.500MHz"
+      },
+      "expected": {
+        "card": "Very long mode name that does not fit\n145.5 MHz",
+        "label": "N0CALL \u00b7 145.5 MHz"
+      }
+    },
+    {
+      "name": "N0CALL / ()",
+      "input": {
+        "name": "N0CALL",
+        "comment": "()"
+      },
+      "expected": {
+        "card": "()",
+        "label": "N0CALL"
+      }
+    },
+    {
+      "name": "N0CALL / /A=001000",
+      "input": {
+        "name": "N0CALL",
+        "comment": "/A=001000"
+      },
+      "expected": {
+        "card": "Altitude 1000 ft",
+        "label": "N0CALL"
+      }
+    },
+    {
+      "name": "  N0   CALL   /   spaced   out  ",
+      "input": {
+        "name": "  N0   CALL  ",
+        "comment": "  spaced   out  "
+      },
+      "expected": {
+        "card": "spaced out",
+        "label": "N0 CALL"
+      }
+    },
+    {
+      "name": "N0CALL / ",
+      "input": {
+        "name": "N0CALL",
+        "comment": ""
+      },
+      "expected": {
+        "card": "",
+        "label": "N0CALL"
+      }
+    },
+    {
+      "name": "N0CALL / null",
+      "input": {
+        "name": "N0CALL",
+        "comment": null
+      },
+      "expected": {
+        "card": "",
+        "label": "N0CALL"
+      }
+    },
+    {
+      "name": " / Voice",
+      "input": {
+        "name": "",
+        "comment": "Voice"
+      },
+      "expected": {
+        "card": "Voice",
+        "label": "Voice"
+      }
+    },
+    {
+      "name": "null / winlink",
+      "input": {
+        "name": null,
+        "comment": "winlink"
+      },
+      "expected": {
+        "card": "winlink",
+        "label": "Winlink"
+      }
+    },
+    {
+      "name": "N0CALL / 145.500MHz +0.000MHz",
+      "input": {
+        "name": "N0CALL",
+        "comment": "145.500MHz +0.000MHz"
+      },
+      "expected": {
+        "card": "145.5 MHz \u00b7 Simplex",
+        "label": "N0CALL \u00b7 145.5 MHz"
+      }
+    },
+    {
+      "name": "N0CALL / 145.50MHz 100.0",
+      "input": {
+        "name": "N0CALL",
+        "comment": "145.50MHz 100.0"
+      },
+      "expected": {
+        "card": "100.0\n145.5 MHz",
+        "label": "N0CALL \u00b7 145.5 MHz"
+      }
+    }
+  ]
+}
