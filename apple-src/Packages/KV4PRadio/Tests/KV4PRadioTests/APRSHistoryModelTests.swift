@@ -138,10 +138,12 @@ struct APRSHistoryModelTests {
         let setup = try Setup()
         await setup.receive(Self.position)
         await setup.receive(Self.toMe)
-        let stored = Dictionary(
-            uniqueKeysWithValues: setup.model.aprsEvents.map { ($0.kind, setup.model.isStored($0)) }
-        )
-        #expect(stored == [.position: false, .message: true])
+        // A packet that arrives before the stored ones are back is stored right after.
+        let isSettled = await KV4PTestSupport.eventually {
+            let stored = setup.model.aprsEvents.map { ($0.kind, setup.model.isStored($0)) }
+            return Dictionary(uniqueKeysWithValues: stored) == [.position: false, .message: true]
+        }
+        #expect(isSettled)
         #expect(setup.model.canStorePackets)
     }
 
