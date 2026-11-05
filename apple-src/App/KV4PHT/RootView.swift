@@ -36,6 +36,7 @@ struct RootView: View {
             }
             .onAppear { model.refreshConnections() }
             .onChange(of: scenePhase, initial: true) {
+                model.isAppActive = scenePhase == .active
                 if scenePhase == .active {
                     model.refreshPermissions()  // the user may return from the system settings
                     model.startBluetoothScan()

@@ -91,6 +91,7 @@ struct SettingsSyncTests {
             Set(SettingsSync.values(of: AppSettings()).keys) == [
                 "callsign", "isStickyPTT", "accessToneHz", "accessToneLengthMs", "accessToneWaitMs", "beaconSymbol",
                 "beaconAccuracy", "beaconFrequency", "aprsDestinationFilter", "txLimits", "units",
+                "beaconIntervalMinutes",
             ]
         )
     }

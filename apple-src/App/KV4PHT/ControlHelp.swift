@@ -40,7 +40,10 @@ enum ControlHelp {
     static let micGain = "Makes a quiet microphone louder."
     static let frequencyLimits =
         "The app transmits only inside these frequencies. Set them to what your licence allows."
-    static let beacon = "Sends your position now and every five minutes while the radio is connected."
+    static let beacon = "Sends your position now and then at the chosen interval while the radio is connected."
+    static let beaconInterval = "All stations share the APRS frequency, so choose no more often than you need."
+    static let backgroundBeacon =
+        "Keeps sending with the screen locked. The system then shows its location indicator, and more battery is used."
     static let symbol = "The icon others see for your station on APRS maps."
     static let accuracy = "How accurately others see your position. Rounding it keeps your exact location private."
     static let beaconFrequency = "The frequency for your beacons; usually the APRS frequency of your region."

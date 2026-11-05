@@ -56,6 +56,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isBeaconEnabled = false
     public var beaconSymbol = APRSSymbol.phone
     public var beaconAccuracy = BeaconAccuracy.exact
+    /// How often the beacon goes out (ADR-0056).
+    public var beaconIntervalMinutes = 5
+    /// The beacon goes on with the screen locked; local to the device (ADR-0056).
+    public var isBackgroundBeaconEnabled = true
     /// MHz; `nil` beacons on the current TX frequency (Android "Current").
     public var beaconFrequency: Float?
     public var isDigipeatingEnabled = false
@@ -73,6 +77,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isSimulatorChosen = false
     /// How the simulated radio behaves, for testing; local to the device (ADR-0041).
     public var simulator = SimulatorSettings()
+
+    /// All stations share the APRS frequency, so there is no shorter one.
+    public static let beaconIntervalOptions = [2, 5, 10, 15, 30, 60]
 
     /// `SettingsActivity.populateAprsFrequencies`, after "Current".
     public static let beaconFrequencyOptions: [Float] = [144.39, 144.575, 144.64, 144.66, 144.8, 145.175, 145.825]
@@ -109,6 +116,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         let wasApproximate = (try? former.decodeIfPresent(Bool.self, forKey: .isBeaconApproximate)) == true
         beaconAccuracy = values.value(.beaconAccuracy, or: wasApproximate ? .within1000m : defaults.beaconAccuracy)
         beaconFrequency = values.value(.beaconFrequency, or: defaults.beaconFrequency)
+        beaconIntervalMinutes = values.value(.beaconIntervalMinutes, or: defaults.beaconIntervalMinutes)
+        isBackgroundBeaconEnabled = values.value(.isBackgroundBeaconEnabled, or: defaults.isBackgroundBeaconEnabled)
         isDigipeatingEnabled = values.value(.isDigipeatingEnabled, or: defaults.isDigipeatingEnabled)
         isIGateEnabled = values.value(.isIGateEnabled, or: defaults.isIGateEnabled)
         isInternetFeedEnabled = values.value(.isInternetFeedEnabled, or: defaults.isInternetFeedEnabled)

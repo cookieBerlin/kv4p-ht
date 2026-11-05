@@ -265,6 +265,14 @@ struct APRSSettings: View {
                 Toggle("Position beacon", isOn: $model.isBeaconEnabled)
                     .disabled(!model.canBeacon || !model.canSendOnAir)
                     .explained(ControlHelp.beacon)
+                Picker("Every", selection: $model.beaconIntervalMinutes) {
+                    ForEach(AppSettings.beaconIntervalOptions, id: \.self) { Text("\($0) min") }
+                }
+                .explained(ControlHelp.beaconInterval)
+                if model.supportsBackgroundBeacon {
+                    Toggle("Beacon in the background", isOn: $model.isBackgroundBeaconEnabled)
+                        .explained(ControlHelp.backgroundBeacon)
+                }
                 if model.isDenied(.location) {
                     PermissionNotice(permission: .location)
                 }
