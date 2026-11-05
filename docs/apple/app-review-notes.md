@@ -43,7 +43,8 @@ nothing to a device. On iPhone and iPad there is no firmware update.
 
 - Bluetooth: connects to the radio.
 - Microphone: transmits the user's voice while the PTT button is pressed.
-- Location: only for APRS position beacons, which are off by default.
+- Location: for APRS position beacons, which are off by default, and for the distance to stations
+  while the APRS list is on screen, which stays on the device.
 
 **Internet:** the optional APRS-IS functions are off by default. They connect to
 the public APRS-IS network to report and show packets. The app has no accounts,
