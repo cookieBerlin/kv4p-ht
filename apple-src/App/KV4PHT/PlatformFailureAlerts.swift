@@ -18,8 +18,8 @@ import KV4PRadio
 #else
     import UserNotifications
 
-    /// iPhone and iPad: a local notification. The system drops it while the app is in the foreground, as the app sets
-    /// no notification delegate. The app also shows the failure as a notice.
+    /// iPhone and iPad: a local notification. In the foreground, the delegate of `NotificationOpener` shows none. The
+    /// app also shows the failure as a notice.
     struct PlatformFailureAlerts: FailureAlerting {
         private static let identifier = "radio-failure"
         let diagnostics: DiagnosticLog

@@ -51,6 +51,14 @@ Milestone 4.7 brings simple chats over APRS, built on the stored packets of
 - **Messages go over the radio only,** so a station seen only on the internet gets a reply if an iGate passes it
   on. An empty chat says so.
 
+### Notifications (4.7c)
+
+- **A tap on the notification of a message opens its chat,** on the chats page, wherever the user was: on an
+  iPhone the APRS page comes to the front, and settings shown over the main page close. The notification carries
+  the station of its chat.
+- **The app has a notification delegate now,** which also keeps notifications out while the app is in front, as
+  before, since the app shows new messages itself there. A failure notification opens nothing but the app.
+
 ## Consequences
 
 - The store finds a station's messages by the callsign in sender or recipient, so a few messages of others whose

@@ -33,6 +33,7 @@ enum Composition {
     )
     private static var crashReports: MetricKitCrashReports?
     private static var cloudKitFailures: Task<Void, Never>?
+    private static var notificationOpener: NotificationOpener?
 
     static func makeViewModel() -> RadioViewModel {
         diagnostics.log(.info, .app, "Started: \(appVersion) on \(ProblemReport.Environment.current.system)")
@@ -73,6 +74,7 @@ enum Composition {
             simulator: simulator
         )
         crashReports = MetricKitCrashReports(model: model)
+        notificationOpener = NotificationOpener(model: model)
         return model
     }
 
