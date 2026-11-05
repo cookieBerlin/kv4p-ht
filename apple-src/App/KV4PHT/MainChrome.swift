@@ -2,6 +2,10 @@ import KV4PAudio
 import KV4PRadio
 import SwiftUI
 
+#if os(iOS)
+    import CoreHaptics
+#endif
+
 extension View {
     /// With room for it, the parts around the memories and APRS: the header, the PTT bar and the settings button.
     func mainChrome(_ model: RadioViewModel, title: String) -> some View {
@@ -549,17 +553,59 @@ private struct AccessToneButton: View {
     }
 
     #if os(iOS)
-        /// Only here the iPhone vibrates all the time: the finger has to stay, unlike with PTT.
+        /// Only here the iPhone vibrates all the time: the finger has to stay, unlike with PTT. One continuous pattern
+        /// rather than an impact every few milliseconds, which asks the system for less.
         private func vibrateWhileSending() async {
-            guard isPressed, model.isSendingAccessTone else { return }
-            let generator = UIImpactFeedbackGenerator(style: .rigid)
-            while !Task.isCancelled {
-                generator.impactOccurred()
-                try? await Task.sleep(for: .milliseconds(80))
-            }
+            guard isPressed, model.isSendingAccessTone, let vibration = ContinuousVibration() else { return }
+            vibration.start()
+            // Ends when the task is cancelled, as the tone ends or the button is let go.
+            try? await Task.sleep(for: .seconds(3600))
+            vibration.stop()
         }
     #endif
 }
+
+#if os(iOS)
+    /// A vibration that lasts until it is stopped; longer than any access tone. `nil` where the device cannot vibrate.
+    @MainActor
+    private final class ContinuousVibration {
+        private let engine: CHHapticEngine
+        private let player: any CHHapticPatternPlayer
+
+        init?() {
+            guard CHHapticEngine.capabilitiesForHardware().supportsHaptics,
+                let engine = try? CHHapticEngine(),
+                let pattern = try? CHHapticPattern(
+                    events: [
+                        CHHapticEvent(
+                            eventType: .hapticContinuous,
+                            parameters: [
+                                CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.8),
+                                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.6),
+                            ],
+                            relativeTime: 0,
+                            duration: 30
+                        )
+                    ],
+                    parameters: []
+                ),
+                let player = try? engine.makePlayer(with: pattern)
+            else { return nil }
+            self.engine = engine
+            self.player = player
+        }
+
+        func start() {
+            try? engine.start()
+            try? player.start(atTime: CHHapticTimeImmediate)
+        }
+
+        func stop() {
+            try? player.stop(atTime: CHHapticTimeImmediate)
+            engine.stop()
+        }
+    }
+#endif
 
 extension View {
     /// Reports when a press starts and when it ends.
