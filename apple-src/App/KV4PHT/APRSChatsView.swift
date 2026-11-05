@@ -122,6 +122,7 @@ private struct APRSConversationView: View {
                 .padding(8)
             }
             .defaultScrollAnchor(.bottom)
+            .scrollDismissesKeyboard(.interactively)
             .overlay {
                 if model.messages(with: peer).isEmpty {
                     ContentUnavailableView(
@@ -152,6 +153,12 @@ private struct APRSConversationView: View {
                     .lineLimit(1...4)
                     .focused($isWriting)
                     .onSubmit(send)
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") { isWriting = false }
+                        }
+                    }
                     .onChange(of: text) {
                         // A stop rather than a cut when it is sent, so that nothing goes missing.
                         if text.count > limit { text = String(text.prefix(limit)) }

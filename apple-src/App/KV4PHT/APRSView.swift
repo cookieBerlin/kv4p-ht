@@ -83,6 +83,12 @@ struct APRSView: View {
         TextField("Message", text: $text)
             .focused($isWriting)
             .onSubmit(send)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { isWriting = false }
+                }
+            }
     }
 
     private var sendButton: some View {

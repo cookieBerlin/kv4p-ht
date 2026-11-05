@@ -24,11 +24,13 @@ server, and without a personal address in the app or the repository.
     frames as a count, a radio that leaves no room to send for 2 s, or does not take the settings for 5 s.
   - Radio use: frequencies, scans, what was asked for and what the radio reports about transmitting, why PTT,
     tuning or a scan was refused, and a transmission ended by its time limit.
-  - Audio: session events, routes, gaps in the sound each minute if there are new ones, and the reason for a
-    failed start.
+  - Audio: session events, routes, and the reason for a failed start. Each minute, the samples received from the
+    radio and asked for by the output, so that rates that do not match show, with gaps and dropped samples; a minute
+    without gaps only with details.
   - APRS: APRS-IS connection, login result and next try; why a packet did not go out; delivery of a message
     by its internal number; beacons; location failures.
-  - Stores and sync: settings or packets that could not be read, failed iCloud events with their code.
+  - Stores and sync: settings or packets that could not be read, failed iCloud events with their code; a finished
+    sync only with details, as several come at once.
   - The app: start with version and system, how it is set up without personal values, foreground and
     background, permissions, the background session, firmware updates and what the user is told.
 - **Frequencies and times go in.** Amateur radio is on air for everyone, so they are not private. Callsigns are.
@@ -49,6 +51,7 @@ server, and without a personal address in the app or the repository.
   scrolls up. The filter is remembered on the device, so the view says clearly when one is on. On an iPhone it is not
   shown beside PTT, as that would bring a page and its gestures close to transmitting.
 - **After a crash, the question leads to the report directly,** in a sheet, as that is what it is about.
+- **A report names the firmware of the last radio,** kept on the device, also after a restart.
 - **A report:** the user sees it, and shares the file through the system's dialog or
   opens a prepared GitHub issue, to which they attach it. The issue holds only versions and device, and says
   that issues are public. The callsign is replaced in the whole report, in any case and with any SSID.
