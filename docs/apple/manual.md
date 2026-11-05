@@ -317,7 +317,8 @@ Messages go over the radio; a station seen only on the internet gets them only i
 the ⋯ menu of its row does the same, also from the *Packets* page. The number on the APRS page, and on *Chats*,
 shows unread messages to your callsign, with any SSID, until you open their chat. While the app is in the background, each of them
 brings a notification with its sender and text. The app must be running for this, so nothing arrives after it has
-ended. *Notify about messages to me* under ⚙ **Settings**, *APRS*, *History* turns this off.
+ended. A tap on the notification opens its chat. *Notify about messages to me* under ⚙ **Settings**, *APRS*,
+*History* turns this off.
 
 **If something goes wrong:** the app keeps a log on your device, with frequencies and times but without callsigns, message texts or positions.
 ⚙ **Settings**, *Logging*, *Live log* shows what is being logged as it happens: you can search, filter by level

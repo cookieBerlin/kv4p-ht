@@ -1789,6 +1789,17 @@ public final class RadioViewModel {
         openChat = peer
     }
 
+    /// Goes up with each request to show a chat from elsewhere, for the views to bring the APRS page to the front.
+    public private(set) var chatRequestCount = 0
+
+    /// From a notification: the chat on the chats page, wherever the user was.
+    public func openChat(with peer: String) {
+        aprsPage = .chats
+        aprsRecipient = peer
+        openChat = peer
+        chatRequestCount += 1
+    }
+
     private func markOpenChatRead() {
         guard let openChat, isAPRSVisible else { return }
         chatReadUntilMs[openChat] = now()
@@ -1854,7 +1865,9 @@ public final class RadioViewModel {
         }
         for event in new.sorted(by: { $0.id < $1.id }) where event.isMessage(to: callsign) {
             if !isAppActive, notifiesAboutMessages, let text = event.body {
-                messageNotifier?.deliver(APRSMessageNotice(id: event.id, title: event.fromCallsign, text: text))
+                messageNotifier?.deliver(
+                    APRSMessageNotice(id: event.id, title: event.fromCallsign, text: text, peer: event.fromCallsign)
+                )
             }
         }
     }

@@ -138,6 +138,7 @@ struct RootView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .onChange(of: model.aprsReplyCount) { withAnimation { page = .aprs } }
+                .onChange(of: model.chatRequestCount) { withAnimation { page = .aprs } }
                 if page == .settings {
                     if model.hasFailed {
                         StatusLine(model: model).padding(.vertical, 6)

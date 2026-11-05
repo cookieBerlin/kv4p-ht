@@ -348,4 +348,5 @@ days lets an older message go, while with *No limit* it stays as other packets g
 change with it. Write in a chat: the counter stops at 61, and the message arrives whole on another radio. Start a
 chat with *New chat*. Let a message go unanswered until it fails, and *Send again* replaces it in the chat while the
 packets keep both. Delete a message and a whole chat. In listen-only mode, a chat has no input.
-With the simulator, try each *Answer to messages*: delivered, a reply after *Reply after*, rejected, and no answer.
+With the app in the background, a tap on the notification of a message opens its chat, also from the settings. With
+the simulator, try each *Answer to messages*: delivered, a reply after *Reply after*, rejected, and no answer.

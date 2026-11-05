@@ -40,6 +40,7 @@ private struct SettingsEntry: ViewModifier {
             #if os(iOS)
                 .navigationDestination(isPresented: $isShowingSettings) { SettingsView(model: model) }
                 .onChange(of: model.aprsReplyCount) { isShowingSettings = false }
+                .onChange(of: model.chatRequestCount) { isShowingSettings = false }
             #endif
     }
 }
