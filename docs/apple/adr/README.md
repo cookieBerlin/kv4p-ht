@@ -50,3 +50,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0044](0044-mute-other-apps-on-the-mac.md) | Mute other apps on the Mac | Proposed |
 | [0045](0045-repeater-access-tone.md) | Repeater access tone | Proposed |
 | [0046](0046-lock-screen-ptt.md) | PTT from the lock screen | Proposed (deferred) |
+| [0047](0047-callsign-and-listen-only.md) | Callsign and listen-only | Proposed |

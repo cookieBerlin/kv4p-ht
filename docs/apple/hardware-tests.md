@@ -35,6 +35,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-26](#hw-26) | Mute other apps on a Mac | ⬜ | – |
 | [HW-27](#hw-27) | Repeater access tone | ⬜ | ⬜ |
 | [HW-28](#hw-28) | Deviation of the access tone | ⬜ | ⬜ |
+| [HW-29](#hw-29) | Callsign and listen-only | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -225,3 +226,12 @@ once and a message says so. A real repeater opens. Music in another app keeps pl
 With a deviation meter or a service monitor, measure each tone with and without
 pre-emphasis at the 50 % level. Note whether the level should change, and whether the first
 or last moments of the tone get lost at the transmitter.
+
+### HW-29
+
+Start with no callsign: the app asks, and the question closes only with a choice. Choose
+*Listen only* with a radio connected: there is no PTT, no tone button and no message line, a
+second radio hears nothing from a beacon, a digipeat or an acknowledgement, and reception
+works. Enter a callsign: the iGate can be used. Turn *Listen only* off while PTT is not
+pressed: PTT returns. Hold sticky PTT and remove the callsign in the settings: the
+transmission ends at once.

@@ -28,6 +28,7 @@ struct RadioViewModelTransmitTests {
                 },
                 serialDevices: { [] }
             )
+            model.callsign = "N0CALL"
         }
 
         /// Connected and tuned to `frequency`.

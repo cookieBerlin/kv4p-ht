@@ -222,8 +222,18 @@ public final class RadioViewModel {
             }
             updateInternet()
             saveSettings()
+            endTransmissionIfBlocked()
         }
     }
+    /// The app does not transmit, by the user's choice; the iGate and the feed stay available (ADR-0047).
+    public var isListenOnly = false {
+        didSet {
+            saveSettings()
+            endTransmissionIfBlocked()
+        }
+    }
+    /// Asked once, at a start without a callsign or listen-only, not while the callsign is edited in the settings.
+    public private(set) var isStationSetupPending = false
     /// iGate: pass received RF packets and our own packets to APRS-IS.
     public var isIGateEnabled = false {
         didSet {
@@ -245,6 +255,36 @@ public final class RadioViewModel {
     }
     /// An APRS-IS connection is available.
     public var canUseInternet: Bool { internet != nil }
+    /// APRS-IS logs in with the callsign, so it needs one.
+    public var canUseInternetWithCallsign: Bool { canUseInternet && !callsign.isEmpty }
+    /// Anything may go out on air: the one rule in front of every way to transmit (ADR-0047).
+    public var canSendOnAir: Bool { !callsign.isEmpty && !isListenOnly }
+
+    /// Neither of the two choices is made, so nothing goes out, which may not be what the user wants.
+    public var stationWarning: String? {
+        callsign.isEmpty && !isListenOnly
+            ? "Without a callsign, nothing goes out. Enter one, or choose Listen only." : nil
+    }
+
+    /// Takes what the user entered; only an empty field keeps asking.
+    public func completeStationSetup(callsign entered: String) {
+        callsign = entered
+        isStationSetupPending = callsign.isEmpty
+    }
+
+    public func chooseListenOnly() {
+        isListenOnly = true
+        isStationSetupPending = false
+    }
+
+    private func endTransmissionIfBlocked() {
+        guard !canSendOnAir, isTransmitting, let controller else { return }
+        isPTTHeld = false
+        Task {
+            await controller.stopTransmitting()
+            show(await controller.snapshot)
+        }
+    }
     /// Logged in to APRS-IS.
     public private(set) var isInternetConnected = false
 
@@ -395,6 +435,7 @@ public final class RadioViewModel {
     public var settings: AppSettings {
         var settings = AppSettings()
         settings.callsign = callsign
+        settings.isListenOnly = isListenOnly
         settings.micGain = micGain
         settings.isStickyPTT = isStickyPTT
         settings.accessToneHz = accessToneHz
@@ -423,6 +464,8 @@ public final class RadioViewModel {
         isRestoring = true
         defer { isRestoring = false }
         callsign = settings.callsign
+        isListenOnly = settings.isListenOnly
+        isStationSetupPending = callsign.isEmpty && !isListenOnly
         micGain = settings.micGain
         isStickyPTT = settings.isStickyPTT
         accessToneHz = settings.accessToneHz
@@ -608,6 +651,8 @@ public final class RadioViewModel {
 
     /// Why PTT cannot transmit on this frequency, with the range for the bandwidth.
     public var transmitBlockedText: String? {
+        if isListenOnly { return Self.listenOnlyText }
+        if callsign.isEmpty { return "Set your callsign to transmit." }
         guard isReady, !canTransmit, let firmware = snapshot.firmware else { return nil }
         let bandwidth = snapshot.desired.bandwidth
         let allowed = txLimits.band(for: firmware.moduleType).allowedRange(bandwidth: bandwidth)
@@ -889,10 +934,16 @@ public final class RadioViewModel {
         Int64((strtod(megahertz.description, nil) * 1_000_000).rounded())
     }
 
+    private static let listenOnlyText = "Listen only: this app does not transmit."
+
     /// `sendChatMessage`: `|`, `~` and `{` become spaces; without a recipient the message is the bulletin BLN1CQ.
     public func sendAPRSMessage(to recipient: String, text: String) {
         guard !callsign.isEmpty else {
             message = "Set your callsign to send APRS messages."
+            return
+        }
+        guard canSendOnAir else {
+            message = Self.listenOnlyText
             return
         }
         let cleaned = String(text.map { "|~{".contains($0) ? " " : $0 })
@@ -916,7 +967,7 @@ public final class RadioViewModel {
         isInternetConnected = internet?.isLoggedIn ?? false
         let time = now()
         aprs.tick(atMs: time, transmit: transmitAPRS)
-        if isBeaconEnabled, time >= nextBeaconAtMs, let location {
+        if isBeaconEnabled, canSendOnAir, time >= nextBeaconAtMs, let location {
             nextBeaconAtMs = time + Self.beaconIntervalMs
             Task { await beacon(from: location) }
         }
@@ -948,7 +999,7 @@ public final class RadioViewModel {
 
     /// `ServiceAprsCallbacks.submitAprsIs`.
     private func gateAPRS(_ request: APRSInternetRequest) -> Bool {
-        guard let internet else { return false }
+        guard let internet, !callsign.isEmpty else { return false }
         return internet.send(request, as: callsign)
     }
 
@@ -957,7 +1008,7 @@ public final class RadioViewModel {
         let active = isIGateEnabled || isInternetFeedEnabled
         internet?.update(
             APRSISSettings(
-                isEnabled: active,
+                isEnabled: active && !callsign.isEmpty,
                 isReceiveEnabled: isInternetFeedEnabled,
                 isTransmitEnabled: isIGateEnabled,
                 callsign: callsign,
@@ -1006,6 +1057,7 @@ public final class RadioViewModel {
     /// `ServiceAprsCallbacks.submitRf` with `AprsRfFrequencyPolicy`: only while receiving; a reliable message stays on
     /// its frequency, everything else goes out on the requested or current TX frequency, within the ham band.
     private func transmitAPRS(_ request: APRSTransmitRequest) -> APRSTransmitOutcome {
+        guard canSendOnAir else { return .never }
         guard isReady, !isTransmitting, !isScanning, let controller, let firmware = snapshot.firmware else {
             return .later
         }
@@ -1035,7 +1087,7 @@ public final class RadioViewModel {
         guard isReady, let controller else { return }
         if isStickyPTT, isTransmitting {
             await controller.stopTransmitting()
-        } else {
+        } else if canSendOnAir {
             isPTTHeld = true
             await otherAudio?.readyToTransmit()
             if isPTTHeld {
@@ -1079,14 +1131,14 @@ public final class RadioViewModel {
     }
 
     public var canSendAccessTone: Bool {
-        accessTone != nil && isReady && !isDenied(.microphone) && !isFreeDV
+        accessTone != nil && isReady && canSendOnAir && !isDenied(.microphone) && !isFreeDV
     }
 
     public var isSendingAccessTone: Bool { snapshot.isSendingAccessTone }
 
     /// Sends the tone, and returns when it is over.
     public func pressAccessTone() async {
-        guard let controller, let tone = accessTone else { return }
+        guard let controller, canSendOnAir, let tone = accessTone else { return }
         // What the last press reported no longer holds; another problem stays until dismissed.
         if message == Self.accessToneCutShort || message == Self.accessToneNotSent {
             message = nil

@@ -10,7 +10,7 @@ struct APRSView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if model.isBeaconEnabled {
+            if model.isBeaconEnabled, model.canSendOnAir {
                 Label(
                     "Position beacon on · accuracy: \(model.beaconAccuracy.label)",
                     systemImage: "location.fill"
@@ -22,7 +22,11 @@ struct APRSView: View {
             }
             feed
             Divider()
-            composer.padding(8)
+            if model.canSendOnAir {
+                composer.padding(8)
+            } else if let blocked = model.transmitBlockedText {
+                Text(blocked).font(.footnote).foregroundStyle(.secondary).padding(8)
+            }
         }
     }
 
@@ -52,7 +56,7 @@ struct APRSView: View {
 
     private var sendButton: some View {
         Button("Send", systemImage: "paperplane", action: send)
-            .disabled(!model.isReady || text.isEmpty || model.callsign.isEmpty)
+            .disabled(!model.isReady || text.isEmpty)
     }
 
     private func send() {
