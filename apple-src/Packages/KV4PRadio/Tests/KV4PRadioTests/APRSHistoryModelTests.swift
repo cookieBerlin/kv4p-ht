@@ -13,7 +13,9 @@ struct APRSHistoryModelTests {
     private struct FailingHistory: APRSHistoryStoring {
         struct Failure: Error {}
         func save(_ entries: [APRSHistoryEntry]) async throws { throw Failure() }
-        func page(before lastSeenMs: Int64?, limit: Int) async throws -> [APRSHistoryEntry] { throw Failure() }
+        func page(before lastSeenMs: Int64?, limit: Int, filter: APRSHistoryFilter) async throws -> [APRSHistoryEntry] {
+            throw Failure()
+        }
         func delete(id: Int64) async throws { throw Failure() }
         func deleteOlder(than lastSeenMs: Int64) async throws { throw Failure() }
         func deleteAll() async throws { throw Failure() }
@@ -341,6 +343,110 @@ struct APRSHistoryModelTests {
             await setup.model.loadMoreAPRSHistory()
         }
         #expect(setup.model.aprsEvents.count == 5)
+    }
+
+    private static func status(_ index: Int) -> String {
+        "N\(index)CALL>APRS,TCPIP*:>Status"
+    }
+
+    @Test("the search shows what fits, by callsign and type, also from what is not in memory")
+    func search() async throws {
+        let setup = try Setup(settings: Self.keepingInternet(), listLimit: 2)
+        for index in 1...4 {
+            await setup.receive(Self.status(index))
+        }
+        await setup.receive(Self.position)
+        #expect(await setup.waitForStored(5))
+
+        await setup.model.setAPRSFilter(callsign: "n2", kinds: [])
+        #expect(setup.model.aprsEvents.map(\.fromCallsign) == ["N2CALL"])
+        #expect(setup.model.aprsFilter == APRSHistoryFilter(callsign: "n2"))
+
+        await setup.model.setAPRSFilter(callsign: "", kinds: [.position])
+        #expect(setup.model.aprsEvents.map(\.kind) == [.position])
+
+        await setup.model.setAPRSFilter(callsign: "N1", kinds: [.status])
+        #expect(setup.model.aprsEvents.map(\.fromCallsign) == ["N1CALL"])
+
+        await setup.model.setAPRSFilter(callsign: "", kinds: [])
+        #expect(setup.model.aprsEvents.count == 2)
+        #expect(setup.model.hasMoreAPRSHistory)
+    }
+
+    @Test("a message filter finds the recipient as well, and more can be loaded")
+    func searchPages() async throws {
+        let setup = try Setup(settings: Self.keepingInternet(), listLimit: 1)
+        await setup.receive(Self.toMe)
+        await setup.receive(Self.toOther)
+        await setup.receive(Self.status(3))
+        #expect(await setup.waitForStored(3))
+        await setup.model.setAPRSFilter(callsign: "N1CALL", kinds: [])
+        #expect(setup.model.hasMoreAPRSHistory)
+        while setup.model.hasMoreAPRSHistory {
+            await setup.model.loadMoreAPRSHistory()
+        }
+        #expect(setup.model.aprsEvents.count == 2)
+        await setup.model.setAPRSFilter(callsign: "N0CALL", kinds: [])
+        while setup.model.hasMoreAPRSHistory {
+            await setup.model.loadMoreAPRSHistory()
+        }
+        #expect(setup.model.aprsEvents.map(\.toCallsign) == ["N0CALL"])
+    }
+
+    @Test("a new packet that fits shows at once, one that does not stays out")
+    func searchLive() async throws {
+        let setup = try Setup(settings: Self.keepingInternet())
+        await setup.model.setAPRSFilter(callsign: "N5", kinds: [])
+        setup.time.advance(by: 1_000)
+        setup.link.receive.yield(Self.status(4))
+        setup.link.receive.yield(Self.status(5))
+        #expect(await KV4PTestSupport.eventually { setup.model.aprsEvents.count == 1 })
+        #expect(setup.model.aprsEvents.first?.fromCallsign == "N5CALL")
+    }
+
+    @Test("the export follows the filter, goes over all that is stored, and adds what is not, oldest first")
+    func export() async throws {
+        let setup = try Setup(listLimit: 2)
+        setup.model.keepsInternetPackets = true
+        for index in 1...4 {
+            await setup.receive(Self.status(index))
+        }
+        #expect(await setup.waitForStored(4))
+        setup.model.keepsInternetPackets = false
+        await setup.receive(Self.position)
+
+        let all = await setup.model.exportAPRS(.raw)
+        #expect(
+            all?.components(separatedBy: "\n").compactMap { $0.split(separator: ">").first.map(String.init) } == [
+                "N1CALL", "N2CALL", "N3CALL", "N4CALL", "N1CALL",
+            ]
+        )
+
+        await setup.model.setAPRSFilter(callsign: "N3", kinds: [])
+        let filtered = await setup.model.exportAPRS(.csv)
+        #expect(filtered?.contains("N3CALL") == true)
+        #expect(filtered?.contains("N2CALL") == false)
+    }
+
+    @Test("a model without a store exports what it has; a store that fails exports nothing")
+    func exportWithoutStore() async throws {
+        let link = FakeLink()
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            internet: link
+        )
+        link.receive.yield(Self.position)
+        #expect(await KV4PTestSupport.eventually { !model.aprsEvents.isEmpty })
+        #expect(await model.exportAPRS(.raw)?.isEmpty == false)
+        await model.setAPRSFilter(callsign: "N1", kinds: [])
+        #expect(model.aprsEvents.count == 1)
+
+        let failing = try Setup(history: FailingHistory())
+        #expect(await KV4PTestSupport.eventually { failing.model.message != nil })
+        failing.model.dismissNotice()
+        #expect(await failing.model.exportAPRS(.raw) == nil)
+        #expect(failing.model.message != nil)
     }
 
     @Test("a model without a store has no history")
