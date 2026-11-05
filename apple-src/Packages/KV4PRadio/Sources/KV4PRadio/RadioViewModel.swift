@@ -1636,8 +1636,23 @@ public final class RadioViewModel {
         outOfSyncSinceMs = since
         if !didLogOutOfSync, time - since >= Self.outOfSyncLogMs {
             didLogOutOfSync = true
-            diagnostics?.log(.error, .connection, "The radio has not taken the settings for a while")
+            // A ready radio has always reported its state.
+            if let device = snapshot.deviceState {
+                diagnostics?.log(
+                    .error,
+                    .connection,
+                    "The radio has not taken the settings for a while: \(syncDetails(device))"
+                )
+            }
         }
+    }
+
+    /// What the app asked for beside what the radio reports, for a setting that is not taken.
+    private func syncDetails(_ device: DeviceState) -> String {
+        let desired = snapshot.desired
+        return "sequence app \(desired.sequence) radio \(device.radio.sequence), last error \(device.lastError), "
+            + "squelch app \(desired.squelch) radio \(device.radio.squelch), "
+            + "RX app \(HamFrequency.format(desired.freqRx)) radio \(HamFrequency.format(device.radio.freqRx))"
     }
 
     /// Each minute if something happened, as the counters tell about gaps in the sound; away from the audio thread.

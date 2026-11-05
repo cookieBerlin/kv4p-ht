@@ -347,6 +347,10 @@ struct DiagnosticsModelTests {
                 return store.read().contains("not taken the settings for a while")
             }
         )
+        // Why, so that a firmware that keeps an old error is told from an app that waits for the wrong thing.
+        #expect(store.read().contains("not taken the settings for a while: sequence app "))
+        #expect(store.read().contains(", last error "))
+        #expect(store.read().contains(", squelch app "))
         transport.streams.publish(.failed(.connectionLost))
         #expect(await KV4PTestSupport.eventually { store.read().contains("No longer waiting for the radio") })
         await model.disconnect()
