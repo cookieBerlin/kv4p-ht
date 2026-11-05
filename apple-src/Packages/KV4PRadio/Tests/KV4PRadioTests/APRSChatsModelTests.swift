@@ -158,4 +158,15 @@ struct APRSChatsModelTests {
         #expect(!setup.model.isKeepingPackets)
         #expect(!SettingsSync.values(of: AppSettings()).keys.contains("aprsPage"))
     }
+
+    @Test("a notification opens its chat on the chats page, and the views are told to show it")
+    func opensFromNotification() throws {
+        let setup = try Setup()
+        setup.model.aprsPage = .packets
+        setup.model.openChat(with: "N1CALL-7")
+        #expect(setup.model.aprsPage == .chats)
+        #expect(setup.model.openChat == "N1CALL-7")
+        #expect(setup.model.aprsRecipient == "N1CALL-7")
+        #expect(setup.model.chatRequestCount == 1)
+    }
 }
