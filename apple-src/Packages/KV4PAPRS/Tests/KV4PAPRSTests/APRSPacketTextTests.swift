@@ -17,7 +17,7 @@ struct APRSObjectSummaryVectorTests {
         let label: String
     }
 
-    static let vectors = (try? VectorFile<Input, Expected>.load("aprs-object-summary", from: .module).vectors) ?? []
+    static let vectors = (try? VectorFile<Input, Expected>.load("aprs-object-summary", from: .module)) ?? []
 
     @Test("vector file is present")
     func vectorsPresent() {
@@ -46,7 +46,7 @@ struct APRSPacketTextTests {
         return controller.events.first
     }
 
-    private static let weather = "N1CALL>APRS:=4903.50N/07201.75W_220/004g005t077r000p010P000h50b09900s020"
+    private static let weather = "N1CALL>APRS:=4903.50N/07201.75W_220/004g005t077r000p010P000h50b09900s002"
 
     @Test("metric and imperial say what they mean")
     func units() {
@@ -87,7 +87,7 @@ struct APRSPacketTextTests {
         )
         #expect(
             event.text(units: .imperial, locale: Self.us)
-                == "77 °F · 50 % · 990 hPa\nWind SW 4 mph · Rain 0.1 in · Snow 0.2 in"
+                == "77 °F · 50 % · 990 hPa\nWind SW 4 mph · Rain 0.1 in · Snow 2 in"
         )
     }
 
@@ -127,7 +127,7 @@ struct APRSPacketTextTests {
             ("N1CALL>APRS::BLN1     :Hello", "Bulletin", "Hello", false),
             ("N1CALL>APRS:>Test status", "Status", "Test status", false),
             ("N1CALL>APRS:<IGATE,MSG_CNT=3,LOC_CNT=7", "Capabilities", "IGate · 3 messages · 7 local stations", false),
-            ("N1CALL>APRS:T#005,199,000", "Telemetry", "T#005,199,000", true),
+            ("N1CALL>APRS:T#005,199,000,255,073,123,01101001", "Telemetry", "T#005,199,000,255,073,123,01101001", true),
             ("N1CALL>APRS:?APRS?", "Query", "?APRS?", true),
             ("N1CALL>APRS:{unknown", "Unknown packet", "{unknown", true),
             ("N1CALL>APRS:=4903.50N/07201.75W>Hello", "Position", "Hello", false),

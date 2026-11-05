@@ -77,6 +77,7 @@ struct SettingsSync {
             Field("beaconFrequency", \.beaconFrequency),
             Field("aprsDestinationFilter", \.aprsDestinationFilter),
             Field("txLimits", \.txLimits),
+            Field("units", \.units),
         ]
     }
 }

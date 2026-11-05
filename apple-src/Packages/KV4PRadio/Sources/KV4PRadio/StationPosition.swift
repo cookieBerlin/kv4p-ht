@@ -74,7 +74,7 @@ public struct StationPosition: Equatable, Sendable {
         map.path = "/"
         map.queryItems = [
             URLQueryItem(name: "ll", value: "\(point.latitude),\(point.longitude)"),
-            URLQueryItem(name: "q", value: event.objectName ?? event.fromCallsign),
+            URLQueryItem(name: "q", value: event.mapLabel),
         ]
         mapURL = map.url
         let distance = own?.distance(to: point)

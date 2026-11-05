@@ -27,7 +27,8 @@ read the position only for beacons and the APRS-IS feed, so the list adds a new 
   free for selecting text.
 - **All packets with coordinates count,** so also objects, and those only from the internet.
   Packets of the user's own callsign have no distance.
-- **The unit follows the system,** with no setting.
+- **The unit follows the system,** or since [ADR-0055](0055-aprs-packet-types-and-units.md) the setting
+  *Units*.
 
 ## Consequences
 
