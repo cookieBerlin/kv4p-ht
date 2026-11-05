@@ -90,6 +90,10 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
   strengths up and down, lose the connection and receive APRS test packets. A weak signal
   is quiet noise, out of which the tone grows up to S9; a real FM signal stays equally
   loud and only gets less noisy. Each squelch level opens from the same S value on.
+  The station you write to over the simulator answers as *Answer to messages* says: with an acknowledgement after
+  2 s (the default), also with a reply after the time set in *Reply after*, by rejecting it, or not at all, which lets
+  a message fail to try *Send again*. A long *Reply after* gives time to put the app in the background and see the
+  notification. These take effect at once.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
