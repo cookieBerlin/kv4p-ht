@@ -9,6 +9,7 @@ struct APRSView: View {
     @State private var isOnScreen = false
     @FocusState private var isWriting: Bool
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isPageOnScreen) private var isPageOnScreen
 
     var body: some View {
         VStack(spacing: 0) {
@@ -53,10 +54,11 @@ struct APRSView: View {
             updateVisibility()
         }
         .onChange(of: scenePhase) { updateVisibility() }
+        .onChange(of: isPageOnScreen) { updateVisibility() }
     }
 
     private func updateVisibility() {
-        model.isAPRSVisible = isOnScreen && scenePhase == .active
+        model.isAPRSVisible = isOnScreen && isPageOnScreen && scenePhase == .active
     }
 
     private var composer: some View {
