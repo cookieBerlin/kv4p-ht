@@ -123,4 +123,20 @@ struct APRSHistoryTests {
         try await SwiftDataAPRSHistory(storeURL: url).save([Self.entry(1, at: 10)])
         #expect(try await SwiftDataAPRSHistory(storeURL: url).count() == 1)
     }
+
+    @Test("the store of an earlier format goes, and the new one stays across restarts")
+    func dropsFormerStore() async throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let former = ["APRSHistory.store", "APRSHistory.store-wal", "APRSHistory.store-shm"]
+            .map { folder.appending(path: $0) }
+        for file in former {
+            try Data("old".utf8).write(to: file)
+        }
+        try await SwiftDataAPRSHistory.inFolder(folder).save([Self.entry(1, at: 10)])
+        for file in former {
+            #expect(!FileManager.default.fileExists(atPath: file.path))
+        }
+        #expect(try await SwiftDataAPRSHistory.inFolder(folder).count() == 1)
+    }
 }

@@ -133,6 +133,50 @@ struct APRSHistoryModelTests {
         #expect(await KV4PTestSupport.eventually { setup.model.storedPacketCount == 1 })
     }
 
+    @Test("each packet of the list says whether it is stored")
+    func tellsWhatIsStored() async throws {
+        let setup = try Setup()
+        await setup.receive(Self.position)
+        await setup.receive(Self.toMe)
+        let stored = Dictionary(uniqueKeysWithValues: setup.model.aprsEvents.map { ($0.kind, setup.model.isStored($0)) })
+        #expect(stored == [.position: false, .message: true])
+        #expect(setup.model.canStorePackets)
+    }
+
+    @Test("a packet from further back in the store counts as stored")
+    func olderIsStored() async throws {
+        let setup = try Setup(listLimit: 1)
+        await setup.receive(Self.toMe)
+        await setup.receive(Self.fromMe)
+        #expect(await setup.waitForStored(2))
+        await setup.model.loadMoreAPRSHistory()
+        #expect(setup.model.aprsEvents.count == 2)
+        #expect(setup.model.aprsEvents.allSatisfy(setup.model.isStored))
+    }
+
+    @Test("a packet that could not be saved does not count as stored")
+    func failedSaveIsNotStored() async throws {
+        let setup = try Setup(history: FailingHistory())
+        await setup.receive(Self.toMe)
+        #expect(await KV4PTestSupport.eventually { !setup.model.isStored(setup.model.aprsEvents[0]) })
+    }
+
+    @Test("without a store, nothing counts as stored, and the settings can say so")
+    func withoutStore() async {
+        let link = FakeLink()
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            internet: link,
+            settings: MemorySettingsStore(AppSettings())
+        )
+        model.callsign = "N0CALL"
+        link.receive.yield(Self.toMe)
+        #expect(await KV4PTestSupport.eventually { model.aprsEvents.count == 1 })
+        #expect(!model.canStorePackets)
+        #expect(!model.isStored(model.aprsEvents[0]))
+    }
+
     @Test("messages to or from this station are always stored")
     func messagesStored() async throws {
         let setup = try Setup()
