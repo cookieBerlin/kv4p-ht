@@ -20,7 +20,7 @@ struct SettingsView: View {
         Form {
             Section("Station") {
                 LabeledContent("Your callsign") {
-                    TextField("Your callsign", text: $callsign, prompt: Text("N0CALL"))
+                    TextField("Your callsign", text: $callsign, prompt: Text("Enter callsign"))
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
                         #if os(iOS)
@@ -28,6 +28,15 @@ struct SettingsView: View {
                             .autocorrectionDisabled()
                         #endif
                         .onChange(of: callsign) { model.callsign = callsign }
+                }
+                if let warning = model.stationWarning {
+                    Label(warning, systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("Listen only", isOn: $model.isListenOnly)
+                    Text(ControlHelp.listenOnly).font(.footnote).foregroundStyle(.secondary)
                 }
             }
 
@@ -91,6 +100,7 @@ struct SettingsView: View {
             if !isPage { NoticeBanner(model: model) }
         }
         .onAppear { callsign = model.callsign }
+        .onChange(of: model.callsign) { callsign = model.callsign }
         .sheet(isPresented: $isManagingMemories) {
             NavigationStack { ManageMemoriesView(model: model) }
                 #if os(macOS)
@@ -277,7 +287,7 @@ struct SettingsView: View {
     @ViewBuilder private var aprs: some View {
         Section("APRS position beacon") {
             Toggle("Position beacon", isOn: $model.isBeaconEnabled)
-                .disabled(!model.canBeacon || model.callsign.isEmpty)
+                .disabled(!model.canBeacon || !model.canSendOnAir)
                 .explained(ControlHelp.beacon)
             if model.isDenied(.location) {
                 PermissionNotice(permission: .location)
@@ -306,13 +316,13 @@ struct SettingsView: View {
         }
         Section("APRS network") {
             Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
-                .disabled(model.callsign.isEmpty)
+                .disabled(!model.canSendOnAir)
                 .explained(ControlHelp.digipeat)
             Toggle("iGate (report RF packets online)", isOn: $model.isIGateEnabled)
-                .disabled(!model.canUseInternet || model.callsign.isEmpty)
+                .disabled(!model.canUseInternetWithCallsign)
                 .explained(ControlHelp.iGate)
             Toggle("Show nearby APRS-IS packets", isOn: $model.isInternetFeedEnabled)
-                .disabled(!model.canUseInternet || model.callsign.isEmpty)
+                .disabled(!model.canUseInternetWithCallsign)
                 .explained(ControlHelp.internetFeed)
             if model.isIGateEnabled || model.isInternetFeedEnabled {
                 Label(

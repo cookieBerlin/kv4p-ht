@@ -181,6 +181,21 @@ Transmitting requires a license and an antenna or dummy load.
 - After a transmission the received audio fades in again over about one second,
   as in the Android app.
 
+## Callsign and listen-only
+
+At a start without a callsign, the app asks for it, or you choose **Listen only**. You can
+change both later in ⚙ **Settings** under *Station*. A transmission needs an amateur radio
+licence.
+
+- **With a callsign:** everything is available. The app does not check what you enter.
+- **Listen only:** the app does not transmit: no PTT, access tone, APRS messages,
+  acknowledgements, beacons or digipeating. Reception, memories and the scan work as usual.
+  With a callsign, the iGate and the APRS-IS feed stay available. A beacon or digipeating
+  you turned on stays set, and works again once you turn *Listen only* off.
+- **Without a callsign:** nothing goes out at all, also not to the iGate. Removing the
+  callsign ends a transmission at once, and unless *Listen only* is on, the settings warn
+  in red.
+
 ## Opening a repeater
 
 Some repeaters open only on a tone. Choose it in ⚙ **Settings** under *Repeater access
@@ -361,6 +376,8 @@ The app warns when the radio's firmware is older than required or missing
 | *Microphone access is not allowed…* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
 | *The microphone could not be started.* | Press PTT again. If it stays, another app may be using the microphone, or restart the app. |
 | *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings**. |
+| *Set your callsign to transmit.* | Enter your callsign in ⚙ **Settings**. |
+| *Listen only: this app does not transmit.* | Turn *Listen only* off in ⚙ **Settings**. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
 | *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |

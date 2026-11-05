@@ -11,8 +11,9 @@ transmitter or receiver of its own.
 
 **Testing without a radio:** the app has a built-in simulated radio. At the top of
 the main screen, choose **Simulator** under **Radio** (on an iPhone, tap the chosen
-radio first) and tap **Connect**. Tuning, receiving,
-transmitting, memories and APRS can then be used without hardware.
+radio first) and tap **Connect**. At the first start, enter any callsign, such as N0CALL, as
+transmitting is otherwise off. Tuning, receiving, transmitting, memories and APRS can then
+be used without hardware.
 Source code: https://github.com/cookieBerlin/kv4p-ht
 
 **Mute other apps (Mac):** if the user chooses this in the settings, the app uses a

@@ -121,6 +121,7 @@ struct RadioViewModelAudioSessionTests {
                 audioOutput: RecordingOutput(log: log),
                 audioSession: session
             )
+            model.callsign = "N0CALL"
         }
 
         /// Connected, tuned into the band and transmitting with sticky PTT.

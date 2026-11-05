@@ -34,6 +34,7 @@ struct RootView: View {
                 }
             }
             .task { await model.loadMemories() }
+            .sheet(isPresented: .constant(model.isStationSetupPending)) { StationSetupView(model: model) }
     }
 
     @ViewBuilder private var content: some View {

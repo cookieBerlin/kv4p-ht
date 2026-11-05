@@ -27,6 +27,7 @@ struct RadioViewModelSimulatorTests {
                 simulator: radio,
                 simulatedFlashStep: .zero
             )
+            model.callsign = "N0CALL"
         }
 
         func connect() async {
