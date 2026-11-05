@@ -90,6 +90,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     /// How the simulated station answers messages, and after how many seconds it replies; local to the device.
     public var simulatedMessageAnswer = SimulatedMessageAnswer.acknowledge
     public var simulatedReplyDelaySeconds = 10
+    /// The firmware of the last radio, for a problem report; local to the device.
+    public var lastFirmware: String?
     /// The units of the APRS list (ADR-0055).
     public var units = APRSUnits.system
     public var txLimits = TXLimits()
@@ -172,6 +174,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         chatReadUntilMs = values.value(.chatReadUntilMs, or: defaults.chatReadUntilMs)
         simulatedMessageAnswer = values.value(.simulatedMessageAnswer, or: defaults.simulatedMessageAnswer)
         simulatedReplyDelaySeconds = values.value(.simulatedReplyDelaySeconds, or: defaults.simulatedReplyDelaySeconds)
+        lastFirmware = values.value(.lastFirmware, or: defaults.lastFirmware)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)

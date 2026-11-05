@@ -254,6 +254,8 @@ public final class RadioViewModel {
     public private(set) var offersCrashReport = false
     /// What the last radio reported, for a report after it has gone.
     private var lastFirmware: FirmwareVersion?
+    /// The last firmware in words, kept for a report after a restart.
+    private var lastFirmwareText: String?
     /// `message` holds what the user typed, which stays out of the log.
     private var isMessageFromUser = false
     /// Why an APRS packet did not go out, once until the reason changes.
@@ -263,8 +265,7 @@ public final class RadioViewModel {
     private var outOfSyncSinceMs: Int64?
     private var didLogOutOfSync = false
     private static let outOfSyncLogMs: Int64 = 5_000
-    private var loggedUnderruns = 0
-    private var loggedDroppedSamples = 0
+    private var loggedRXStatistics = RXAudioPlayer.Statistics.zero
     private var nextRXLogAtMs: Int64 = 0
     private static let rxLogIntervalMs: Int64 = 60_000
     private var allowedPermissions: Set<Permission> = []
@@ -745,6 +746,7 @@ public final class RadioViewModel {
         settings.aprsPage = aprsPage
         settings.chatReadUntilMs = chatReadUntilMs
         settings.simulatedMessageAnswer = simulatedMessageAnswer
+        settings.lastFirmware = lastFirmwareText
         settings.simulatedReplyDelaySeconds = simulatedReplyDelaySeconds
         if let liveLog {
             settings.logFilter = liveLog.filter
@@ -808,6 +810,7 @@ public final class RadioViewModel {
         aprsPage = settings.aprsPage
         chatReadUntilMs = settings.chatReadUntilMs
         simulatedMessageAnswer = settings.simulatedMessageAnswer
+        lastFirmwareText = settings.lastFirmware
         simulatedReplyDelaySeconds = settings.simulatedReplyDelaySeconds
         diagnostics?.detailedUntilMs = settings.detailedLoggingUntilMs
         liveLog?.filter = settings.logFilter
@@ -1356,6 +1359,8 @@ public final class RadioViewModel {
         }
         if let firmware = snapshot.firmware, firmware != lastFirmware {
             lastFirmware = firmware
+            lastFirmwareText = Self.describe(firmware)
+            saveSettings()
             diagnostics?.log(.info, .connection, "Firmware \(Self.describe(firmware))")
         }
         if snapshot.isTransmitting != self.snapshot.isTransmitting {
@@ -1639,16 +1644,35 @@ public final class RadioViewModel {
     private func logRXAudio(atMs time: Int64, always: Bool = false) {
         guard always || time >= nextRXLogAtMs else { return }
         nextRXLogAtMs = time + Self.rxLogIntervalMs
-        let statistics = rxAudio.statistics
-        if always || statistics.underruns != loggedUnderruns || statistics.droppedSamples != loggedDroppedSamples {
+        let now = rxAudio.statistics
+        let last = loggedRXStatistics
+        loggedRXStatistics = now
+        let numbers = { (received: Int, requested: Int, underruns: Int, dropped: Int) in
+            "received \(received), played \(requested) samples, \(underruns) underruns, \(dropped) dropped"
+        }
+        if always {
             diagnostics?.log(
                 .info,
                 .audio,
-                "RX audio so far: \(statistics.underruns) underruns, \(statistics.droppedSamples) dropped samples"
+                "RX audio so far: "
+                    + numbers(now.receivedSamples, now.requestedSamples, now.underruns, now.droppedSamples)
             )
+            return
         }
-        loggedUnderruns = statistics.underruns
-        loggedDroppedSamples = statistics.droppedSamples
+        let underruns = now.underruns - last.underruns
+        let dropped = now.droppedSamples - last.droppedSamples
+        // A quiet minute only with details; gaps in the sound always.
+        diagnostics?.log(
+            underruns > 0 || dropped > 0 ? .info : .detail,
+            .audio,
+            "RX audio in the last minute: "
+                + numbers(
+                    now.receivedSamples - last.receivedSamples,
+                    now.requestedSamples - last.requestedSamples,
+                    underruns,
+                    dropped
+                )
+        )
     }
 
     /// In the background, only a session keeps the location available where the system limits it.
@@ -1731,7 +1755,7 @@ public final class RadioViewModel {
     }
 
     private var firmwareForReport: String {
-        lastFirmware.map(Self.describe) ?? "Not connected yet"
+        lastFirmwareText ?? "Not connected yet"
     }
 
     public func problemReport(in environment: ProblemReport.Environment) -> String {
@@ -1927,6 +1951,12 @@ public final class RadioViewModel {
             self.storedAPRSEvents = Dictionary(uniqueKeysWithValues: stored.map { ($0.id, $0) })
             self.aprs.restore(stored, highestId: highestId)
             self.lastCheckedAPRSId = highestId
+            // What comes back is known, so that a start logs no change of delivery.
+            self.aprsDelivery = Dictionary(
+                uniqueKeysWithValues: self.aprs.events.filter { $0.deliveryState != .none }.map {
+                    ($0.id, $0.deliveryState)
+                }
+            )
             try await self.loadChats(from: history)
             self.isAPRSHistoryLoaded = true
             for list in APRSList.allCases {
@@ -2204,7 +2234,8 @@ public final class RadioViewModel {
     }
 
     private func noteMemorySync(_ date: Date) {
-        diagnostics?.log(.info, .sync, "Memory sync finished")
+        // Many come at once; a failed one is always logged (ADR-0059).
+        diagnostics?.log(.detail, .sync, "Memory sync finished")
         lastMemorySync = max(lastMemorySync ?? date, date)
         saveSettings()
     }

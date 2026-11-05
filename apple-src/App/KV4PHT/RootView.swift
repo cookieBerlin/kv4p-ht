@@ -139,6 +139,8 @@ struct RootView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .onChange(of: model.aprsReplyCount) { withAnimation { page = .aprs } }
                 .onChange(of: model.chatRequestCount) { withAnimation { page = .aprs } }
+                // A text field on a page that is swiped away keeps the keyboard otherwise, with no way to close it.
+                .onChange(of: page) { dismissKeyboard() }
                 if page == .settings {
                     if model.hasFailed {
                         StatusLine(model: model).padding(.vertical, 6)
@@ -149,6 +151,10 @@ struct RootView: View {
                 }
                 pageBar
             }
+        }
+
+        private func dismissKeyboard() {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
 
         /// The number of new messages on the APRS page (ADR-0058).
