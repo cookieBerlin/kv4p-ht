@@ -108,7 +108,7 @@ enum Composition {
     private static func aprsHistory() -> (any APRSHistoryStoring)? {
         let folder = URL.applicationSupportDirectory
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return try? SwiftDataAPRSHistory(storeURL: folder.appending(path: "APRSHistory.store"))
+        return try? SwiftDataAPRSHistory.inFolder(folder)
     }
 
     private static func transport(for connection: RadioViewModel.Connection) -> any RadioTransport {

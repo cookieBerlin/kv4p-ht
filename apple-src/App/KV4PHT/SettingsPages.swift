@@ -340,6 +340,13 @@ struct APRSSettings: View {
                 .explained(ControlHelp.units)
             }
             Section("History") {
+                if !model.canStorePackets {
+                    Label(
+                        "The packet store could not be opened, so no packets are kept.",
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .foregroundStyle(.secondary)
+                }
                 Toggle("Keep packets", isOn: keepsPackets)
                     .explained(ControlHelp.keepPackets)
                 if model.isKeepingPackets {

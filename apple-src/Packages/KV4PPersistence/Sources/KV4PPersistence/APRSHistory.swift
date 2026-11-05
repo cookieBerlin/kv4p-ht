@@ -118,6 +118,21 @@ public actor SwiftDataAPRSHistory: APRSHistoryStoring {
         try self.init(configuration: ModelConfiguration(url: storeURL, cloudKitDatabase: .none))
     }
 
+    /// The file name changes with a format of the store that cannot follow from the one before: what was stored goes, as
+    /// packets are not worth a migration (ADR-0057).
+    private static let storeName = "APRSPackets.store"
+    private static let formerStoreNames = ["APRSHistory.store"]
+
+    /// The store of this app in `folder`, without those of earlier formats.
+    public static func inFolder(_ folder: URL) throws -> SwiftDataAPRSHistory {
+        for name in formerStoreNames {
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(at: folder.appending(path: name + suffix))
+            }
+        }
+        return try SwiftDataAPRSHistory(storeURL: folder.appending(path: storeName))
+    }
+
     /// Keeps the entries only while the history exists (tests).
     public static func inMemory() throws -> SwiftDataAPRSHistory {
         try SwiftDataAPRSHistory(configuration: ModelConfiguration(isStoredInMemoryOnly: true))

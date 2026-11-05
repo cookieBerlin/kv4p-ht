@@ -299,7 +299,8 @@ bulletin BLN1CQ.
 **History:** under ⚙ **Settings**, *APRS*, *History*, *Keep packets* keeps the list across restarts, for 1, 7
 or 30 days or without limit, 30 by default. The packets stay on this device and are not synced. Packets only
 from the internet can be many, so they stay only with *Keep internet packets* on; messages to or from you
-always stay. The list shows the newest 500; **Load more** at its end brings older ones. The ⋯ button of a
+always stay. The box on a row tells you: filled means the packet is stored, empty means it goes when the
+app ends. The list shows the newest 500; **Load more** at its end brings older ones. The ⋯ button of a
 row deletes that packet at once, and *Delete all packets* in the settings all of them, after a question. A message
 that had no acknowledgement when the app ended shows as not delivered, and is not sent again.
 

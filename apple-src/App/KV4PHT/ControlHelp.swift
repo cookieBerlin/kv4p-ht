@@ -52,6 +52,8 @@ enum ControlHelp {
     static let packetTypes = "Shows only the chosen types of packet."
     static let exportPackets = "Saves the packets this list shows, also those stored, as a file."
     static let keepPackets = "The APRS list stays when the app ends. The packets stay on this device."
+    static let packetStored = "Stored: this packet stays when the app ends."
+    static let packetNotStored = "Not stored: this packet goes when the app ends."
     static let keepInternetPackets =
         "Also keeps packets only from the internet, which can be many. Messages to or from you always stay."
     static let digipeat = "Sends on packets addressed to WIDE1-1 or your callsign, so they reach further."

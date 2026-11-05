@@ -227,6 +227,7 @@ struct APRSPacketList: View {
                     if let state = Self.delivery(event.deliveryState) {
                         Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
                     }
+                    storedMark(event)
                     if event.packetCount > 1 {
                         Text("×\(event.packetCount)").foregroundStyle(.secondary)
                     }
@@ -257,6 +258,19 @@ struct APRSPacketList: View {
             }
         }
         .textSelection(.enabled)
+    }
+
+    /// Whether the packet stays when the app ends: filled if it does.
+    private func storedMark(_ event: APRSEvent) -> some View {
+        let isStored = model.isStored(event)
+        return Label(
+            isStored ? "Stored" : "Not stored",
+            systemImage: isStored ? "archivebox.fill" : "archivebox"
+        )
+        .labelStyle(.iconOnly)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .help(isStored ? ControlHelp.packetStored : ControlHelp.packetNotStored)
     }
 
     /// A packet's symbol, or what kind of packet it is. It tells more when looked at closer: a tooltip on the Mac, holding it

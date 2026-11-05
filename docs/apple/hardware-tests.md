@@ -306,3 +306,5 @@ question both ways. With a long list, **Load more** brings older packets, and th
 Search by callsign, *For me* with a message to another SSID of yours, and *Types* find older stored packets too.
 Export both formats and open the CSV in a spreadsheet: a text such as `=1+1` stays text. *Settings*, *APRS*, *Packets*
 shows the list over the full height, and its filter leaves the main page alone. After a restart both filters are back.
+The box on a row is filled for a stored packet and empty for one only from the internet with *Keep internet packets* off,
+and *Stored packets* in the settings counts the filled ones. After an update from the version before this, the old packets are gone and the count starts again at 0.

@@ -30,6 +30,12 @@ others add to it.
 - **Writes happen one after another,** away from the screen, and only for what changed. A packet that
   arrives before the stored ones are back waits, and gets a new id, so that ids never repeat.
 - **Old packets go at the start, every hour and when the time is shortened.**
+- **A new format of the store starts empty.** Packets are not worth a migration, so a change the store
+  cannot follow by itself gets a new file name, and the old files go. They are named in the code, so
+  a store that fails to open for another reason is never deleted.
+- **A row shows whether its packet is stored,** as a filled or an empty box, so that the settings can be
+  understood from the list. A packet whose saving failed shows as not stored.
+- **A store that cannot be opened shows in the settings,** instead of the count staying at 0 unexplained.
 - **Switching off stores nothing more, and asks whether to delete what is stored.** A single packet
   goes through a button on its row, as a sideways swipe changes the page on a phone, and without a
   question. Deleting all asks first.

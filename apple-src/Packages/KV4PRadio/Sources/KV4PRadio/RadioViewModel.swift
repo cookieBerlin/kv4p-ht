@@ -227,6 +227,17 @@ public final class RadioViewModel {
         }
     }
     public private(set) var storedPacketCount = 0
+    /// Without a store, the app can keep no packets; the settings say so.
+    public var canStorePackets: Bool { aprsHistory != nil }
+    /// The packets in memory that are not in the store: they go when the app ends.
+    private var aprsIdsNotStored: Set<Int64> = []
+    /// Saving these failed.
+    private var aprsIdsNotSaved: Set<Int64> = []
+
+    /// Whether a packet of the list stays when the app ends. What came from the store is in it.
+    public func isStored(_ event: APRSEvent) -> Bool {
+        !aprsIdsNotStored.contains(event.id)
+    }
 
     /// The list on the main page, newest first.
     public var aprsEvents: [APRSEvent] { aprsEvents(in: .main) }
@@ -1339,6 +1350,9 @@ public final class RadioViewModel {
 
     private func showAPRS() {
         storeAPRSEvents()
+        aprsIdsNotStored = Set(
+            aprs.events.map(\.id).filter { storedAPRSEvents[$0] == nil || aprsIdsNotSaved.contains($0) }
+        )
         for list in APRSList.allCases {
             var state = self[list]
             state.events = (aprs.events + state.older)
@@ -1408,7 +1422,15 @@ public final class RadioViewModel {
                     storedAPRSEvents[event.id] = event
                 }
                 let entries = changed.compactMap(Self.entry)
-                withAPRSHistory { try await $0.save(entries) }
+                withAPRSHistory { [weak self] history in
+                    do {
+                        try await history.save(entries)
+                    } catch {
+                        self?.aprsIdsNotSaved.formUnion(entries.map(\.id))
+                        self?.showAPRS()
+                        throw error
+                    }
+                }
             }
         }
         for event in aprs.trim(keeping: aprsListLimit) {

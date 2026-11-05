@@ -138,7 +138,9 @@ struct APRSHistoryModelTests {
         let setup = try Setup()
         await setup.receive(Self.position)
         await setup.receive(Self.toMe)
-        let stored = Dictionary(uniqueKeysWithValues: setup.model.aprsEvents.map { ($0.kind, setup.model.isStored($0)) })
+        let stored = Dictionary(
+            uniqueKeysWithValues: setup.model.aprsEvents.map { ($0.kind, setup.model.isStored($0)) }
+        )
         #expect(stored == [.position: false, .message: true])
         #expect(setup.model.canStorePackets)
     }
