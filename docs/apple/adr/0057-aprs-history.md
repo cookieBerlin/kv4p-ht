@@ -34,6 +34,22 @@ others add to it.
   goes through a button on its row, as a sideways swipe changes the page on a phone, and without a
   question. Deleting all asks first.
 
+### Search, filter and export (4.6b)
+
+- **A bar above the list replaces *All packets / Only messages for me*.** That switch only hid
+  messages between other stations, while positions and all else stayed, so it seemed not to work. The
+  GUI of this app may be better than the Android app's, as only the layers that talk to the hardware
+  must be the same, so its port and vectors go.
+- **The bar has a search by callsign, *For me*, *Types* and *Export*.** *For me* means messages from
+  or to this station with any SSID, without those to everyone, as for the notice of 4.6c.
+- **Search and types go over all that is stored,** and more can be loaded for them.
+- **A page *Packets* under APRS in the settings shows the same list over the full height,** from one
+  view. It has a filter of its own, so that looking through the history cannot hide new packets on
+  the main page while transmitting. Both filters are remembered on this device and do not sync.
+- **The export follows the filter of its list,** goes over all that is stored, and adds what is only in
+  memory, oldest first. It uses the system's save dialog. A CSV is fixed in metric units and
+  English, and text from the air that a spreadsheet would run as a formula gets a `'` in front.
+
 ## Consequences
 
 - A stored event that cannot be read any more, as by a later version, stays out of the list, and

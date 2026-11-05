@@ -21,7 +21,7 @@ struct AppSettingsTests {
         #expect(!settings.isDigipeatingEnabled)
         #expect(!settings.isIGateEnabled)
         #expect(!settings.isInternetFeedEnabled)
-        #expect(settings.aprsDestinationFilter == .all)
+        #expect(settings.aprsListFilter.isEmpty)
         #expect(settings.txLimits == TXLimits())
         #expect(settings.selectedGroup == nil)
     }
@@ -33,7 +33,7 @@ struct AppSettingsTests {
         settings.micGain = .high
         settings.beaconSymbol = .car
         settings.beaconFrequency = 144.39
-        settings.aprsDestinationFilter = .mine
+        settings.aprsListFilter = APRSListFilter(isForMe: true)
         settings.txLimits.max2m = 146
         settings.selectedGroup = "Repeaters"
         #expect(AppSettings(data: try settings.encoded()) == settings)

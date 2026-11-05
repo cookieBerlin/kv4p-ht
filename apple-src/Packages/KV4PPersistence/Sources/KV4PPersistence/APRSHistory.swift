@@ -30,18 +30,47 @@ public struct APRSHistoryEntry: Equatable, Sendable {
     }
 }
 
+/// What to look for in the APRS list; empty finds everything.
+public struct APRSHistoryFilter: Equatable, Sendable {
+    /// Found in the sender or the recipient, in any case.
+    public var callsign: String
+    /// The kinds of packet; none means all.
+    public var kinds: Set<Int>
+    /// A callsign that must be in the packet as well, whatever the search says.
+    public var participant: String
+
+    public init(callsign: String = "", kinds: Set<Int> = [], participant: String = "") {
+        self.callsign = callsign
+        self.kinds = kinds
+        self.participant = participant
+    }
+
+    public var isEmpty: Bool { term.isEmpty && kinds.isEmpty && participant.isEmpty }
+
+    /// The callsign as the store looks for it.
+    public var term: String {
+        callsign.trimmingCharacters(in: .whitespaces).uppercased()
+    }
+}
+
 /// Keeps the APRS list across restarts, on this device only.
 public protocol APRSHistoryStoring: Sendable {
     /// Adds the entries, or replaces those with the same id.
     func save(_ entries: [APRSHistoryEntry]) async throws
-    /// The newest entries up to and including `lastSeenMs`, newest first.
-    func page(before lastSeenMs: Int64?, limit: Int) async throws -> [APRSHistoryEntry]
+    /// The newest entries that fit, up to and including `lastSeenMs`, newest first.
+    func page(before lastSeenMs: Int64?, limit: Int, filter: APRSHistoryFilter) async throws -> [APRSHistoryEntry]
     func delete(id: Int64) async throws
     func deleteOlder(than lastSeenMs: Int64) async throws
     func deleteAll() async throws
     func count() async throws -> Int
     /// 0 if there are none.
     func highestId() async throws -> Int64
+}
+
+extension APRSHistoryStoring {
+    public func page(before lastSeenMs: Int64?, limit: Int) async throws -> [APRSHistoryEntry] {
+        try await page(before: lastSeenMs, limit: limit, filter: APRSHistoryFilter())
+    }
 }
 
 @Model
@@ -55,8 +84,11 @@ final class StoredAPRSPacket {
     var toCallsign: String?
     var isInternetOnly: Bool
     var payload: Data
+    /// Sender and recipient in upper case, to search both at once.
+    var callsigns: String
 
     init(_ entry: APRSHistoryEntry) {
+        callsigns = "\(entry.fromCallsign) \(entry.toCallsign ?? "")".uppercased()
         eventId = entry.id
         lastSeenMs = entry.lastSeenMs
         kind = entry.kind
@@ -103,10 +135,18 @@ public actor SwiftDataAPRSHistory: APRSHistoryStoring {
         try modelContext.save()
     }
 
-    public func page(before lastSeenMs: Int64?, limit: Int) throws -> [APRSHistoryEntry] {
+    public func page(before lastSeenMs: Int64?, limit: Int, filter: APRSHistoryFilter) throws -> [APRSHistoryEntry] {
         let latest = lastSeenMs ?? .max
+        let term = filter.term
+        let kinds = Array(filter.kinds)
+        let hasNoKinds = kinds.isEmpty
+        let participant = filter.participant
         var descriptor = FetchDescriptor<StoredAPRSPacket>(
-            predicate: #Predicate { $0.lastSeenMs <= latest },
+            predicate: #Predicate { packet in
+                packet.lastSeenMs <= latest && (term.isEmpty || packet.callsigns.contains(term))
+                    && (hasNoKinds || kinds.contains(packet.kind))
+                    && (participant.isEmpty || packet.callsigns.contains(participant))
+            },
             sortBy: [SortDescriptor(\.lastSeenMs, order: .reverse), SortDescriptor(\.eventId, order: .reverse)]
         )
         descriptor.fetchLimit = limit

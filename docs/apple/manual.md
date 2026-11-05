@@ -174,7 +174,7 @@ Transmitting requires a license and an antenna or dummy load.
 - **High power** is in ⚙ **Settings** under **Radio**.
 - The app only transmits inside the ham band: 144–148 MHz with a VHF module,
   420–450 MHz with a UHF module, including half the bandwidth at both edges.
-  Narrower limits can be chosen in ⚙ **Settings** under **Advanced**, **Frequency limits**. Otherwise the screen shows
+  Narrower limits can be chosen in ⚙ **Settings** under **Radio**, **Frequency limits**. Otherwise the screen shows
   *Can't transmit here*, with the allowed range. On 144.0000 MHz, half of the channel
   would lie outside the band, so with 25 kHz the first allowed frequency is 144.0125 MHz.
 - 📱 A phone call, or a headset that is unplugged or switched off, ends the
@@ -273,10 +273,11 @@ position is known, the distance and direction from you stand below them, such as
 the units you chose under ⚙ **Settings**, *APRS*, *Units*: those of your system by default, or metric
 or imperial, also for the weather. Pressure stays in hPa; very near stations show no direction. Before you have decided on location
 access, **Show distances** at the top of the list asks for it. Without access, the list works as
-before. The list stays when the app ends: see *History* below. *Only messages for
-me* hides messages between other stations; messages from or to you, to `ALL`,
-`QST`, `CQ` and bulletins stay, as do all positions, weather reports and
-objects.
+before. The list stays when the app ends: see *History* below. **Above the list:** the search finds a callsign in the sender or recipient, over everything stored. *For me*
+shows only messages from or to your callsign, with any SSID. *Types* narrows the list to the types you
+choose. *Export* saves what the list shows, also what is stored, as CSV or as raw packets. The app remembers
+the filter on this device. ⚙ **Settings**, *APRS*, *Packets* shows the same list over the full height,
+with a filter of its own, so that looking through the history leaves the main page as it is.
 
 **Messages** (licence required): enter your callsign in ⚙ **Settings** under *Station* (the app
 ships with none and remembers yours), then a recipient and the text below the APRS list,
@@ -353,17 +354,16 @@ A short text below a setting explains it.
 | Page | What it holds |
 |---|---|
 | **Station** | Your callsign, listen only |
-| **Radio** | Bandwidth, squelch, tones, high power, voice mode, audio filters, firmware |
+| **Radio** | Bandwidth, squelch, tones, high power, voice mode, audio filters, frequency limits, firmware |
 | **Transmit** | Sticky PTT, mic gain boost, repeater access tone |
 | **Audio** | 📱 The volume on an iPhone, and what other apps do while the radio is busy |
-| **APRS** | Position beacon, digipeating, iGate, APRS-IS feed |
+| **APRS** | Packets, position beacon, units, history, digipeating, iGate, APRS-IS feed |
 | **Memories** | Groups and memories: sort, edit, import |
 | **Simulator** | The simulated radio; only while it is the chosen radio |
-| **Advanced** | Frequency limits |
 | **About kv4p HT** | 📱 Version and licences; on the Mac in the **kv4p HT** menu |
 
 **iCloud sync**, in its own group under *Station* and on by default, takes your memories and groups, your callsign, sticky PTT, the access
-tone, the APRS symbol, position accuracy, beacon frequency and interval, list filter, the units and the
+tone, the APRS symbol, position accuracy, beacon frequency and interval, the units and the
 frequency limits to your other iPhones, iPads and Macs with the same Apple ID. A change can take a
 while to arrive. The radio, the memory group, other audio, mic gain, listen only and the
 switches for the beacon and the background, digipeating, the iGate and the APRS-IS feed stay on each device.
@@ -381,7 +381,7 @@ its settings between launches:
 
 - **⚙ Settings → Transmit:** sticky PTT and mic gain boost; without a radio, the settings
   that need one say that they are not available.
-- **⚙ Settings → Advanced:** the **Frequency limits**: 2 m from
+- **⚙ Settings → Radio:** the **Frequency limits**: 2 m from
   144 MHz to 148 or 146 MHz, 70 cm from 420 or 430 MHz to 450 or 440 MHz, as in
   the Android app. The app transmits only inside the band of the radio module.
 - **⚙ Settings → Station:** your callsign.

@@ -64,7 +64,6 @@ struct RadioViewModelSettingsTests {
         settings.beaconAccuracy = .within1000m
         settings.beaconFrequency = 144.39
         settings.isDigipeatingEnabled = true
-        settings.aprsDestinationFilter = .mine
         settings.txLimits.max2m = 146
         settings.selectedGroup = "Repeaters"
         let model = Self.model(MemorySettingsStore(settings))
@@ -76,7 +75,6 @@ struct RadioViewModelSettingsTests {
         #expect(model.beaconAccuracy == .within1000m)
         #expect(model.beaconFrequency == 144.39)
         #expect(model.isDigipeatingEnabled)
-        #expect(model.aprsDestinationFilter == .mine)
         #expect(model.txLimits.max2m == 146)
         #expect(model.selectedGroup == "Repeaters")
     }
@@ -94,7 +92,6 @@ struct RadioViewModelSettingsTests {
         model.isDigipeatingEnabled = true
         model.isIGateEnabled = true
         model.isInternetFeedEnabled = true
-        model.aprsDestinationFilter = .mine
         model.txLimits.min70cm = 430
         model.selectedGroup = "Local"
         model.isBeaconEnabled = true
@@ -158,10 +155,9 @@ struct RadioViewModelSettingsTests {
         let position = try #require(RadioViewModelAPRSTests.position)
         await simulator.value?.hear(position)
         #expect(await RadioViewModelTests.eventually(model) { $0.aprsEvents.count == 3 })
-        model.aprsDestinationFilter = .mine
-        #expect(model.aprsEvents.count == 2)
-        #expect(!model.aprsEvents.contains { $0.body == "elsewhere" })
-        model.aprsDestinationFilter = .all
+        await model.setAPRSFilter(APRSListFilter(isForMe: true))
+        #expect(model.aprsEvents.map(\.body) == ["for me"])
+        await model.setAPRSFilter(APRSListFilter())
         #expect(model.aprsEvents.count == 3)
     }
 }

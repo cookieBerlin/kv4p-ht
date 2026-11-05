@@ -24,6 +24,13 @@ struct APRSExportTests {
         #expect(lines[3].isEmpty)
     }
 
+    @Test("what a packet does not have stays empty")
+    func emptyFields() {
+        var event = Self.event("N1CALL>APRS:=4903.50N/07201.75W>")
+        event.rawLine = nil
+        #expect(APRSExport.csv([event]).contains(",Position,49.05833,-72.02917,/>,,,yes,\r\n"))
+    }
+
     @Test("a value with a comma, a quote or a line break is quoted")
     func quoting() {
         #expect(APRSExport.field("a,b") == "\"a,b\"")

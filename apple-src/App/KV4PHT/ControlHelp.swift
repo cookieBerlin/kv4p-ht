@@ -48,6 +48,9 @@ enum ControlHelp {
     static let accuracy = "How accurately others see your position. Rounding it keeps your exact location private."
     static let beaconFrequency = "The frequency for your beacons; usually the APRS frequency of your region."
     static let units = "For temperature, wind, rain, snow and distances in the APRS list. Pressure stays in hPa."
+    static let forMe = "Only messages from or to your callsign, with any SSID."
+    static let packetTypes = "Shows only the chosen types of packet."
+    static let exportPackets = "Saves the packets this list shows, also those stored, as a file."
     static let keepPackets = "The APRS list stays when the app ends. The packets stay on this device."
     static let keepInternetPackets =
         "Also keeps packets only from the internet, which can be many. Messages to or from you always stay."

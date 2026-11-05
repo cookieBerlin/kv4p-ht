@@ -41,7 +41,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-32](#hw-32) | Distance to APRS stations | ⬜ | ⬜ |
 | [HW-33](#hw-33) | APRS symbols and radios | ⬜ | ⬜ |
 | [HW-34](#hw-34) | APRS packet types and units | ⬜ | ⬜ |
-| [HW-35](#hw-35) | Beacons with the screen locked (iPhone) | ⬜ | ⬜ |
+| [HW-35](#hw-35) | Beacons with the screen locked (iPhone) | – | ⬜ |
 | [HW-36](#hw-36) | APRS history | ⬜ | ⬜ |
 
 ## TestFlight
@@ -303,3 +303,6 @@ and is not sent again. With the APRS-IS feed on, its packets stay in the list bu
 restart, unless *Keep internet packets* is on; a message to you stays either way. Delete one packet
 with the button on its row, and all of them in the settings. Turn *Keep packets* off and answer the
 question both ways. With a long list, **Load more** brings older packets, and the app stays smooth.
+Search by callsign, *For me* with a message to another SSID of yours, and *Types* find older stored packets too.
+Export both formats and open the CSV in a spreadsheet: a text such as `=1+1` stays text. *Settings*, *APRS*, *Packets*
+shows the list over the full height, and its filter leaves the main page alone. After a restart both filters are back.

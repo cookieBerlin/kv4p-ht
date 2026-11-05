@@ -89,6 +89,8 @@ struct APRSHistoryTests {
         #expect(try await ids(APRSHistoryFilter(kinds: [3, 4])) == [3, 2])
         #expect(try await ids(APRSHistoryFilter(callsign: "N1", kinds: [4])) == [3])
         #expect(try await ids(APRSHistoryFilter(callsign: "N1"), before: 2, limit: 1) == [1])
+        #expect(try await ids(APRSHistoryFilter(callsign: "N1", participant: "N0")) == [1])
+        #expect(!APRSHistoryFilter(participant: "x").isEmpty)
         #expect(APRSHistoryFilter().isEmpty)
         #expect(!APRSHistoryFilter(callsign: "x").isEmpty)
         #expect(!APRSHistoryFilter(kinds: [1]).isEmpty)

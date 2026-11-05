@@ -358,17 +358,17 @@ struct APRSHistoryModelTests {
         await setup.receive(Self.position)
         #expect(await setup.waitForStored(5))
 
-        await setup.model.setAPRSFilter(callsign: "n2", kinds: [])
+        await setup.model.setAPRSFilter(APRSListFilter(callsign: "n2"))
         #expect(setup.model.aprsEvents.map(\.fromCallsign) == ["N2CALL"])
-        #expect(setup.model.aprsFilter == APRSHistoryFilter(callsign: "n2"))
+        #expect(setup.model.aprsFilter() == APRSListFilter(callsign: "n2"))
 
-        await setup.model.setAPRSFilter(callsign: "", kinds: [.position])
+        await setup.model.setAPRSFilter(APRSListFilter(kinds: [.position]))
         #expect(setup.model.aprsEvents.map(\.kind) == [.position])
 
-        await setup.model.setAPRSFilter(callsign: "N1", kinds: [.status])
+        await setup.model.setAPRSFilter(APRSListFilter(callsign: "N1", kinds: [.status]))
         #expect(setup.model.aprsEvents.map(\.fromCallsign) == ["N1CALL"])
 
-        await setup.model.setAPRSFilter(callsign: "", kinds: [])
+        await setup.model.setAPRSFilter(APRSListFilter())
         #expect(setup.model.aprsEvents.count == 2)
         #expect(setup.model.hasMoreAPRSHistory)
     }
@@ -380,13 +380,13 @@ struct APRSHistoryModelTests {
         await setup.receive(Self.toOther)
         await setup.receive(Self.status(3))
         #expect(await setup.waitForStored(3))
-        await setup.model.setAPRSFilter(callsign: "N1CALL", kinds: [])
+        await setup.model.setAPRSFilter(APRSListFilter(callsign: "N1CALL"))
         #expect(setup.model.hasMoreAPRSHistory)
         while setup.model.hasMoreAPRSHistory {
             await setup.model.loadMoreAPRSHistory()
         }
         #expect(setup.model.aprsEvents.count == 2)
-        await setup.model.setAPRSFilter(callsign: "N0CALL", kinds: [])
+        await setup.model.setAPRSFilter(APRSListFilter(callsign: "N0CALL"))
         while setup.model.hasMoreAPRSHistory {
             await setup.model.loadMoreAPRSHistory()
         }
@@ -396,7 +396,7 @@ struct APRSHistoryModelTests {
     @Test("a new packet that fits shows at once, one that does not stays out")
     func searchLive() async throws {
         let setup = try Setup(settings: Self.keepingInternet())
-        await setup.model.setAPRSFilter(callsign: "N5", kinds: [])
+        await setup.model.setAPRSFilter(APRSListFilter(callsign: "N5"))
         setup.time.advance(by: 1_000)
         setup.link.receive.yield(Self.status(4))
         setup.link.receive.yield(Self.status(5))
@@ -422,7 +422,7 @@ struct APRSHistoryModelTests {
             ]
         )
 
-        await setup.model.setAPRSFilter(callsign: "N3", kinds: [])
+        await setup.model.setAPRSFilter(APRSListFilter(callsign: "N3"))
         let filtered = await setup.model.exportAPRS(.csv)
         #expect(filtered?.contains("N3CALL") == true)
         #expect(filtered?.contains("N2CALL") == false)
@@ -439,7 +439,7 @@ struct APRSHistoryModelTests {
         link.receive.yield(Self.position)
         #expect(await KV4PTestSupport.eventually { !model.aprsEvents.isEmpty })
         #expect(await model.exportAPRS(.raw)?.isEmpty == false)
-        await model.setAPRSFilter(callsign: "N1", kinds: [])
+        await model.setAPRSFilter(APRSListFilter(callsign: "N1"))
         #expect(model.aprsEvents.count == 1)
 
         let failing = try Setup(history: FailingHistory())
@@ -447,6 +447,58 @@ struct APRSHistoryModelTests {
         failing.model.dismissNotice()
         #expect(await failing.model.exportAPRS(.raw) == nil)
         #expect(failing.model.message != nil)
+    }
+
+    @Test("each list has its own filter, and both remember it on this device")
+    func twoLists() async throws {
+        let setup = try Setup(settings: Self.keepingInternet())
+        await setup.receive(Self.status(1))
+        await setup.receive(Self.status(2))
+        #expect(await setup.waitForStored(2))
+        await setup.model.setAPRSFilter(APRSListFilter(callsign: "N2"), in: .packetsPage)
+        #expect(setup.model.aprsEvents(in: .packetsPage).map(\.fromCallsign) == ["N2CALL"])
+        #expect(setup.model.aprsEvents.count == 2)
+        #expect(setup.settings.settings.aprsPageFilter == APRSListFilter(callsign: "N2"))
+        #expect(setup.settings.settings.aprsListFilter == APRSListFilter())
+        let keys = SettingsSync.values(of: AppSettings()).keys
+        #expect(!keys.contains("aprsListFilter"))
+        #expect(!keys.contains("aprsPageFilter"))
+
+        var settings = Self.keepingInternet()
+        settings.aprsListFilter = APRSListFilter(callsign: "N1")
+        let restarted = try Setup(history: setup.history, settings: settings, listLimit: 1, start: 300_000)
+        #expect(restarted.model.aprsFilter() == APRSListFilter(callsign: "N1"))
+        #expect(await KV4PTestSupport.eventually { restarted.model.aprsEvents.map(\.fromCallsign) == ["N1CALL"] })
+    }
+
+    @Test("for me finds messages with any SSID in the store, and nothing else")
+    func forMeStored() async throws {
+        let setup = try Setup(settings: Self.keepingInternet(), listLimit: 1)
+        await setup.receive(Self.toMe)
+        await setup.receive("N3CALL>APRS,TCPIP*::N0CALL-7 :Hello")
+        await setup.receive(Self.toOther)
+        await setup.receive("N3CALL>APRS,TCPIP*::BLN1     :Hello")
+        await setup.receive("N0CALL>APRS,TCPIP*:>Status")
+        #expect(await setup.waitForStored(5))
+        await setup.model.setAPRSFilter(APRSListFilter(isForMe: true))
+        while setup.model.hasMoreAPRSHistory {
+            await setup.model.loadMoreAPRSHistory()
+        }
+        #expect(setup.model.aprsEvents.map(\.toCallsign) == ["N0CALL-7", "N0CALL"])
+    }
+
+    @Test("the packets page also lets the position be read")
+    func pageVisible() async throws {
+        let location = FakeLocation()
+        location.set(GeoPoint(latitude: 49, longitude: -72))
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            location: location,
+            permissions: FakePermissions()
+        )
+        model.isPacketsPageVisible = true
+        #expect(await KV4PTestSupport.eventually { model.ownPosition != nil })
     }
 
     @Test("a model without a store has no history")

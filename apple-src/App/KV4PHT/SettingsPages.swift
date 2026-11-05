@@ -7,7 +7,7 @@ import SwiftUI
 
 /// The pages of the settings (ADR-0048), in the order the overview shows them.
 enum SettingsPage: CaseIterable, Identifiable {
-    case station, radio, transmit, audio, aprs, memories, simulator, advanced
+    case station, radio, transmit, audio, aprs, memories, simulator
 
     var id: Self { self }
 
@@ -20,7 +20,6 @@ enum SettingsPage: CaseIterable, Identifiable {
         case .aprs: "APRS"
         case .memories: "Memories"
         case .simulator: "Simulator"
-        case .advanced: "Advanced"
         }
     }
 
@@ -33,7 +32,6 @@ enum SettingsPage: CaseIterable, Identifiable {
         case .aprs: "location"
         case .memories: "list.bullet"
         case .simulator: "testtube.2"
-        case .advanced: "slider.horizontal.3"
         }
     }
 }
@@ -109,7 +107,7 @@ private struct RadioSection<Rows: View>: View {
     }
 }
 
-/// What the radio itself does: its channel, its audio filters and its firmware.
+/// What the radio itself does: its channel, its audio filters, the limits of transmitting and its firmware.
 struct RadioSettings: View {
     @Bindable var model: RadioViewModel
 
@@ -157,6 +155,13 @@ struct RadioSettings: View {
                 Toggle("Low-pass", isOn: $model.filters.lowPass)
                     .explained(ControlHelp.lowPass)
             }
+            Section("Frequency limits") {
+                limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
+                limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
+                limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
+                limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
+                Text(ControlHelp.frequencyLimits).font(.footnote).foregroundStyle(.secondary)
+            }
             if model.firmwareText != nil || showsFirmwareUpdate {
                 Section("Firmware") {
                     if let firmware = model.firmwareText {
@@ -167,6 +172,13 @@ struct RadioSettings: View {
                     }
                 }
             }
+        }
+    }
+
+    /// `SettingsActivity`'s TX frequency limits, in whole MHz.
+    private func limitPicker(_ title: String, _ value: Binding<Float>, _ options: [Float]) -> some View {
+        Picker(title, selection: value) {
+            ForEach(options, id: \.self) { Text("\(Int($0)) MHz").tag($0) }
         }
     }
 
@@ -283,6 +295,13 @@ struct APRSSettings: View {
 
     var body: some View {
         Form {
+            Section {
+                NavigationLink {
+                    APRSPacketsPage(model: model)
+                } label: {
+                    LabeledContent("Packets", value: "\(model.storedPacketCount) stored")
+                }
+            }
             Section("Position beacon") {
                 Toggle("Position beacon", isOn: $model.isBeaconEnabled)
                     .disabled(!model.canBeacon || !model.canSendOnAir)
@@ -417,29 +436,6 @@ struct SimulatorSettings: View {
                 }
             }
             .disabled(!model.canSimulateSignal)
-        }
-    }
-}
-
-/// `SettingsActivity`'s TX frequency limits, in whole MHz.
-struct AdvancedSettings: View {
-    @Bindable var model: RadioViewModel
-
-    var body: some View {
-        Form {
-            Section("Frequency limits") {
-                limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
-                limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
-                limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
-                limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
-                Text(ControlHelp.frequencyLimits).font(.footnote).foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    private func limitPicker(_ title: String, _ value: Binding<Float>, _ options: [Float]) -> some View {
-        Picker(title, selection: value) {
-            ForEach(options, id: \.self) { Text("\(Int($0)) MHz").tag($0) }
         }
     }
 }
