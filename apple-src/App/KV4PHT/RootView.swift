@@ -126,6 +126,8 @@ struct RootView: View {
         @AppStorage("mainPage") private var page = Page.memories
         /// Where the scroll view stands, which follows `page` and leads it when swiped.
         @State private var shownPage: Page?
+        /// The bars below the pages make way for the keyboard, so that the line to write stays above it.
+        @State private var isKeyboardShown = false
 
         /// One page over the full width; all are there at once, so each is told whether it is the one shown.
         private func pageView(_ item: Page, @ViewBuilder content: () -> some View) -> some View {
@@ -165,20 +167,19 @@ struct RootView: View {
                 .onChange(of: model.chatRequestCount) { withAnimation { page = .aprs } }
                 // A text field on a page that is swiped away keeps the keyboard otherwise, with no way to close it.
                 .onChange(of: page) { dismissKeyboard() }
-                if page == .settings {
-                    if model.hasFailed {
-                        StatusLine(model: model).padding(.vertical, 6)
+                if !isKeyboardShown {
+                    if page == .settings {
+                        if model.hasFailed {
+                            StatusLine(model: model).padding(.vertical, 6)
+                        }
+                        NoticeBanner(model: model)
+                    } else {
+                        BottomBar(model: model, showsPTT: page == .memories)
                     }
-                    NoticeBanner(model: model)
-                } else {
-                    BottomBar(model: model, showsPTT: page == .memories)
+                    pageBar
                 }
-                pageBar
             }
-        }
-
-        private func dismissKeyboard() {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            .observesKeyboard($isKeyboardShown)
         }
 
         /// The number of new messages on the APRS page (ADR-0058).
