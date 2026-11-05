@@ -96,6 +96,12 @@ box. Hardware test results are in [hardware-tests.md](hardware-tests.md).
 | ⬜ | 6.1 | **SSTV receive** | The milestone starts with two decisions: which modes the app supports, and whether an existing library can be reused or the decoder is written from scratch (including its licence). The app then decodes SSTV images from the received audio and shows and saves them. The decoder is tested with generated test signals, as the Android app has no SSTV to serve as an oracle. ADR. |
 | ⬜ | 6.2 | **SSTV transmit** | The user chooses an image, and the app sends it as it is in the chosen modes; the callsign is part of the image. The app's own TX time limit does not apply to it, and the transmission can be stopped at any time. Listen-only mode blocks it, and the frequency limits stay in force. Encoder and decoder pass a round trip in the tests. The firmware ends a transmission after 200 s: longer modes wait until the firmware allows them, as a separate step later. ADR, or part of the ADR of 6.1. |
 
+## Phase 7 — Simulators on the network
+
+|   | # | Milestone | Acceptance criteria |
+|---|---|---|---|
+| ⬜ | 7.1 | **Simulators that hear each other** | Simulated radios of the app on several Macs, iPhones and iPads in the same local network find each other through Bonjour and connect directly, with the local network permission only; no multicast entitlement is needed. Together they form one simulated channel, on which everything the app does over a real radio works: what one transmits, the others hear when tuned to that frequency, with offset, tones and squelch as on air. That covers FM voice, FreeDV 2400B, the repeater access tone, APRS packets with positions, objects, weather and messages, acknowledgements, chats, beacons, digipeating and the S-meter. Only one station transmits at a time per frequency, and a second one is heard as on air. A session holds only the devices that joined it on purpose, and nothing leaves the local network. The simulator alone, without a network, keeps working as before, and the real radio path is not touched. The milestone starts with an ADR on the protocol between the simulators, and may be split into parts, such as APRS first and audio after it. |
+
 ## Phase 99 — App Store release
 
 Deferred: the maintainer plans it later. Until then, the app is distributed through
