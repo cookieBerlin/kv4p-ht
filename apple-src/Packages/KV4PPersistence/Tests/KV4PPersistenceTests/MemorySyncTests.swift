@@ -214,6 +214,16 @@ struct MemorySyncTests {
         #expect(reported.isSet.withLock { $0 })
     }
 
+    @Test("a repository on a store offers the times of finished syncs, a plain one has none")
+    func finishedSyncs() async throws {
+        let repository = try SwiftDataMemoryRepository(storeURL: Self.storeURL())
+        let listener = Task {
+            for await _ in repository.finishedSyncs {}
+        }
+        listener.cancel()
+        await listener.value
+    }
+
     @Test("a repository without changes of its own reports none")
     func noChanges() async {
         struct Plain: MemoryRepository {
@@ -226,6 +236,9 @@ struct MemorySyncTests {
         }
         for await _ in Plain().changes {
             Issue.record("no change expected")
+        }
+        for await _ in Plain().finishedSyncs {
+            Issue.record("no sync expected")
         }
     }
 }

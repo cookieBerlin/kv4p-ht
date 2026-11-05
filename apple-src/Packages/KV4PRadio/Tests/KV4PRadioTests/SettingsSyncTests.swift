@@ -372,6 +372,39 @@ struct SettingsSyncTests {
         #expect(Self.model(MemorySyncedSettings(), local: local).lastSettingsSync == Date(timeIntervalSince1970: 11))
     }
 
+    @Test("the time of the last memory sync is shown and kept, and does not go back")
+    func lastMemorySync() async {
+        struct Syncing: MemoryRepository {
+            let times: AsyncStream<Date>
+            var finishedSyncs: AsyncStream<Date> { times }
+            func all() async throws -> [ChannelMemory] { [] }
+            func insert(_ memories: [ChannelMemory]) async throws -> [ChannelMemory] { memories }
+            func update(_ memory: ChannelMemory) async throws {}
+            func delete(id: Int32) async throws {}
+            func reorder(_ ids: [Int32]) async throws {}
+            func renameGroup(_ group: String, to newName: String) async throws {}
+        }
+        let (times, continuation) = AsyncStream.makeStream(of: Date.self)
+        let store = MemorySettingsStore()
+        var local = AppSettings()
+        local.lastMemorySync = Date(timeIntervalSince1970: 10)
+        store.save((try? local.encoded()) ?? Data())
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            memories: Syncing(times: times),
+            settings: store
+        )
+        #expect(model.lastMemorySync == Date(timeIntervalSince1970: 10))
+        continuation.yield(Date(timeIntervalSince1970: 20))
+        #expect(await RadioViewModelTests.eventually(model) { $0.lastMemorySync == Date(timeIntervalSince1970: 20) })
+        #expect(store.settings.lastMemorySync == Date(timeIntervalSince1970: 20))
+        continuation.yield(Date(timeIntervalSince1970: 15))
+        continuation.yield(Date(timeIntervalSince1970: 30))
+        #expect(await RadioViewModelTests.eventually(model) { $0.lastMemorySync == Date(timeIntervalSince1970: 30) })
+        #expect(!SettingsSync.values(of: AppSettings()).keys.contains("lastMemorySync"))
+    }
+
     @Test("a real wait is what the view model starts with")
     func waitIsTwoSeconds() {
         #expect(RadioViewModel.settingsSyncPause == .seconds(2))
