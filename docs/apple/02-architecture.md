@@ -109,5 +109,5 @@ forwarding; they are the only coverage exclusions.
   `io.github.cookieberlin.kv4pht`, deployment targets 26
   ([ADR-0008](adr/0008-minimum-os-versions.md)), version numbers.
 - Entitlements: Bluetooth, microphone, location (APRS beacons), network client, iCloud
-  key-value store for builds with a team (ADR-0051);
+  key-value store and CloudKit for builds with a team (ADR-0051, ADR-0052);
   iOS background modes `audio` and `bluetooth-central` (phase 2).

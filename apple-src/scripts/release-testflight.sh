@@ -52,5 +52,6 @@ for platform in ${PLATFORMS:-iOS macOS}; do
   xcodebuild -exportArchive -quiet -archivePath "$archive" -exportOptionsPlist "$options" \
     -exportPath "$out/export-$platform" -allowProvisioningUpdates
   echo "testflight: uploaded the $platform build $build to App Store Connect"
+  echo "testflight: if the memory model changed, deploy the CloudKit schema to production (ADR-0052)"
   echo "testflight: paste $out/WhatToTest-$platform.txt into What to Test of that build"
 done

@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import SwiftData
+import Synchronization
 import Testing
 
 @testable import KV4PPersistence
@@ -82,10 +83,13 @@ struct MemorySyncTests {
     @Test("two memories with one number from two devices get a number each here")
     func sameNumber() async throws {
         let url = Self.storeURL()
-        try Self.arrive(url, [
-            (ChannelMemory(id: 1, name: "A", frequency: 146.52), position: 1, globalId: "a"),
-            (ChannelMemory(id: 1, name: "B", frequency: 146.54), position: 2, globalId: "b"),
-        ])
+        try Self.arrive(
+            url,
+            [
+                (ChannelMemory(id: 1, name: "A", frequency: 146.52), position: 1, globalId: "a"),
+                (ChannelMemory(id: 1, name: "B", frequency: 146.54), position: 2, globalId: "b"),
+            ]
+        )
         let repository = try SwiftDataMemoryRepository(storeURL: url)
         let memories = try await repository.all()
         #expect(Set(memories.map(\.id)).count == 2)
@@ -122,10 +126,13 @@ struct MemorySyncTests {
     func duplicates() async throws {
         let url = Self.storeURL()
         let memory = ChannelMemory(name: "A", frequency: 146.52, txTone: "67", group: "Local")
-        try Self.arrive(url, [
-            (memory, position: 1, globalId: "b"),
-            (memory, position: 2, globalId: "a"),
-        ])
+        try Self.arrive(
+            url,
+            [
+                (memory, position: 1, globalId: "b"),
+                (memory, position: 2, globalId: "a"),
+            ]
+        )
         let repository = try SwiftDataMemoryRepository(storeURL: url)
         #expect(try await repository.all().map(\.name) == ["A"])
         #expect(try Self.globalIds(url) == ["a"])
@@ -134,10 +141,13 @@ struct MemorySyncTests {
     @Test("memories that differ in any way both stay, as neither may get lost")
     func notDuplicates() async throws {
         let url = Self.storeURL()
-        try Self.arrive(url, [
-            (ChannelMemory(name: "A", frequency: 146.52, txTone: "67"), position: 1, globalId: "a"),
-            (ChannelMemory(name: "A", frequency: 146.52, txTone: "71.9"), position: 2, globalId: "b"),
-        ])
+        try Self.arrive(
+            url,
+            [
+                (ChannelMemory(name: "A", frequency: 146.52, txTone: "67"), position: 1, globalId: "a"),
+                (ChannelMemory(name: "A", frequency: 146.52, txTone: "71.9"), position: 2, globalId: "b"),
+            ]
+        )
         let repository = try SwiftDataMemoryRepository(storeURL: url)
         #expect(try await repository.all().map(\.txTone) == ["67", "71.9"])
     }
@@ -145,10 +155,13 @@ struct MemorySyncTests {
     @Test("two memories on one place stand in the same order on every device")
     func samePosition() async throws {
         let url = Self.storeURL()
-        try Self.arrive(url, [
-            (ChannelMemory(id: 1, name: "Second", frequency: 146.52), position: 3, globalId: "b"),
-            (ChannelMemory(id: 2, name: "First", frequency: 146.54), position: 3, globalId: "a"),
-        ])
+        try Self.arrive(
+            url,
+            [
+                (ChannelMemory(id: 1, name: "Second", frequency: 146.52), position: 3, globalId: "b"),
+                (ChannelMemory(id: 2, name: "First", frequency: 146.54), position: 3, globalId: "a"),
+            ]
+        )
         let repository = try SwiftDataMemoryRepository(storeURL: url)
         #expect(try await repository.all().map(\.name) == ["First", "Second"])
     }
@@ -180,32 +193,25 @@ struct MemorySyncTests {
 
     @Test("a change from iCloud is reported")
     func reportsChanges() async throws {
+        final class Flag: Sendable {
+            let isSet = Mutex(false)
+        }
         let repository = try SwiftDataMemoryRepository(storeURL: Self.storeURL())
         let changes = repository.changes
-        let reported = Task {
-            for await _ in changes { return true }
-            return false
+        let reported = Flag()
+        let listener = Task {
+            for await _ in changes {
+                reported.isSet.withLock { $0 = true }
+                return
+            }
         }
         // The stream listens from its first use on; repeat, as that moment is not visible from here.
-        while !reported.isCancelled {
+        for _ in 0..<500 where !reported.isSet.withLock({ $0 }) {
             NotificationCenter.default.post(name: .NSPersistentStoreRemoteChange, object: nil)
             try await Task.sleep(for: .milliseconds(5))
-            if await Self.isDone(reported) { break }
         }
-        #expect(await reported.value)
-    }
-
-    private static func isDone(_ task: Task<Bool, Never>) async -> Bool {
-        await withTaskGroup(of: Bool?.self) { group in
-            group.addTask { await task.value }
-            group.addTask {
-                try? await Task.sleep(for: .milliseconds(5))
-                return nil
-            }
-            let first = await group.next() ?? nil
-            group.cancelAll()
-            return first != nil
-        }
+        listener.cancel()
+        #expect(reported.isSet.withLock { $0 })
     }
 
     @Test("a repository without changes of its own reports none")

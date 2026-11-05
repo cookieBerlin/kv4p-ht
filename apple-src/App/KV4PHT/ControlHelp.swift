@@ -24,8 +24,8 @@ enum ControlHelp {
         "The app does not transmit: no PTT, access tone, APRS messages, beacons or digipeating. With a callsign, the "
         + "iGate and the APRS-IS feed stay available."
     static let settingsSync =
-        "Your callsign, the PTT, access tone and APRS options and the frequency limits follow you to your other devices "
-        + "with the same Apple ID."
+        "Your callsign, memories, the PTT, access tone and APRS options and the frequency limits follow you to your "
+        + "other devices with the same Apple ID. For memories, a change of this switch takes effect at the next start."
     static let accessTone =
         "Hold to send the tone that opens a repeater. It ends by itself; releasing it earlier stops it."
     static let squelch = "How strong a signal must be to be heard. 0 keeps the speaker always on."

@@ -82,11 +82,15 @@ enum Composition {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
     }
 
-    /// The memories live in the app's Application Support folder; without it the app runs without memories.
+    /// The memories live in the app's Application Support folder; without it the app runs without memories. They sync
+    /// if the user wants that at this start (ADR-0052); if the store does not open with iCloud, it does without.
     private static func memoryRepository() -> (any MemoryRepository)? {
         let folder = URL.applicationSupportDirectory
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return try? SwiftDataMemoryRepository(storeURL: folder.appending(path: "Memories.store"))
+        let url = folder.appending(path: "Memories.store")
+        let syncs = AppSettings(data: UserDefaultsSettingsStore().load()).isSettingsSyncEnabled
+        return (try? SwiftDataMemoryRepository(storeURL: url, syncs: syncs))
+            ?? (try? SwiftDataMemoryRepository(storeURL: url, syncs: false))
     }
 
     private static func transport(for connection: RadioViewModel.Connection) -> any RadioTransport {

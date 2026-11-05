@@ -8,8 +8,8 @@ public enum MemoryOffset: Int, CaseIterable, Codable, Sendable {
 }
 
 /// A stored channel (Android `ChannelMemory`). `frequency` is the RX frequency in MHz; tones are `CTCSS` labels.
-public struct ChannelMemory: Equatable, Identifiable, Sendable {
-    /// Assigned by the repository; it is also the memory id sent to the radio.
+public struct ChannelMemory: Hashable, Identifiable, Sendable {
+    /// Assigned by the repository, for this device; it is also the memory id sent to the radio.
     public var id: Int32
     public var name: String
     public var frequency: Float
@@ -122,4 +122,10 @@ public protocol MemoryRepository: Sendable {
     func reorder(_ ids: [Int32]) async throws
     /// Gives the memories of `group` the name `newName`; they keep their place.
     func renameGroup(_ group: String, to newName: String) async throws
+    /// Reports that the memories have changed from outside, through iCloud.
+    var changes: AsyncStream<Void> { get }
+}
+
+extension MemoryRepository {
+    public var changes: AsyncStream<Void> { AsyncStream { $0.finish() } }
 }

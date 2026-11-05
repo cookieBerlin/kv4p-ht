@@ -375,6 +375,7 @@ public final class RadioViewModel {
     private let syncedSettings: (any SyncedSettingsStore)?
     private let settingsSyncSleep: @Sendable (Duration) async throws -> Void
     private var settingsSync: SettingsSync?
+    private var memoryObserver: Task<Void, Never>?
     private var settingsSyncTask: Task<Void, Never>?
     /// How long changes must pause before they go to the other devices.
     static let settingsSyncPause = Duration.seconds(2)
@@ -441,6 +442,7 @@ public final class RadioViewModel {
         self.simulatedSignalStep = simulatedSignalStep
         refreshConnections()
         observeInternet()
+        observeMemories()
         observeAudioSession()
         observePermissions()
         if let switching = audioSession ?? otherAppsMute {
@@ -1185,6 +1187,16 @@ public final class RadioViewModel {
         guard let point = await location.currentLocation(), isInternetFeedEnabled else { return }
         internetLocation = point
         updateInternet()
+    }
+
+    /// Memories changed on another device reach this one through the repository.
+    private func observeMemories() {
+        guard let changes = repository?.changes else { return }
+        memoryObserver = Task { [weak self] in
+            for await _ in changes {
+                await self?.loadMemories()
+            }
+        }
     }
 
     private func observeInternet() {
