@@ -525,6 +525,9 @@ struct DiagnosticsControllerTests {
         setup.simulator = RadioSimulator(scenario: scenario)
         await setup.controller.connect()
         setup.transport.streams.deliver(setup.simulator.connect(at: .zero))
+        _ = try #require(await setup.snapshots.next { $0.status == .ready })
+        // What HELLO asked to send may have gone before the small window applied; this cannot.
+        await setup.controller.update { $0.setSquelch(3) }
         let clock = setup.clock
         #expect(
             await eventually {
