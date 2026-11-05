@@ -114,6 +114,7 @@ struct APRSSymbolInfoTests {
             (">Hello^", "Kenwood TH-D74", "Hello"),
             (">Hello&", "Kenwood TH-D75", "Hello"),
             (">Hello", "Kenwood TH-D7A", "Hello"),
+            (">", "Kenwood TH-D7A", nil),
             ("]Hello=", "Kenwood TM-D710", "Hello"),
             ("]Hello", "Kenwood TM-D700", "Hello"),
         ] as [(String, String, String?)]
