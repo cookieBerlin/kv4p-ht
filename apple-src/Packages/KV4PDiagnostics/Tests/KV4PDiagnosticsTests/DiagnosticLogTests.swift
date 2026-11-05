@@ -150,4 +150,81 @@ struct DiagnosticLogTests {
         file.append("two", atMs: 0)
         #expect(file.read() == "two\n")
     }
+
+    @Test("the file says how much it holds and since when")
+    func fileSummary() {
+        let file = LogFile(folder: Self.folder(), partLimit: 5)
+        #expect(file.summary() == LogSummary(byteCount: 0, since: nil))
+        file.append("12345", atMs: 0)
+        file.append("next", atMs: Self.day)
+        #expect(file.summary() == LogSummary(byteCount: 11, since: "1970-01-01"))
+    }
+
+    @Test("memory says the same")
+    func memorySummary() {
+        let store = MemoryLogStore()
+        let log = DiagnosticLog(store: store, now: { 0 })
+        #expect(log.summary() == LogSummary(byteCount: 0, since: nil))
+        log.log(.info, .app, "One")
+        #expect(log.summary().since == "1970-01-01")
+        #expect(log.summary().byteCount == store.read().utf8.count)
+    }
+
+    @Test("a live reader gets the lines from now on, filtered like the file, and a new one replaces it")
+    func live() async {
+        let log = DiagnosticLog(store: MemoryLogStore(), now: { 0 })
+        log.log(.info, .app, "Before")
+        var first = log.liveLines().makeAsyncIterator()
+        log.log(.error, .connection, "Path /dev/cu.usbserial-0001 failed")
+        let line = await first.next()
+        #expect(line?.level == .error)
+        #expect(line?.category == .connection)
+        #expect(line?.message == "Path [path] failed")
+        var second = log.liveLines().makeAsyncIterator()
+        #expect(await first.next() == nil)
+        log.log(.info, .app, "After")
+        #expect(await second.next()?.message == "After")
+    }
+}
+
+/// Lines as the live view reads and filters them (ADR-0059).
+@Suite("Log lines")
+struct LogLineTests {
+    private static let line = LogLine(
+        date: Date(timeIntervalSince1970: 1),
+        level: .error,
+        category: .connection,
+        message: "It failed: for now"
+    )
+
+    @Test("a line comes back from its text")
+    func parses() {
+        #expect(Self.line.text == "1970-01-01T00:00:01Z ERROR connection: It failed: for now")
+        #expect(LogLine(parsing: Self.line.text) == Self.line)
+    }
+
+    @Test("what is not a line is left out")
+    func notLines() {
+        #expect(LogLine(parsing: "") == nil)
+        #expect(LogLine(parsing: "r") == nil)
+        #expect(LogLine(parsing: "no ERROR connection: It") == nil)
+        #expect(LogLine(parsing: "1970-01-01T00:00:01Z WRONG connection: It") == nil)
+        #expect(LogLine(parsing: "1970-01-01T00:00:01Z ERROR wrong: It") == nil)
+        #expect(LogLine(parsing: "1970-01-01T00:00:01Z ERROR connection It") == nil)
+    }
+
+    @Test("a filter looks at the level, the category and the text; empty finds everything")
+    func filter() {
+        #expect(LogFilter().isEmpty)
+        #expect(LogFilter().matches(Self.line))
+        #expect(LogFilter(levels: [.error]).matches(Self.line))
+        #expect(!LogFilter(levels: [.info]).matches(Self.line))
+        #expect(LogFilter(categories: [.connection]).matches(Self.line))
+        #expect(!LogFilter(categories: [.audio]).matches(Self.line))
+        #expect(LogFilter(search: "FAILED").matches(Self.line))
+        #expect(!LogFilter(search: "other").matches(Self.line))
+        #expect(!LogFilter(search: "x").isEmpty)
+        #expect(!LogFilter(levels: [.info]).isEmpty)
+        #expect(!LogFilter(categories: [.app]).isEmpty)
+    }
 }

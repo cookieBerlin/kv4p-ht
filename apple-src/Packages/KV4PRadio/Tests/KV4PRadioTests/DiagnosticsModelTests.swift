@@ -136,6 +136,43 @@ struct DiagnosticsModelTests {
         #expect(log.detailedUntilMs == Self.day)
     }
 
+    @Test("the live log comes with the log, its filter is kept on this device, and copying leaves out the callsign")
+    func liveLog() async throws {
+        let setup = Setup()
+        let live = try #require(setup.model.liveLog)
+        #expect(!SettingsSync.values(of: AppSettings()).keys.contains("logFilter"))
+        live.filter = LogFilter(search: "n0call")
+        #expect(setup.settings.settings.logFilter == LogFilter(search: "n0call"))
+        live.filter = LogFilter()
+        setup.model.callsign = "N0CALL"
+        setup.log.log(.info, .app, "Heard n0call-7")
+        live.start()
+        #expect(setup.model.liveLogText().contains("[callsign]-7"))
+        #expect(!setup.model.liveLogText().uppercased().contains("N0CALL"))
+        #expect(setup.model.logSummary?.byteCount == setup.store.read().utf8.count)
+        setup.model.deleteDiagnostics()
+        #expect(live.lines.isEmpty)
+        live.stop()
+    }
+
+    @Test("a stored filter comes back, and the end of detailed logging is known")
+    func restoresLiveLog() {
+        var stored = AppSettings()
+        stored.logFilter = LogFilter(search: "x")
+        stored.detailedLoggingUntilMs = Self.day
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            settings: MemorySettingsStore(stored),
+            diagnostics: DiagnosticLog(store: MemoryLogStore(), now: { 0 }),
+            now: { 0 }
+        )
+        #expect(model.liveLog?.filter == LogFilter(search: "x"))
+        #expect(model.detailedLoggingEnds == Date(timeIntervalSince1970: Double(Self.day) / 1000))
+        model.isDetailedLogging = false
+        #expect(model.detailedLoggingEnds == nil)
+    }
+
     @Test("a new crash is offered once, also one from an earlier start")
     func offersCrash() {
         let setup = Setup()
@@ -194,6 +231,9 @@ struct DiagnosticsModelTests {
         #expect(!model.offersCrashReport)
         model.dismissCrashOffer()
         model.deleteDiagnostics()
+        #expect(model.liveLog == nil)
+        #expect(model.logSummary == nil)
+        #expect(model.liveLogText().isEmpty)
         #expect(model.problemReport(in: Self.environment).contains("Crashes: none reported"))
     }
 
