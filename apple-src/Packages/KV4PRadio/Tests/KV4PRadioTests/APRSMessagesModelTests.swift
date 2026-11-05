@@ -121,6 +121,7 @@ struct APRSMessagesModelTests {
         await setup.receive(Self.toMe, Self.toMe)
         #expect(setup.notifier.delivered.map(\.title) == ["N1CALL"])
         #expect(setup.notifier.delivered.map(\.text) == ["Hello"])
+        #expect(setup.notifier.delivered.map(\.peer) == ["N1CALL"])
         await setup.receive(Self.toMe2)
         #expect(Set(setup.notifier.delivered.map(\.id)).count == 2)
     }
