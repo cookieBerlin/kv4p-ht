@@ -43,6 +43,11 @@ Milestone 4.7 brings simple chats over APRS, built on the stored packets of
   goes through its menu, without a question, as in the packets.
 - **Without a callsign or in listen-only mode, a chat has no input,** and says why. Without a connected radio, it
   says so.
+- **Over the simulator, the station written to answers,** so that chats can be tried without a radio: with an
+  acknowledgement after 2 s by default, also with a reply after a time that can be chosen, to see its notification
+  with the app in the background, by rejecting, or not at all. The simulator knows no APRS, so the app plays that
+  station and hands its answers to the simulator as heard on air, as with the simulated test packets. A repeat is
+  acknowledged again but brings no second reply. These settings stay on the device and take effect at once.
 - **Messages go over the radio only,** so a station seen only on the internet gets a reply if an iGate passes it
   on. An empty chat says so.
 

@@ -87,6 +87,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var aprsPage = APRSPage.packets
     /// When each chat was last read; local to the device.
     public var chatReadUntilMs: [String: Int64] = [:]
+    /// How the simulated station answers messages, and after how many seconds it replies; local to the device.
+    public var simulatedMessageAnswer = SimulatedMessageAnswer.acknowledge
+    public var simulatedReplyDelaySeconds = 10
     /// The units of the APRS list (ADR-0055).
     public var units = APRSUnits.system
     public var txLimits = TXLimits()
@@ -103,6 +106,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public static let packetRetentionOptions = [1, 7, 30, 0]
     /// 0 is without limit, the default, so that chats do not go unexpectedly.
     public static let messageRetentionOptions = [30, 90, 365, 0]
+    /// Long enough to put the app in the background, to see a notification.
+    public static let simulatedReplyDelayOptions = [2, 10, 30, 60, 300]
 
     /// All stations share the APRS frequency, so there is no shorter one.
     public static let beaconIntervalOptions = [2, 5, 10, 15, 30, 60]
@@ -165,6 +170,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         messageRetentionDays = values.value(.messageRetentionDays, or: defaults.messageRetentionDays)
         aprsPage = values.value(.aprsPage, or: defaults.aprsPage)
         chatReadUntilMs = values.value(.chatReadUntilMs, or: defaults.chatReadUntilMs)
+        simulatedMessageAnswer = values.value(.simulatedMessageAnswer, or: defaults.simulatedMessageAnswer)
+        simulatedReplyDelaySeconds = values.value(.simulatedReplyDelaySeconds, or: defaults.simulatedReplyDelaySeconds)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)
