@@ -263,7 +263,9 @@ station capabilities. Repeats of the same packet within 30 seconds (numbered
 messages: 30 minutes) are counted (×2, ×3, …) instead of listed again. Packets
 relayed by another station (third-party) show *via* that station. Tune to the
 APRS frequency of your region (e.g. 144.800 MHz in Europe, 144.390 MHz in North
-America). The coordinates of a station open Apple Maps with a pin named after it. Once your
+America). The icon of a packet shows its APRS symbol, and the line below names it, along with the
+radio if a Mic-E packet says which one it is, such as *Car · Yaesu FT5D*. For the details, 🖥 point at
+the icon or 📱 hold it. The coordinates of a station open Apple Maps with a pin named after it. Once your
 position is known, the distance and direction from you stand below them, such as *12.3 km NE*, in
 the unit of your system; very near stations show no direction. Before you have decided on location
 access, **Show distances** at the top of the list asks for it. Without access, the list works as

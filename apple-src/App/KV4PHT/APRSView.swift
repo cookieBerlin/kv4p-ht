@@ -118,9 +118,7 @@ struct APRSView: View {
 
     private func row(_ event: APRSEvent) -> some View {
         HStack(alignment: .top) {
-            Image(systemName: Self.symbol(event.kind))
-                .foregroundStyle(.secondary)
-                .frame(width: 24)
+            icon(event)
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(Self.title(event)).font(.headline)
@@ -137,12 +135,43 @@ struct APRSView: View {
                 if let text = Self.text(event), !text.isEmpty {
                     Text(text)
                 }
+                if let origin = Self.origin(event) {
+                    Text(origin).font(.caption).foregroundStyle(.secondary)
+                }
                 if let position = model.position(of: event) {
                     location(position)
                 }
             }
         }
         .textSelection(.enabled)
+    }
+
+    /// A packet's symbol, or what kind of packet it is. The symbol tells more when looked at closer: a tooltip on the Mac,
+    /// holding it on iPhone and iPad, as holding the text of the row selects it.
+    @ViewBuilder private func icon(_ event: APRSEvent) -> some View {
+        if let symbol = event.symbol {
+            APRSSymbolView(symbol: symbol)
+                .frame(width: 24)
+                #if os(macOS)
+                    .help(event.symbolDetails.joined(separator: "\n"))
+                #else
+                    .contentShape(.rect)
+                    .contextMenu {
+                        ForEach(event.symbolDetails, id: \.self) { Text($0) }
+                    }
+                #endif
+                .accessibilityLabel(event.symbolDetails.joined(separator: ", "))
+        } else {
+            Image(systemName: Self.symbol(event.kind))
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+        }
+    }
+
+    /// What the symbol means, and the radio it came from.
+    private static func origin(_ event: APRSEvent) -> String? {
+        let parts = [event.symbol?.name, event.deviceName].compactMap(\.self)
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     /// The coordinates lead to the map; the distance stands below them, as a phone has little room.
@@ -212,7 +241,7 @@ struct APRSView: View {
                 event.pressure > 0 ? String(format: "%.1f hPa", event.pressure) : "",
                 event.windDirection.map { "wind \($0) \(event.windForce) mph" } ?? "",
             ].filter { !$0.isEmpty }.joined(separator: " · ")
-        default: event.comment
+        default: event.displayComment
         }
     }
 }

@@ -39,6 +39,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-30](#hw-30) | Settings sync between two devices | ⬜ | ⬜ |
 | [HW-31](#hw-31) | Memory sync between two devices | ⬜ | ⬜ |
 | [HW-32](#hw-32) | Distance to APRS stations | ⬜ | ⬜ |
+| [HW-33](#hw-33) | APRS symbols and radios | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -265,3 +266,11 @@ With a real position and packets of stations whose place you know: distance and 
 in the unit of the system. The coordinates open Apple Maps with a pin named after the station.
 Before location access is decided, *Show distances* asks for it; denied, the list shows only the
 coordinates, without a hint. The location indicator stays off while the APRS list is not on screen.
+
+### HW-33
+
+With packets of real stations on the APRS frequency, or APRS-IS: symbols show as icons with their
+meaning. A Yaesu or Kenwood Mic-E radio shows its name, and no longer marks such as `_3` in the
+comment. The tooltip on the Mac and holding the icon on iPhone and iPad show the details, and holding
+the text of a row still selects it. A digipeater with an overlay shows its letter. The icons are
+readable in light and dark mode, and the beacon symbols in the settings show theirs.

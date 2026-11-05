@@ -269,13 +269,7 @@ struct APRSSettings: View {
                     PermissionNotice(permission: .location)
                 }
                 Picker("Symbol", selection: $model.beaconSymbol) {
-                    ForEach(APRSSymbol.allCases, id: \.self) { symbol in
-                        if let image = symbol.systemImage {
-                            Label(symbol.name, systemImage: image)
-                        } else {
-                            Text(symbol.name)
-                        }
-                    }
+                    ForEach(APRSSymbol.allCases, id: \.self) { $0.menuLabel }
                 }
                 .explained(ControlHelp.symbol)
                 Picker("Position accuracy", selection: $model.beaconAccuracy) {
@@ -382,26 +376,6 @@ struct AdvancedSettings: View {
     private func limitPicker(_ title: String, _ value: Binding<Float>, _ options: [Float]) -> some View {
         Picker(title, selection: value) {
             ForEach(options, id: \.self) { Text("\(Int($0)) MHz").tag($0) }
-        }
-    }
-}
-
-extension APRSSymbol {
-    /// A system symbol, if one fits; milestone 4.3 finds a solution for the others.
-    fileprivate var systemImage: String? {
-        switch self {
-        case .phone: "iphone"
-        case .person: "figure.stand"
-        case .house: "house"
-        case .bicycle: "bicycle"
-        case .car: "car"
-        case .jeep: "suv.side"
-        case .truck: "truck.box"
-        case .motorcycle: "motorcycle"
-        case .eighteenWheeler: "box.truck"
-        case .smallAircraft: "airplane"
-        case .sailboat: "sailboat"
-        case .van, .rv, .glider, .helicopter, .motorboat: nil
         }
     }
 }
