@@ -7,9 +7,16 @@ final class ScriptedTransport: RadioTransport {
     private let connectError: TransportError?
     private let onConnect: (@Sendable (TransportStreams) async -> Void)?
     private let sentFrames = Mutex<[[UInt8]]>([])
+    /// Every send fails, as with a transport that has gone.
+    private let failsToSend: Bool
 
     /// `onConnect` runs inside `connect()` after the transport reports connected.
-    init(connectError: TransportError? = nil, onConnect: (@Sendable (TransportStreams) async -> Void)? = nil) {
+    init(
+        connectError: TransportError? = nil,
+        failsToSend: Bool = false,
+        onConnect: (@Sendable (TransportStreams) async -> Void)? = nil
+    ) {
+        self.failsToSend = failsToSend
         self.connectError = connectError
         self.onConnect = onConnect
     }
@@ -30,6 +37,7 @@ final class ScriptedTransport: RadioTransport {
     }
 
     func send(_ bytes: [UInt8]) async throws(TransportError) {
+        if failsToSend { throw .connectionLost }
         sentFrames.withLock { $0.append(bytes) }
     }
 

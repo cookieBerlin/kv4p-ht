@@ -1,10 +1,13 @@
 import Foundation
+import KV4PAPRS
 import KV4PAudio
+import KV4PPersistence
 import KV4PSimulator
 import KV4PTestSupport
 import KV4PTransport
 import Testing
 
+@testable import KV4PProtocol
 @testable import KV4PRadio
 
 /// What the view model logs, and the way to a report (ADR-0059).
@@ -25,7 +28,7 @@ struct DiagnosticsModelTests {
         let log: DiagnosticLog
         let model: RadioViewModel
 
-        init(crashes: CrashReportStore? = nil) {
+        init(crashes: CrashReportStore? = nil, microphone: FakeMicrophone = FakeMicrophone()) {
             let time = time
             self.crashes =
                 crashes
@@ -35,7 +38,7 @@ struct DiagnosticsModelTests {
                 makeController: { _, rxAudio in
                     let clock = ManualClock()
                     let transport = SimulatorTransport(simulator: RadioSimulator(scenario: .ble), clock: clock)
-                    return RadioController(transport: transport, clock: clock, rxAudio: rxAudio)
+                    return RadioController(transport: transport, clock: clock, rxAudio: rxAudio, microphone: microphone)
                 },
                 serialDevices: { [] },
                 internet: link,
@@ -43,7 +46,8 @@ struct DiagnosticsModelTests {
                 permissions: permissions,
                 diagnostics: log,
                 crashReports: self.crashes,
-                now: { time.ms }
+                now: { time.ms },
+                aprsTickInterval: .milliseconds(1)
             )
         }
 
@@ -191,5 +195,325 @@ struct DiagnosticsModelTests {
         model.dismissCrashOffer()
         model.deleteDiagnostics()
         #expect(model.problemReport(in: Self.environment).contains("Crashes: none reported"))
+    }
+
+    // MARK: Why something did not happen
+
+    /// A radio that connects but never says HELLO, so that it stays not ready.
+    private final class SilentSetup {
+        let store = MemoryLogStore()
+        let model: RadioViewModel
+
+        @MainActor
+        init(settings: MemorySettingsStore = MemorySettingsStore(AppSettings())) {
+            model = RadioViewModel(
+                makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+                serialDevices: { [] },
+                settings: settings,
+                diagnostics: DiagnosticLog(store: store, now: { 1_000 }),
+                now: { 1_000 }
+            )
+        }
+    }
+
+    @Test("what the radio refuses is logged with its reason")
+    func refusals() async {
+        let setup = SilentSetup()
+        setup.model.callsign = "N0CALL"
+        await setup.model.connect()
+        await setup.model.tune(to: ChannelMemory(name: "Private name", frequency: 146.52))
+        await setup.model.toggleScan()
+        #expect(setup.store.read().contains("Tuning refused: notReady"))
+        #expect(setup.store.read().contains("Scan refused: notReady"))
+        #expect(!setup.store.read().contains("Private name"))
+        await setup.model.disconnect()
+        #expect(setup.store.read().contains("RX audio so far: 0 underruns, 0 dropped samples"))
+    }
+
+    @Test("stored settings that cannot be read are logged, and the start says how the app is set up")
+    func unreadableSettings() {
+        let setup = SilentSetup(settings: MemorySettingsStore(data: Data("not JSON".utf8)))
+        #expect(setup.store.read().contains("ERROR storage: The settings could not be read"))
+        #expect(setup.store.read().contains("INFO app: Settings: connection"))
+        #expect(!AppSettings.isUnreadable(nil))
+        #expect(!SilentSetup().store.read().contains("could not be read"))
+    }
+
+    @Test("what the user types stays out of the log")
+    func typedText() async {
+        let setup = Setup()
+        setup.model.selectedConnection = .simulator
+        await setup.model.connect()
+        #expect(await setup.waits(for: "Status: ready"))
+        #expect(await KV4PTestSupport.eventually { setup.model.isReady })
+        setup.model.frequencyText = "Private text"
+        await setup.model.applyFrequency()
+        #expect(setup.model.message?.contains("Private text") == true)
+        #expect(!setup.text.contains("Private text"))
+        #expect(setup.text.contains("An entered frequency was not valid"))
+    }
+
+    @Test("tuning, transmitting and what the radio reports are logged with their frequency")
+    func tuning() async {
+        let setup = Setup()
+        setup.model.selectedConnection = .simulator
+        setup.model.callsign = "N0CALL"
+        await setup.model.connect()
+        #expect(await KV4PTestSupport.eventually { setup.model.isReady })
+        setup.model.frequencyText = "146.52"
+        await setup.model.applyFrequency()
+        #expect(await setup.waits(for: "Tuned: RX 146.5200 MHz, TX 146.5200 MHz"))
+        #expect(await KV4PTestSupport.eventually { setup.model.canTransmit && setup.model.snapshot.isInSync })
+        await setup.model.pressPTT()
+        #expect(await setup.waits(for: "Transmit requested on 146.5200 MHz"))
+        await setup.model.releasePTT()
+        #expect(await setup.waits(for: "Transmit ended"))
+    }
+
+    @Test("PTT that is refused says why")
+    func refusedPTT() async {
+        let setup = Setup(microphone: FakeMicrophone(fails: true))
+        setup.model.selectedConnection = .simulator
+        setup.model.callsign = "N0CALL"
+        await setup.model.connect()
+        #expect(await KV4PTestSupport.eventually { setup.model.isReady })
+        setup.model.frequencyText = "146.52"
+        await setup.model.applyFrequency()
+        #expect(await KV4PTestSupport.eventually { setup.model.canTransmit && setup.model.snapshot.isInSync })
+        await setup.model.pressPTT()
+        #expect(setup.text.contains("PTT refused: microphoneUnavailable"))
+    }
+
+    @Test("a radio that does not take the settings for a while is logged")
+    func outOfSync() async {
+        let store = MemoryLogStore()
+        let time = TestTime()
+        let transport = ScriptedTransport()
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: transport) },
+            serialDevices: { [] },
+            diagnostics: DiagnosticLog(store: store, now: { time.ms }),
+            now: { time.ms },
+            aprsTickInterval: .milliseconds(1)
+        )
+        await model.connect()
+        var simulator = RadioSimulator(scenario: .ble)
+        transport.streams.deliver(simulator.connect(at: .zero))
+        #expect(await KV4PTestSupport.eventually { model.isReady })
+        #expect(!store.read().contains("not taken the settings"))
+        #expect(
+            await KV4PTestSupport.eventually {
+                time.advance(by: 1_000)
+                return store.read().contains("not taken the settings for a while")
+            }
+        )
+        transport.streams.publish(.failed(.connectionLost))
+        #expect(await KV4PTestSupport.eventually { store.read().contains("No longer waiting for the radio") })
+        await model.disconnect()
+    }
+
+    @Test("gaps in the sound are logged each minute, only when there are new ones")
+    func rxAudio() async {
+        let setup = Setup()
+        setup.model.selectedConnection = .simulator
+        await setup.model.connect()
+        let block = ImaAdpcm.encodeBlock([Int16](repeating: 0, count: KV4P.audioBlockSamples))
+        for _ in 0..<2_000 {
+            setup.model.rxAudio.receive(block: block)
+        }
+        #expect(
+            await KV4PTestSupport.eventually {
+                setup.time.advance(by: 60_000)
+                return setup.text.contains("RX audio so far: 0 underruns, ")
+                    && !setup.text.contains(", 0 dropped samples")
+            }
+        )
+    }
+
+    @Test("a setting from iCloud that cannot be read is logged by its name only")
+    func unreadableSyncedSetting() {
+        let synced = MemorySyncedSettings()
+        synced.set(["callsign": Data("not JSON".utf8)])
+        let store = MemoryLogStore()
+        _ = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            settings: MemorySettingsStore(AppSettings()),
+            syncedSettings: synced,
+            diagnostics: DiagnosticLog(store: store, now: { 0 }),
+            settingsSyncSleep: { _ in }
+        )
+        #expect(store.read().contains("A setting from iCloud could not be read: callsign"))
+        #expect(!store.read().contains("not JSON"))
+    }
+
+    @Test("why a packet did not go out is logged once, until the reason changes")
+    func blockedPackets() async {
+        let setup = SilentSetup()
+        setup.model.callsign = "N0CALL"
+        setup.model.sendAPRSMessage(to: "N1CALL", text: "One")
+        setup.model.sendAPRSMessage(to: "N1CALL", text: "Two")
+        #expect(setup.store.read().contains("A packet did not go out"))
+        #expect(!setup.store.read().contains("One"))
+
+    }
+
+    @Test("a packet the iGate cannot pass on is logged, with no link or if the link does not take it")
+    func gate() async throws {
+        for (link, callsign, reason) in [
+            (nil, "N0CALL", "no internet link or callsign"),
+            (FakeLink(), "N1CALL", "the internet link did not take it"),
+        ] as [(FakeLink?, String, String)] {
+            let store = MemoryLogStore()
+            let simulator = Box<SimulatorTransport<ManualClock>>()
+            let model = RadioViewModel(
+                makeController: { _, rxAudio in
+                    let clock = ManualClock()
+                    let transport = SimulatorTransport(simulator: RadioSimulator(scenario: .ble), clock: clock)
+                    simulator.value = transport
+                    return RadioController(transport: transport, clock: clock, rxAudio: rxAudio)
+                },
+                serialDevices: { [] },
+                internet: link,
+                diagnostics: DiagnosticLog(store: store, now: { 0 })
+            )
+            await model.connect()
+            #expect(await KV4PTestSupport.eventually { model.isReady })
+            model.callsign = callsign
+            model.isIGateEnabled = true
+            let packet = try APRSParser.parse(tnc2: "N2CALL>APRS,WIDE1-1:>gate me")
+            await simulator.value?.hear(try packet.ax25Frame())
+            #expect(await KV4PTestSupport.eventually { store.read().contains(reason) })
+            #expect(!store.read().contains("gate me"))
+            await model.disconnect()
+        }
+    }
+
+    @Test("a connection is told by its kind, not by the name of the port or radio")
+    func connectionKinds() {
+        #expect(RadioViewModel.kind(of: .serial("/dev/cu.usbserial-0001")) == "USB")
+        #expect(RadioViewModel.kind(of: .bluetooth) == "Bluetooth")
+        #expect(RadioViewModel.kind(of: .simulator) == "simulator")
+    }
+
+    @Test("the app going away and coming back is logged once each")
+    func lifecycle() {
+        let setup = Setup()
+        setup.model.isAppActive = true
+        #expect(!setup.text.contains("In the foreground"))
+        setup.model.isAppActive = false
+        setup.model.isAppActive = true
+        #expect(setup.text.contains("In the background"))
+        #expect(setup.text.contains("In the foreground"))
+    }
+
+    @Test("an allowed permission is logged once")
+    func allowed() {
+        let setup = Setup()
+        setup.permissions.setQuietly(.location, .granted)
+        setup.model.refreshPermissions()
+        setup.model.refreshPermissions()
+        let lines = setup.text.components(separatedBy: "\n").filter { $0.contains("permissions: Allowed: location") }
+        #expect(lines.count == 1)
+    }
+}
+
+/// What the controller logs about the connection (ADR-0059).
+@Suite("Diagnostics in the controller")
+struct DiagnosticsControllerTests {
+    private static func log() -> (MemoryLogStore, DiagnosticLog) {
+        let store = MemoryLogStore()
+        return (store, DiagnosticLog(store: store, now: { 0 }))
+    }
+
+    @Test("a transmission that reaches its limit says so")
+    func runaway() async throws {
+        let (store, log) = Self.log()
+        var setup = TransmitControllerTests.Scripted(microphone: FakeMicrophone(), diagnostics: log)
+        try await setup.ready()
+        try await setup.controller.startTransmitting()
+        await setup.clock.waitForSleepers(1)
+        setup.clock.advance(by: .seconds(180))
+        #expect(await eventually { store.read().contains("reached its time limit") })
+    }
+
+    @Test("a microphone that does not start says why")
+    func microphone() async throws {
+        let (store, log) = Self.log()
+        var setup = TransmitControllerTests.Scripted(microphone: FakeMicrophone(fails: true), diagnostics: log)
+        try await setup.ready()
+        await #expect(throws: RadioError.microphoneUnavailable) { try await setup.controller.startTransmitting() }
+        #expect(store.read().contains("ERROR transmit: Microphone:"))
+    }
+
+    @Test("unreadable frames are counted, without flooding the log")
+    func unreadableFrames() async throws {
+        let (store, log) = Self.log()
+        var setup = TransmitControllerTests.Scripted(microphone: FakeMicrophone(), diagnostics: log)
+        try await setup.ready()
+        for _ in 0..<50 {
+            setup.transport.streams.deliver(KV4P.vendorFrame(DeviceCommand.deviceState.rawValue, [1]))
+            setup.transport.streams.deliver(KV4P.vendorFrame(DeviceCommand.windowUpdate.rawValue, [1]))
+        }
+        #expect(await eventually { store.read().contains("100 in this session") })
+        #expect(store.read().contains("Unreadable device state, 1 in this session"))
+        #expect(store.read().components(separatedBy: "Unreadable").count == 3)
+    }
+
+    @Test("a failed send is logged once")
+    func sendFails() async throws {
+        let (store, log) = Self.log()
+        let transport = ScriptedTransport(failsToSend: true)
+        let controller = RadioController(transport: transport, clock: ManualClock(), diagnostics: log)
+        await controller.connect()
+        var simulator = RadioSimulator(scenario: .ble)
+        transport.streams.deliver(simulator.connect(at: .zero))
+        #expect(await eventually { store.read().contains("Sending failed: connectionLost") })
+        #expect(await eventually { await controller.snapshot.status == .ready })
+        await controller.update { $0.setSquelch(3) }
+        await controller.update { $0.setSquelch(4) }
+        await Task.yield()
+        #expect(store.read().components(separatedBy: "Sending failed").count == 2)
+    }
+
+    @Test("a radio that leaves no room for a while is logged, and when it has room again")
+    func stall() async throws {
+        let (store, log) = Self.log()
+        var setup = TransmitControllerTests.Scripted(microphone: FakeMicrophone(), diagnostics: log)
+        var scenario = Scenario.ble
+        scenario.windowSize = 1
+        setup.simulator = RadioSimulator(scenario: scenario)
+        await setup.controller.connect()
+        setup.transport.streams.deliver(setup.simulator.connect(at: .zero))
+        let clock = setup.clock
+        #expect(
+            await eventually {
+                clock.advance(by: .seconds(1))
+                return store.read().contains("left no room to send")
+            }
+        )
+        setup.transport.streams.deliver(DeviceFrameEncoder.windowUpdate(WindowUpdate(size: 100_000)))
+        #expect(await eventually { store.read().contains("has room to send again") })
+    }
+
+    @Test("a packet the radio refuses says why")
+    func refusedPacket() async {
+        let (store, log) = Self.log()
+        let controller = RadioController(transport: ScriptedTransport(), clock: ManualClock(), diagnostics: log)
+        await #expect(throws: RadioError.notReady) { try await controller.transmitAX25([1], frequency: 144.8) }
+        #expect(store.read().contains("Sending a packet failed: notReady"))
+    }
+
+    @Test("with details on, the traffic of each minute is summed up")
+    func traffic() async throws {
+        let (store, log) = Self.log()
+        log.detailedUntilMs = 1
+        var setup = TransmitControllerTests.Scripted(microphone: FakeMicrophone(), diagnostics: log)
+        try await setup.ready()
+        setup.clock.advance(by: .seconds(30))
+        setup.transport.streams.deliver(DeviceFrameEncoder.windowUpdate(WindowUpdate(size: 10)))
+        setup.clock.advance(by: .seconds(30))
+        setup.transport.streams.deliver(DeviceFrameEncoder.windowUpdate(WindowUpdate(size: 10)))
+        #expect(await eventually { store.read().contains("DETAIL connection: Traffic in the last minute: in ") })
     }
 }

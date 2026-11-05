@@ -1,7 +1,18 @@
 import Foundation
+import Synchronization
 import Testing
 
-@testable import KV4PRadio
+@testable import KV4PDiagnostics
+
+private final class TestTime: Sendable {
+    private let value = Mutex<Int64>(1_000_000)
+
+    var ms: Int64 { value.withLock { $0 } }
+
+    func advance(by ms: Int64) {
+        value.withLock { $0 += ms }
+    }
+}
 
 /// The log on the device, in files limited in age and size (ADR-0059).
 @Suite("Diagnostic log")
@@ -54,6 +65,18 @@ struct DiagnosticLogTests {
     func errors() {
         let error = NSError(domain: "Domain", code: 7, userInfo: [NSLocalizedDescriptionKey: "/Users/name/file"])
         #expect(DiagnosticLog.describe(error) == "Domain 7")
+    }
+
+    @Test("a path never reaches a line, as it can hold a serial number or the user's name")
+    func redacts() {
+        let store = MemoryLogStore()
+        let log = DiagnosticLog(store: store, now: { 0 })
+        log.log(.error, .connection, #"Failed: portUnavailable(path: "/dev/cu.usbserial-0001", errno: 2)"#)
+        log.log(.error, .storage, "/Users/name/file cannot be opened")
+        #expect(store.read().contains(#"portUnavailable(path: "[path]", errno: 2)"#))
+        #expect(store.read().contains("[path] cannot be opened"))
+        #expect(!store.read().contains("usbserial"))
+        #expect(!store.read().contains("name"))
     }
 
     @Test("the file keeps lines across restarts, oldest first")
