@@ -403,6 +403,17 @@ struct SettingsSyncTests {
         continuation.yield(Date(timeIntervalSince1970: 30))
         #expect(await RadioViewModelTests.eventually(model) { $0.lastMemorySync == Date(timeIntervalSince1970: 30) })
         #expect(!SettingsSync.values(of: AppSettings()).keys.contains("lastMemorySync"))
+
+        let (firstTimes, first) = AsyncStream.makeStream(of: Date.self)
+        let new = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            memories: Syncing(times: firstTimes),
+            settings: MemorySettingsStore()
+        )
+        #expect(new.lastMemorySync == nil)
+        first.yield(Date(timeIntervalSince1970: 5))
+        #expect(await RadioViewModelTests.eventually(new) { $0.lastMemorySync == Date(timeIntervalSince1970: 5) })
     }
 
     @Test("a real wait is what the view model starts with")

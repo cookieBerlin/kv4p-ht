@@ -35,6 +35,8 @@ would mean writing and testing the sync ourselves.
   global id, so in the same order on each device.
 - **Each step reads through a new context,** and the view model reloads when iCloud reports
   a change.
+- **Its own time:** the page shows when a sync of the memories last finished, from CloudKit's
+  events, next to the time of the settings. Those are separate ways with separate times.
 - **One switch:** *iCloud sync* also covers memories. As SwiftData sets this up when the
   store opens, it takes effect for memories at the next start.
 - **Entitlements and background mode:** the iCloud entitlements gain the container and push
