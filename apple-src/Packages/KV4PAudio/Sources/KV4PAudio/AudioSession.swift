@@ -53,7 +53,8 @@ public protocol OtherAudioSwitching: Sendable {
 /// The audio session of the app; implemented by the OS adapter (`AVAudioSessionAdapter`, iOS only).
 public protocol AudioSession: OtherAudioSwitching {
     var events: AsyncStream<AudioSessionEvent> { get }
-    /// Configures the session for receiving and transmitting, then activates it.
-    func activate() throws
-    func deactivate()
+    /// Configures the session for receiving and transmitting, then activates it. Asynchronous, as it takes up to a
+    /// second, which the main thread must not wait for.
+    func activate() async throws
+    func deactivate() async
 }

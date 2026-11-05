@@ -1293,7 +1293,7 @@ public final class RadioViewModel {
         connection = selectedConnection
         message = nil
         frequency = nil
-        startAudio()
+        await startAudio()
         let snapshots = controller.snapshots
         observer = Task { [weak self] in
             for await snapshot in snapshots where !Task.isCancelled {
@@ -1332,7 +1332,7 @@ public final class RadioViewModel {
         await otherAudio?.stop()
         await controller?.disconnect()
         audioOutput?.stop()
-        audioSession?.deactivate()
+        await audioSession?.deactivate()
         controller = nil
         connection = nil
         stopSignalRamp()
@@ -1430,9 +1430,9 @@ public final class RadioViewModel {
 
     // MARK: Audio session
 
-    private func startAudio() {
+    private func startAudio() async {
         do {
-            try audioSession?.activate()
+            try await audioSession?.activate()
             try audioOutput?.start(rxAudio)
         } catch {
             diagnostics?.log(.error, .audio, "Audio start: \(DiagnosticLog.describe(error))")
@@ -1474,7 +1474,7 @@ public final class RadioViewModel {
             audioOutput?.stop()
         case .interruptionEnded(let shouldResume):
             if shouldResume {
-                startAudio()
+                await startAudio()
             } else {
                 message = "The audio was interrupted. Connect again to listen."
             }
@@ -1485,7 +1485,7 @@ public final class RadioViewModel {
             await otherAudio?.stop()
             await controller.stopTransmitting()
             audioOutput?.stop()
-            startAudio()
+            await startAudio()
         }
         show(await controller.snapshot)
     }
