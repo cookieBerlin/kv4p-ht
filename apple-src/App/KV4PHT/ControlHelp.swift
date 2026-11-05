@@ -55,6 +55,8 @@ enum ControlHelp {
         "Also logs each packet by its kind, each scan step and the traffic per minute, without callsigns or text. Turns itself off after a day."
     static let notifyMessages =
         "A message to your callsign, with any SSID, brings a notification while the app is in the background."
+    static let keepMessages =
+        "Messages to and from you, which the chats show, stay this long, apart from the other packets."
     static let keepPackets = "The APRS list stays when the app ends. The packets stay on this device."
     static let packetStored = "Stored: this packet stays when the app ends."
     static let packetNotStored = "Not stored: this packet goes when the app ends."

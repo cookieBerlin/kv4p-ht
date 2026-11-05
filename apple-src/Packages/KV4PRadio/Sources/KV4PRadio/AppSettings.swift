@@ -81,6 +81,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var detailedLoggingUntilMs: Int64 = 0
     /// What the live view of the log looks for; local to the device.
     public var logFilter = LogFilter()
+    /// How long messages to and from this station stay, in days; 0 for without limit (ADR-0061).
+    public var messageRetentionDays = 0
+    /// Packets or chats on the APRS page; local to the device.
+    public var aprsPage = APRSPage.packets
+    /// When each chat was last read; local to the device.
+    public var chatReadUntilMs: [String: Int64] = [:]
     /// The units of the APRS list (ADR-0055).
     public var units = APRSUnits.system
     public var txLimits = TXLimits()
@@ -95,6 +101,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
 
     /// Days, with 0 for without limit.
     public static let packetRetentionOptions = [1, 7, 30, 0]
+    /// 0 is without limit, the default, so that chats do not go unexpectedly.
+    public static let messageRetentionOptions = [30, 90, 365, 0]
 
     /// All stations share the APRS frequency, so there is no shorter one.
     public static let beaconIntervalOptions = [2, 5, 10, 15, 30, 60]
@@ -154,6 +162,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
         notifiesAboutMessages = values.value(.notifiesAboutMessages, or: defaults.notifiesAboutMessages)
         detailedLoggingUntilMs = values.value(.detailedLoggingUntilMs, or: defaults.detailedLoggingUntilMs)
         logFilter = values.value(.logFilter, or: defaults.logFilter)
+        messageRetentionDays = values.value(.messageRetentionDays, or: defaults.messageRetentionDays)
+        aprsPage = values.value(.aprsPage, or: defaults.aprsPage)
+        chatReadUntilMs = values.value(.chatReadUntilMs, or: defaults.chatReadUntilMs)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)
@@ -172,4 +183,9 @@ extension KeyedDecodingContainer {
     fileprivate func value<T: Decodable>(_ key: Key, or fallback: T) -> T {
         (try? decodeIfPresent(T.self, forKey: key)).flatMap { $0 } ?? fallback
     }
+}
+
+/// What the APRS page shows.
+public enum APRSPage: String, CaseIterable, Codable, Sendable {
+    case packets, chats
 }

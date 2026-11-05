@@ -296,9 +296,15 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
-**Answering and new messages:** a tap on a message fills in the other station as the recipient, and *Reply* in
-the ⋯ menu of its row does the same, also from the *Packets* page. On an iPhone, a number on the APRS page shows
-new messages to your callsign, with any SSID, until you open it. While the app is in the background, each of them
+**Chats:** the switch at the top of the APRS page changes between *Packets* and *Chats*. *Chats* has one chat for
+each station you wrote with, with its SSID, newest first, and the number of unread messages. A chat shows the
+messages in the order they were written, yours on the right with their delivery. A tap on such a message in the
+packets opens its chat. Messages to and from you stay as long as ⚙ **Settings**, *APRS*, *History*, *Keep messages
+for* says, without limit by default; with *Keep packets* off, chats end with the app.
+
+**Answering and new messages:** a tap on a message to others fills in its sender as the recipient, and *Reply* in
+the ⋯ menu of its row does the same, also from the *Packets* page. The number on the APRS page, and on *Chats*,
+shows unread messages to your callsign, with any SSID, until you open their chat. While the app is in the background, each of them
 brings a notification with its sender and text. The app must be running for this, so nothing arrives after it has
 ended. *Notify about messages to me* under ⚙ **Settings**, *APRS*, *History* turns this off.
 

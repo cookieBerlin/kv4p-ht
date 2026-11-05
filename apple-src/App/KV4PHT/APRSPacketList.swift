@@ -82,10 +82,9 @@ struct APRSPacketList: View {
     }
 
     private func updateVisibility() {
-        let isVisible = isOnScreen && scenePhase == .active
-        switch list {
-        case .main: model.isAPRSVisible = isVisible
-        case .packetsPage: model.isPacketsPageVisible = isVisible
+        // The main page says so for packets and chats together, in `APRSView`.
+        if list == .packetsPage {
+            model.isPacketsPageVisible = isOnScreen && scenePhase == .active
         }
     }
 
@@ -257,6 +256,9 @@ struct APRSPacketList: View {
                         if model.canReply(to: event) {
                             Button("Reply", systemImage: "arrowshape.turn.up.left") { reply(to: event) }
                         }
+                        if list == .main, model.chatPeer(of: event) != nil {
+                            Button("Open chat", systemImage: "bubble.left.and.bubble.right") { model.open(event) }
+                        }
                         Button("Delete", systemImage: "trash", role: .destructive) { model.deleteAPRSEvent(event) }
                     } label: {
                         Image(systemName: "ellipsis")
@@ -284,7 +286,7 @@ struct APRSPacketList: View {
         .onTapGesture {
             // Not on the packets page, where a stray tap would leave it.
             if list == .main {
-                model.reply(to: event)
+                model.open(event)
             }
         }
         .textSelection(.enabled)
@@ -360,7 +362,7 @@ struct APRSPacketList: View {
         Calendar.current.isDateInToday(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000)) ? .time : .date
     }
 
-    private static func delivery(_ state: APRSEvent.DeliveryState) -> (String, String)? {
+    static func delivery(_ state: APRSEvent.DeliveryState) -> (String, String)? {
         switch state {
         case .none: nil
         case .pending: ("Waiting for acknowledgement", "clock")

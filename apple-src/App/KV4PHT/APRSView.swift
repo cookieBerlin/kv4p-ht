@@ -6,7 +6,9 @@ import SwiftUI
 struct APRSView: View {
     @Bindable var model: RadioViewModel
     @State private var text = ""
+    @State private var isOnScreen = false
     @FocusState private var isWriting: Bool
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,7 +22,18 @@ struct APRSView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
             }
-            APRSPacketList(model: model, list: .main)
+            Picker("Show", selection: $model.aprsPage) {
+                Text("Packets").tag(APRSPage.packets)
+                Text(model.newAPRSMessages > 0 ? "Chats (\(model.newAPRSMessages))" : "Chats").tag(APRSPage.chats)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal)
+            .padding(.top, 6)
+            switch model.aprsPage {
+            case .packets: APRSPacketList(model: model, list: .main)
+            case .chats: APRSChatsView(model: model)
+            }
             Divider()
             if model.canSendOnAir {
                 composer.padding(8)
@@ -28,6 +41,19 @@ struct APRSView: View {
                 Text(blocked).font(.footnote).foregroundStyle(.secondary).padding(8)
             }
         }
+        .onAppear {
+            isOnScreen = true
+            updateVisibility()
+        }
+        .onDisappear {
+            isOnScreen = false
+            updateVisibility()
+        }
+        .onChange(of: scenePhase) { updateVisibility() }
+    }
+
+    private func updateVisibility() {
+        model.isAPRSVisible = isOnScreen && scenePhase == .active
     }
 
     private var composer: some View {

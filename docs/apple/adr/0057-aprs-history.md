@@ -29,7 +29,8 @@ others add to it.
   delivered.
 - **Writes happen one after another,** away from the screen, and only for what changed. A packet that
   arrives before the stored ones are back waits, and gets a new id, so that ids never repeat.
-- **Old packets go at the start, every hour and when the time is shortened.**
+- **Old packets go at the start, every hour and when the time is shortened.** Since 4.7a, messages to and
+  from this station go by a time of their own ([ADR-0061](0061-aprs-chats.md)).
 - **A new format of the store starts empty.** Packets are not worth a migration, so a change the store
   cannot follow by itself gets a new file name, and the old files go. They are named in the code, so
   a store that fails to open for another reason is never deleted.
