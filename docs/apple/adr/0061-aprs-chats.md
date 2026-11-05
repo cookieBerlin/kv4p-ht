@@ -28,6 +28,24 @@ Milestone 4.7 brings simple chats over APRS, built on the stored packets of
   still decides whether anything is stored, so with it off the chats end with the app, and the chats say so.
 - **Until 4.7b, the line to send messages stays below the chats,** and opening a chat fills in its station.
 
+### Writing (4.7b)
+
+- **A chat has its own line to write,** and the one below the packets stays there for bulletins and quick messages.
+- **The counter stops at 61 characters, not 67.** A message to a station carries its number of up to five
+  characters after a `{`, which the ported encoder fits into the 67 by cutting the text. A bulletin has no number,
+  so 67 stay. Typing stops at the limit, so that nothing is cut when sending.
+- **New chat** takes a callsign of three to six letters and digits, with an SSID of up to two, and refuses a
+  bulletin address. The chat shows once its first message is there.
+- ***Send again*** is offered for an own message that failed or was rejected, never by itself. It sends the text as a
+  new message, and the old one leaves the chat but stays in the packets, marked on the stored event, so that what
+  went out stays traceable.
+- **Deleting a chat** asks first, and removes its messages from the packets and the store as well. A single message
+  goes through its menu, without a question, as in the packets.
+- **Without a callsign or in listen-only mode, a chat has no input,** and says why. Without a connected radio, it
+  says so.
+- **Messages go over the radio only,** so a station seen only on the internet gets a reply if an iGate passes it
+  on. An empty chat says so.
+
 ## Consequences
 
 - The store finds a station's messages by the callsign in sender or recipient, so a few messages of others whose

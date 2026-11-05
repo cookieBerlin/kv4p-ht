@@ -6,6 +6,8 @@ import SwiftUI
 /// stack, as the APRS page sits in one on a wide iPad.
 struct APRSChatsView: View {
     @Bindable var model: RadioViewModel
+    @State private var isStartingChat = false
+    @State private var newCallsign = ""
 
     var body: some View {
         if let peer = model.openChat {
@@ -17,6 +19,12 @@ struct APRSChatsView: View {
 
     private var list: some View {
         List {
+            if model.canSendOnAir {
+                Button("New chat", systemImage: "plus") {
+                    newCallsign = ""
+                    isStartingChat = true
+                }
+            }
             if !model.isKeepingPackets {
                 Label("Keep packets is off, so chats end with the app.", systemImage: "info.circle")
                     .font(.footnote)
@@ -31,6 +39,20 @@ struct APRSChatsView: View {
                 }
                 .buttonStyle(.plain)
             }
+        }
+        .alert("New chat", isPresented: $isStartingChat) {
+            TextField("Callsign", text: $newCallsign)
+                .autocorrectionDisabled()
+            Button("Cancel", role: .cancel) {}
+            Button("Open") {
+                if let peer = APRSChats.callsign(from: newCallsign) {
+                    model.aprsRecipient = peer
+                    model.openChat = peer
+                }
+            }
+            .disabled(APRSChats.callsign(from: newCallsign) == nil)
+        } message: {
+            Text("The callsign with its SSID, if it has one, as a reply goes to exactly that one.")
         }
         .overlay {
             if model.conversations.isEmpty {
@@ -70,10 +92,16 @@ struct APRSChatsView: View {
     }
 }
 
-/// One chat, in the order it was written: this station's messages on the right, with their delivery.
+/// One chat, in the order it was written: this station's messages on the right, with their delivery, and a line to
+/// write below.
 private struct APRSConversationView: View {
     let model: RadioViewModel
     let peer: String
+    @State private var text = ""
+    @State private var isConfirmingDelete = false
+    @FocusState private var isWriting: Bool
+
+    private var limit: Int { model.chatTextLimit(for: peer) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -82,6 +110,8 @@ private struct APRSConversationView: View {
                 Spacer()
                 Text(peer).font(.headline)
                 Spacer()
+                Button("Delete chat…", systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
+                    .labelStyle(.iconOnly)
             }
             .padding(8)
             Divider()
@@ -92,7 +122,61 @@ private struct APRSConversationView: View {
                 .padding(8)
             }
             .defaultScrollAnchor(.bottom)
+            .overlay {
+                if model.messages(with: peer).isEmpty {
+                    ContentUnavailableView(
+                        "No messages yet",
+                        systemImage: "bubble.left.and.bubble.right",
+                        description: Text(
+                            "Messages go over the radio. A station only on the internet gets them if an iGate passes them on."
+                        )
+                    )
+                }
+            }
+            Divider()
+            input
         }
+        .alert("Delete the chat with \(peer)?", isPresented: $isConfirmingDelete) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) { model.deleteChat(with: peer) }
+        } message: {
+            Text("This also removes its messages from the packets.")
+        }
+    }
+
+    @ViewBuilder private var input: some View {
+        if model.canSendOnAir {
+            HStack {
+                TextField("Message", text: $text, axis: .vertical)
+                    .textFieldStyle(.roundedBorder)
+                    .lineLimit(1...4)
+                    .focused($isWriting)
+                    .onSubmit(send)
+                    .onChange(of: text) {
+                        // A stop rather than a cut when it is sent, so that nothing goes missing.
+                        if text.count > limit { text = String(text.prefix(limit)) }
+                    }
+                Text("\(text.count)/\(limit)")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(text.count == limit ? .red : .secondary)
+                    .accessibilityLabel("\(limit - text.count) characters left")
+                Button("Send", systemImage: "paperplane", action: send)
+                    .labelStyle(.iconOnly)
+                    .disabled(!model.isReady || text.isEmpty)
+            }
+            .padding(8)
+            if !model.isReady {
+                Text("Connect the radio to send.").font(.footnote).foregroundStyle(.secondary).padding(.bottom, 8)
+            }
+        } else if let blocked = model.transmitBlockedText {
+            Text(blocked).font(.footnote).foregroundStyle(.secondary).padding(8)
+        }
+    }
+
+    private func send() {
+        guard !text.isEmpty, model.isReady else { return }
+        model.sendChatMessage(text, to: peer)
+        text = ""
     }
 
     private func bubble(_ event: APRSEvent) -> some View {
@@ -108,10 +192,20 @@ private struct APRSConversationView: View {
                         in: .rect(cornerRadius: 12)
                     )
                     .textSelection(.enabled)
+                    .contextMenu {
+                        if model.canResend(event) {
+                            Button("Send again", systemImage: "arrow.clockwise") { model.resend(event) }
+                        }
+                        Button("Delete", systemImage: "trash", role: .destructive) { model.deleteAPRSEvent(event) }
+                    }
                 HStack(spacing: 4) {
                     Text(Date(timeIntervalSince1970: Double(event.firstSeenMs) / 1000), style: .time)
                     if let state = APRSPacketList.delivery(event.deliveryState) {
                         Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
+                    }
+                    if model.canResend(event) {
+                        Button("Send again") { model.resend(event) }
+                            .buttonStyle(.borderless)
                     }
                 }
                 .font(.caption2)

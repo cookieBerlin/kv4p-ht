@@ -345,4 +345,6 @@ number of unread messages, and a tap opens one with your message on the right an
 APRS page goes down when you open the chat, and stays down after a restart. A tap on such a message under *Packets*
 opens its chat. With more than 500 packets, older messages still show in their chat. *Keep messages for* set to 30
 days lets an older message go, while with *No limit* it stays as other packets go. Change your callsign: the chats
-change with it.
+change with it. Write in a chat: the counter stops at 61, and the message arrives whole on another radio. Start a
+chat with *New chat*. Let a message go unanswered until it fails, and *Send again* replaces it in the chat while the
+packets keep both. Delete a message and a whole chat. In listen-only mode, a chat has no input.
