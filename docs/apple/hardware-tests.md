@@ -42,7 +42,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-33](#hw-33) | APRS symbols and radios | ⬜ | ⬜ |
 | [HW-34](#hw-34) | APRS packet types and units | ⬜ | ⬜ |
 | [HW-35](#hw-35) | Beacons with the screen locked (iPhone) | – | ⬜ |
-| [HW-36](#hw-36) | APRS history | ⬜ | ⬜ |
+| [HW-36](#hw-36) | APRS history | ✅ | ✅ |
 
 ## TestFlight
 
