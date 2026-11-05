@@ -103,25 +103,37 @@ struct APRSPacketList: View {
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                 #endif
-            Toggle(isOn: forMe) {
-                Label("For me", systemImage: "person.crop.circle")
+            HStack(spacing: 0) {
+                forMeButton
+                typesMenu
+                exportMenu
             }
-            .toggleStyle(.button)
-            .help(ControlHelp.forMe)
-            typesMenu
-            exportMenu
+            // The icons end where the rows do, not their wider tap areas.
+            .padding(.trailing, -10)
         }
-        .labelStyle(.iconOnly)
         .padding(.horizontal)
-        .padding(.vertical, 6)
+        .padding(.vertical, 2)
     }
 
-    private var forMe: Binding<Bool> {
-        Binding {
-            filter.isForMe
-        } set: { isOn in
-            setFilter { $0.isForMe = isOn }
+    /// The same size for each, whatever its icon, so that the gaps are even; filled when it is in use.
+    private func barIcon(_ title: LocalizedStringKey, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .labelStyle(.iconOnly)
+            .font(.title3)
+            .foregroundStyle(.tint)
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+    }
+
+    private var forMeButton: some View {
+        Button {
+            setFilter { $0.isForMe.toggle() }
+        } label: {
+            barIcon("For me", systemImage: filter.isForMe ? "person.crop.circle.fill" : "person.crop.circle")
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(filter.isForMe ? .isSelected : [])
+        .help(ControlHelp.forMe)
     }
 
     private var typesMenu: some View {
@@ -130,12 +142,14 @@ struct APRSPacketList: View {
                 Toggle(kind.filterName, isOn: typeBinding(kind))
             }
         } label: {
-            Label(
+            barIcon(
                 "Types",
                 systemImage: filter.kinds.isEmpty
                     ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
             )
         }
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
         .fixedSize()
         .help(ControlHelp.packetTypes)
     }
@@ -160,8 +174,10 @@ struct APRSPacketList: View {
                 Button(format.label) { export(format) }
             }
         } label: {
-            Label("Export", systemImage: "square.and.arrow.up")
+            barIcon("Export", systemImage: "square.and.arrow.up")
         }
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
         .fixedSize()
         .help(ControlHelp.exportPackets)
     }
