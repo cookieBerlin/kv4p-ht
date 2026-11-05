@@ -28,7 +28,8 @@ struct DiagnosticsModelTests {
         init(crashes: CrashReportStore? = nil) {
             let time = time
             self.crashes =
-                crashes ?? CrashReportStore(folder: FileManager.default.temporaryDirectory.appending(path: UUID().uuidString))
+                crashes
+                ?? CrashReportStore(folder: FileManager.default.temporaryDirectory.appending(path: UUID().uuidString))
             log = DiagnosticLog(store: store, now: { time.ms })
             model = RadioViewModel(
                 makeController: { _, rxAudio in
@@ -105,7 +106,7 @@ struct DiagnosticsModelTests {
         #expect(!setup.model.isDetailedLogging)
         setup.model.isDetailedLogging = true
         #expect(setup.model.isDetailedLogging)
-        #expect(setup.settings.settings.detailedLoggingUntilMs == Self.day)
+        #expect(setup.settings.settings.detailedLoggingUntilMs == setup.time.ms + Self.day)
         #expect(!SettingsSync.values(of: AppSettings()).keys.contains("detailedLoggingUntilMs"))
         setup.time.advance(by: Self.day)
         #expect(!setup.model.isDetailedLogging)

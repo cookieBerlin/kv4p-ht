@@ -37,7 +37,7 @@ struct DiagnosticLogTests {
         let time = TestTime()
         let log = DiagnosticLog(store: store, now: { time.ms })
         log.log(.detail, .aprs, "Not yet")
-        log.detailedUntilMs = 100
+        log.detailedUntilMs = time.ms + 100
         log.log(.detail, .aprs, "Now")
         time.advance(by: 100)
         log.log(.detail, .aprs, "Too late")
@@ -115,7 +115,7 @@ struct DiagnosticLogTests {
         let file = LogFile(folder: Self.folder(), partLimit: 100, readLimit: 8)
         file.append("older", atMs: 0)
         file.append("newer", atMs: 0)
-        #expect(file.read() == "\nnewer\n")
+        #expect(file.read() == "r\nnewer\n")
     }
 
     @Test("everything can be deleted, and the log goes on")

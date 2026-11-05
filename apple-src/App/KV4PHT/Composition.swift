@@ -25,8 +25,17 @@ enum Composition {
     /// The firmwares of the app's bundle, which only the Mac has (ADR-0049).
     private static let firmwareChoices = Bundle.main.resourceURL.map(FirmwareChoice.bundled(in:)) ?? []
 
+    /// The log and crash data of this device (ADR-0059).
+    private static let diagnosticsFolder = URL.applicationSupportDirectory.appending(path: "Diagnostics")
+    private static let diagnostics = DiagnosticLog(
+        store: LogFile(folder: diagnosticsFolder.appending(path: "Log")),
+        now: RadioViewModel.systemTimeMs
+    )
+    private static var crashReports: MetricKitCrashReports?
+
     static func makeViewModel() -> RadioViewModel {
-        RadioViewModel(
+        diagnostics.log(.info, .app, "Started")
+        let model = RadioViewModel(
             makeController: {
                 RadioController(transport: transport(for: $0), rxAudio: $1, microphone: AVAudioEngineInput())
             },
@@ -47,8 +56,12 @@ enum Composition {
             failureAlerts: PlatformFailureAlerts(),
             messageNotifier: SystemMessageNotifier(),
             permissions: SystemPermissions(),
+            diagnostics: diagnostics,
+            crashReports: CrashReportStore(folder: diagnosticsFolder.appending(path: "Crashes")),
             simulator: simulator
         )
+        crashReports = MetricKitCrashReports(model: model)
+        return model
     }
 
     /// iOS shares the audio hardware between apps through a session; macOS has none.
@@ -101,15 +114,29 @@ enum Composition {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let url = folder.appending(path: "Memories.store")
         let syncs = AppSettings(data: UserDefaultsSettingsStore().load()).isSettingsSyncEnabled
-        return (try? SwiftDataMemoryRepository(storeURL: url, syncs: syncs))
-            ?? (try? SwiftDataMemoryRepository(storeURL: url, syncs: false))
+        do {
+            return try SwiftDataMemoryRepository(storeURL: url, syncs: syncs)
+        } catch {
+            diagnostics.log(.error, .storage, "Memories with sync: \(DiagnosticLog.describe(error))")
+        }
+        do {
+            return try SwiftDataMemoryRepository(storeURL: url, syncs: false)
+        } catch {
+            diagnostics.log(.error, .storage, "Memories: \(DiagnosticLog.describe(error))")
+            return nil
+        }
     }
 
     /// The APRS packets, in a store of their own that never syncs (ADR-0057).
     private static func aprsHistory() -> (any APRSHistoryStoring)? {
         let folder = URL.applicationSupportDirectory
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return try? SwiftDataAPRSHistory.inFolder(folder)
+        do {
+            return try SwiftDataAPRSHistory.inFolder(folder)
+        } catch {
+            diagnostics.log(.error, .storage, "APRS history: \(DiagnosticLog.describe(error))")
+            return nil
+        }
     }
 
     private static func transport(for connection: RadioViewModel.Connection) -> any RadioTransport {

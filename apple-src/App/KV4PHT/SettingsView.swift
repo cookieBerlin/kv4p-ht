@@ -49,7 +49,7 @@ struct SettingsView: View {
                         }
                     }
                 }
-                Section { NavigationLink("About kv4p HT") { AboutView() } }
+                Section { NavigationLink("About kv4p HT") { AboutView(model: model) } }
             }
             .settingsPage("Settings", model: model)
         #endif

@@ -122,7 +122,12 @@ public final class RadioViewModel {
     public var frequencyText = ""
     /// The last problem, in words for the user.
     public private(set) var message: String? {
-        didSet { isNoticeSuccess = false }
+        didSet {
+            isNoticeSuccess = false
+            if let message {
+                diagnostics?.log(.info, .app, message)
+            }
+        }
     }
     /// `notice` reports something that worked.
     public private(set) var isNoticeSuccess = false
@@ -227,6 +232,21 @@ public final class RadioViewModel {
         }
     }
     public private(set) var storedPacketCount = 0
+    /// More goes into the log, without personal data, and this ends by itself after a day (ADR-0059).
+    public var isDetailedLogging: Bool {
+        get { now() < detailedLoggingUntilMs }
+        set {
+            detailedLoggingUntilMs = newValue ? now() + Self.detailedLoggingMs : 0
+            diagnostics?.detailedUntilMs = detailedLoggingUntilMs
+            saveSettings()
+        }
+    }
+    private var detailedLoggingUntilMs: Int64 = 0
+    private static let detailedLoggingMs: Int64 = 86_400_000
+    /// A crash is known that the user has not been asked about.
+    public private(set) var offersCrashReport = false
+    /// What the last radio reported, for a report after it has gone.
+    private var lastFirmware: FirmwareVersion?
     /// A message to this station in the background brings a notification (ADR-0058).
     public var notifiesAboutMessages = true {
         didSet {
@@ -457,6 +477,8 @@ public final class RadioViewModel {
     private let bluetoothScanner: (any BLEScanning)?
     private let failureAlerts: (any FailureAlerting)?
     private let messageNotifier: (any APRSMessageNotifying)?
+    private let diagnostics: DiagnosticLog?
+    private let crashReports: CrashReportStore?
     private let permissions: (any PermissionChecking)?
     private var deniedPermissions: Set<Permission> = []
     private var permissionObserver: Task<Void, Never>?
@@ -538,6 +560,8 @@ public final class RadioViewModel {
         failureAlerts: (any FailureAlerting)? = nil,
         messageNotifier: (any APRSMessageNotifying)? = nil,
         permissions: (any PermissionChecking)? = nil,
+        diagnostics: DiagnosticLog? = nil,
+        crashReports: CrashReportStore? = nil,
         simulator: (any SimulatorControlling)? = nil,
         simulatedFlashStep: Duration = .milliseconds(400),
         simulatedSignalStep: Duration = .seconds(1),
@@ -558,6 +582,9 @@ public final class RadioViewModel {
         self.bluetoothScanner = bluetoothScanner
         self.failureAlerts = failureAlerts
         self.messageNotifier = messageNotifier
+        self.diagnostics = diagnostics
+        self.crashReports = crashReports
+        offersCrashReport = crashReports?.hasNew ?? false
         self.permissions = permissions
         self.location = location
         self.backgroundLocation = backgroundLocation
@@ -596,7 +623,10 @@ public final class RadioViewModel {
         }
         restore(AppSettings(data: settings?.load()))
         syncedSettings?.observeChanges { [weak self] in
-            Task { @MainActor [weak self] in self?.receiveSettings(fromCloud: true) }
+            Task { @MainActor [weak self] in
+                self?.diagnostics?.log(.info, .sync, "Settings arrived from iCloud")
+                self?.receiveSettings(fromCloud: true)
+            }
         }
         startSettingsSync()
         refreshPermissions()
@@ -636,6 +666,7 @@ public final class RadioViewModel {
         settings.isKeepingPackets = isKeepingPackets
         settings.keepsInternetPackets = keepsInternetPackets
         settings.notifiesAboutMessages = notifiesAboutMessages
+        settings.detailedLoggingUntilMs = detailedLoggingUntilMs
         settings.packetRetentionDays = packetRetentionDays
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
@@ -690,6 +721,8 @@ public final class RadioViewModel {
         isKeepingPackets = settings.isKeepingPackets
         keepsInternetPackets = settings.keepsInternetPackets
         notifiesAboutMessages = settings.notifiesAboutMessages
+        detailedLoggingUntilMs = settings.detailedLoggingUntilMs
+        diagnostics?.detailedUntilMs = settings.detailedLoggingUntilMs
         packetRetentionDays = settings.packetRetentionDays
     }
 
@@ -844,7 +877,11 @@ public final class RadioViewModel {
 
     /// Reads the permissions again; the beacon ends without location access and stays off afterwards.
     public func refreshPermissions() {
-        deniedPermissions = Set(Permission.allCases.filter { permissions?.state(of: $0) == .denied })
+        let denied = Set(Permission.allCases.filter { permissions?.state(of: $0) == .denied })
+        for permission in denied.subtracting(deniedPermissions) {
+            diagnostics?.log(.info, .permissions, "Refused: \(permission)")
+        }
+        deniedPermissions = denied
         if isDenied(.location) {
             if isBeaconEnabled {
                 report(Permission.location.deniedMessage)
@@ -1089,6 +1126,7 @@ public final class RadioViewModel {
         guard canUpdateFirmware, let target = flashTarget else { return }
         await disconnect()
         firmwareUpdate = .connecting
+        diagnostics?.log(.info, .firmware, "Update started")
         let (events, reporter) = AsyncStream.makeStream(of: FlashEvent.self)
         let progress = Task { [weak self] in
             for await event in events {
@@ -1102,12 +1140,14 @@ public final class RadioViewModel {
             await progress.value
             let isForThisApp = choice.edition == .forThisApp
             firmwareUpdate = isForThisApp ? .finished : .finishedForAndroid
+            diagnostics?.log(.info, .firmware, "Update finished")
             if canConfigureSimulator { simulatorSettings.firmware = isForThisApp ? .current : .android }
             if isForThisApp { await connect() }
         } catch {
             reporter.finish()
             await progress.value
             firmwareUpdate = .failed(Self.message(for: error))
+            diagnostics?.log(.error, .firmware, "Update failed: \(error)")
         }
     }
 
@@ -1121,6 +1161,7 @@ public final class RadioViewModel {
         bluetoothScan?.cancel()
         bluetoothScan = nil
         await tearDown()
+        diagnostics?.log(.info, .connection, "Connecting over \(Self.kind(of: selectedConnection))")
         askForPermissions()
         let controller = makeController(selectedConnection, rxAudio)
         self.controller = controller
@@ -1152,6 +1193,7 @@ public final class RadioViewModel {
 
     public func disconnect() async {
         await tearDown()
+        diagnostics?.log(.info, .connection, "Disconnected")
         refreshPermissions()
     }
 
@@ -1173,8 +1215,39 @@ public final class RadioViewModel {
         updateBeaconSession()
     }
 
+    /// The kinds of connection only, as a device's name or path says more than a report needs.
+    private static func kind(of connection: Connection) -> String {
+        switch connection {
+        case .bluetooth, .bluetoothDevice: "Bluetooth"
+        case .serial: "USB"
+        case .simulator: "simulator"
+        }
+    }
+
+    private func logChanges(to snapshot: RadioSnapshot) {
+        if snapshot.status != self.snapshot.status {
+            if case .failed(let failure) = snapshot.status {
+                diagnostics?.log(.error, .connection, "Failed: \(failure)")
+            } else {
+                diagnostics?.log(.info, .connection, "Status: \(snapshot.status)")
+            }
+        }
+        if let firmware = snapshot.firmware, firmware != lastFirmware {
+            lastFirmware = firmware
+            diagnostics?.log(.info, .connection, "Firmware \(Self.describe(firmware))")
+        }
+        if snapshot.isTransmitting != self.snapshot.isTransmitting {
+            diagnostics?.log(.info, .transmit, snapshot.isTransmitting ? "Transmit started" : "Transmit ended")
+        }
+    }
+
+    private static func describe(_ firmware: FirmwareVersion) -> String {
+        "\(firmware.version), module \(firmware.moduleType), radio \(firmware.radioModuleStatus)"
+    }
+
     private func show(_ snapshot: RadioSnapshot) {
         guard snapshot.revision >= self.snapshot.revision else { return }  // already showing a newer one
+        logChanges(to: snapshot)
         let hadFailed = hasFailed
         self.snapshot = snapshot
         updateBeaconSession()
@@ -1194,6 +1267,7 @@ public final class RadioViewModel {
     }
 
     private func report(_ text: String) {
+        diagnostics?.log(.error, .app, text)
         if failureAlerts?.usesDialog == true {
             alertMessage = text
         }
@@ -1232,6 +1306,7 @@ public final class RadioViewModel {
         guard let events = audioSession?.events else { return }
         audioSessionObserver = Task { [weak self] in
             for await event in events {
+                self?.diagnostics?.log(.info, .audio, "Audio session: \(event)")
                 await self?.handle(event)
             }
         }
@@ -1397,6 +1472,45 @@ public final class RadioViewModel {
         }
     }
 
+    // MARK: Problem reports
+
+    /// Crash data from the system, which can arrive at any time, also about an earlier start.
+    public func receiveCrashReport(id: String, json: String) {
+        guard crashReports?.add(id: id, json: json) == true else { return }
+        diagnostics?.log(.error, .app, "A crash was reported")
+        offersCrashReport = true
+    }
+
+    /// The user has been asked; a report stays possible.
+    public func dismissCrashOffer() {
+        crashReports?.markSeen()
+        offersCrashReport = false
+    }
+
+    private var firmwareForReport: String {
+        lastFirmware.map(Self.describe) ?? "Not connected yet"
+    }
+
+    public func problemReport(in environment: ProblemReport.Environment) -> String {
+        ProblemReport.text(
+            environment: environment,
+            firmware: firmwareForReport,
+            log: diagnostics?.read() ?? "",
+            crashes: crashReports?.all() ?? [],
+            callsign: callsign
+        )
+    }
+
+    public func problemIssueURL(in environment: ProblemReport.Environment) -> URL? {
+        ProblemReport.issueURL(environment: environment, firmware: firmwareForReport)
+    }
+
+    public func deleteDiagnostics() {
+        diagnostics?.deleteAll()
+        crashReports?.deleteAll()
+        offersCrashReport = false
+    }
+
     // MARK: APRS messages
 
     private func listVisibilityChanged() {
@@ -1412,6 +1526,9 @@ public final class RadioViewModel {
         guard aprsHistory == nil || isAPRSHistoryLoaded else { return }
         let new = aprs.events.filter { $0.id > lastCheckedAPRSId }
         lastCheckedAPRSId = new.map(\.id).max() ?? lastCheckedAPRSId
+        for event in new {
+            diagnostics?.log(.detail, .aprs, "Packet: \(event.kind)")
+        }
         for event in new.sorted(by: { $0.id < $1.id }) where event.isMessage(to: callsign) {
             if !isAPRSVisible, !isPacketsPageVisible {
                 newAPRSMessages += 1
@@ -1447,6 +1564,7 @@ public final class RadioViewModel {
                 try await work(aprsHistory)
                 self?.storedPacketCount = try await aprsHistory.count()
             } catch {
+                self?.diagnostics?.log(.error, .storage, "APRS history: \(DiagnosticLog.describe(error))")
                 self?.message = "The APRS history could not be read or saved."
             }
         }
@@ -1698,6 +1816,7 @@ public final class RadioViewModel {
     }
 
     private func noteMemorySync(_ date: Date) {
+        diagnostics?.log(.info, .sync, "Memory sync finished")
         lastMemorySync = max(lastMemorySync ?? date, date)
         saveSettings()
     }
