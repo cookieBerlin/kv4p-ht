@@ -593,6 +593,8 @@ private struct AccessToneButton: View {
             else { return nil }
             // Haptics only: otherwise the engine also takes part in the app's audio session, which carries the radio.
             engine.playsHapticsOnly = true
+            // The engine stops itself when idle; stopping it after the pattern made Core Haptics report an error.
+            engine.isAutoShutdownEnabled = true
             self.engine = engine
             self.player = player
         }
@@ -604,7 +606,6 @@ private struct AccessToneButton: View {
 
         func stop() {
             try? player.stop(atTime: CHHapticTimeImmediate)
-            engine.stop()
         }
     }
 #endif
