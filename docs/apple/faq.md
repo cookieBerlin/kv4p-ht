@@ -122,6 +122,12 @@ shows such marks as the name of the radio. A mark it does not know stays in the 
 from the [APRS device identification database](https://github.com/aprsorg/aprs-deviceid), and the
 meanings of the symbols from the [aprs.fi APRS symbols index](https://github.com/hessu/aprs-symbol-index).
 
+## Does the app keep the APRS packets?
+
+Yes, on this device only, for 30 days by default, and not synced. Packets only from the internet stay only if you
+choose so. Messages to or from you always stay. Under ⚙ **Settings**, *APRS*, *History* you can change
+this and delete them.
+
 ## Does the app collect personal data?
 
 No data is sent anywhere except what you configure: APRS packets you transmit or

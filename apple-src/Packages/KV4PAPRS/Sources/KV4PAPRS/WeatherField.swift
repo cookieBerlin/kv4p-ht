@@ -1,5 +1,5 @@
 /// Weather data (java-aprs `WeatherField`), as `WeatherParser` finds it anywhere after the position.
-public struct WeatherField: Equatable, Sendable {
+public struct WeatherField: Codable, Equatable, Sendable {
     public internal(set) var windDirection: Int?
     public internal(set) var windSpeed: Int?
     public internal(set) var windGust: Int?

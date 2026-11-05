@@ -98,6 +98,8 @@ public struct APRSController: Sendable {
     public private(set) var events: [APRSEvent] = []
     public private(set) var packets: [APRSPacketRecord] = []
 
+    /// The ids go on, also when events have gone or come back from storage.
+    private var lastEventId: Int64 = 0
     private var storedCallsign = ""
     private var storedDestination = ""
     private var pendingAcknowledgements: [(dueAtMs: Int64, eventId: Int64, packet: APRSPacket, frequencyHz: Int64?)] =
@@ -285,6 +287,7 @@ public struct APRSController: Sendable {
             event = parsed
         }
         event.dedupKey = Self.dedupKey(packet)
+        event.rawLine = Self.rawLine(packet)
         let inserted = insert(
             event,
             record: Self.record(packet, source: .txRF, frequencyHz: sentHz, frame: frame, at: now)
@@ -332,7 +335,8 @@ public struct APRSController: Sendable {
 
     private mutating func insert(_ candidate: APRSEvent, record: APRSPacketRecord) -> APRSEvent {
         var event = candidate
-        event.id = Int64(events.count + 1)
+        lastEventId += 1
+        event.id = lastEventId
         event.packetCount = 1
         events.append(event)
         var record = record
@@ -394,6 +398,7 @@ public struct APRSController: Sendable {
             toCallsign: destination,
             body: MessageField(payload).body.map(Java.trim)
         )
+        event.rawLine = Self.rawLine(packet)
         if reliable {
             event.messageIdentifier = identifier
             event.deliveryState = .pending
@@ -425,6 +430,48 @@ public struct APRSController: Sendable {
                 && event.messageIdentifier == identifier && event.deliveryState == .pending
         }
         return identifier
+    }
+
+    // MARK: Stored events
+
+    /// Takes back stored events, oldest first. A message that waited for its acknowledgement is not sent again. Events
+    /// that came in the meantime follow, with new ids, as ids must not repeat.
+    public mutating func restore(_ stored: [APRSEvent], highestId: Int64) {
+        let restored = stored.map { event in
+            var event = event
+            if event.deliveryState == .pending {
+                event.deliveryState = .failed
+                event.nextRetryAtMs = nil
+            }
+            return event
+        }
+        lastEventId = highestId
+        for index in events.indices {
+            lastEventId += 1
+            let id = lastEventId
+            for packet in packets.indices where packets[packet].eventId == events[index].id {
+                packets[packet].eventId = id
+            }
+            events[index].id = id
+        }
+        events = restored + events
+    }
+
+    /// Lets events go, with their packets.
+    public mutating func removeEvents(where shouldRemove: (APRSEvent) -> Bool) {
+        let removed = Set(events.filter(shouldRemove).map(\.id))
+        events.removeAll { removed.contains($0.id) }
+        packets.removeAll { $0.eventId.map(removed.contains) == true }
+        pendingAcknowledgements.removeAll { removed.contains($0.eventId) }
+    }
+
+    /// Keeps the newest events in memory, and any message that still waits. Returns those that went.
+    @discardableResult
+    public mutating func trim(keeping limit: Int) -> [APRSEvent] {
+        let surplus = events.filter { $0.deliveryState != .pending }.dropLast(limit)
+        let ids = Set(surplus.map(\.id))
+        removeEvents { ids.contains($0.id) }
+        return Array(surplus)
     }
 
     // MARK: Housekeeping
@@ -543,6 +590,7 @@ public struct APRSController: Sendable {
             event.comment = "Raw: " + Java.latin1(info.payload)
         }
         event.dedupKey = dedupKey(packet)
+        event.rawLine = rawLine(packet)
         return event
     }
 
@@ -567,6 +615,12 @@ public struct APRSController: Sendable {
             event.kind = .stationCapabilities
             event.comment = capabilities.displayText
         }
+    }
+
+    /// The packet as a line of text, in TNC2 form.
+    private static func rawLine(_ packet: APRSPacket) -> String {
+        let path = packet.digipeaters.map { ",\($0)" }.joined()
+        return "\(packet.source)>\(packet.destination)\(path):\(Java.latin1(packet.info.payload))"
     }
 
     /// `logicalPacketKey`: source, destination and payload.

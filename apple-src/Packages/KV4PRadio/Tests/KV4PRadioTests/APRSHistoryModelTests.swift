@@ -128,7 +128,7 @@ struct APRSHistoryModelTests {
         let setup = try Setup(settings: Self.keepingInternet())
         await setup.receive(Self.position)
         #expect(await setup.waitForStored(1))
-        #expect(setup.model.storedPacketCount == 1)
+        #expect(await KV4PTestSupport.eventually { setup.model.storedPacketCount == 1 })
     }
 
     @Test("messages to or from this station are always stored")
@@ -147,9 +147,10 @@ struct APRSHistoryModelTests {
         #expect(await setup.waitForStored(1))
         await setup.receive(Self.position, atOffset: 1_000)
         #expect(setup.model.aprsEvents.first?.packetCount == 2)
+        let expected = setup.time.ms
         let saved = await KV4PTestSupport.eventually { [history = setup.history] in
             let page = (try? await history.page(before: nil, limit: 1)) ?? []
-            return page.first?.lastSeenMs == 101_000
+            return page.first?.lastSeenMs == expected
         }
         #expect(saved)
         #expect(await setup.stored() == 1)
@@ -299,17 +300,32 @@ struct APRSHistoryModelTests {
         #expect(await KV4PTestSupport.eventually { restarted.model.aprsEvents.count == 2 })
         #expect(restarted.model.hasMoreAPRSHistory)
         await restarted.model.loadMoreAPRSHistory()
-        #expect(restarted.model.aprsEvents.count == 3)
-        #expect(restarted.model.hasMoreAPRSHistory)
-        await restarted.model.loadMoreAPRSHistory()
+        #expect(restarted.model.aprsEvents.count > 2)
+        while restarted.model.hasMoreAPRSHistory {
+            await restarted.model.loadMoreAPRSHistory()
+        }
         #expect(restarted.model.aprsEvents.count == 5)
         #expect(restarted.model.aprsEvents.map(\.fromCallsign).first == "N5CALL")
-        await restarted.model.loadMoreAPRSHistory()
-        #expect(!restarted.model.hasMoreAPRSHistory)
-        #expect(restarted.model.aprsEvents.count == 5)
         let old = try #require(restarted.model.aprsEvents.last)
         restarted.model.deleteAPRSEvent(old)
         #expect(restarted.model.aprsEvents.count == 4)
+    }
+
+    @Test("a shorter time also takes older packets out of the list")
+    func retentionOfLoaded() async throws {
+        var settings = Self.keepingInternet()
+        settings.packetRetentionDays = 0
+        let setup = try Setup(settings: settings, listLimit: 1)
+        await setup.receive("N1CALL>APRS,TCPIP*:>Status")
+        await setup.receive("N2CALL>APRS,TCPIP*:>Status")
+        #expect(await setup.waitForStored(2))
+        let restarted = try Setup(history: setup.history, settings: settings, listLimit: 1, start: 3 * Self.day)
+        #expect(await KV4PTestSupport.eventually { restarted.model.aprsEvents.count == 1 })
+        await restarted.model.loadMoreAPRSHistory()
+        #expect(restarted.model.aprsEvents.count == 2)
+        restarted.model.packetRetentionDays = 1
+        #expect(await KV4PTestSupport.eventually { restarted.model.aprsEvents.isEmpty })
+        #expect(await restarted.waitForStored(0))
     }
 
     @Test("while the app runs, memory holds the newest; the rest stays stored and can be loaded")

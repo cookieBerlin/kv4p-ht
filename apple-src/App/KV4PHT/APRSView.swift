@@ -91,6 +91,11 @@ struct APRSView: View {
             ForEach(model.aprsEvents) { event in
                 row(event)
             }
+            if model.hasMoreAPRSHistory {
+                Button("Load more", systemImage: "clock.arrow.circlepath") {
+                    Task { await model.loadMoreAPRSHistory() }
+                }
+            }
         }
         .onAppear {
             isOnScreen = true
@@ -129,8 +134,20 @@ struct APRSView: View {
                     if event.packetCount > 1 {
                         Text("×\(event.packetCount)").foregroundStyle(.secondary)
                     }
-                    Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: .time)
+                    Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: Self.timeStyle(event))
                         .foregroundStyle(.secondary)
+                    Menu {
+                        Button("Delete", systemImage: "trash", role: .destructive) { model.deleteAPRSEvent(event) }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24, height: 24)
+                            .contentShape(.rect)
+                    }
+                    .menuIndicator(.hidden)
+                    .buttonStyle(.plain)
+                    .fixedSize()
+                    .accessibilityLabel("More for this packet")
                 }
                 if let text = event.text(units: model.units, locale: .current) {
                     Text(text).font(event.isRawText ? .footnote.monospaced() : .body)
@@ -186,6 +203,11 @@ struct APRSView: View {
             .font(.caption.monospacedDigit())
             .foregroundStyle(.secondary)
         }
+    }
+
+    /// A packet from another day says so, as a stored list goes back further than today.
+    private static func timeStyle(_ event: APRSEvent) -> Text.DateStyle {
+        Calendar.current.isDateInToday(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000)) ? .time : .date
     }
 
     private static func delivery(_ state: APRSEvent.DeliveryState) -> (String, String)? {

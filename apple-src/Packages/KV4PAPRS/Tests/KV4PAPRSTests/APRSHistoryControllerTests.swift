@@ -50,12 +50,18 @@ struct APRSHistoryControllerTests {
         var controller = Self.controller([])
         controller.txDestination = "APKVPA"
         let beacon = APRSBeacon(latitude: 49, longitude: -72, symbolTable: "/", symbolCode: ">")
-        _ = controller.submitBeacon(beacon, atMs: 1, transmit: { _ in .later }, gate: { _ in false })
+        _ = controller.submitBeacon(
+            beacon,
+            atMs: 1,
+            transmit: { _ in .accepted(frequencyHz: 144_800_000, frame: []) },
+            gate: { _ in false }
+        )
         _ = controller.post(
             to: "N1CALL",
             text: "Hi",
+            frequencyHz: nil,
             atMs: 2,
-            transmit: { _ in .later },
+            transmit: { _ in .accepted(frequencyHz: 144_800_000, frame: []) },
             gate: { _ in false }
         )
         #expect(controller.events.allSatisfy { $0.rawLine?.hasPrefix("N0CALL>APKVPA:") == true })
@@ -73,6 +79,16 @@ struct APRSHistoryControllerTests {
         #expect(controller.events.last?.id == 91)
     }
 
+    @Test("what came before the stored events are back follows them, with a new id")
+    func restoreBehindNew() {
+        var controller = Self.controller([Self.position])
+        let stored = Self.controller([Self.status]).events
+        controller.restore(stored, highestId: 7)
+        #expect(controller.events.map(\.fromCallsign) == ["N2CALL", "N1CALL"])
+        #expect(controller.events.map(\.id) == [1, 8])
+        #expect(controller.packets.map(\.eventId) == [8])
+    }
+
     @Test("ids go on from the last one after events have gone")
     func idsAfterRemoval() {
         var controller = Self.controller([Self.position, Self.status])
@@ -88,8 +104,9 @@ struct APRSHistoryControllerTests {
         _ = controller.post(
             to: "N1CALL",
             text: "Hi",
+            frequencyHz: nil,
             atMs: 1,
-            transmit: { _ in .later },
+            transmit: { _ in .accepted(frequencyHz: 144_800_000, frame: []) },
             gate: { _ in false }
         )
         var stored = controller.events
@@ -116,21 +133,44 @@ struct APRSHistoryControllerTests {
         #expect(controller.packets.map(\.eventId) == [2])
     }
 
-    @Test("the oldest go when too many are in memory, but no message that still waits")
+    @Test("a removed message gets no acknowledgement any more")
+    func removalEndsAcknowledgement() throws {
+        var controller = Self.controller([])
+        controller.txDestination = "APKVPA"
+        let packet = try APRSParser.parse(tnc2: "N1CALL>APRS::N0CALL   :Hello{1")
+        _ = controller.receive(
+            packet,
+            frame: nil,
+            frequencyHz: 144_800_000,
+            atMs: 1,
+            transmit: { _ in .later },
+            gate: { _ in false }
+        )
+        controller.removeEvents { _ in true }
+        var sent = 0
+        controller.tick(atMs: 1_000_000) { _ in
+            sent += 1
+            return .later
+        }
+        #expect(sent == 0)
+    }
+
+    @Test("the oldest go when too many are in memory, but no message that still waits, which comes on top")
     func trim() {
         var controller = Self.controller([Self.position, Self.status, Self.weather])
         controller.txDestination = "APKVPA"
         _ = controller.post(
             to: "N1CALL",
             text: "Hi",
+            frequencyHz: nil,
             atMs: 1_000_000,
-            transmit: { _ in .later },
+            transmit: { _ in .accepted(frequencyHz: 144_800_000, frame: []) },
             gate: { _ in false }
         )
         let waiting = controller.events.last?.id
-        controller.trim(keeping: 1)
-        #expect(controller.events.map(\.id) == [waiting])
-        controller.trim(keeping: 5)
-        #expect(controller.events.map(\.id) == [waiting])
+        #expect(controller.trim(keeping: 1).map(\.id) == [1, 2])
+        #expect(controller.events.map(\.id) == [3, waiting])
+        #expect(controller.trim(keeping: 5).isEmpty)
+        #expect(controller.events.map(\.id) == [3, waiting])
     }
 }

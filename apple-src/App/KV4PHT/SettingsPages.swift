@@ -255,9 +255,31 @@ struct AudioSettings: View {
     }
 }
 
-/// The position beacon and the APRS network.
+/// The position beacon, the list and the APRS network.
 struct APRSSettings: View {
     @Bindable var model: RadioViewModel
+    @State private var isAskingToDeleteStored = false
+    @State private var isConfirmingDeleteAll = false
+
+    /// Turning off asks what becomes of what is stored.
+    private var keepsPackets: Binding<Bool> {
+        Binding {
+            model.isKeepingPackets
+        } set: { isOn in
+            model.isKeepingPackets = isOn
+            if !isOn, model.storedPacketCount > 0 {
+                isAskingToDeleteStored = true
+            }
+        }
+    }
+
+    private static func retentionLabel(_ days: Int) -> String {
+        switch days {
+        case 0: "No limit"
+        case 1: "1 day"
+        default: "\(days) days"
+        }
+    }
 
     var body: some View {
         Form {
@@ -298,6 +320,22 @@ struct APRSSettings: View {
                 }
                 .explained(ControlHelp.units)
             }
+            Section("History") {
+                Toggle("Keep packets", isOn: keepsPackets)
+                    .explained(ControlHelp.keepPackets)
+                if model.isKeepingPackets {
+                    Toggle("Keep internet packets", isOn: $model.keepsInternetPackets)
+                        .explained(ControlHelp.keepInternetPackets)
+                    Picker("Keep for", selection: $model.packetRetentionDays) {
+                        ForEach(AppSettings.packetRetentionOptions, id: \.self) { days in
+                            Text(Self.retentionLabel(days)).tag(days)
+                        }
+                    }
+                }
+                LabeledContent("Stored packets", value: "\(model.storedPacketCount)")
+                Button("Delete all packets…", role: .destructive) { isConfirmingDeleteAll = true }
+                    .disabled(model.storedPacketCount == 0 && model.aprsEvents.isEmpty)
+            }
             Section("Network") {
                 Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
                     .disabled(!model.canSendOnAir)
@@ -316,6 +354,18 @@ struct APRSSettings: View {
                     .foregroundStyle(.secondary)
                 }
             }
+        }
+        .alert("Delete the stored packets?", isPresented: $isAskingToDeleteStored) {
+            Button("Keep", role: .cancel) {}
+            Button("Delete", role: .destructive) { model.deleteAllAPRSEvents() }
+        } message: {
+            Text("No new packets are stored from now on.")
+        }
+        .alert("Delete all packets?", isPresented: $isConfirmingDeleteAll) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) { model.deleteAllAPRSEvents() }
+        } message: {
+            Text("This removes all packets of the list, also those stored.")
         }
     }
 }

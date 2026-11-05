@@ -66,6 +66,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isIGateEnabled = false
     public var isInternetFeedEnabled = false
     public var aprsDestinationFilter = APRSDestinationFilter.all
+    /// The list stays across restarts; local to the device, as the packets are (ADR-0057).
+    public var isKeepingPackets = true
+    /// Packets only from the internet are stored as well, which can be many.
+    public var keepsInternetPackets = false
+    /// How long packets stay, in days; 0 for without limit.
+    public var packetRetentionDays = 30
     /// The units of the APRS list (ADR-0055).
     public var units = APRSUnits.system
     public var txLimits = TXLimits()
@@ -77,6 +83,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isSimulatorChosen = false
     /// How the simulated radio behaves, for testing; local to the device (ADR-0041).
     public var simulator = SimulatorSettings()
+
+    /// Days, with 0 for without limit.
+    public static let packetRetentionOptions = [1, 7, 30, 0]
 
     /// All stations share the APRS frequency, so there is no shorter one.
     public static let beaconIntervalOptions = [2, 5, 10, 15, 30, 60]
@@ -123,6 +132,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isInternetFeedEnabled = values.value(.isInternetFeedEnabled, or: defaults.isInternetFeedEnabled)
         aprsDestinationFilter = values.value(.aprsDestinationFilter, or: defaults.aprsDestinationFilter)
         units = values.value(.units, or: defaults.units)
+        isKeepingPackets = values.value(.isKeepingPackets, or: defaults.isKeepingPackets)
+        keepsInternetPackets = values.value(.keepsInternetPackets, or: defaults.keepsInternetPackets)
+        packetRetentionDays = values.value(.packetRetentionDays, or: defaults.packetRetentionDays)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)
