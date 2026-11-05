@@ -75,7 +75,10 @@ struct AccessToneControllerTests {
 
     @Test("sends silence until the radio transmits and the wait has passed, then the tone, then stops by itself")
     func sends() async throws {
-        var setup = Setup()
+        // The test sends no WINDOW_UPDATE: how long the silence lasts depends on the runner, so the window must not run out.
+        var scenario = Scenario.ble
+        scenario.windowSize = 1 << 20
+        var setup = Setup(scenario: scenario)
         try await setup.ready()
         let controller = setup.controller
         let task = Task { try await controller.sendAccessTone(Self.tone) }
@@ -86,7 +89,7 @@ struct AccessToneControllerTests {
         let result = try await setup.run(until: task)
         #expect(result == .finished)
 
-        // The last blocks may still be on their way to the transport.
+        // The last blocks may still be in the queue to the transport.
         let toneBlocks = Self.tone.samples().count / KV4P.audioBlockSamples
         let isLoud: ([Int16]) -> Bool = { ($0.map { abs(Int($0)) }.max() ?? 0) > 4000 }
         let sender = setup
