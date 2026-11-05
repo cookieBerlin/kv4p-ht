@@ -17,7 +17,8 @@ struct APRSHistoryModelTests {
             throw Failure()
         }
         func delete(id: Int64) async throws { throw Failure() }
-        func deleteOlder(than lastSeenMs: Int64) async throws { throw Failure() }
+        func deleteOlder(than lastSeenMs: Int64, except filter: APRSHistoryFilter) async throws { throw Failure() }
+        func deleteOlder(than lastSeenMs: Int64, matching filter: APRSHistoryFilter) async throws { throw Failure() }
         func deleteAll() async throws { throw Failure() }
         func count() async throws -> Int { throw Failure() }
         func highestId() async throws -> Int64 { throw Failure() }

@@ -32,6 +32,7 @@ struct APRSMessagesModelTests {
         let notifier = FakeMessageNotifier()
         let permissions = FakePermissions()
         let settings: MemorySettingsStore
+        let time = TestTime()
         let model: RadioViewModel
 
         init(history: (any APRSHistoryStoring)? = nil, settings: AppSettings = AppSettings()) {
@@ -44,7 +45,7 @@ struct APRSMessagesModelTests {
                 settings: self.settings,
                 messageNotifier: notifier,
                 permissions: permissions,
-                now: { 1_000 }
+                now: { [time] in time.ms }
             )
             model.callsign = "N0CALL"
         }
@@ -56,6 +57,7 @@ struct APRSMessagesModelTests {
         /// Waits until each packet has reached the list.
         func receive(_ lines: String...) async {
             for line in lines {
+                time.advance(by: 1_000)
                 let before = packets
                 link.receive.yield(line)
                 #expect(await KV4PTestSupport.eventually { self.packets > before })
@@ -65,7 +67,7 @@ struct APRSMessagesModelTests {
 
     // MARK: Count
 
-    @Test("a new message to this station counts while the list is not on screen")
+    @Test("a new message to this station counts until its chat is opened")
     func counts() async {
         let setup = Setup()
         await setup.receive(Self.toMe, Self.toMe2)
@@ -82,19 +84,22 @@ struct APRSMessagesModelTests {
     @Test("the count ends when a list comes on screen, and stays at 0 while it is there")
     func clears() async {
         let setup = Setup()
-        await setup.receive(Self.toMe)
+        await setup.receive(Self.toMe, Self.toMe2)
         setup.model.isAPRSVisible = true
-        #expect(setup.model.newAPRSMessages == 0)
-        await setup.receive(Self.toMe2)
-        #expect(setup.model.newAPRSMessages == 0)
-        setup.model.isAPRSVisible = false
-        await setup.receive("N3CALL>APRS,TCPIP*::N0CALL   :Third")
+        #expect(setup.model.newAPRSMessages == 2)
+        setup.model.openChat = "N1CALL"
         #expect(setup.model.newAPRSMessages == 1)
-        setup.model.isPacketsPageVisible = true
-        #expect(setup.model.newAPRSMessages == 0)
+        await setup.receive("N1CALL>APRS,TCPIP*::N0CALL   :While open")
+        #expect(setup.model.newAPRSMessages == 1)
+        setup.model.isAPRSVisible = false
+        await setup.receive("N1CALL>APRS,TCPIP*::N0CALL   :While away")
+        #expect(setup.model.newAPRSMessages == 2)
+        setup.model.isAPRSVisible = true
+        #expect(setup.model.newAPRSMessages == 1)
+        setup.model.openChat = nil
     }
 
-    @Test("messages that come back from the store are not new")
+    @Test("messages that come back from the store bring no notification, and stay unread until read")
     func restored() async throws {
         let history = try SwiftDataAPRSHistory.inMemory()
         let first = Setup(history: history)
@@ -103,7 +108,7 @@ struct APRSMessagesModelTests {
         let second = Setup(history: history)
         #expect(await KV4PTestSupport.eventually { second.model.aprsEvents.count == 1 })
         second.model.isAppActive = false
-        #expect(second.model.newAPRSMessages == 0)
+        #expect(second.model.newAPRSMessages == 1)
         #expect(second.notifier.delivered.isEmpty)
     }
 

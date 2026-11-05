@@ -103,7 +103,7 @@ struct APRSHistoryTests {
         try await history.delete(id: 3)
         try await history.delete(id: 99)
         #expect(try await history.page(before: nil, limit: 10).map(\.id) == [5, 4, 2, 1])
-        try await history.deleteOlder(than: 20)
+        try await history.deleteOlder(than: 20, except: APRSHistoryFilter(kinds: [99]))
         #expect(try await history.page(before: nil, limit: 10).map(\.id) == [5, 4, 2])
         try await history.deleteAll()
         #expect(try await history.count() == 0)
@@ -138,5 +138,45 @@ struct APRSHistoryTests {
             #expect(!FileManager.default.fileExists(atPath: file.path))
         }
         #expect(try await SwiftDataAPRSHistory.inFolder(folder).count() == 1)
+    }
+
+    @Test("old entries go, except those that fit a filter, which can go by a time of their own")
+    func keepsMessages() async throws {
+        let history = try SwiftDataAPRSHistory.inMemory()
+        let message = APRSHistoryEntry(
+            id: 1,
+            lastSeenMs: 10,
+            kind: 1,
+            fromCallsign: "N1CALL",
+            toCallsign: "N0CALL",
+            isInternetOnly: false,
+            payload: Data()
+        )
+        let other = APRSHistoryEntry(
+            id: 2,
+            lastSeenMs: 10,
+            kind: 1,
+            fromCallsign: "N1CALL",
+            toCallsign: "N2CALL",
+            isInternetOnly: false,
+            payload: Data()
+        )
+        let newer = APRSHistoryEntry(
+            id: 3,
+            lastSeenMs: 50,
+            kind: 1,
+            fromCallsign: "N0CALL",
+            toCallsign: "N1CALL",
+            isInternetOnly: false,
+            payload: Data()
+        )
+        try await history.save([message, other, newer, Self.entry(4, at: 10)])
+        let chats = APRSHistoryFilter(kinds: [1], participant: "N0CALL")
+        try await history.deleteOlder(than: 20, except: chats)
+        #expect(try await history.page(before: nil, limit: 10).map(\.id) == [3, 1])
+        try await history.deleteOlder(than: 20, matching: chats)
+        #expect(try await history.page(before: nil, limit: 10).map(\.id) == [3])
+        try await history.deleteOlder(than: 60, matching: APRSHistoryFilter())
+        #expect(try await history.count() == 0)
     }
 }
