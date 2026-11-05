@@ -242,6 +242,13 @@ public final class RadioViewModel {
         }
     }
     private var detailedLoggingUntilMs: Int64 = 0
+    /// When detailed logging ends by itself, while it is on.
+    public var detailedLoggingEnds: Date? {
+        isDetailedLogging ? Date(timeIntervalSince1970: Double(detailedLoggingUntilMs) / 1000) : nil
+    }
+    /// For the live view of the log.
+    public let liveLog: LiveLog?
+    public var logSummary: LogSummary? { diagnostics?.summary() }
     private static let detailedLoggingMs: Int64 = 86_400_000
     /// A crash is known that the user has not been asked about.
     public private(set) var offersCrashReport = false
@@ -602,6 +609,7 @@ public final class RadioViewModel {
         self.failureAlerts = failureAlerts
         self.messageNotifier = messageNotifier
         self.diagnostics = diagnostics
+        liveLog = diagnostics.map { LiveLog(diagnostics: $0) }
         self.crashReports = crashReports
         offersCrashReport = crashReports?.hasNew ?? false
         self.permissions = permissions
@@ -646,6 +654,7 @@ public final class RadioViewModel {
             diagnostics?.log(.error, .storage, "The settings could not be read, so all are back to their defaults")
         }
         restore(AppSettings(data: stored))
+        liveLog?.onFilterChange = { [weak self] _ in self?.saveSettings() }
         diagnostics?.log(
             .info,
             .app,
@@ -698,6 +707,9 @@ public final class RadioViewModel {
         settings.keepsInternetPackets = keepsInternetPackets
         settings.notifiesAboutMessages = notifiesAboutMessages
         settings.detailedLoggingUntilMs = detailedLoggingUntilMs
+        if let liveLog {
+            settings.logFilter = liveLog.filter
+        }
         settings.packetRetentionDays = packetRetentionDays
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
@@ -754,6 +766,7 @@ public final class RadioViewModel {
         notifiesAboutMessages = settings.notifiesAboutMessages
         detailedLoggingUntilMs = settings.detailedLoggingUntilMs
         diagnostics?.detailedUntilMs = settings.detailedLoggingUntilMs
+        liveLog?.filter = settings.logFilter
         packetRetentionDays = settings.packetRetentionDays
     }
 
@@ -1612,8 +1625,14 @@ public final class RadioViewModel {
         ProblemReport.issueURL(environment: environment, firmware: firmwareForReport)
     }
 
+    /// What the live view shows, to copy; the log holds no callsigns, but it is the same promise as for a report.
+    public func liveLogText() -> String {
+        ProblemReport.redacted(liveLog?.text ?? "", callsign: callsign)
+    }
+
     public func deleteDiagnostics() {
         diagnostics?.deleteAll()
+        liveLog?.clear()
         crashReports?.deleteAll()
         offersCrashReport = false
     }

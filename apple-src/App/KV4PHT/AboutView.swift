@@ -3,8 +3,6 @@ import SwiftUI
 
 /// The About window: version, build, the firmware the app ships and the licences.
 struct AboutView: View {
-    let model: RadioViewModel
-    @State private var isReporting = false
     private let about = AboutInfo(info: Bundle.main.infoDictionary ?? [:])
     @State private var shown: LicenceFile?
 
@@ -21,9 +19,6 @@ struct AboutView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-            }
-            Section {
-                Button("Report a problem…") { isReporting = true }
             }
             Section("Data") {
                 ForEach(AboutInfo.dataSources) { source in
@@ -53,7 +48,6 @@ struct AboutView: View {
             .navigationTitle("About")
         #endif
         .sheet(item: $shown) { LicenceText(file: $0) }
-        .sheet(isPresented: $isReporting) { ProblemReportView(model: model) }
     }
 }
 

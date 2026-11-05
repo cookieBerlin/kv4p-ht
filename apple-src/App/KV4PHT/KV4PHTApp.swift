@@ -17,7 +17,7 @@ struct KV4PHTApp: App {
         #endif
         #if os(macOS)
             Settings { SettingsView(model: model) }
-            Window("About kv4p HT", id: AboutCommand.window) { AboutView(model: model) }
+            Window("About kv4p HT", id: AboutCommand.window) { AboutView() }
                 .windowResizability(.contentSize)
         #endif
     }

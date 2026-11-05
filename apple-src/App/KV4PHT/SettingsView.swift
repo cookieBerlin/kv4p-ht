@@ -49,7 +49,7 @@ struct SettingsView: View {
                         }
                     }
                 }
-                Section { NavigationLink("About kv4p HT") { AboutView(model: model) } }
+                Section { NavigationLink("About kv4p HT") { AboutView() } }
             }
             .settingsPage("Settings", model: model)
         #endif
@@ -84,6 +84,7 @@ struct SettingsView: View {
             case .aprs: APRSSettings(model: model)
             case .memories: ManageMemoriesView(model: model)
             case .simulator: SimulatorSettings(model: model)
+            case .logging: LoggingSettings(model: model)
             }
         }
         .settingsPage(page.title, model: model)

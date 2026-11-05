@@ -79,6 +79,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var notifiesAboutMessages = true
     /// Detailed logging ends by itself at this time; local to the device (ADR-0059).
     public var detailedLoggingUntilMs: Int64 = 0
+    /// What the live view of the log looks for; local to the device.
+    public var logFilter = LogFilter()
     /// The units of the APRS list (ADR-0055).
     public var units = APRSUnits.system
     public var txLimits = TXLimits()
@@ -151,6 +153,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         packetRetentionDays = values.value(.packetRetentionDays, or: defaults.packetRetentionDays)
         notifiesAboutMessages = values.value(.notifiesAboutMessages, or: defaults.notifiesAboutMessages)
         detailedLoggingUntilMs = values.value(.detailedLoggingUntilMs, or: defaults.detailedLoggingUntilMs)
+        logFilter = values.value(.logFilter, or: defaults.logFilter)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)

@@ -303,9 +303,10 @@ brings a notification with its sender and text. The app must be running for this
 ended. *Notify about messages to me* under ⚙ **Settings**, *APRS*, *History* turns this off.
 
 **If something goes wrong:** the app keeps a log on your device, with frequencies and times but without callsigns, message texts or positions.
-*About kv4p HT*, *Report a problem* shows a report with it, which you can share or attach to a GitHub issue after
-looking through it. Issues are public. Nothing leaves your device without you. There you can also delete the log,
-and turn on *Detailed logging*, which ends by itself after a day. After a crash, the app asks once whether to report it.
+⚙ **Settings**, *Logging*, *Live log* shows what is being logged as it happens: you can search, filter by level
+and category, pause and copy. On the same page, *Report a problem* shows a report, which you can share or attach to a
+GitHub issue after looking through it. Issues are public. Nothing leaves your device without you. There you can
+also delete the log, and turn on *Detailed logging*, which ends by itself after a day. After a crash, the app asks once whether to report it.
 
 **History:** under ⚙ **Settings**, *APRS*, *History*, *Keep packets* keeps the list across restarts, for 1, 7
 or 30 days or without limit, 30 by default. The packets stay on this device and are not synced. Packets only

@@ -6,25 +6,27 @@ public protocol LogStoring: Sendable {
     func append(_ line: String, atMs: Int64)
     func read() -> String
     func deleteAll()
+    func summary() -> LogSummary
 }
 
 /// What the app did, for a report on a problem (ADR-0059). A line never holds message texts, positions, callsigns,
 /// passwords or the names of memories and radios, and the real-time audio paths do not log. Frequencies and times are
 /// not private, as amateur radio is on air for everyone.
 public final class DiagnosticLog: Sendable {
-    public enum Level: String, Sendable {
+    public enum Level: String, CaseIterable, Codable, Sendable {
         case error = "ERROR"
         case info = "INFO"
         case detail = "DETAIL"
     }
 
-    public enum Category: String, Sendable {
+    public enum Category: String, CaseIterable, Codable, Sendable {
         case app, connection, transmit, audio, permissions, sync, firmware, aprs, storage, location
     }
 
     private let store: any LogStoring
     private let now: @Sendable () -> Int64
     private let detailedUntil = OSAllocatedUnfairLock<Int64>(initialState: 0)
+    private let liveContinuation = OSAllocatedUnfairLock<AsyncStream<LogLine>.Continuation?>(initialState: nil)
 
     public init(store: any LogStoring, now: @escaping @Sendable () -> Int64) {
         self.store = store
@@ -40,9 +42,15 @@ public final class DiagnosticLog: Sendable {
     public func log(_ level: Level, _ category: Category, _ text: String) {
         let time = now()
         guard level != .detail || time < detailedUntilMs else { return }
-        let date = Date(timeIntervalSince1970: Double(time) / 1000).ISO8601Format()
         let line = Self.redacted(text)
-        store.append("\(date) \(level.rawValue) \(category.rawValue): \(line)", atMs: time)
+        let entry = LogLine(
+            date: Date(timeIntervalSince1970: Double(time) / 1000),
+            level: level,
+            category: category,
+            message: line
+        )
+        store.append(entry.text, atMs: time)
+        liveContinuation.withLock { _ = $0?.yield(entry) }
         Logger(subsystem: "io.github.cookieberlin.kv4pht", category: category.rawValue)
             .log(level: level == .error ? .error : .info, "\(line, privacy: .public)")
     }
@@ -53,6 +61,20 @@ public final class DiagnosticLog: Sendable {
 
     public func deleteAll() {
         store.deleteAll()
+    }
+
+    public func summary() -> LogSummary {
+        store.summary()
+    }
+
+    /// The lines from now on, for one reader, which costs nothing while there is none. A new reader replaces the last.
+    public func liveLines() -> AsyncStream<LogLine> {
+        let (lines, continuation) = AsyncStream.makeStream(of: LogLine.self, bufferingPolicy: .bufferingNewest(2_000))
+        liveContinuation.withLock {
+            $0?.finish()
+            $0 = continuation
+        }
+        return lines
     }
 
     /// A serial port's name can hold a serial number, and a path the user's name; every line passes here.
@@ -87,6 +109,11 @@ public final class MemoryLogStore: LogStoring, Sendable {
 
     public func deleteAll() {
         lines.withLock { $0 = "" }
+    }
+
+    public func summary() -> LogSummary {
+        let text = read()
+        return LogSummary(byteCount: text.utf8.count, since: text.isEmpty ? nil : String(text.prefix(10)))
     }
 }
 
@@ -126,6 +153,20 @@ public final class LogFile: LogStoring, @unchecked Sendable {
             for name in names() {
                 try? FileManager.default.removeItem(at: folder.appending(path: name))
             }
+        }
+    }
+
+    public func summary() -> LogSummary {
+        queue.sync {
+            let all = names()
+            let sizes = all.compactMap { name -> Int? in
+                let handle = try? FileHandle(forReadingFrom: folder.appending(path: name))
+                return (try? handle?.seekToEnd()).flatMap { $0 }.map(Int.init)
+            }
+            return LogSummary(
+                byteCount: sizes.reduce(0, +),
+                since: all.first.map { String($0.dropFirst("kv4p-".count).prefix(10)) }
+            )
         }
     }
 

@@ -41,7 +41,15 @@ server, and without a personal address in the app or the repository.
   for the app. Up to 5 crashes stay, without the region of the device. TestFlight's own crash reports and
   feedback stay as they are. No third-party service.
 - **After a new crash, the app asks once** whether to report it.
-- **A report is made under *About*:** the user sees it, and shares the file through the system's dialog or
+- **The settings have a page *Logging* of its own,** as under *About* it would be hard to find. It holds the
+  live view, the size of the log, *Detailed logging*, the report and a way to delete everything.
+- **A live view shows what is being logged:** the last 500 lines of the file, then what comes, gathered four
+  times a second so that a busy feed does not slow the screen. It holds at most 2,000 lines and only works while it
+  is open. It can search, filter by level and category, pause and copy, and follows the end until the user
+  scrolls up. The filter is remembered on the device, so the view says clearly when one is on. On an iPhone it is not
+  shown beside PTT, as that would bring a page and its gestures close to transmitting.
+- **After a crash, the question leads to the report directly,** in a sheet, as that is what it is about.
+- **A report:** the user sees it, and shares the file through the system's dialog or
   opens a prepared GitHub issue, to which they attach it. The issue holds only versions and device, and says
   that issues are public. The callsign is replaced in the whole report, in any case and with any SSID.
   Nothing leaves the device without the user.

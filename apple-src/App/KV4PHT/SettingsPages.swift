@@ -7,7 +7,7 @@ import SwiftUI
 
 /// The pages of the settings (ADR-0048), in the order the overview shows them.
 enum SettingsPage: CaseIterable, Identifiable {
-    case station, radio, transmit, audio, aprs, memories, simulator
+    case station, radio, transmit, audio, aprs, memories, simulator, logging
 
     var id: Self { self }
 
@@ -20,6 +20,7 @@ enum SettingsPage: CaseIterable, Identifiable {
         case .aprs: "APRS"
         case .memories: "Memories"
         case .simulator: "Simulator"
+        case .logging: "Logging"
         }
     }
 
@@ -32,6 +33,7 @@ enum SettingsPage: CaseIterable, Identifiable {
         case .aprs: "location"
         case .memories: "list.bullet"
         case .simulator: "testtube.2"
+        case .logging: "doc.text.magnifyingglass"
         }
     }
 }
