@@ -1,8 +1,8 @@
 #if canImport(AVFoundation)
     import AVFoundation
+    import KV4PDiagnostics
     import KV4PProtocol
     import Synchronization
-    import os
 
     /// Captures the default input device and converts it to 16 kHz mono 16-bit samples. All logic lives in
     /// `TXAudioEncoder` and `RadioController`; this file is excluded from coverage (ADR-0011).
@@ -18,13 +18,15 @@
             let engine: AVAudioEngine
         }
 
-        private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "microphone")
-
         private let session = Mutex<Session?>(nil)
         /// A new engine takes long to start, which PTT would feel. It is kept between transmissions.
         private let prepared = Mutex<PreparedEngine?>(nil)
 
-        public init() {}
+        private let diagnostics: DiagnosticLog?
+
+        public init(diagnostics: DiagnosticLog? = nil) {
+            self.diagnostics = diagnostics
+        }
 
         deinit {
             stop()
@@ -47,15 +49,13 @@
                     return try capture(on: engine)
                 } catch {
                     // A prepared engine does not survive every change of the audio session.
-                    Self.log.error("A prepared microphone engine did not start: \(error, privacy: .public)")
+                    diagnostics?.log(.error, .audio, "A prepared microphone engine did not start: \(error)")
                 }
             }
             do {
                 return try capture(on: AVAudioEngine())
             } catch {
-                Self.log.error(
-                    "The microphone did not start: \(error, privacy: .public) \(Self.sessionState, privacy: .public)"
-                )
+                diagnostics?.log(.error, .audio, "The microphone did not start: \(error) \(Self.sessionState)")
                 throw error
             }
         }

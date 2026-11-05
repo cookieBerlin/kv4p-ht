@@ -21,6 +21,15 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "KV4PDiagnostics",
+            path: "Packages/KV4PDiagnostics/Sources/KV4PDiagnostics"
+        ),
+        .testTarget(
+            name: "KV4PDiagnosticsTests",
+            dependencies: ["KV4PDiagnostics"],
+            path: "Packages/KV4PDiagnostics/Tests/KV4PDiagnosticsTests"
+        ),
+        .target(
             name: "KV4PProtocol",
             path: "Packages/KV4PProtocol/Sources/KV4PProtocol"
         ),
@@ -32,7 +41,7 @@ let package = Package(
         ),
         .target(
             name: "KV4PAudio",
-            dependencies: ["KV4PProtocol"],
+            dependencies: ["KV4PDiagnostics", "KV4PProtocol"],
             path: "Packages/KV4PAudio/Sources/KV4PAudio"
         ),
         .testTarget(
@@ -43,6 +52,7 @@ let package = Package(
         ),
         .target(
             name: "KV4PPersistence",
+            dependencies: ["KV4PDiagnostics"],
             path: "Packages/KV4PPersistence/Sources/KV4PPersistence"
         ),
         .testTarget(
@@ -53,11 +63,12 @@ let package = Package(
         ),
         .target(
             name: "KV4PAPRS",
+            dependencies: ["KV4PDiagnostics"],
             path: "Packages/KV4PAPRS/Sources/KV4PAPRS"
         ),
         .testTarget(
             name: "KV4PAPRSTests",
-            dependencies: ["KV4PAPRS", "KV4PTestSupport"],
+            dependencies: ["KV4PAPRS", "KV4PDiagnostics", "KV4PTestSupport"],
             path: "Packages/KV4PAPRS/Tests/KV4PAPRSTests",
             resources: [.copy("Vectors")]
         ),
@@ -97,7 +108,7 @@ let package = Package(
         ),
         .target(
             name: "KV4PTransport",
-            dependencies: ["KV4PProtocol"],
+            dependencies: ["KV4PDiagnostics", "KV4PProtocol"],
             path: "Packages/KV4PTransport/Sources/KV4PTransport"
         ),
         .testTarget(
@@ -118,6 +129,7 @@ let package = Package(
         .target(
             name: "KV4PRadio",
             dependencies: [
+                "KV4PDiagnostics",
                 "KV4PProtocol", "KV4PTransport", "KV4PAudio", "KV4PPersistence", "KV4PAPRS", "KV4PDigital",
                 "KV4PFlasher", "KV4PSimulator",
             ],

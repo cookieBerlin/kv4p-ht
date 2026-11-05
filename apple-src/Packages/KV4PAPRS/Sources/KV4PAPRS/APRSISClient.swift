@@ -1,4 +1,5 @@
 import Foundation
+import KV4PDiagnostics
 import Synchronization
 
 /// A line-based TCP connection; the APRS-IS adapter implements it (`NetworkLineConnector`).
@@ -107,8 +108,17 @@ public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == 
     private let receivedContinuation: AsyncStream<String>.Continuation
     private let deliveredContinuation: AsyncStream<APRSInternetRequest>.Continuation
     private let loop: Mutex<Task<Void, Never>?> = Mutex(nil)
+    /// Never the login line or what comes back, as they hold the callsign and the position.
+    private let diagnostics: DiagnosticLog?
 
-    public init(software: String, version: String, connector: any LineConnector, clock: C) {
+    public init(
+        software: String,
+        version: String,
+        connector: any LineConnector,
+        clock: C,
+        diagnostics: DiagnosticLog? = nil
+    ) {
+        self.diagnostics = diagnostics
         self.software = Self.singleWord(software)
         self.version = Self.singleWord(version)
         self.connector = connector
@@ -192,10 +202,12 @@ public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == 
                 continue
             }
             let queued = state.withLock { $0.pendingGeneration }
+            diagnostics?.log(.info, .aprs, "APRS-IS: connecting to \(server.host)")
             let loggedIn = await session(settings, server: server, generation: generation)
             if loggedIn {
                 delay = Self.initialReconnectDelay
             }
+            diagnostics?.log(.info, .aprs, "APRS-IS: session ended, next try in \(delay)")
             await wait(delay, generation: generation, queued: queued, wakeups: &wakeups)
             if !loggedIn {
                 delay = min(delay * 2, Self.maximumReconnectDelay)
@@ -237,10 +249,12 @@ public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == 
         let (events, sink) = AsyncStream.makeStream(of: Event.self)
         state.withLock { $0.session = sink }
         let connector = connector
+        let diagnostics = diagnostics
         let connecting = Task {
             do {
                 sink.yield(.connected(try await connector.connect(host: server.host, port: server.port)))
             } catch {
+                diagnostics?.log(.error, .aprs, "APRS-IS: connecting failed, \(DiagnosticLog.describe(error))")
                 sink.yield(.failed)
             }
         }
@@ -295,11 +309,13 @@ public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == 
                     requireVerified: settings.isTransmitEnabled
                 ) {
                 case .accepted:
+                    diagnostics?.log(.info, .aprs, "APRS-IS: logged in")
                     loggedIn = true
                     timer.cancel()
                     state.withLock { $0.isLoggedIn = true }
                     guard await flush(to: connection, generation: generation) else { return true }
                 case .rejected:
+                    diagnostics?.log(.error, .aprs, "APRS-IS: login rejected")
                     return false
                 case .other:
                     break
@@ -312,7 +328,10 @@ public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == 
                 if loggedIn {
                     guard await flush(to: connection, generation: generation) else { return true }
                 }
-            case .failed, .timeout:
+            case .failed:
+                return loggedIn
+            case .timeout:
+                diagnostics?.log(.error, .aprs, "APRS-IS: the server did not answer in time")
                 return loggedIn
             }
         }
@@ -349,6 +368,7 @@ public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == 
             try await connection?.send(line)
             return true
         } catch {
+            diagnostics?.log(.error, .aprs, "APRS-IS: sending failed, \(DiagnosticLog.describe(error))")
             return false
         }
     }
@@ -422,7 +442,18 @@ public final class APRSISClient<C: Clock>: APRSInternetLink where C.Duration == 
 }
 
 extension APRSISClient where C == ContinuousClock {
-    public convenience init(software: String, version: String, connector: any LineConnector) {
-        self.init(software: software, version: version, connector: connector, clock: ContinuousClock())
+    public convenience init(
+        software: String,
+        version: String,
+        connector: any LineConnector,
+        diagnostics: DiagnosticLog? = nil
+    ) {
+        self.init(
+            software: software,
+            version: version,
+            connector: connector,
+            clock: ContinuousClock(),
+            diagnostics: diagnostics
+        )
     }
 }

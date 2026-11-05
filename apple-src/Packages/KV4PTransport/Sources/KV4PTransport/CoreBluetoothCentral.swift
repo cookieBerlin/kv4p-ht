@@ -1,5 +1,6 @@
 #if canImport(CoreBluetooth)
     import CoreBluetooth
+    import KV4PDiagnostics
     import KV4PProtocol
 
     /// Forwards between CoreBluetooth and `BLETransport` (ADR-0018). All logic lives in `BLELink`; this file is
@@ -18,10 +19,22 @@
         private let txUUID = CBUUID(string: BLEGATT.txCharacteristicUUID)
         private let rxUUID = CBUUID(string: BLEGATT.rxCharacteristicUUID)
 
-        public override init() {
+        private let diagnostics: DiagnosticLog?
+
+        public init(diagnostics: DiagnosticLog? = nil) {
+            self.diagnostics = diagnostics
             (events, continuation) = AsyncStream.makeStream()
             super.init()
             manager = CBCentralManager(delegate: self, queue: queue)
+        }
+
+        /// The reason the system gives, as the link only knows that a step failed.
+        private func note(_ step: String, _ error: (any Error)?) {
+            if let error {
+                diagnostics?.log(.error, .connection, "Bluetooth \(step): \(DiagnosticLog.describe(error))")
+            } else if step == "disconnect" {
+                diagnostics?.log(.info, .connection, "Bluetooth disconnected without an error")
+            }
         }
 
         public func perform(_ command: BLECommand) {
@@ -86,6 +99,7 @@
             didFailToConnect peripheral: CBPeripheral,
             error: (any Error)?
         ) {
+            note("connect", error)
             emit(.failedToConnect)
         }
 
@@ -94,12 +108,14 @@
             didDisconnectPeripheral peripheral: CBPeripheral,
             error: (any Error)?
         ) {
+            note("disconnect", error)
             emit(.disconnected)
         }
     }
 
     extension CoreBluetoothCentral: CBPeripheralDelegate {
         public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: (any Error)?) {
+            note("discover services", error)
             emit(.serviceDiscovered(peripheral.services?.contains { $0.uuid == serviceUUID } ?? false))
         }
 
@@ -108,6 +124,7 @@
             didDiscoverCharacteristicsFor service: CBService,
             error: (any Error)?
         ) {
+            note("discover characteristics", error)
             tx = service.characteristics?.first { $0.uuid == txUUID }
             rx = service.characteristics?.first { $0.uuid == rxUUID }
             let characteristics = tx.map { tx in
@@ -125,6 +142,7 @@
             didUpdateNotificationStateFor characteristic: CBCharacteristic,
             error: (any Error)?
         ) {
+            note("enable notifications", error)
             emit(.notificationsEnabled(error == nil && characteristic.isNotifying))
         }
 
@@ -141,6 +159,7 @@
             didWriteValueFor characteristic: CBCharacteristic,
             error: (any Error)?
         ) {
+            note("write", error)
             emit(.readyToWrite)
         }
 

@@ -20,6 +20,7 @@ added when their milestone starts.
 apple-src/
 ├── Package.swift
 ├── Packages/
+│   ├── KV4PDiagnostics/ # The log on the device; re-exported by KV4PRadio
 │   ├── KV4PProtocol/    # KISS framing, KV4P vendor frames, HELLO/DeviceState codecs
 │   ├── KV4PTransport/   # Transport abstraction; BLE (CoreBluetooth) + USB serial (macOS) adapters
 │   ├── KV4PAudio/       # IMA ADPCM, resampling, audio pipeline, AVAudioEngine adapter

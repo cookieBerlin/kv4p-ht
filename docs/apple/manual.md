@@ -302,7 +302,7 @@ new messages to your callsign, with any SSID, until you open it. While the app i
 brings a notification with its sender and text. The app must be running for this, so nothing arrives after it has
 ended. *Notify about messages to me* under ⚙ **Settings**, *APRS*, *History* turns this off.
 
-**If something goes wrong:** the app keeps a log on your device, without callsigns, message texts or positions.
+**If something goes wrong:** the app keeps a log on your device, with frequencies and times but without callsigns, message texts or positions.
 *About kv4p HT*, *Report a problem* shows a report with it, which you can share or attach to a GitHub issue after
 looking through it. Issues are public. Nothing leaves your device without you. There you can also delete the log,
 and turn on *Detailed logging*, which ends by itself after a day. After a crash, the app asks once whether to report it.

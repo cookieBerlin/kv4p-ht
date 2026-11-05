@@ -124,7 +124,7 @@ public final class RadioViewModel {
     public private(set) var message: String? {
         didSet {
             isNoticeSuccess = false
-            if let message {
+            if let message, !isMessageFromUser {
                 diagnostics?.log(.info, .app, message)
             }
         }
@@ -247,6 +247,20 @@ public final class RadioViewModel {
     public private(set) var offersCrashReport = false
     /// What the last radio reported, for a report after it has gone.
     private var lastFirmware: FirmwareVersion?
+    /// `message` holds what the user typed, which stays out of the log.
+    private var isMessageFromUser = false
+    /// Why an APRS packet did not go out, once until the reason changes.
+    private var lastAPRSBlock: String?
+    private var aprsDelivery: [Int64: APRSEvent.DeliveryState] = [:]
+    /// Since when the radio has not confirmed the desired state.
+    private var outOfSyncSinceMs: Int64?
+    private var didLogOutOfSync = false
+    private static let outOfSyncLogMs: Int64 = 5_000
+    private var loggedUnderruns = 0
+    private var loggedDroppedSamples = 0
+    private var nextRXLogAtMs: Int64 = 0
+    private static let rxLogIntervalMs: Int64 = 60_000
+    private var allowedPermissions: Set<Permission> = []
     /// A message to this station in the background brings a notification (ADR-0058).
     public var notifiesAboutMessages = true {
         didSet {
@@ -413,7 +427,12 @@ public final class RadioViewModel {
     }
     /// The app is on screen. Where a session is needed for the background, this decides when it can start.
     public var isAppActive = true {
-        didSet { updateBeaconSession() }
+        didSet {
+            if isAppActive != oldValue {
+                diagnostics?.log(.info, .app, isAppActive ? "In the foreground" : "In the background")
+            }
+            updateBeaconSession()
+        }
     }
     /// The system limits the location in the background here, so the choice is offered.
     public var supportsBackgroundBeacon: Bool { backgroundLocation != nil }
@@ -618,10 +637,22 @@ public final class RadioViewModel {
                 prepareMicrophone: { [weak self] in await self?.controller?.prepareMicrophone() },
                 reportFailure: { [weak self] in self?.message = $0 },
                 sleep: otherAudioSleep,
-                releaseWait: audioSession == nil ? .zero : OtherAudioController.podcastReturnWait
+                releaseWait: audioSession == nil ? .zero : OtherAudioController.podcastReturnWait,
+                diagnostics: diagnostics
             )
         }
-        restore(AppSettings(data: settings?.load()))
+        let stored = settings?.load()
+        if AppSettings.isUnreadable(stored) {
+            diagnostics?.log(.error, .storage, "The settings could not be read, so all are back to their defaults")
+        }
+        restore(AppSettings(data: stored))
+        diagnostics?.log(
+            .info,
+            .app,
+            "Settings: connection \(Self.kind(of: selectedConnection)), listen only \(isListenOnly), "
+                + "beacon \(isBeaconEnabled), internet feed \(isInternetFeedEnabled), iGate \(isIGateEnabled), "
+                + "digipeat \(isDigipeatingEnabled), keep packets \(isKeepingPackets), sync \(isSettingsSyncEnabled)"
+        )
         syncedSettings?.observeChanges { [weak self] in
             Task { @MainActor [weak self] in
                 self?.diagnostics?.log(.info, .sync, "Settings arrived from iCloud")
@@ -782,7 +813,11 @@ public final class RadioViewModel {
         guard settingsSync != nil, let syncedSettings else { return }
         settingsSyncHint =
             syncedSettings.isAvailable ? nil : "iCloud is not available, so these settings stay on this device."
-        guard let merged = settingsSync?.incoming(syncedSettings.values(), into: settings), merged != settings else {
+        let incoming = settingsSync?.incoming(syncedSettings.values(), into: settings)
+        settingsSync?.unreadableKeys.forEach { key in
+            diagnostics?.log(.error, .sync, "A setting from iCloud could not be read: \(key)")
+        }
+        guard let merged = incoming, merged != settings else {
             if fromCloud {
                 noteSettingsSynced()
             }
@@ -882,6 +917,11 @@ public final class RadioViewModel {
             diagnostics?.log(.info, .permissions, "Refused: \(permission)")
         }
         deniedPermissions = denied
+        let allowed = Set(Permission.allCases.filter { permissions?.state(of: $0) == .granted })
+        for permission in allowed.subtracting(allowedPermissions) {
+            diagnostics?.log(.info, .permissions, "Allowed: \(permission)")
+        }
+        allowedPermissions = allowed
         if isDenied(.location) {
             if isBeaconEnabled {
                 report(Permission.location.deniedMessage)
@@ -1126,11 +1166,14 @@ public final class RadioViewModel {
         guard canUpdateFirmware, let target = flashTarget else { return }
         await disconnect()
         firmwareUpdate = .connecting
-        diagnostics?.log(.info, .firmware, "Update started")
+        diagnostics?.log(.info, .firmware, "Update started: \(choice.edition)")
         let (events, reporter) = AsyncStream.makeStream(of: FlashEvent.self)
         let progress = Task { [weak self] in
             for await event in events {
-                guard case .progress(let percent) = event else { continue }
+                guard case .progress(let percent) = event else {
+                    self?.diagnostics?.log(.info, .firmware, "The bootloader answered")
+                    continue
+                }
                 self?.firmwareUpdate = .flashing(percent: percent)
             }
         }
@@ -1192,6 +1235,7 @@ public final class RadioViewModel {
     }
 
     public func disconnect() async {
+        logRXAudio(atMs: now(), always: true)
         await tearDown()
         diagnostics?.log(.info, .connection, "Disconnected")
         refreshPermissions()
@@ -1216,7 +1260,7 @@ public final class RadioViewModel {
     }
 
     /// The kinds of connection only, as a device's name or path says more than a report needs.
-    private static func kind(of connection: Connection) -> String {
+    static func kind(of connection: Connection) -> String {
         switch connection {
         case .bluetooth, .bluetoothDevice: "Bluetooth"
         case .serial: "USB"
@@ -1237,7 +1281,30 @@ public final class RadioViewModel {
             diagnostics?.log(.info, .connection, "Firmware \(Self.describe(firmware))")
         }
         if snapshot.isTransmitting != self.snapshot.isTransmitting {
-            diagnostics?.log(.info, .transmit, snapshot.isTransmitting ? "Transmit started" : "Transmit ended")
+            let frequency = HamFrequency.format(snapshot.desired.freqTx)
+            diagnostics?.log(
+                .info,
+                .transmit,
+                snapshot.isTransmitting ? "Transmit requested on \(frequency) MHz" : "Transmit ended"
+            )
+        }
+        // What the radio says, which is not always what was asked for.
+        if let mode = snapshot.deviceState?.mode, mode != self.snapshot.deviceState?.mode {
+            diagnostics?.log(.info, .transmit, "The radio reports \(mode)")
+        }
+        if snapshot.isScanning != self.snapshot.isScanning {
+            diagnostics?.log(.info, .connection, snapshot.isScanning ? "Scan started" : "Scan ended")
+        }
+        if snapshot.desired.freqRx != self.snapshot.desired.freqRx
+            || snapshot.desired.freqTx != self.snapshot.desired.freqTx
+        {
+            // A scan moves on many times a minute.
+            diagnostics?.log(
+                snapshot.isScanning ? .detail : .info,
+                .connection,
+                "Tuned: RX \(HamFrequency.format(snapshot.desired.freqRx)) MHz, "
+                    + "TX \(HamFrequency.format(snapshot.desired.freqTx)) MHz"
+            )
         }
     }
 
@@ -1285,6 +1352,7 @@ public final class RadioViewModel {
             try audioSession?.activate()
             try audioOutput?.start(rxAudio)
         } catch {
+            diagnostics?.log(.error, .audio, "Audio start: \(DiagnosticLog.describe(error))")
             message = "The audio output cannot be started."
         }
     }
@@ -1403,6 +1471,8 @@ public final class RadioViewModel {
     private func tickAPRS() {
         isInternetConnected = internet?.isLoggedIn ?? false
         let time = now()
+        watchSync(atMs: time)
+        logRXAudio(atMs: time)
         aprs.tick(atMs: time, transmit: transmitAPRS)
         updateBeaconSession()
         if isBeaconEnabled, canSendOnAir, canReadLocationNow, time >= nextBeaconAtMs, let location {
@@ -1410,6 +1480,40 @@ public final class RadioViewModel {
             Task { await beacon(from: location) }
         }
         showAPRS()
+    }
+
+    /// A setting the radio does not take shows here; a moment is normal.
+    private func watchSync(atMs time: Int64) {
+        guard isReady, !snapshot.isInSync else {
+            if didLogOutOfSync {
+                diagnostics?.log(.info, .connection, "No longer waiting for the radio to take the settings")
+            }
+            outOfSyncSinceMs = nil
+            didLogOutOfSync = false
+            return
+        }
+        let since = outOfSyncSinceMs ?? time
+        outOfSyncSinceMs = since
+        if !didLogOutOfSync, time - since >= Self.outOfSyncLogMs {
+            didLogOutOfSync = true
+            diagnostics?.log(.error, .connection, "The radio has not taken the settings for a while")
+        }
+    }
+
+    /// Each minute if something happened, as the counters tell about gaps in the sound; away from the audio thread.
+    private func logRXAudio(atMs time: Int64, always: Bool = false) {
+        guard always || time >= nextRXLogAtMs else { return }
+        nextRXLogAtMs = time + Self.rxLogIntervalMs
+        let statistics = rxAudio.statistics
+        if always || statistics.underruns != loggedUnderruns || statistics.droppedSamples != loggedDroppedSamples {
+            diagnostics?.log(
+                .info,
+                .audio,
+                "RX audio so far: \(statistics.underruns) underruns, \(statistics.droppedSamples) dropped samples"
+            )
+        }
+        loggedUnderruns = statistics.underruns
+        loggedDroppedSamples = statistics.droppedSamples
     }
 
     /// In the background, only a session keeps the location available where the system limits it.
@@ -1424,9 +1528,11 @@ public final class RadioViewModel {
         if isWanted, !isBeaconSessionRunning, isAppActive, let backgroundLocation {
             backgroundLocation.start()
             isBeaconSessionRunning = true
+            diagnostics?.log(.info, .location, "Background session started")
         } else if !isWanted, isBeaconSessionRunning {
             backgroundLocation?.stop()
             isBeaconSessionRunning = false
+            diagnostics?.log(.info, .location, "Background session ended")
         }
     }
 
@@ -1449,6 +1555,7 @@ public final class RadioViewModel {
             symbolCode: beaconSymbol.code
         )
         beaconOverride = beaconFrequency
+        diagnostics?.log(.info, .aprs, "Beacon due")
         _ = aprs.submitBeacon(beacon, atMs: now(), transmit: transmitAPRS, gate: gateAPRS)
         beaconOverride = nil
         showAPRS()
@@ -1524,6 +1631,7 @@ public final class RadioViewModel {
     /// id then, so it waits.
     private func noticeNewAPRSMessages() {
         guard aprsHistory == nil || isAPRSHistoryLoaded else { return }
+        logDeliveryChanges()
         let new = aprs.events.filter { $0.id > lastCheckedAPRSId }
         lastCheckedAPRSId = new.map(\.id).max() ?? lastCheckedAPRSId
         for event in new {
@@ -1537,6 +1645,15 @@ public final class RadioViewModel {
                 messageNotifier?.deliver(APRSMessageNotice(id: event.id, title: event.fromCallsign, text: text))
             }
         }
+    }
+
+    /// By the number of the event, which says nothing about who wrote to whom.
+    private func logDeliveryChanges() {
+        let messages = aprs.events.filter { $0.deliveryState != .none }
+        for event in messages where aprsDelivery[event.id] != event.deliveryState {
+            diagnostics?.log(.info, .aprs, "Message \(event.id): \(event.deliveryState)")
+        }
+        aprsDelivery = Dictionary(uniqueKeysWithValues: messages.map { ($0.id, $0.deliveryState) })
     }
 
     /// A message can be answered if this station can send.
@@ -1579,6 +1696,9 @@ public final class RadioViewModel {
             let page = try await history.page(before: nil, limit: self.aprsListLimit)
             let highestId = try await history.highestId()
             let stored = page.reversed().compactMap(Self.event)
+            if stored.count < page.count {
+                self.diagnostics?.log(.error, .storage, "\(page.count - stored.count) stored packets could not be read")
+            }
             self.storedAPRSEvents = Dictionary(uniqueKeysWithValues: stored.map { ($0.id, $0) })
             self.aprs.restore(stored, highestId: highestId)
             self.lastCheckedAPRSId = highestId
@@ -1768,8 +1888,22 @@ public final class RadioViewModel {
 
     /// `ServiceAprsCallbacks.submitAprsIs`.
     private func gateAPRS(_ request: APRSInternetRequest) -> Bool {
-        guard let internet, !callsign.isEmpty else { return false }
-        return internet.send(request, as: callsign)
+        guard let internet, !callsign.isEmpty else {
+            noteAPRSBlock("no internet link or callsign")
+            return false
+        }
+        let isSent = internet.send(request, as: callsign)
+        if !isSent {
+            noteAPRSBlock("the internet link did not take it")
+        }
+        return isSent
+    }
+
+    private func noteAPRSBlock(_ reason: String?) {
+        if let reason, reason != lastAPRSBlock {
+            diagnostics?.log(.info, .aprs, "A packet did not go out: \(reason)")
+        }
+        lastAPRSBlock = reason
     }
 
     /// `updateAprsIsConnection`: connected while the iGate or the feed is on; sending only for the iGate.
@@ -1852,13 +1986,18 @@ public final class RadioViewModel {
     /// `ServiceAprsCallbacks.submitRf` with `AprsRfFrequencyPolicy`: only while receiving; a reliable message stays on
     /// its frequency, everything else goes out on the requested or current TX frequency, within the ham band.
     private func transmitAPRS(_ request: APRSTransmitRequest) -> APRSTransmitOutcome {
-        guard canSendOnAir else { return .never }
+        guard canSendOnAir else {
+            noteAPRSBlock("listen only or no callsign")
+            return .never
+        }
         guard isReady, !isTransmitting, !isScanning, let controller, let firmware = snapshot.firmware else {
+            noteAPRSBlock("the radio is not ready, transmitting or scanning")
             return .later
         }
         let selected = Self.hertz(snapshot.desired.freqTx)
         let reliable = request.purpose == .outgoingMessage || request.purpose == .reliableMessageRetry
         if reliable, let requested = request.frequencyHz, requested != selected {
+            noteAPRSBlock("the frequency has changed since the message was written")
             return .never  // the app does not retune to the original frequency
         }
         let requested = request.purpose == .positionBeacon ? beaconOverride.map(Self.hertz) : request.frequencyHz
@@ -1870,8 +2009,13 @@ public final class RadioViewModel {
         let megahertz = Float(Double(hertz) / 1_000_000)
         guard txLimits.band(for: firmware.moduleType).allows(megahertz, bandwidth: snapshot.desired.bandwidth),
             let frame = try? request.packet.ax25Frame()
-        else { return .later }
-        Task { try? await controller.transmitAX25(frame, frequency: megahertz) }
+        else {
+            noteAPRSBlock("\(HamFrequency.format(megahertz)) MHz is outside the limits")
+            return .later
+        }
+        noteAPRSBlock(nil)
+        diagnostics?.log(.detail, .aprs, "Sending a packet on \(HamFrequency.format(megahertz)) MHz")
+        Task { try? await controller.transmitAX25(frame, frequency: megahertz) }  // the controller logs a refusal
         return .accepted(frequencyHz: hertz, frame: frame)
     }
 
@@ -1891,6 +2035,7 @@ public final class RadioViewModel {
                     try await controller.startTransmitting()
                 } catch {
                     refreshPermissions()
+                    diagnostics?.log(.info, .transmit, "PTT refused: \(error)")
                     if isDenied(.microphone) {
                         message = Permission.microphone.deniedMessage
                     } else if error != .transmitNotAllowed {
@@ -2080,7 +2225,11 @@ public final class RadioViewModel {
 
     public func tune(to memory: ChannelMemory) async {
         guard let controller else { return }
-        try? await controller.tune(to: memory)
+        do {
+            try await controller.tune(to: memory)
+        } catch {
+            diagnostics?.log(.info, .connection, "Tuning refused: \(error)")
+        }
         show(await controller.snapshot)
     }
 
@@ -2090,7 +2239,11 @@ public final class RadioViewModel {
         if isScanning {
             await controller.stopScan()
         } else {
-            try? await controller.startScan(visibleMemories)
+            do {
+                try await controller.startScan(visibleMemories)
+            } catch {
+                diagnostics?.log(.info, .connection, "Scan refused: \(error)")
+            }
         }
         show(await controller.snapshot)
     }
@@ -2132,6 +2285,7 @@ public final class RadioViewModel {
                 selectedGroup = nil
             }
         } catch {
+            diagnostics?.log(.error, .storage, "Memories: \(DiagnosticLog.describe(error))")
             message = "The memories could not be loaded or saved."
         }
     }
@@ -2142,7 +2296,10 @@ public final class RadioViewModel {
     public func applyFrequency() async {
         guard isReady, let controller, let firmware = snapshot.firmware, let current = frequency else { return }
         guard let entered = HamFrequency.safe(frequencyText, in: firmware.minRadioFreq...firmware.maxRadioFreq) else {
+            isMessageFromUser = true
             message = "\"\(frequencyText)\" is not a frequency."
+            isMessageFromUser = false
+            diagnostics?.log(.info, .connection, "An entered frequency was not valid")
             frequencyText = HamFrequency.format(current)
             return
         }

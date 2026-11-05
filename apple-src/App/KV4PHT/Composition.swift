@@ -32,29 +32,41 @@ enum Composition {
         now: RadioViewModel.systemTimeMs
     )
     private static var crashReports: MetricKitCrashReports?
+    private static var cloudKitFailures: Task<Void, Never>?
 
     static func makeViewModel() -> RadioViewModel {
-        diagnostics.log(.info, .app, "Started")
+        diagnostics.log(.info, .app, "Started: \(appVersion) on \(ProblemReport.Environment.current.system)")
+        cloudKitFailures = CloudKitSyncEvents.logFailures(to: diagnostics)
         let model = RadioViewModel(
             makeController: {
-                RadioController(transport: transport(for: $0), rxAudio: $1, microphone: AVAudioEngineInput())
+                RadioController(
+                    transport: transport(for: $0),
+                    rxAudio: $1,
+                    microphone: AVAudioEngineInput(diagnostics: diagnostics),
+                    diagnostics: diagnostics
+                )
             },
             serialDevices: serialDevices,
-            audioOutput: AVAudioEngineOutput(),
+            audioOutput: AVAudioEngineOutput(diagnostics: diagnostics),
             audioSession: audioSession(),
             otherAppsMute: otherAppsMute(),
             memories: memoryRepository(),
-            location: CoreLocationProvider(),
+            location: CoreLocationProvider(diagnostics: diagnostics),
             backgroundLocation: backgroundLocation(),
-            internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
+            internet: APRSISClient(
+                software: "kv4p-ht",
+                version: appVersion,
+                connector: NetworkLineConnector(),
+                diagnostics: diagnostics
+            ),
             firmware: firmwareFlasher(),
             firmwareChoices: firmwareChoices,
             aprsHistory: aprsHistory(),
             settings: settingsStore(),
             syncedSettings: UbiquitousSettingsStore(),
             bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
-            failureAlerts: PlatformFailureAlerts(),
-            messageNotifier: SystemMessageNotifier(),
+            failureAlerts: PlatformFailureAlerts(diagnostics: diagnostics),
+            messageNotifier: SystemMessageNotifier(diagnostics: diagnostics),
             permissions: SystemPermissions(),
             diagnostics: diagnostics,
             crashReports: CrashReportStore(folder: diagnosticsFolder.appending(path: "Crashes")),
@@ -67,7 +79,7 @@ enum Composition {
     /// iOS shares the audio hardware between apps through a session; macOS has none.
     private static func audioSession() -> (any AudioSession)? {
         #if os(iOS)
-            AVAudioSessionAdapter()
+            AVAudioSessionAdapter(diagnostics: diagnostics)
         #else
             nil
         #endif
@@ -85,7 +97,7 @@ enum Composition {
     /// The Mac has no session, but a tap can silence other apps.
     private static func otherAppsMute() -> (any OtherAudioSwitching)? {
         #if os(macOS)
-            CoreAudioOtherAppsMute()
+            CoreAudioOtherAppsMute(diagnostics: diagnostics)
         #else
             nil
         #endif
@@ -142,9 +154,9 @@ enum Composition {
     private static func transport(for connection: RadioViewModel.Connection) -> any RadioTransport {
         switch connection {
         case .bluetooth:
-            return BLETransport(central: CoreBluetoothCentral())
+            return BLETransport(central: CoreBluetoothCentral(diagnostics: diagnostics))
         case .bluetoothDevice(let device):
-            return BLETransport(central: CoreBluetoothCentral(), peripheral: device.id)
+            return BLETransport(central: CoreBluetoothCentral(diagnostics: diagnostics), peripheral: device.id)
         case .serial(let path):
             return serialTransport(path)
         case .simulator:
@@ -155,7 +167,14 @@ enum Composition {
     #if os(macOS)
         /// Flashing keeps the Mac awake.
         private static func firmwareFlasher() -> (any FirmwareFlashing)? {
-            guard !firmwareChoices.isEmpty, let stub = try? FlasherStub.esp32() else { return nil }
+            guard !firmwareChoices.isEmpty else {
+                diagnostics.log(.error, .firmware, "The app has no firmware to offer")
+                return nil
+            }
+            guard let stub = try? FlasherStub.esp32() else {
+                diagnostics.log(.error, .firmware, "The flasher stub could not be read")
+                return nil
+            }
             let flasher = FirmwareFlasher(stub: stub, clock: ContinuousClock()) {
                 SerialBootloaderPort(port: POSIXSerialPort(path: $0), clock: ContinuousClock())
             }

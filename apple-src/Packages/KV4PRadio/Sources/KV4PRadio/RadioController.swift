@@ -93,6 +93,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     public static var defaultScanSquelch: UInt8 { 7 }
     /// How long the radio has to report that it transmits, before the access tone gives up.
     public static var accessToneOnAirTimeout: Duration { .seconds(2) }
+    /// A short wait for room in the window is normal; one this long is worth a line in the log.
+    public static var stallLogDelay: Duration { .seconds(2) }
 
     public nonisolated let snapshots: AsyncStream<RadioSnapshot>
     /// AX.25 frames (without FCS) the radio decoded on air, e.g. APRS; the newest are kept if nobody reads.
@@ -136,6 +138,23 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     private var helloTimer: Task<Void, Never>?
     /// Numbers connection attempts, so a timer of an earlier attempt cannot fail a later one.
     private var attempt = 0
+    private let diagnostics: DiagnosticLog?
+    /// Frames that could not be read in this session.
+    private var unreadableFrames = 0
+    private var didLogSendFailure = false
+    /// Logs when the radio leaves no room for longer than `stallLogDelay`.
+    private var stallTimer: Task<Void, Never>?
+    private var isStalled = false
+    /// For the summary each minute, with detailed logging.
+    private var traffic = Traffic()
+    private var lastTrafficLog: C.Instant?
+
+    private struct Traffic {
+        var framesIn = 0
+        var bytesIn = 0
+        var framesOut = 0
+        var bytesOut = 0
+    }
 
     public init(
         transport: any RadioTransport,
@@ -143,8 +162,10 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         helloTimeout: Duration = defaultHelloTimeout,
         rxAudio: (any RXAudioSink)? = nil,
         microphone: (any AudioInput)? = nil,
-        digitalVoice: @escaping @Sendable () -> FreeDVVoice? = { FreeDVVoice() }
+        digitalVoice: @escaping @Sendable () -> FreeDVVoice? = { FreeDVVoice() },
+        diagnostics: DiagnosticLog? = nil
     ) {
+        self.diagnostics = diagnostics
         self.transport = transport
         self.clock = clock
         self.helloTimeout = helloTimeout
@@ -171,6 +192,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     // MARK: Session
 
     public func connect() async {
+        unreadableFrames = 0
+        didLogSendFailure = false
         microphone?.prepare()
         startTasks()
         parser = KISSParser()
@@ -403,6 +426,15 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     /// `txAX25PacketOnFrequency`: sends one AX.25 frame (without FCS) on `frequency` with the current bandwidth and
     /// TX tone; the radio returns to its RX configuration afterwards. Only while receiving, as on Android.
     public func transmitAX25(_ frame: [UInt8], frequency: Float) throws(RadioError) {
+        do throws(RadioError) {
+            try queueAX25(frame, frequency: frequency)
+        } catch {
+            diagnostics?.log(.error, .aprs, "Sending a packet failed: \(error)")
+            throw error
+        }
+    }
+
+    private func queueAX25(_ frame: [UInt8], frequency: Float) throws(RadioError) {
         guard snapshot.status == .ready, let firmware = desiredState.firmware else { throw .notReady }
         guard !isCapturing, scanList == nil else { throw .busy }
         let desired = desiredState.desired
@@ -440,6 +472,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             samples = try await microphone.start()
         } catch {
             isCapturing = false
+            diagnostics?.log(.error, .transmit, "Microphone: \(DiagnosticLog.describe(error))")
             throw .microphoneUnavailable
         }
         guard current == transmission else { return microphone.stop() }  // ended while the microphone started
@@ -548,6 +581,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
 
     private func runawayTimedOut(transmission timedOut: Int) {
         guard timedOut == transmission else { return }
+        diagnostics?.log(.error, .transmit, "The transmission reached its time limit and was ended")
         stopTransmitting()
     }
 
@@ -574,7 +608,10 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     // MARK: Device → host
 
     private func receive(_ chunk: [UInt8]) async {
+        traffic.bytesIn += chunk.count
+        logTraffic()
         for frame in parser.process(chunk) {
+            traffic.framesIn += 1
             switch frame {
             case .command(.hello, let payload):
                 await handleHello(payload)
@@ -584,6 +621,8 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
                     applyTXRule()
                     flush()
                     checkScan()
+                } else {
+                    noteUnreadableFrame("device state")
                 }
             case .ax25(let frame) where snapshot.status == .ready:
                 receivedFramesContinuation.yield(frame)
@@ -594,11 +633,38 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
             case .command(.windowUpdate, let payload):
                 if let update = try? WindowUpdate(decoding: payload) {
                     await window.enlarge(by: Int(update.size))
+                } else {
+                    noteUnreadableFrame("window update")
                 }
             default:
                 break  // debug output is not shown
             }
         }
+    }
+
+    /// The first of a session, and then now and then, as a poor connection can bring many.
+    private func noteUnreadableFrame(_ kind: String) {
+        unreadableFrames += 1
+        if unreadableFrames == 1 || unreadableFrames.isMultiple(of: 100) {
+            diagnostics?.log(.error, .connection, "Unreadable \(kind), \(unreadableFrames) in this session")
+        }
+    }
+
+    private func logTraffic() {
+        let now = clock.now
+        guard let last = lastTrafficLog else {
+            lastTrafficLog = now
+            return
+        }
+        guard last.duration(to: now) >= .seconds(60) else { return }
+        lastTrafficLog = now
+        diagnostics?.log(
+            .detail,
+            .connection,
+            "Traffic in the last minute: in \(traffic.framesIn) frames, \(traffic.bytesIn) bytes; "
+                + "out \(traffic.framesOut) frames, \(traffic.bytesOut) bytes"
+        )
+        traffic = Traffic()
     }
 
     /// The nightly build reports the same version as the released firmware 17; only it has the FreeDV modem.
@@ -650,6 +716,7 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Queues the pending desired states; the sender writes them in order within the flow-control window.
     private func flush() {
         if isKeyed, !desiredState.desired.flags.contains(.pttRequested) {
+            diagnostics?.log(.info, .transmit, "The radio released PTT")
             endTransmission()  // the device released PTT
         }
         for state in desiredState.takeOutgoing() {
@@ -661,8 +728,43 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
     /// Frames are sent one at a time, in order.
     private func send(_ frame: [UInt8]) async {
         // Failures mean the transport is gone; the next HELLO resyncs the state.
+        await watchForStall(frame.count)
         try? await window.reserve(frame.count)
-        try? await transport.send(frame)
+        endStallWatch()
+        traffic.framesOut += 1
+        traffic.bytesOut += frame.count
+        do {
+            try await transport.send(frame)
+        } catch {
+            if !didLogSendFailure {
+                didLogSendFailure = true
+                diagnostics?.log(.error, .connection, "Sending failed: \(error)")
+            }
+        }
+    }
+
+    /// Only when the radio leaves no room, so that sending normally costs nothing.
+    private func watchForStall(_ size: Int) async {
+        guard await window.available < size else { return }
+        let clock = clock
+        stallTimer = Task { [weak self] in
+            guard (try? await clock.sleep(for: Self.stallLogDelay)) != nil else { return }
+            await self?.noteStall()
+        }
+    }
+
+    private func noteStall() {
+        isStalled = true
+        diagnostics?.log(.error, .connection, "The radio has left no room to send for a while")
+    }
+
+    private func endStallWatch() {
+        stallTimer?.cancel()
+        stallTimer = nil
+        if isStalled {
+            isStalled = false
+            diagnostics?.log(.info, .connection, "The radio has room to send again")
+        }
     }
 
     private func fail(_ failure: RadioFailure) {
@@ -699,7 +801,8 @@ extension RadioController where C == ContinuousClock {
         helloTimeout: Duration = defaultHelloTimeout,
         rxAudio: (any RXAudioSink)? = nil,
         microphone: (any AudioInput)? = nil,
-        digitalVoice: @escaping @Sendable () -> FreeDVVoice? = { FreeDVVoice() }
+        digitalVoice: @escaping @Sendable () -> FreeDVVoice? = { FreeDVVoice() },
+        diagnostics: DiagnosticLog? = nil
     ) {
         self.init(
             transport: transport,
@@ -707,7 +810,8 @@ extension RadioController where C == ContinuousClock {
             helloTimeout: helloTimeout,
             rxAudio: rxAudio,
             microphone: microphone,
-            digitalVoice: digitalVoice
+            digitalVoice: digitalVoice,
+            diagnostics: diagnostics
         )
     }
 }

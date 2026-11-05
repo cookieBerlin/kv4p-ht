@@ -9,7 +9,8 @@ public protocol LogStoring: Sendable {
 }
 
 /// What the app did, for a report on a problem (ADR-0059). A line never holds message texts, positions, callsigns,
-/// passwords or the names of memories and radios, and the real-time audio paths do not log.
+/// passwords or the names of memories and radios, and the real-time audio paths do not log. Frequencies and times are
+/// not private, as amateur radio is on air for everyone.
 public final class DiagnosticLog: Sendable {
     public enum Level: String, Sendable {
         case error = "ERROR"
@@ -18,7 +19,7 @@ public final class DiagnosticLog: Sendable {
     }
 
     public enum Category: String, Sendable {
-        case app, connection, transmit, audio, permissions, sync, firmware, aprs, storage
+        case app, connection, transmit, audio, permissions, sync, firmware, aprs, storage, location
     }
 
     private let store: any LogStoring
@@ -40,9 +41,10 @@ public final class DiagnosticLog: Sendable {
         let time = now()
         guard level != .detail || time < detailedUntilMs else { return }
         let date = Date(timeIntervalSince1970: Double(time) / 1000).ISO8601Format()
-        store.append("\(date) \(level.rawValue) \(category.rawValue): \(text)", atMs: time)
+        let line = Self.redacted(text)
+        store.append("\(date) \(level.rawValue) \(category.rawValue): \(line)", atMs: time)
         Logger(subsystem: "io.github.cookieberlin.kv4pht", category: category.rawValue)
-            .log(level: level == .error ? .error : .info, "\(text, privacy: .public)")
+            .log(level: level == .error ? .error : .info, "\(line, privacy: .public)")
     }
 
     public func read() -> String {
@@ -51,6 +53,15 @@ public final class DiagnosticLog: Sendable {
 
     public func deleteAll() {
         store.deleteAll()
+    }
+
+    /// A serial port's name can hold a serial number, and a path the user's name; every line passes here.
+    static func redacted(_ text: String) -> String {
+        text.replacingOccurrences(
+            of: #"/(dev|Users|var|private|tmp)/[^\s,)"']*"#,
+            with: "[path]",
+            options: .regularExpression
+        )
     }
 
     /// The text of an error can hold a path with the user's name, so it is told by its domain and code.
@@ -162,74 +173,6 @@ public final class LogFile: LogStoring, @unchecked Sendable {
         let kept = names().filter { $0 == name || $0 >= "kv4p-\(oldest)-" }.suffix(Self.keptFiles)
         for old in Set(names()).subtracting(kept) {
             try? FileManager.default.removeItem(at: folder.appending(path: old))
-        }
-    }
-}
-
-/// Crash data from the system, until it is reported or deleted (ADR-0059). A new one is offered once.
-public final class CrashReportStore: Sendable {
-    private static let kept = 5
-
-    private let folder: URL
-
-    public init(folder: URL) {
-        self.folder = folder
-    }
-
-    private var newFolder: URL { folder.appending(path: "new") }
-
-    private func names(in folder: URL) -> [String] {
-        ((try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []).sorted()
-    }
-
-    /// Whether this crash was not known yet. The name starts with a number, so names sort by age; `id` comes from the
-    /// system and is the way to know a report again.
-    @discardableResult
-    public func add(id: String, json: String) -> Bool {
-        let name = "\(String(format: "%010d", nextNumber() + 1))-\(id).json"
-        let known = (names(in: folder) + names(in: newFolder)).contains { $0.hasSuffix("-\(id).json") }
-        guard !known else { return false }
-        try? FileManager.default.createDirectory(at: newFolder, withIntermediateDirectories: true)
-        try? Data(json.utf8).write(to: newFolder.appending(path: name))
-        trim()
-        return true
-    }
-
-    private func nextNumber() -> Int {
-        (names(in: folder) + names(in: newFolder)).compactMap { Int($0.prefix(10)) }.max() ?? 0
-    }
-
-    private func trim() {
-        let all = (reports(in: folder) + reports(in: newFolder)).sorted { $0.lastPathComponent < $1.lastPathComponent }
-        for old in all.dropLast(Self.kept) {
-            try? FileManager.default.removeItem(at: old)
-        }
-    }
-
-    private func reports(in folder: URL) -> [URL] {
-        names(in: folder).filter { $0.hasSuffix(".json") }.map { folder.appending(path: $0) }
-    }
-
-    public var hasNew: Bool {
-        !reports(in: newFolder).isEmpty
-    }
-
-    public func markSeen() {
-        for report in reports(in: newFolder) {
-            try? FileManager.default.moveItem(at: report, to: folder.appending(path: report.lastPathComponent))
-        }
-    }
-
-    /// Oldest first.
-    public func all() -> [String] {
-        (reports(in: folder) + reports(in: newFolder))
-            .sorted { $0.lastPathComponent < $1.lastPathComponent }
-            .compactMap { try? String(contentsOf: $0, encoding: .utf8) }
-    }
-
-    public func deleteAll() {
-        for report in reports(in: folder) + reports(in: newFolder) {
-            try? FileManager.default.removeItem(at: report)
         }
     }
 }

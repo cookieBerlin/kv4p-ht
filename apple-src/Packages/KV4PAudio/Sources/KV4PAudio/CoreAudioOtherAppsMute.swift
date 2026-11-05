@@ -1,6 +1,7 @@
 #if os(macOS)
     import CoreAudio
     import Foundation
+    import KV4PDiagnostics
     import os
 
     /// Silences all other apps on a Mac through a Core Audio tap, which silences them only while it is read. Without
@@ -22,7 +23,10 @@
         private var proc: AudioDeviceIOProcID?
         private var outputChanged: AudioObjectPropertyListenerBlock?
 
-        public init() {
+        private let diagnostics: DiagnosticLog?
+
+        public init(diagnostics: DiagnosticLog? = nil) {
+            self.diagnostics = diagnostics
             let outputChanged: AudioObjectPropertyListenerBlock = { [weak self] _, _ in self?.rebuild() }
             self.outputChanged = outputChanged
             var output = Self.address(kAudioHardwarePropertyDefaultOutputDevice)
@@ -88,7 +92,7 @@
                         try startTap()
                         done.resume()
                     } catch {
-                        Self.log.error("other audio: mute failed: \(String(describing: error), privacy: .public)")
+                        diagnostics?.log(.error, .audio, "other audio: mute failed: \(String(describing: error))")
                         stop()
                         done.resume(throwing: error)
                     }
@@ -103,8 +107,10 @@
             do {
                 try startTap()
             } catch {
-                Self.log.error(
-                    "other audio: mute failed after a change of output: \(String(describing: error), privacy: .public)"
+                diagnostics?.log(
+                    .error,
+                    .audio,
+                    "other audio: mute failed after a change of output: \(String(describing: error))"
                 )
                 stop()
             }

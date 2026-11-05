@@ -330,7 +330,8 @@ cannot. With *Pause podcasts, lower music*, a podcast that returns after a trans
 
 ### HW-39
 
-*About*, *Report a problem*: *Show the report* lists your connection with its firmware, and neither your callsign,
-message texts nor positions. Share the file, and open the prepared issue without sending it. *Detailed logging* adds
+*About*, *Report a problem*: *Show the report* lists your connection with its firmware and frequencies, and neither your
+callsign, message texts, positions, the port's name nor other apps' names. Switch the radio off while connected over
+Bluetooth: the report gives a reason. Stop iCloud with a failed sync, if you can: the report gives its code. Share the file, and open the prepared issue without sending it. *Detailed logging* adds
 packets by their kind. Delete the log: the report starts anew. On a TestFlight build, after a crash, the app asks once
 at a later start whether to report it; when the system delivers this is up to the system, so it can take a while.

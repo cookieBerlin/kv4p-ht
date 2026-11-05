@@ -107,6 +107,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self = data.flatMap { try? JSONDecoder().decode(AppSettings.self, from: $0) } ?? AppSettings()
     }
 
+    /// Stored settings are there, but as a whole cannot be read, so all fall back to their defaults.
+    public static func isUnreadable(_ data: Data?) -> Bool {
+        guard let data else { return false }
+        return (try? JSONDecoder().decode(AppSettings.self, from: data)) == nil
+    }
+
     public func encoded() throws -> Data {
         try JSONEncoder().encode(self)
     }
