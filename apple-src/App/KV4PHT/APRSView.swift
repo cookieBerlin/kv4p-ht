@@ -34,11 +34,14 @@ struct APRSView: View {
             case .packets: APRSPacketList(model: model, list: .main)
             case .chats: APRSChatsView(model: model)
             }
-            Divider()
-            if model.canSendOnAir {
-                composer.padding(8)
-            } else if let blocked = model.transmitBlockedText {
-                Text(blocked).font(.footnote).foregroundStyle(.secondary).padding(8)
+            // A chat has its own line to write.
+            if model.aprsPage == .packets {
+                Divider()
+                if model.canSendOnAir {
+                    composer.padding(8)
+                } else if let blocked = model.transmitBlockedText {
+                    Text(blocked).font(.footnote).foregroundStyle(.secondary).padding(8)
+                }
             }
         }
         .onAppear {

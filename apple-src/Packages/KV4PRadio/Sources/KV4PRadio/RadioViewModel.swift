@@ -1486,13 +1486,19 @@ public final class RadioViewModel {
 
     /// `sendChatMessage`: `|`, `~` and `{` become spaces; without a recipient the message is the bulletin BLN1CQ.
     public func sendAPRSMessage(to recipient: String, text: String) {
+        post(to: recipient, text: text)
+    }
+
+    /// Whether the message went out, or at least waits for its acknowledgement.
+    @discardableResult
+    private func post(to recipient: String, text: String) -> Bool {
         guard !callsign.isEmpty else {
             message = "Set your callsign to send APRS messages."
-            return
+            return false
         }
         guard canSendOnAir else {
             message = Self.listenOnlyText
-            return
+            return false
         }
         let cleaned = String(text.map { "|~{".contains($0) ? " " : $0 })
         let to = recipient.trimmingCharacters(in: .whitespaces).isEmpty ? "BLN1CQ" : recipient
@@ -1507,6 +1513,57 @@ public final class RadioViewModel {
         )
         if !posted {
             message = "The APRS message was not accepted for transmission."
+        }
+        showAPRS()
+        return posted
+    }
+
+    // MARK: Writing in chats
+
+    /// How much text a message to `peer` can hold without being cut.
+    public func chatTextLimit(for peer: String) -> Int {
+        APRSChats.textLimit(to: peer)
+    }
+
+    public func sendChatMessage(_ text: String, to peer: String) {
+        post(to: peer, text: String(text.prefix(chatTextLimit(for: peer))))
+    }
+
+    /// An own message that was not delivered, which is never sent again by itself.
+    public func canResend(_ event: APRSEvent) -> Bool {
+        canSendOnAir && event.kind == .message && !event.isResent
+            && event.fromCallsign.uppercased() == callsign.uppercased()
+            && [.failed, .rejected].contains(event.deliveryState)
+    }
+
+    /// Sends the text again as a new message, which takes the old one's place in the chat.
+    public func resend(_ event: APRSEvent) {
+        guard canResend(event), let to = event.toCallsign, let text = event.body, post(to: to, text: text) else {
+            return
+        }
+        aprs.markResent(id: event.id)
+        if !aprs.events.contains(where: { $0.id == event.id }) {
+            // Only in the store any more, so it is saved here.
+            var marked = event
+            marked.markResent()
+            let entries = [marked].compactMap(Self.entry)
+            withAPRSHistory { try await $0.save(entries) }
+        }
+        chatEvents[event.id] = nil
+        showAPRS()
+    }
+
+    /// The messages of a chat go, also from the packets and the store.
+    public func deleteChat(with peer: String) {
+        let ids = Set((Array(chatEvents.values) + aprs.events).filter { chatPeer(of: $0) == peer }.map(\.id))
+        forget(ids)
+        withAPRSHistory { history in
+            for id in ids {
+                try await history.delete(id: id)
+            }
+        }
+        if openChat == peer {
+            openChat = nil
         }
         showAPRS()
     }
@@ -1737,8 +1794,8 @@ public final class RadioViewModel {
     }
 
     private func showChats() {
-        for event in aprs.events where chatPeer(of: event) != nil {
-            chatEvents[event.id] = event
+        for event in aprs.events {
+            chatEvents[event.id] = chatPeer(of: event) == nil ? nil : event
         }
         conversations = APRSChats.conversations(
             in: Array(chatEvents.values),
@@ -2007,14 +2064,21 @@ public final class RadioViewModel {
     }
 
     public func deleteAPRSEvent(_ event: APRSEvent) {
-        aprs.removeEvents { $0.id == event.id }
-        for list in APRSList.allCases {
-            self[list].older.removeAll { $0.id == event.id }
-        }
-        storedAPRSEvents[event.id] = nil
-        chatEvents[event.id] = nil
+        forget([event.id])
         withAPRSHistory { try await $0.delete(id: event.id) }
         showAPRS()
+    }
+
+    /// Takes events out of memory and the lists; the store is up to the caller.
+    private func forget(_ ids: Set<Int64>) {
+        aprs.removeEvents { ids.contains($0.id) }
+        for list in APRSList.allCases {
+            self[list].older.removeAll { ids.contains($0.id) }
+        }
+        for id in ids {
+            storedAPRSEvents[id] = nil
+            chatEvents[id] = nil
+        }
     }
 
     public func deleteAllAPRSEvents() {
