@@ -591,6 +591,8 @@ private struct AccessToneButton: View {
                 ),
                 let player = try? engine.makePlayer(with: pattern)
             else { return nil }
+            // Haptics only: otherwise the engine also takes part in the app's audio session, which carries the radio.
+            engine.playsHapticsOnly = true
             self.engine = engine
             self.player = player
         }
