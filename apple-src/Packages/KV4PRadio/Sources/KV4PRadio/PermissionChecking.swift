@@ -1,6 +1,6 @@
 /// A system permission the app needs for part of its functions (ADR-0040).
 public enum Permission: CaseIterable, Sendable {
-    case bluetooth, microphone, location
+    case bluetooth, microphone, location, notifications
 
     /// What the app cannot do without the permission.
     public var deniedMessage: String {
@@ -8,6 +8,7 @@ public enum Permission: CaseIterable, Sendable {
         case .bluetooth: "Bluetooth access is not allowed, so the app cannot reach a radio over Bluetooth."
         case .microphone: "Microphone access is not allowed, so the app cannot transmit."
         case .location: "Location access is not allowed, so the app cannot send position beacons."
+        case .notifications: "Notifications are not allowed, so messages to you stay in the app."
         }
     }
 }

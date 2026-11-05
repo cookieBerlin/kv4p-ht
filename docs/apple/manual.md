@@ -296,6 +296,12 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
+**Answering and new messages:** a tap on a message fills in the other station as the recipient, and *Reply* in
+the ⋯ menu of its row does the same, also from the *Packets* page. On an iPhone, a number on the APRS page shows
+new messages to your callsign, with any SSID, until you open it. While the app is in the background, each of them
+brings a notification with its sender and text. The app must be running for this, so nothing arrives after it has
+ended. *Notify about messages to me* under ⚙ **Settings**, *APRS*, *History* turns this off.
+
 **History:** under ⚙ **Settings**, *APRS*, *History*, *Keep packets* keeps the list across restarts, for 1, 7
 or 30 days or without limit, 30 by default. The packets stay on this device and are not synced. Packets only
 from the internet can be many, so they stay only with *Keep internet packets* on; messages to or from you

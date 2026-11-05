@@ -5,8 +5,8 @@ import SwiftUI
 /// The APRS packets heard on air, newest first, and a line to send messages; the settings are in `SettingsView`.
 struct APRSView: View {
     @Bindable var model: RadioViewModel
-    @State private var recipient = ""
     @State private var text = ""
+    @FocusState private var isWriting: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,19 +38,21 @@ struct APRSView: View {
             sendButton.labelStyle(.iconOnly)
         }
         .textFieldStyle(.roundedBorder)
+        .onChange(of: model.aprsReplyCount) { isWriting = true }
     }
 
     private var recipientField: some View {
         // iOS: a phone has room for the short label only.
         #if os(macOS)
-            TextField("To (empty: bulletin)", text: $recipient)
+            TextField("To (empty: bulletin)", text: $model.aprsRecipient)
         #else
-            TextField("To", text: $recipient)
+            TextField("To", text: $model.aprsRecipient)
         #endif
     }
 
     private var messageField: some View {
         TextField("Message", text: $text)
+            .focused($isWriting)
             .onSubmit(send)
     }
 
@@ -61,7 +63,7 @@ struct APRSView: View {
 
     private func send() {
         guard !text.isEmpty else { return }
-        model.sendAPRSMessage(to: recipient, text: text)
+        model.sendAPRSMessage(to: model.aprsRecipient, text: text)
         text = ""
     }
 }

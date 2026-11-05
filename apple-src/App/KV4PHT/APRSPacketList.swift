@@ -4,6 +4,10 @@ import KV4PRadio
 import SwiftUI
 import UniformTypeIdentifiers
 
+#if os(macOS)
+    import AppKit
+#endif
+
 /// The icon after the text, for a link that leaves the app.
 private struct TrailingIcon: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -250,6 +254,9 @@ struct APRSPacketList: View {
                     Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: Self.timeStyle(event))
                         .foregroundStyle(.secondary)
                     Menu {
+                        if model.canReply(to: event) {
+                            Button("Reply", systemImage: "arrowshape.turn.up.left") { reply(to: event) }
+                        }
                         Button("Delete", systemImage: "trash", role: .destructive) { model.deleteAPRSEvent(event) }
                     } label: {
                         Image(systemName: "ellipsis")
@@ -273,7 +280,24 @@ struct APRSPacketList: View {
                 }
             }
         }
+        .contentShape(.rect)
+        .onTapGesture {
+            // Not on the packets page, where a stray tap would leave it.
+            if list == .main {
+                model.reply(to: event)
+            }
+        }
         .textSelection(.enabled)
+    }
+
+    /// From the packets page, this goes back to the main page, where the message is written.
+    private func reply(to event: APRSEvent) {
+        model.reply(to: event)
+        #if os(macOS)
+            if list == .packetsPage {
+                NSApp.keyWindow?.close()
+            }
+        #endif
     }
 
     /// Whether the packet stays when the app ends: filled if it does.

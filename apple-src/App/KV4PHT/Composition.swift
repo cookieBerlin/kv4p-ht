@@ -45,6 +45,7 @@ enum Composition {
             syncedSettings: UbiquitousSettingsStore(),
             bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
             failureAlerts: PlatformFailureAlerts(),
+            messageNotifier: SystemMessageNotifier(),
             permissions: SystemPermissions(),
             simulator: simulator
         )

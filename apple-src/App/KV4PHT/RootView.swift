@@ -36,7 +36,9 @@ struct RootView: View {
             }
             .onAppear { model.refreshConnections() }
             .onChange(of: scenePhase, initial: true) {
-                model.isAppActive = scenePhase == .active
+                #if os(iOS)
+                    model.isAppActive = scenePhase == .active
+                #endif
                 if scenePhase == .active {
                     model.refreshPermissions()  // the user may return from the system settings
                     model.startBluetoothScan()
@@ -45,6 +47,15 @@ struct RootView: View {
                     model.flushSettingsSync()
                 }
             }
+            #if os(macOS)
+                // The scene stays active behind another app here, where a window is still on screen.
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    model.isAppActive = true
+                }
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+                    model.isAppActive = false
+                }
+            #endif
             .task { await model.loadMemories() }
             .sheet(isPresented: .constant(model.isStationSetupPending)) { StationSetupView(model: model) }
     }
@@ -112,6 +123,7 @@ struct RootView: View {
                     NavigationStack { SettingsView(model: model) }.tag(Page.settings)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                .onChange(of: model.aprsReplyCount) { withAnimation { page = .aprs } }
                 if page == .settings {
                     if model.hasFailed {
                         StatusLine(model: model).padding(.vertical, 6)
@@ -124,6 +136,17 @@ struct RootView: View {
             }
         }
 
+        /// The number of new messages on the APRS page (ADR-0058).
+        private var newMessages: some View {
+            Text(model.newAPRSMessages, format: .number)
+                .font(.caption2.bold())
+                .foregroundStyle(.white)
+                .padding(.horizontal, 4)
+                .background(.red, in: .capsule)
+                .fixedSize()
+                .offset(x: 10, y: -6)
+        }
+
         private var pageBar: some View {
             HStack {
                 ForEach(Page.allCases) { item in
@@ -131,11 +154,20 @@ struct RootView: View {
                         withAnimation { page = item }
                     } label: {
                         VStack(spacing: 2) {
-                            Image(systemName: item.symbol).font(.title3)
+                            Image(systemName: item.symbol)
+                                .font(.title3)
+                                .overlay(alignment: .topTrailing) {
+                                    if item == .aprs, model.newAPRSMessages > 0 {
+                                        newMessages
+                                    }
+                                }
                             Text(item.title).font(.caption2)
                         }
                         .frame(maxWidth: .infinity)
                     }
+                    .accessibilityValue(
+                        item == .aprs && model.newAPRSMessages > 0 ? "\(model.newAPRSMessages) new" : ""
+                    )
                     .foregroundStyle(page == item ? Color.accentColor : Color.secondary)
                     .accessibilityAddTraits(page == item ? .isSelected : [])
                 }
