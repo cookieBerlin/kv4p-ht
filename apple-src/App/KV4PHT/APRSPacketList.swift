@@ -48,6 +48,7 @@ struct APRSPacketList: View {
     @State private var isExporting = false
     @State private var isOnScreen = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isPageOnScreen) private var isPageOnScreen
 
     private var events: [APRSEvent] { model.aprsEvents(in: list) }
     private var filter: APRSListFilter { model.aprsFilter(in: list) }
@@ -67,6 +68,7 @@ struct APRSPacketList: View {
             updateVisibility()
         }
         .onChange(of: scenePhase) { updateVisibility() }
+        .onChange(of: isPageOnScreen) { updateVisibility() }
         .onChange(of: search) {
             guard search != filter.callsign else { return }
             setFilter { $0.callsign = search }
@@ -84,7 +86,7 @@ struct APRSPacketList: View {
     private func updateVisibility() {
         // The main page says so for packets and chats together, in `APRSView`.
         if list == .packetsPage {
-            model.isPacketsPageVisible = isOnScreen && scenePhase == .active
+            model.isPacketsPageVisible = isOnScreen && isPageOnScreen && scenePhase == .active
         }
     }
 
