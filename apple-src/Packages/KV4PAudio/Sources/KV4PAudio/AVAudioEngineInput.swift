@@ -90,7 +90,8 @@
             converter.downmix = true
             let (samples, continuation) = AsyncStream.makeStream(of: [Int16].self)
             let ratio = format.sampleRate / inputFormat.sampleRate
-            input.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { buffer, _ in
+            // The SDK gives the call that replaces `installTap` no plain Swift name yet.
+            try input.__installTap(onBus: 0, bufferSize: 1024, format: inputFormat, error: ()) { buffer, _ in
                 let capacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 1
                 guard let output = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { return }
                 nonisolated(unsafe) var consumed = false

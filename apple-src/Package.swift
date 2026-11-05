@@ -5,8 +5,8 @@ import PackageDescription
 let package = Package(
     name: "KV4P",
     platforms: [
-        .macOS("26.0"),
-        .iOS("26.0"),
+        .macOS("27.0"),
+        .iOS("27.0"),
     ],
     products: [
         .library(name: "KV4PProtocol", targets: ["KV4PProtocol"]),

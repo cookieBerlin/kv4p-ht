@@ -4,7 +4,7 @@ Applies in addition to the root [`CLAUDE.md`](../CLAUDE.md).
 
 ## Platforms
 
-- macOS 26+ on Apple Silicon (phase 1), iOS 26+ and iPadOS 26+ (phase 2).
+- macOS 27+ on Apple Silicon (phase 1), iOS 27+ and iPadOS 27+ (phase 2).
 - One native SwiftUI multiplatform app, no Mac Catalyst
   ([ADR-0012](../docs/apple/adr/0012-platform-strategy.md)).
 - Bundle identifier `io.github.cookieberlin.kv4pht`, defined only in

@@ -37,7 +37,7 @@
                 return noErr
             }
             engine.attach(source)
-            engine.connect(source, to: engine.mainMixerNode, format: format)
+            try engine.connectNode(source, to: engine.mainMixerNode, format: format)
             // The engine stops when the output device changes (e.g. headphones); it continues on the new one.
             let observer = NotificationCenter.default.addObserver(
                 forName: .AVAudioEngineConfigurationChange,
