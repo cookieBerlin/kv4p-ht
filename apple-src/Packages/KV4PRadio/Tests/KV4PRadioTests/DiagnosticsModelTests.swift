@@ -267,7 +267,7 @@ struct DiagnosticsModelTests {
         #expect(setup.store.read().contains("Scan refused: notReady"))
         #expect(!setup.store.read().contains("Private name"))
         await setup.model.disconnect()
-        #expect(setup.store.read().contains("RX audio so far: 0 underruns, 0 dropped samples"))
+        #expect(setup.store.read().contains("RX audio so far: received 0, played 0 samples, 0 underruns, 0 dropped"))
     }
 
     @Test("stored settings that cannot be read are logged, and the start says how the app is set up")
@@ -352,7 +352,7 @@ struct DiagnosticsModelTests {
         await model.disconnect()
     }
 
-    @Test("gaps in the sound are logged each minute, only when there are new ones")
+    @Test("the sound of each minute is logged, as an error of rate shows in received and played samples")
     func rxAudio() async {
         let setup = Setup()
         setup.model.selectedConnection = .simulator
@@ -364,8 +364,8 @@ struct DiagnosticsModelTests {
         #expect(
             await KV4PTestSupport.eventually {
                 setup.time.advance(by: 60_000)
-                return setup.text.contains("RX audio so far: 0 underruns, ")
-                    && !setup.text.contains(", 0 dropped samples")
+                return setup.text.contains("INFO audio: RX audio in the last minute: received ")
+                    && !setup.text.contains("underruns, 0 dropped")
             }
         )
     }
@@ -455,6 +455,75 @@ struct DiagnosticsModelTests {
         setup.model.refreshPermissions()
         let lines = setup.text.components(separatedBy: "\n").filter { $0.contains("permissions: Allowed: location") }
         #expect(lines.count == 1)
+    }
+
+    @Test("a minute without gaps in the sound goes to the detailed log only")
+    func quietMinute() async {
+        let setup = Setup()
+        setup.model.isDetailedLogging = true
+        setup.model.selectedConnection = .simulator
+        await setup.model.connect()
+        #expect(
+            await KV4PTestSupport.eventually {
+                setup.time.advance(by: 60_000)
+                return setup.text.contains("DETAIL audio: RX audio in the last minute: received ")
+            }
+        )
+    }
+
+    @Test("messages that come back from the store are known, so a start logs no change of their delivery")
+    func deliveryAfterRestart() async throws {
+        let history = try SwiftDataAPRSHistory.inMemory()
+        var controller = APRSController(startMs: 0)
+        controller.callsign = "N0CALL"
+        controller.txDestination = "APKVPA"
+        _ = controller.post(
+            to: "N1CALL",
+            text: "Hi",
+            frequencyHz: nil,
+            atMs: 1,
+            transmit: { _ in .accepted(frequencyHz: 144_800_000, frame: []) },
+            gate: { _ in false }
+        )
+        let event = controller.events[0]
+        try await history.save([
+            APRSHistoryEntry(
+                id: event.id,
+                lastSeenMs: event.lastSeenMs,
+                kind: event.kind.rawValue,
+                fromCallsign: event.fromCallsign,
+                toCallsign: event.toCallsign,
+                isInternetOnly: false,
+                payload: try JSONEncoder().encode(event)
+            )
+        ])
+        let store = MemoryLogStore()
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            aprsHistory: history,
+            diagnostics: DiagnosticLog(store: store, now: { 1_000_000 }),
+            now: { 1_000_000 }
+        )
+        model.callsign = "N0CALL"
+        #expect(await KV4PTestSupport.eventually { model.messages(with: "N1CALL").first?.deliveryState == .failed })
+        #expect(!store.read().contains("aprs: Message"))
+    }
+
+    @Test("the report names the last firmware also after a restart")
+    func firmwareAfterRestart() async {
+        let setup = Setup()
+        setup.model.selectedConnection = .simulator
+        await setup.model.connect()
+        #expect(await setup.waits(for: "Firmware "))
+        let restarted = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            settings: MemorySettingsStore(setup.settings.settings)
+        )
+        let report = restarted.problemReport(in: Self.environment)
+        #expect(report.contains("Firmware: 17, module sa818VHF"))
+        #expect(!SettingsSync.values(of: AppSettings()).keys.contains("lastFirmware"))
     }
 }
 

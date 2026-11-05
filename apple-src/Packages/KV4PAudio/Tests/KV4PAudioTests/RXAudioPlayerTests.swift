@@ -74,7 +74,16 @@ struct RXAudioPlayerTests {
         let player = RXAudioPlayer(buffer: JitterBuffer(prefill: 1, capacity: 4))
         player.receive(block: Self.block)
         _ = player.render(8)
-        #expect(player.statistics == RXAudioPlayer.Statistics(buffered: 0, underruns: 1, droppedSamples: 1))
+        #expect(
+            player.statistics
+                == RXAudioPlayer.Statistics(
+                    buffered: 0,
+                    underruns: 1,
+                    droppedSamples: 1,
+                    receivedSamples: 5,
+                    requestedSamples: 8
+                )
+        )
     }
 
     @Test("reset discards the buffered audio")
