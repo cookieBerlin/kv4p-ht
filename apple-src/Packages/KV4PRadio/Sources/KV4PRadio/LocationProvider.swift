@@ -9,6 +9,14 @@ public struct GeoPoint: Equatable, Sendable {
     }
 }
 
+/// Keeps the location available while the app is in the background, on a platform that needs it (ADR-0056).
+@MainActor
+public protocol BackgroundLocationKeeping {
+    /// Can only begin in the foreground.
+    func start()
+    func stop()
+}
+
 /// The device location for position beacons; implemented by the OS adapter (`CoreLocationProvider`).
 public protocol LocationProvider: Sendable {
     /// Asks for permission if needed; `nil` when the location is unknown or not allowed.

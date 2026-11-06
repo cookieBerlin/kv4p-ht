@@ -11,6 +11,7 @@
 	<array>
 		<string>audio</string>
 		<string>bluetooth-central</string>
+		<string>location</string>
 		<string>remote-notification</string>
 	</array>
 </dict>

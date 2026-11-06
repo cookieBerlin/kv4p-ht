@@ -230,6 +230,7 @@ public final class RadioViewModel {
             updateInternet()
             saveSettings()
             endTransmissionIfBlocked()
+            updateBeaconSession()
         }
     }
     /// The app does not transmit, by the user's choice; the iGate and the feed stay available (ADR-0047).
@@ -237,6 +238,7 @@ public final class RadioViewModel {
         didSet {
             saveSettings()
             endTransmissionIfBlocked()
+            updateBeaconSession()
         }
     }
     /// Asked once, at a start without a callsign or listen-only, not while the callsign is edited in the settings.
@@ -317,8 +319,29 @@ public final class RadioViewModel {
                 nextBeaconAtMs = 0
             }
             saveSettings()
+            updateBeaconSession()
         }
     }
+    /// How often the beacon goes out; a shorter time counts from now.
+    public var beaconIntervalMinutes = 5 {
+        didSet {
+            nextBeaconAtMs = min(nextBeaconAtMs, now() + beaconIntervalMs)
+            saveSettings()
+        }
+    }
+    /// The beacon goes on with the screen locked, where the system would stop it otherwise.
+    public var isBackgroundBeaconEnabled = true {
+        didSet {
+            saveSettings()
+            updateBeaconSession()
+        }
+    }
+    /// The app is on screen. Where a session is needed for the background, this decides when it can start.
+    public var isAppActive = true {
+        didSet { updateBeaconSession() }
+    }
+    /// The system limits the location in the background here, so the choice is offered.
+    public var supportsBackgroundBeacon: Bool { backgroundLocation != nil }
     public var beaconSymbol = APRSSymbol.phone {
         didSet { saveSettings() }
     }
@@ -356,6 +379,11 @@ public final class RadioViewModel {
 
     static let beaconIntervalMs: Int64 = 5 * 60_000
     private var nextBeaconAtMs: Int64 = 0
+    private var beaconIntervalMs: Int64 { Int64(beaconIntervalMinutes) * 60_000 }
+    private let backgroundLocation: (any BackgroundLocationKeeping)?
+    private var isBeaconSessionRunning = false
+    /// A failed beacon was reported, and none has worked since.
+    private var didReportBeaconFailure = false
     private let location: (any LocationProvider)?
     private let internet: (any APRSInternetLink)?
     private var internetLocation: GeoPoint?
@@ -416,6 +444,7 @@ public final class RadioViewModel {
         otherAppsMute: (any OtherAudioSwitching)? = nil,
         memories: (any MemoryRepository)? = nil,
         location: (any LocationProvider)? = nil,
+        backgroundLocation: (any BackgroundLocationKeeping)? = nil,
         internet: (any APRSInternetLink)? = nil,
         firmware: (any FirmwareFlashing)? = nil,
         firmwareChoices: [FirmwareChoice] = [],
@@ -442,6 +471,7 @@ public final class RadioViewModel {
         self.failureAlerts = failureAlerts
         self.permissions = permissions
         self.location = location
+        self.backgroundLocation = backgroundLocation
         self.internet = internet
         self.now = now
         self.aprsTickInterval = aprsTickInterval
@@ -504,6 +534,8 @@ public final class RadioViewModel {
         settings.beaconSymbol = beaconSymbol
         settings.beaconAccuracy = beaconAccuracy
         settings.beaconFrequency = beaconFrequency
+        settings.beaconIntervalMinutes = beaconIntervalMinutes
+        settings.isBackgroundBeaconEnabled = isBackgroundBeaconEnabled
         settings.isDigipeatingEnabled = isDigipeatingEnabled
         settings.isIGateEnabled = isIGateEnabled
         settings.isInternetFeedEnabled = isInternetFeedEnabled
@@ -524,6 +556,7 @@ public final class RadioViewModel {
         applySynced(settings)
         isSettingsSyncEnabled = settings.isSettingsSyncEnabled
         lastSettingsSync = settings.lastSettingsSync
+        isBackgroundBeaconEnabled = settings.isBackgroundBeaconEnabled
         lastMemorySync = settings.lastMemorySync
         isListenOnly = settings.isListenOnly
         isStationSetupPending = callsign.isEmpty && !isListenOnly
@@ -554,6 +587,7 @@ public final class RadioViewModel {
         beaconSymbol = settings.beaconSymbol
         beaconAccuracy = settings.beaconAccuracy
         beaconFrequency = settings.beaconFrequency
+        beaconIntervalMinutes = settings.beaconIntervalMinutes
         aprsDestinationFilter = settings.aprsDestinationFilter
         txLimits = settings.txLimits
         units = settings.units
@@ -712,9 +746,13 @@ public final class RadioViewModel {
     public func refreshPermissions() {
         deniedPermissions = Set(Permission.allCases.filter { permissions?.state(of: $0) == .denied })
         if isDenied(.location) {
+            if isBeaconEnabled {
+                report(Permission.location.deniedMessage)
+            }
             isBeaconEnabled = false
             ownPosition = nil
         }
+        updateBeaconSession()
         offersDistances = location != nil && permissions?.state(of: .location) == .notDetermined
         refreshOwnPosition()
         updateBluetoothScan()
@@ -1022,12 +1060,14 @@ public final class RadioViewModel {
         connection = nil
         stopSignalRamp()
         snapshot = Self.disconnected
+        updateBeaconSession()
     }
 
     private func show(_ snapshot: RadioSnapshot) {
         guard snapshot.revision >= self.snapshot.revision else { return }  // already showing a newer one
         let hadFailed = hasFailed
         self.snapshot = snapshot
+        updateBeaconSession()
         if case .failed(let failure) = snapshot.status {
             let text = Self.message(for: failure)
             message = text
@@ -1179,19 +1219,43 @@ public final class RadioViewModel {
         isInternetConnected = internet?.isLoggedIn ?? false
         let time = now()
         aprs.tick(atMs: time, transmit: transmitAPRS)
-        if isBeaconEnabled, canSendOnAir, time >= nextBeaconAtMs, let location {
-            nextBeaconAtMs = time + Self.beaconIntervalMs
+        updateBeaconSession()
+        if isBeaconEnabled, canSendOnAir, canReadLocationNow, time >= nextBeaconAtMs, let location {
+            nextBeaconAtMs = time + beaconIntervalMs
             Task { await beacon(from: location) }
         }
         showAPRS()
+    }
+
+    /// In the background, only a session keeps the location available where the system limits it.
+    private var canReadLocationNow: Bool {
+        isAppActive || backgroundLocation == nil || isBeaconSessionRunning
+    }
+
+    /// Starts or ends the session as the beacon needs it (ADR-0056). It can only start in the foreground.
+    private func updateBeaconSession() {
+        let isWanted =
+            isBackgroundBeaconEnabled && isBeaconEnabled && canSendOnAir && isReady && !isDenied(.location)
+        if isWanted, !isBeaconSessionRunning, isAppActive, let backgroundLocation {
+            backgroundLocation.start()
+            isBeaconSessionRunning = true
+        } else if !isWanted, isBeaconSessionRunning {
+            backgroundLocation?.stop()
+            isBeaconSessionRunning = false
+        }
     }
 
     /// `sendPositionBeacon`: compressed, messaging capable, primary table, on the current TX frequency.
     private func beacon(from location: any LocationProvider) async {
         guard let point = await location.currentLocation() else {
             message = "Your location is unknown."
+            if !didReportBeaconFailure {
+                didReportBeaconFailure = true
+                report("Your location is unknown.")
+            }
             return
         }
+        didReportBeaconFailure = false
         ownPosition = point
         let beacon = APRSBeacon(
             latitude: beaconAccuracy.rounded(point.latitude),

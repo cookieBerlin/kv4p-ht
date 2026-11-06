@@ -26,6 +26,8 @@ Packages/KV4PRadio/Sources/KV4PRadio/CoreLocationProvider.swift
 Packages/KV4PPersistence/Sources/KV4PPersistence/UbiquitousSettingsStore.swift
 # CloudKit's sync events: forwards when one has finished, as an event cannot be made in a test (ADR-0052).
 Packages/KV4PPersistence/Sources/KV4PPersistence/CloudKitSyncEvents.swift
+# CLBackgroundActivitySession adapter (iOS): starts and ends the session only (ADR-0056).
+Packages/KV4PRadio/Sources/KV4PRadio/CoreLocationBackgroundSession.swift
 # Network.framework adapter for APRS-IS: forwards TCP lines only (ADR-0018).
 Packages/KV4PAPRS/Sources/KV4PAPRS/NetworkLineConnector.swift
 # Codec2, vendored unmodified third-party C code (ADR-0011, ADR-0027).

@@ -41,6 +41,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-32](#hw-32) | Distance to APRS stations | ⬜ | ⬜ |
 | [HW-33](#hw-33) | APRS symbols and radios | ⬜ | ⬜ |
 | [HW-34](#hw-34) | APRS packet types and units | ⬜ | ⬜ |
+| [HW-35](#hw-35) | Beacons with the screen locked (iPhone) | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -283,3 +284,12 @@ follow *Units* under *APRS* in the settings, and so does the distance. A repeate
 frequency, offset and range, a removed object is crossed out, and packets only from the internet and
 digipeated ones are marked. Status, capabilities, telemetry and bulletins say what they are. Holding
 or pointing at any icon shows its details. On a second device, *Units* follows.
+
+### HW-35
+
+On an iPhone with a radio, a callsign and access while using the app; only with a licence, as this
+transmits. Turn the beacon on with a short interval, then lock the screen. A second radio or APRS-IS
+shows the beacons at that interval, also after an hour, and the system's location indicator shows. After
+ending the beacon, the indicator goes. With *Beacon in the background* off, no beacon goes out with
+the screen locked, there is no indicator, and the beacon goes out when the app returns. Take away
+location access or go without a position: one notice comes, not one per beacon. Note the battery used.

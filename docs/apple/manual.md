@@ -131,9 +131,9 @@ disconnect yourself:
   audio; it continues when the call ends.
 - 📱 **In the background:** while the radio is connected, reception goes on
   when you lock the screen or switch to another app. This includes the audio,
-  APRS, digipeating and the iGate. Disconnect to save the battery. Position
-  beacons wait until the app is on screen again, because iOS only gives the app
-  your location while you use it.
+  APRS, digipeating, the iGate and, with *Beacon in the background* on, position
+  beacons. The system then shows its location indicator. Disconnect to save the battery.
+  With the switch off, beacons wait until the app is on screen again.
 - 📱 **Other audio:** while the squelch is open or you transmit, podcasts of other apps
   pause and music gets quieter. They return once the squelch has stayed closed for the
   time set under **Resume after**, 3 s by default. Choose it in ⚙ **Settings** under
@@ -295,7 +295,10 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
-**Position beacon** (licence required): turn on *Position beacon* in ⚙ **Settings** under *APRS*,
+**Position beacon** (licence required): choose how often under *Every*, from 2 to 60 minutes, 5 by default.
+All stations share the frequency, so choose no more often than you need. 📱 *Beacon in the background*, on
+by default, keeps it going with the screen locked. If your position cannot be found, one notice says so,
+and another only after a beacon has worked in between. Turn on *Position beacon* in ⚙ **Settings** under *APRS*,
 where digipeating and the APRS-IS switches are too. The app sends your position right away and then every five
 minutes, as long as the radio is connected and receiving. Choose the symbol
 others see (phone, car, house, …) and, under *Position accuracy*, round the position
@@ -353,10 +356,10 @@ A short text below a setting explains it.
 | **About kv4p HT** | 📱 Version and licences; on the Mac in the **kv4p HT** menu |
 
 **iCloud sync**, in its own group under *Station* and on by default, takes your memories and groups, your callsign, sticky PTT, the access
-tone, the APRS symbol, position accuracy, beacon frequency and list filter, the units and the frequency
-limits to your other iPhones, iPads and Macs with the same Apple ID. A change can take a
+tone, the APRS symbol, position accuracy, beacon frequency and interval, list filter, the units and the
+frequency limits to your other iPhones, iPads and Macs with the same Apple ID. A change can take a
 while to arrive. The radio, the memory group, other audio, mic gain, listen only and the
-switches for the beacon, digipeating, the iGate and the APRS-IS feed stay on each device.
+switches for the beacon and the background, digipeating, the iGate and the APRS-IS feed stay on each device.
 For memories, a change of the switch takes effect at the next start. If two devices change the
 same field at once, the later change counts. The same memory on two devices becomes one once it
 is alike in everything; memories that differ stay apart. Without iCloud the app works as before

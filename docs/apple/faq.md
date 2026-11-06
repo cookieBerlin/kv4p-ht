@@ -63,9 +63,10 @@ Firmware flashing is available on macOS only.
 ## Does the iPhone keep receiving with the screen locked?
 
 Yes, while the radio is connected: audio, APRS, digipeating and the iGate go on
-in the background. Position beacons wait until the app is on screen again,
-because the app only asks for your location while you use it. See
-[ADR-0031](adr/0031-ios-background-operation.md).
+in the background, and so do position beacons, unless you turn off *Beacon in the
+background*. The system then shows its location indicator, and more battery is used.
+See [ADR-0031](adr/0031-ios-background-operation.md) and
+[ADR-0056](adr/0056-background-beacons.md).
 
 ## Can I try the app without a radio?
 

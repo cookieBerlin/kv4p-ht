@@ -36,6 +36,7 @@ enum Composition {
             otherAppsMute: otherAppsMute(),
             memories: memoryRepository(),
             location: CoreLocationProvider(),
+            backgroundLocation: backgroundLocation(),
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
             firmware: firmwareFlasher(),
             firmwareChoices: firmwareChoices,
@@ -52,6 +53,15 @@ enum Composition {
     private static func audioSession() -> (any AudioSession)? {
         #if os(iOS)
             AVAudioSessionAdapter()
+        #else
+            nil
+        #endif
+    }
+
+    /// Only iOS limits the location in the background.
+    private static func backgroundLocation() -> (any BackgroundLocationKeeping)? {
+        #if os(iOS)
+            CoreLocationBackgroundSession()
         #else
             nil
         #endif

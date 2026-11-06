@@ -22,7 +22,7 @@ else
   resources="$app"
   icon_key=CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName
   modes=$(plutil -extract UIBackgroundModes json -o - "$plist" 2>/dev/null || echo '[]')
-  for mode in audio bluetooth-central remote-notification; do
+  for mode in audio bluetooth-central location remote-notification; do
     jq -e --arg mode "$mode" 'index($mode) != null' <<<"$modes" >/dev/null || fail "UIBackgroundModes in $plist lacks $mode"
   done
 fi

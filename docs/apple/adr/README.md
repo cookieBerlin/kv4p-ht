@@ -59,3 +59,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0053](0053-distance-to-stations.md) | Distance to stations | Proposed |
 | [0054](0054-aprs-symbols-and-devices.md) | APRS symbols and devices | Proposed |
 | [0055](0055-aprs-packet-types-and-units.md) | APRS packet types and units | Proposed |
+| [0056](0056-background-beacons.md) | Background beacons | Proposed |

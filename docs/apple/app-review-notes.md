@@ -38,6 +38,9 @@ nothing to a device. On iPhone and iPad there is no firmware update.
 - `audio`: received radio audio keeps playing with the screen locked.
 - `bluetooth-central`: the connection to the radio stays up with the screen
   locked.
+- `location`: position beacons the user turned on keep going with the screen locked, with access
+  while using the app, and the system's indicator. It runs only with the beacon on and a radio
+  connected, and a switch turns it off.
 
 **Permissions, each asked for when first needed:**
 
