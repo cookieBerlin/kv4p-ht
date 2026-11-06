@@ -19,10 +19,10 @@
 		A1000000000000000000000B /* partitions.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* partitions.bin */; platformFilters = (macos, ); };
 		A1000000000000000000000C /* boot_app0.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* boot_app0.bin */; platformFilters = (macos, ); };
 		A1000000000000000000000D /* firmware_v17.bin in Resources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000009 /* firmware_v17.bin */; platformFilters = (macos, ); };
-		A1000000000000000000F001 /* firmware-nightly.bin in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000F001 /* firmware-nightly.bin */; platformFilters = (macos, ); };
-		A1000000000000000000F002 /* firmware-nightly.json in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000F002 /* firmware-nightly.json */; platformFilters = (macos, ); };
 		A1000000000000000000000E /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000000A /* LICENSE */; };
 		A1000000000000000000000F /* COPYING-codec2 in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000000B /* COPYING-codec2 */; };
+		A1000000000000000000F001 /* firmware-nightly.bin in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000F001 /* firmware-nightly.bin */; platformFilters = (macos, ); };
+		A1000000000000000000F002 /* firmware-nightly.json in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000F002 /* firmware-nightly.json */; platformFilters = (macos, ); };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,10 +35,10 @@
 		A30000000000000000000007 /* partitions.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = partitions.bin; path = "../../android-src/KV4PHT/app/src/main/res/raw/partitions.bin"; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000008 /* boot_app0.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = boot_app0.bin; path = "../../android-src/KV4PHT/app/src/main/res/raw/boot_app0.bin"; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000009 /* firmware_v17.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = firmware_v17.bin; path = "../../android-src/KV4PHT/app/src/main/res/raw/firmware_v17.bin"; sourceTree = SOURCE_ROOT; };
-		A3000000000000000000F001 /* firmware-nightly.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = firmware-nightly.bin; path = Firmware/firmware-nightly.bin; sourceTree = SOURCE_ROOT; };
-		A3000000000000000000F002 /* firmware-nightly.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = firmware-nightly.json; path = Firmware/firmware-nightly.json; sourceTree = SOURCE_ROOT; };
 		A3000000000000000000000A /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../../LICENSE; sourceTree = SOURCE_ROOT; };
 		A3000000000000000000000B /* COPYING-codec2 */ = {isa = PBXFileReference; lastKnownFileType = text; name = "COPYING-codec2"; path = "../Packages/KV4PDigital/COPYING-codec2"; sourceTree = SOURCE_ROOT; };
+		A3000000000000000000F001 /* firmware-nightly.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = "firmware-nightly.bin"; path = "Firmware/firmware-nightly.bin"; sourceTree = SOURCE_ROOT; };
+		A3000000000000000000F002 /* firmware-nightly.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "firmware-nightly.json"; path = "Firmware/firmware-nightly.json"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */

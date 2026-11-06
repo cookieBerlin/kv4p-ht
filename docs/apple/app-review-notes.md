@@ -20,6 +20,10 @@ Source code: https://github.com/cookieBerlin/kv4p-ht
 Core Audio tap to silence other apps while the radio receives or transmits. It requests
 no permission and records, stores and sends nothing.
 
+**iCloud:** the app keeps a few settings, such as the callsign, in the user's iCloud
+key-value store, so that they reach the user's other devices. It can be turned off under
+Settings, Station.
+
 **Licence:** transmitting on air requires an amateur radio licence. The simulator
 sends nothing on air.
 

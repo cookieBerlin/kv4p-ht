@@ -22,6 +22,8 @@ Packages/KV4PAudio/Sources/KV4PAudio/CoreAudioOtherAppsMute.swift
 Packages/KV4PAudio/Sources/KV4PAudio/AVAudioSessionAdapter.swift
 # CoreLocation adapter: forwards the first location update only (ADR-0018).
 Packages/KV4PRadio/Sources/KV4PRadio/CoreLocationProvider.swift
+# iCloud key-value store adapter: forwards reads, writes and its notification only (ADR-0051).
+Packages/KV4PPersistence/Sources/KV4PPersistence/UbiquitousSettingsStore.swift
 # Network.framework adapter for APRS-IS: forwards TCP lines only (ADR-0018).
 Packages/KV4PAPRS/Sources/KV4PAPRS/NetworkLineConnector.swift
 # Codec2, vendored unmodified third-party C code (ADR-0011, ADR-0027).

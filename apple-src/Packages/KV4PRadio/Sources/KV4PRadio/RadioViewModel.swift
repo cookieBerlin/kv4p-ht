@@ -236,6 +236,19 @@ public final class RadioViewModel {
     }
     /// Asked once, at a start without a callsign or listen-only, not while the callsign is edited in the settings.
     public private(set) var isStationSetupPending = false
+    /// The settings for all devices follow the user through iCloud (ADR-0051).
+    public var isSettingsSyncEnabled = true {
+        didSet {
+            saveSettings()
+            if !isRestoring {
+                startSettingsSync()
+            }
+        }
+    }
+    /// When this device last exchanged settings with iCloud; the system decides when they travel on.
+    public private(set) var lastSettingsSync: Date?
+    /// Why the sync cannot work at the moment, though it is on.
+    public private(set) var settingsSyncHint: String?
     /// iGate: pass received RF packets and our own packets to APRS-IS.
     public var isIGateEnabled = false {
         didSet {
@@ -359,6 +372,12 @@ public final class RadioViewModel {
     /// What the flasher can write, the one for this app first (ADR-0049).
     public let firmwareChoices: [FirmwareChoice]
     private let settingsStore: (any SettingsStore)?
+    private let syncedSettings: (any SyncedSettingsStore)?
+    private let settingsSyncSleep: @Sendable (Duration) async throws -> Void
+    private var settingsSync: SettingsSync?
+    private var settingsSyncTask: Task<Void, Never>?
+    /// How long changes must pause before they go to the other devices.
+    static let settingsSyncPause = Duration.seconds(2)
     /// Restoring the settings, which must not save them again.
     private var isRestoring = false
     private var controller: (any RadioControlling)?
@@ -381,6 +400,7 @@ public final class RadioViewModel {
         firmware: (any FirmwareFlashing)? = nil,
         firmwareChoices: [FirmwareChoice] = [],
         settings: (any SettingsStore)? = nil,
+        syncedSettings: (any SyncedSettingsStore)? = nil,
         bluetoothScanner: (any BLEScanning)? = nil,
         failureAlerts: (any FailureAlerting)? = nil,
         permissions: (any PermissionChecking)? = nil,
@@ -388,6 +408,7 @@ public final class RadioViewModel {
         simulatedFlashStep: Duration = .milliseconds(400),
         simulatedSignalStep: Duration = .seconds(1),
         otherAudioSleep: @escaping @Sendable (Duration) async throws -> Void = RadioViewModel.systemSleep,
+        settingsSyncSleep: @escaping @Sendable (Duration) async throws -> Void = RadioViewModel.systemSleep,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
         aprsTickInterval: Duration = .milliseconds(500)
     ) {
@@ -395,6 +416,8 @@ public final class RadioViewModel {
         self.firmware = firmware
         self.firmwareChoices = firmwareChoices
         settingsStore = settings
+        self.syncedSettings = syncedSettings
+        self.settingsSyncSleep = settingsSyncSleep
         self.bluetoothScanner = bluetoothScanner
         self.failureAlerts = failureAlerts
         self.permissions = permissions
@@ -432,6 +455,10 @@ public final class RadioViewModel {
             )
         }
         restore(AppSettings(data: settings?.load()))
+        syncedSettings?.observeChanges { [weak self] in
+            Task { @MainActor [weak self] in self?.receiveSettings(fromCloud: true) }
+        }
+        startSettingsSync()
         refreshPermissions()
     }
 
@@ -442,6 +469,8 @@ public final class RadioViewModel {
         var settings = AppSettings()
         settings.callsign = callsign
         settings.isListenOnly = isListenOnly
+        settings.isSettingsSyncEnabled = isSettingsSyncEnabled
+        settings.lastSettingsSync = lastSettingsSync
         settings.micGain = micGain
         settings.isStickyPTT = isStickyPTT
         settings.accessToneHz = accessToneHz
@@ -469,25 +498,18 @@ public final class RadioViewModel {
     private func restore(_ settings: AppSettings) {
         isRestoring = true
         defer { isRestoring = false }
-        callsign = settings.callsign
+        applySynced(settings)
+        isSettingsSyncEnabled = settings.isSettingsSyncEnabled
+        lastSettingsSync = settings.lastSettingsSync
         isListenOnly = settings.isListenOnly
         isStationSetupPending = callsign.isEmpty && !isListenOnly
         micGain = settings.micGain
-        isStickyPTT = settings.isStickyPTT
-        accessToneHz = settings.accessToneHz
-        accessToneLengthMs = settings.accessToneLengthMs
-        accessToneWaitMs = settings.accessToneWaitMs
         otherAudioMode = otherAudioModes.contains(settings.otherAudioMode) ? settings.otherAudioMode : .keepPlaying
         otherAudioResumeSeconds = settings.otherAudioResumeSeconds
         isBeaconEnabled = settings.isBeaconEnabled
-        beaconSymbol = settings.beaconSymbol
-        beaconAccuracy = settings.beaconAccuracy
-        beaconFrequency = settings.beaconFrequency
         isDigipeatingEnabled = settings.isDigipeatingEnabled
         isIGateEnabled = settings.isIGateEnabled
         isInternetFeedEnabled = settings.isInternetFeedEnabled
-        aprsDestinationFilter = settings.aprsDestinationFilter
-        txLimits = settings.txLimits
         selectedGroup = settings.selectedGroup
         simulatorSettings = settings.simulator
         if let radio = settings.bluetoothRadio {
@@ -498,9 +520,89 @@ public final class RadioViewModel {
         }
     }
 
+    /// The settings for all devices, as `SettingsSync` lists them.
+    private func applySynced(_ settings: AppSettings) {
+        callsign = settings.callsign
+        isStickyPTT = settings.isStickyPTT
+        accessToneHz = settings.accessToneHz
+        accessToneLengthMs = settings.accessToneLengthMs
+        accessToneWaitMs = settings.accessToneWaitMs
+        beaconSymbol = settings.beaconSymbol
+        beaconAccuracy = settings.beaconAccuracy
+        beaconFrequency = settings.beaconFrequency
+        aprsDestinationFilter = settings.aprsDestinationFilter
+        txLimits = settings.txLimits
+    }
+
     private func saveSettings() {
         guard !isRestoring, let settingsStore, let data = try? settings.encoded() else { return }
         settingsStore.save(data)
+        scheduleSettingsSync()
+    }
+
+    // MARK: Settings sync
+
+    /// Sends what changed, once the changes have paused, so that typing a callsign is not sent letter by letter.
+    private func scheduleSettingsSync() {
+        guard settingsSync != nil else { return }
+        settingsSyncTask?.cancel()
+        settingsSyncTask = Task { [weak self, settingsSyncSleep] in
+            guard (try? await settingsSyncSleep(Self.settingsSyncPause)) != nil else { return }
+            self?.sendSettings()
+        }
+    }
+
+    /// Before the app may be stopped, nothing should wait.
+    public func flushSettingsSync() {
+        settingsSyncTask?.cancel()
+        sendSettings()
+    }
+
+    private func sendSettings() {
+        let changed = settingsSync?.outgoing(settings) ?? [:]
+        if !changed.isEmpty {
+            syncedSettings?.set(changed)
+            noteSettingsSynced()
+        }
+    }
+
+    private func noteSettingsSynced() {
+        guard syncedSettings?.isAvailable == true else { return }
+        lastSettingsSync = Date(timeIntervalSince1970: Double(now()) / 1000)
+        saveSettings()
+    }
+
+    private func startSettingsSync() {
+        settingsSyncTask?.cancel()
+        settingsSync = nil
+        settingsSyncHint = nil
+        guard isSettingsSyncEnabled, let syncedSettings else { return }
+        settingsSync = SettingsSync(settings)
+        receiveSettings()
+        let unknown = SettingsSync.unknownToCloud(settings, remote: syncedSettings.values())
+        if !unknown.isEmpty {
+            syncedSettings.set(unknown)
+            noteSettingsSynced()
+        }
+    }
+
+    private func receiveSettings(fromCloud: Bool = false) {
+        guard settingsSync != nil, let syncedSettings else { return }
+        settingsSyncHint =
+            syncedSettings.isAvailable ? nil : "iCloud is not available, so these settings stay on this device."
+        guard let merged = settingsSync?.incoming(syncedSettings.values(), into: settings), merged != settings else {
+            if fromCloud {
+                noteSettingsSynced()
+            }
+            return
+        }
+        isRestoring = true
+        applySynced(merged)
+        isRestoring = false
+        // The question at the start closes with a callsign; it does not open while the app is in use.
+        isStationSetupPending = isStationSetupPending && callsign.isEmpty
+        saveSettings()
+        noteSettingsSynced()
     }
 
     /// Bluetooth with the radios found or remembered, the USB serial devices present, and the built-in simulator.

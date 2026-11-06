@@ -36,6 +36,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-27](#hw-27) | Repeater access tone | ⬜ | ⬜ |
 | [HW-28](#hw-28) | Deviation of the access tone | ⬜ | ⬜ |
 | [HW-29](#hw-29) | Callsign and listen-only | ⬜ | ⬜ |
+| [HW-30](#hw-30) | Settings sync between two devices | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -236,3 +237,12 @@ second radio hears nothing from a beacon, a digipeat or an acknowledgement, and 
 works. Enter a callsign: the iGate can be used. Turn *Listen only* off while PTT is not
 pressed: PTT returns. Hold sticky PTT and remove the callsign in the settings: the
 transmission ends at once.
+
+### HW-30
+
+With two devices on the same Apple ID, both signed with a team. Enter a callsign on one: after
+a while it appears on the other, and the question at the start closes there. Change sticky PTT
+and the beacon frequency: they follow. Remove the callsign: it goes on the other device as
+well, without the question. Change the mic gain or listen only: the other device stays as it
+is. Turn *iCloud sync* off on one: changes no longer pass in either direction; on again, it
+catches up. Install on a new device with no settings: it changes nothing on the others.
