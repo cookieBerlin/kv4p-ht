@@ -61,3 +61,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0055](0055-aprs-packet-types-and-units.md) | APRS packet types and units | Proposed |
 | [0056](0056-background-beacons.md) | Background beacons | Proposed |
 | [0057](0057-aprs-history.md) | APRS history | Proposed |
+| [0063](0063-sstv.md) | SSTV receive and transmit | Proposed |
