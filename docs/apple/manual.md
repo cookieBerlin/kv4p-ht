@@ -342,13 +342,17 @@ A short text below a setting explains it.
 | **Advanced** | Frequency limits |
 | **About kv4p HT** | 📱 Version and licences; on the Mac in the **kv4p HT** menu |
 
-**iCloud sync**, in its own group under *Station* and on by default, takes your callsign, sticky PTT, the access
+**iCloud sync**, in its own group under *Station* and on by default, takes your memories and groups, your callsign, sticky PTT, the access
 tone, the APRS symbol, position accuracy, beacon frequency and list filter and the frequency
 limits to your other iPhones, iPads and Macs with the same Apple ID. A change can take a
 while to arrive. The radio, the memory group, other audio, mic gain, listen only and the
 switches for the beacon, digipeating, the iGate and the APRS-IS feed stay on each device.
-Without iCloud the app works as before and says so below the switch. **Last synced** shows
-when this device last exchanged settings with iCloud; the system decides when they reach
+For memories, a change of the switch takes effect at the next start. If two devices change the
+same field at once, the later change counts. The same memory on two devices becomes one once it
+is alike in everything; memories that differ stay apart. Without iCloud the app works as before
+and says so below the switch. **Settings last synced** shows when this device last exchanged settings with
+iCloud, and **Memories last synced** when a sync of the memories last finished. The two run
+separately, so each has its own time; the system decides when they reach
 your other devices.
 
 The radio keeps its own settings (frequency, bandwidth, squelch, tones, power,

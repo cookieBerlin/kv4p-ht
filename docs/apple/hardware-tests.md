@@ -37,6 +37,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-28](#hw-28) | Deviation of the access tone | ⬜ | ⬜ |
 | [HW-29](#hw-29) | Callsign and listen-only | ⬜ | ⬜ |
 | [HW-30](#hw-30) | Settings sync between two devices | ⬜ | ⬜ |
+| [HW-31](#hw-31) | Memory sync between two devices | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -246,3 +247,13 @@ and the beacon frequency: they follow. Remove the callsign: it goes on the other
 well, without the question. Change the mic gain or listen only: the other device stays as it
 is. Turn *iCloud sync* off on one: changes no longer pass in either direction; on again, it
 catches up. Install on a new device with no settings: it changes nothing on the others.
+
+### HW-31
+
+With two devices on the same Apple ID, both signed with a team, and the CloudKit schema in the
+development environment. Add a memory on one: after a while it appears on the other without a
+restart. Rename, move to another group, sort and delete: the other device follows. With memories
+that already exist on both devices, the first sync leaves one of each. Tune to a memory while
+others change. Turn off the network, change on both, turn it on again: nothing is lost, and the
+later change of a field counts. Turn *iCloud sync* off and restart: changes stay on the device.
+A TestFlight build additionally needs the schema deployed to production.

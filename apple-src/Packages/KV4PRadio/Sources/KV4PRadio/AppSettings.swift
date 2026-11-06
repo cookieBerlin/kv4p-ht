@@ -41,6 +41,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isSettingsSyncEnabled = true
     /// When this device last exchanged settings with iCloud.
     public var lastSettingsSync: Date?
+    /// When a sync of the memories with iCloud last finished.
+    public var lastMemorySync: Date?
     public var micGain = MicGain.none
     public var isStickyPTT = false
     /// The tone that opens a repeater, in Hz; 0 for none (ADR-0045).
@@ -91,6 +93,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isListenOnly = values.value(.isListenOnly, or: defaults.isListenOnly)
         isSettingsSyncEnabled = values.value(.isSettingsSyncEnabled, or: defaults.isSettingsSyncEnabled)
         lastSettingsSync = values.value(.lastSettingsSync, or: defaults.lastSettingsSync)
+        lastMemorySync = values.value(.lastMemorySync, or: defaults.lastMemorySync)
         micGain = values.value(.micGain, or: defaults.micGain)
         isStickyPTT = values.value(.isStickyPTT, or: defaults.isStickyPTT)
         accessToneHz = values.value(.accessToneHz, or: defaults.accessToneHz)

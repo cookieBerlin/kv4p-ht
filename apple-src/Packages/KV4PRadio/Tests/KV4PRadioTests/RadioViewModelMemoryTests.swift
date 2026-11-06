@@ -1,3 +1,4 @@
+import CoreData
 import KV4PPersistence
 import KV4PSimulator
 import KV4PTestSupport
@@ -98,6 +99,20 @@ struct RadioViewModelMemoryTests {
         #expect(await RadioViewModelTests.eventually(model) { $0.activeMemoryId == model.memories.first?.id })
         await model.toggleScan()
         #expect(!model.isScanning)
+    }
+
+    @Test("memories changed through iCloud appear without doing anything")
+    func remoteChange() async throws {
+        let repository = try SwiftDataMemoryRepository.inMemory()
+        let model = await connected(repository)
+        await model.loadMemories()
+        #expect(model.memories.isEmpty)
+        _ = try await repository.insert([Self.simplex])
+        for _ in 0..<500 where model.memories.isEmpty {
+            NotificationCenter.default.post(name: .NSPersistentStoreRemoteChange, object: nil)
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        #expect(model.memories.map(\.name) == ["Simplex"])
     }
 
     @Test("the squelch stays as it is during a scan")

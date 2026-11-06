@@ -1,23 +1,29 @@
+import CoreData
 import Foundation
 import SwiftData
 
+/// A stored memory. CloudKit holds no unique fields and needs a default for every field (ADR-0052).
 @Model
 final class StoredMemory {
-    @Attribute(.unique) var memoryId: Int32
-    var name: String
-    var frequency: Float
-    var offset: MemoryOffset
-    var offsetKHz: Int
-    var txTone: String
-    var rxTone: String
-    var group: String
-    var skipDuringScan: Bool
+    /// Identifies the memory on every device; empty in a store of an earlier version, until it is migrated.
+    var globalId: String = ""
+    /// A number of this device, which another device can use for another memory: the repository decides (ADR-0052).
+    var memoryId: Int32 = 0
+    var name: String = ""
+    var frequency: Float = 0
+    var offset: MemoryOffset = MemoryOffset.none
+    var offsetKHz: Int = 600
+    var txTone: String = "None"
+    var rxTone: String = "None"
+    var group: String = ""
+    var skipDuringScan: Bool = false
     var accessToneHz: Int?
     var accessToneLengthMs: Int?
     /// The place in the stored order, from 1; 0 in a store of an earlier version, until it is migrated.
     var position: Int = 0
 
-    init(_ memory: ChannelMemory, position: Int) {
+    init(_ memory: ChannelMemory, position: Int, globalId: String) {
+        self.globalId = globalId
         self.position = position
         memoryId = memory.id
         name = memory.name
@@ -45,9 +51,9 @@ final class StoredMemory {
         accessToneLengthMs = memory.accessToneLengthMs
     }
 
-    var memory: ChannelMemory {
+    func memory(id: Int32) -> ChannelMemory {
         ChannelMemory(
-            id: memoryId,
+            id: id,
             name: name,
             frequency: frequency,
             offset: offset,
@@ -62,12 +68,17 @@ final class StoredMemory {
     }
 }
 
-/// `MemoryRepository` on SwiftData (ADR-0007).
+/// `MemoryRepository` on SwiftData (ADR-0007), kept in sync through CloudKit where the app has the entitlement for it
+/// (ADR-0052).
 @ModelActor
 public actor SwiftDataMemoryRepository: MemoryRepository {
-    /// Stores at `storeURL`.
-    public init(storeURL: URL) throws {
-        try self.init(configuration: ModelConfiguration(url: storeURL))
+    /// The numbers of this run, for the radio and the screens: a global id has its number while the app runs.
+    private var numbers: [String: Int32] = [:]
+
+    /// Stores at `storeURL`. With `syncs`, CloudKit takes part if the app is entitled to it; without, the store stays
+    /// on this device.
+    public init(storeURL: URL, syncs: Bool = true) throws {
+        try self.init(configuration: ModelConfiguration(url: storeURL, cloudKitDatabase: syncs ? .automatic : .none))
     }
 
     /// Keeps the memories only while the repository exists (tests, previews).
@@ -79,74 +90,136 @@ public actor SwiftDataMemoryRepository: MemoryRepository {
         self.init(modelContainer: try ModelContainer(for: StoredMemory.self, configurations: configuration))
     }
 
+    /// iCloud has delivered changes.
+    public nonisolated var changes: AsyncStream<Void> {
+        AsyncStream { continuation in
+            let task = Task {
+                for await _ in NotificationCenter.default.notifications(named: .NSPersistentStoreRemoteChange) {
+                    continuation.yield()
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    public nonisolated var finishedSyncs: AsyncStream<Date> { CloudKitSyncEvents.finishedSyncs }
+
     public func all() throws -> [ChannelMemory] {
-        ChannelMemory.arranged(try ordered().map(\.memory))
+        ChannelMemory.arranged(try ordered(in: newContext()).map(identified))
     }
 
     public func insert(_ memories: [ChannelMemory]) throws -> [ChannelMemory] {
-        let existing = try ordered()
-        var nextId = (existing.map(\.memoryId).max() ?? 0) + 1
-        var nextPosition = Self.nextPosition(after: existing)
+        let context = newContext()
+        var nextPosition = Self.nextPosition(after: try ordered(in: context))
         let inserted = memories.map { memory in
+            let globalId = UUID().uuidString
             var memory = memory
-            memory.id = nextId
-            nextId += 1
+            memory.id = assignNumber(to: globalId, preferred: 0)
+            context.insert(StoredMemory(memory, position: nextPosition, globalId: globalId))
+            nextPosition += 1
             return memory
         }
-        for memory in inserted {
-            modelContext.insert(StoredMemory(memory, position: nextPosition))
-            nextPosition += 1
-        }
-        try modelContext.save()
+        try context.save()
         return inserted
     }
 
     public func update(_ memory: ChannelMemory) throws {
-        let existing = try ordered()
-        if let stored = existing.first(where: { $0.memoryId == memory.id }) {
+        let context = newContext()
+        let existing = try ordered(in: context)
+        if let stored = stored(memory.id, in: existing) {
             if stored.group != memory.group {
                 stored.position = Self.nextPosition(after: existing)
             }
             stored.update(from: memory)
         }
-        try modelContext.save()
+        try context.save()
     }
 
     public func delete(id: Int32) throws {
-        if let stored = try stored(id) {
-            modelContext.delete(stored)
+        let context = newContext()
+        if let stored = stored(id, in: try ordered(in: context)) {
+            context.delete(stored)
         }
-        try modelContext.save()
+        try context.save()
     }
 
     public func reorder(_ ids: [Int32]) throws {
-        let existing = try ordered()
-        let named = ids.compactMap { id in existing.first { $0.memoryId == id } }
-        let others = existing.filter { !ids.contains($0.memoryId) }
+        let context = newContext()
+        let existing = try ordered(in: context)
+        let named = ids.compactMap { stored($0, in: existing) }
+        let others = existing.filter { row in !named.contains { $0 === row } }
         place(named + others)
-        try modelContext.save()
+        try context.save()
     }
 
     public func renameGroup(_ group: String, to newName: String) throws {
-        for stored in try ordered() where stored.group == group {
+        let context = newContext()
+        for stored in try ordered(in: context) where stored.group == group {
             stored.group = newName
         }
-        try modelContext.save()
+        try context.save()
     }
 
-    /// The stored memories in their order. A store of an earlier version gets its order here: groups alphabetically,
-    /// no group last, and each group in the order the memories were added (ADR-0042).
-    private func ordered() throws -> [StoredMemory] {
-        let stored = try modelContext.fetch(
+    /// A context of its own for each step, so that it reads what iCloud has written since the last one.
+    private func newContext() -> ModelContext {
+        ModelContext(modelContainer)
+    }
+
+    /// The stored memories in their order, with everything a store of an earlier version or another device can lack:
+    /// a global id, the order and no second copy of a memory. Each device does the same, so the result is the same.
+    private func ordered(in context: ModelContext) throws -> [StoredMemory] {
+        var stored = try context.fetch(
             FetchDescriptor<StoredMemory>(sortBy: [SortDescriptor(\.position), SortDescriptor(\.memoryId)])
         )
-        guard stored.first?.position == 0 else { return stored }
-        let migrated = stored.sorted {
-            ($0.group.isEmpty ? 1 : 0, $0.group, $0.memoryId) < ($1.group.isEmpty ? 1 : 0, $1.group, $1.memoryId)
+        for memory in stored where memory.globalId.isEmpty {
+            memory.globalId = UUID().uuidString
         }
-        place(migrated)
-        try modelContext.save()
-        return migrated
+        if stored.first?.position == 0 {
+            // Groups alphabetically, no group last, and each group in the order the memories were added (ADR-0042).
+            let key = { (memory: StoredMemory) in (memory.group.isEmpty ? 1 : 0, memory.group, memory.memoryId) }
+            place(stored.sorted { key($0) < key($1) })
+        }
+        stored.sort { ($0.position, $0.globalId) < ($1.position, $1.globalId) }
+        stored = withoutCopies(stored, in: context)
+        for memory in stored {
+            _ = number(of: memory)
+        }
+        if context.hasChanges {
+            try context.save()
+        }
+        return stored
+    }
+
+    /// Two devices that had the same memories before they synced now hold each of them twice. Of memories alike in
+    /// everything, the one with the lowest global id stays; those that differ in anything both stay, as none may get
+    /// lost.
+    private func withoutCopies(_ stored: [StoredMemory], in context: ModelContext) -> [StoredMemory] {
+        var lowest: [ChannelMemory: String] = [:]
+        for memory in stored {
+            let content = memory.memory(id: 0)
+            lowest[content] = min(lowest[content] ?? memory.globalId, memory.globalId)
+        }
+        return stored.filter { memory in
+            guard lowest[memory.memory(id: 0)] != memory.globalId else { return true }
+            context.delete(memory)
+            return false
+        }
+    }
+
+    private func identified(_ stored: StoredMemory) -> ChannelMemory {
+        stored.memory(id: number(of: stored))
+    }
+
+    private func number(of memory: StoredMemory) -> Int32 {
+        numbers[memory.globalId] ?? assignNumber(to: memory.globalId, preferred: memory.memoryId)
+    }
+
+    /// The number the memory had, if nothing else has it, so that it stays between launches; otherwise a new one.
+    private func assignNumber(to globalId: String, preferred: Int32) -> Int32 {
+        let isFree = preferred > 0 && !numbers.values.contains(preferred)
+        let number = isFree ? preferred : (numbers.values.max() ?? 0) + 1
+        numbers[globalId] = number
+        return number
     }
 
     private func place(_ stored: [StoredMemory]) {
@@ -159,7 +232,7 @@ public actor SwiftDataMemoryRepository: MemoryRepository {
         (stored.last?.position ?? 0) + 1
     }
 
-    private func stored(_ id: Int32) throws -> StoredMemory? {
-        try modelContext.fetch(FetchDescriptor<StoredMemory>(predicate: #Predicate { $0.memoryId == id })).first
+    private func stored(_ id: Int32, in rows: [StoredMemory]) -> StoredMemory? {
+        rows.first { numbers[$0.globalId] == id }
     }
 }

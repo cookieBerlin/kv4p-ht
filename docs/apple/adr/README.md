@@ -55,3 +55,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0049](0049-two-bundled-firmwares.md) | Two bundled firmwares | Proposed |
 | [0050](0050-draggable-squelch-mark.md) | Draggable squelch mark | Proposed |
 | [0051](0051-settings-sync.md) | Settings sync | Proposed |
+| [0052](0052-memory-sync.md) | Memory sync | Proposed |

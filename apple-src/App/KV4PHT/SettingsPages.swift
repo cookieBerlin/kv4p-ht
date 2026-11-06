@@ -72,18 +72,23 @@ struct StationSettings: View {
                     Text(hint).font(.footnote).foregroundStyle(.secondary)
                 }
                 if model.isSettingsSyncEnabled {
-                    LabeledContent("Last synced") {
-                        if let date = model.lastSettingsSync {
-                            Text(date, format: .dateTime.day().month().hour().minute())
-                        } else {
-                            Text("Not yet")
-                        }
-                    }
+                    lastSync("Settings last synced", model.lastSettingsSync)
+                    lastSync("Memories last synced", model.lastMemorySync)
                 }
             }
         }
         .onAppear { callsign = model.callsign }
         .onChange(of: model.callsign) { callsign = model.callsign }
+    }
+
+    private func lastSync(_ title: String, _ date: Date?) -> some View {
+        LabeledContent(title) {
+            if let date {
+                Text(date, format: .dateTime.day().month().hour().minute())
+            } else {
+                Text("Not yet")
+            }
+        }
     }
 }
 

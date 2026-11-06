@@ -247,6 +247,8 @@ public final class RadioViewModel {
     }
     /// When this device last exchanged settings with iCloud; the system decides when they travel on.
     public private(set) var lastSettingsSync: Date?
+    /// When a sync of the memories with iCloud last finished.
+    public private(set) var lastMemorySync: Date?
     /// Why the sync cannot work at the moment, though it is on.
     public private(set) var settingsSyncHint: String?
     /// iGate: pass received RF packets and our own packets to APRS-IS.
@@ -375,6 +377,7 @@ public final class RadioViewModel {
     private let syncedSettings: (any SyncedSettingsStore)?
     private let settingsSyncSleep: @Sendable (Duration) async throws -> Void
     private var settingsSync: SettingsSync?
+    private var memoryObservers: [Task<Void, Never>] = []
     private var settingsSyncTask: Task<Void, Never>?
     /// How long changes must pause before they go to the other devices.
     static let settingsSyncPause = Duration.seconds(2)
@@ -441,6 +444,7 @@ public final class RadioViewModel {
         self.simulatedSignalStep = simulatedSignalStep
         refreshConnections()
         observeInternet()
+        observeMemories()
         observeAudioSession()
         observePermissions()
         if let switching = audioSession ?? otherAppsMute {
@@ -471,6 +475,7 @@ public final class RadioViewModel {
         settings.isListenOnly = isListenOnly
         settings.isSettingsSyncEnabled = isSettingsSyncEnabled
         settings.lastSettingsSync = lastSettingsSync
+        settings.lastMemorySync = lastMemorySync
         settings.micGain = micGain
         settings.isStickyPTT = isStickyPTT
         settings.accessToneHz = accessToneHz
@@ -501,6 +506,7 @@ public final class RadioViewModel {
         applySynced(settings)
         isSettingsSyncEnabled = settings.isSettingsSyncEnabled
         lastSettingsSync = settings.lastSettingsSync
+        lastMemorySync = settings.lastMemorySync
         isListenOnly = settings.isListenOnly
         isStationSetupPending = callsign.isEmpty && !isListenOnly
         micGain = settings.micGain
@@ -1185,6 +1191,30 @@ public final class RadioViewModel {
         guard let point = await location.currentLocation(), isInternetFeedEnabled else { return }
         internetLocation = point
         updateInternet()
+    }
+
+    /// Memories changed on another device reach this one through the repository.
+    private func observeMemories() {
+        guard let repository else { return }
+        let changes = repository.changes
+        let finishedSyncs = repository.finishedSyncs
+        memoryObservers = [
+            Task { [weak self] in
+                for await _ in changes {
+                    await self?.loadMemories()
+                }
+            },
+            Task { [weak self] in
+                for await date in finishedSyncs {
+                    self?.noteMemorySync(date)
+                }
+            },
+        ]
+    }
+
+    private func noteMemorySync(_ date: Date) {
+        lastMemorySync = max(lastMemorySync ?? date, date)
+        saveSettings()
     }
 
     private func observeInternet() {
