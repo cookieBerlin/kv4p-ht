@@ -1,0 +1,14 @@
+// The UI test target of the accessibility audit (ADR-0062). The project takes Base.xcconfig, which is for the app; these
+// replace what a test bundle must not take from it.
+
+PRODUCT_NAME = KV4PHTUITests
+PRODUCT_BUNDLE_IDENTIFIER = io.github.cookieberlin.kv4pht.uitests
+TEST_TARGET_NAME = KV4PHT
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_FILE =
+INFOPLIST_FILE[sdk=iphoneos*] =
+INFOPLIST_FILE[sdk=iphonesimulator*] =
+INFOPLIST_FILE[sdk=macosx*] =
+CODE_SIGN_ENTITLEMENTS =
+CODE_SIGN_ENTITLEMENTS[sdk=iphone*] =
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] =

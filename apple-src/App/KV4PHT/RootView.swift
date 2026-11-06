@@ -216,6 +216,8 @@ struct RootView: View {
                     )
                     .foregroundStyle(page == item ? Color.accentColor : Color.secondary)
                     .accessibilityAddTraits(page == item ? .isSelected : [])
+                    // For the UI tests, as the pages are all there at once and share names with links (ADR-0062).
+                    .accessibilityIdentifier("page-\(item.title)")
                 }
             }
             .padding(.top, 6)

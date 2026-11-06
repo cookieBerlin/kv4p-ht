@@ -47,6 +47,8 @@ struct SettingsView: View {
                         } label: {
                             Label(page.title, systemImage: page.systemImage)
                         }
+                        // For the UI tests, as "Memories" and "APRS" also name pages of the bar below (ADR-0062).
+                        .accessibilityIdentifier("settings-\(page.title)")
                     }
                 }
                 Section { NavigationLink("About kv4p HT") { AboutView() } }
