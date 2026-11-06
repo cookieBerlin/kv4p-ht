@@ -75,6 +75,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var keepsInternetPackets = false
     /// How long packets stay, in days; 0 for without limit.
     public var packetRetentionDays = 30
+    /// A message to this station in the background brings a notification; local to the device (ADR-0058).
+    public var notifiesAboutMessages = true
     /// The units of the APRS list (ADR-0055).
     public var units = APRSUnits.system
     public var txLimits = TXLimits()
@@ -139,6 +141,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isKeepingPackets = values.value(.isKeepingPackets, or: defaults.isKeepingPackets)
         keepsInternetPackets = values.value(.keepsInternetPackets, or: defaults.keepsInternetPackets)
         packetRetentionDays = values.value(.packetRetentionDays, or: defaults.packetRetentionDays)
+        notifiesAboutMessages = values.value(.notifiesAboutMessages, or: defaults.notifiesAboutMessages)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)

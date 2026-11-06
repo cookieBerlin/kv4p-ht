@@ -358,6 +358,11 @@ struct APRSSettings: View {
                         }
                     }
                 }
+                Toggle("Notify about messages to me", isOn: $model.notifiesAboutMessages)
+                    .explained(ControlHelp.notifyMessages)
+                if model.notifiesAboutMessages, model.isDenied(.notifications) {
+                    PermissionNotice(permission: .notifications)
+                }
                 LabeledContent("Stored packets", value: "\(model.storedPacketCount)")
                 Button("Delete all packets…", role: .destructive) { isConfirmingDeleteAll = true }
                     .disabled(model.storedPacketCount == 0 && model.aprsEvents.isEmpty)

@@ -43,6 +43,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-34](#hw-34) | APRS packet types and units | ⬜ | ⬜ |
 | [HW-35](#hw-35) | Beacons with the screen locked (iPhone) | – | ⬜ |
 | [HW-36](#hw-36) | APRS history | ✅ | ✅ |
+| [HW-37](#hw-37) | APRS messages and notifications | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -308,3 +309,12 @@ Export both formats and open the CSV in a spreadsheet: a text such as `=1+1` sta
 shows the list over the full height, and its filter leaves the main page alone. After a restart both filters are back.
 The box on a row is filled for a stored packet and empty for one only from the internet with *Keep internet packets* off,
 and *Stored packets* in the settings counts the filled ones. After an update from the version before this, the old packets are gone and the count starts again at 0.
+
+### HW-37
+
+A tap on a received message fills in its sender and moves to the text; on an own message it fills in the
+recipient. On the packets page a tap does nothing, and *Reply* in the row's menu goes back to the main page.
+With the app in the background, also on a Mac behind another app, a message to your callsign with another SSID
+brings one notification with its sender and text, despite repeats. A bulletin or a message to others brings none,
+and neither does anything with *Notify about messages to me* off. On an iPhone, new messages show as a number on
+the APRS page, which ends when you open it. Refuse notifications in the system settings: the switch offers a way there.

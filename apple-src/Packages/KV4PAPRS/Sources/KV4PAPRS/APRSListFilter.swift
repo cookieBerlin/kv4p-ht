@@ -42,6 +42,14 @@ extension APRSEvent {
         return Self.baseCallsign(fromCallsign) == own || toCallsign.map(Self.baseCallsign) == own
     }
 
+    /// A message meant for this station, with any SSID: not one to everyone, and not this station's own. Another of its
+    /// SSIDs can write to it.
+    public func isMessage(to callsign: String) -> Bool {
+        let own = Self.baseCallsign(callsign)
+        return kind == .message && !own.isEmpty && toCallsign.map(Self.baseCallsign) == own
+            && fromCallsign.uppercased() != Java.trim(callsign).uppercased()
+    }
+
     /// The callsign without its SSID, in upper case.
     public static func baseCallsign(_ callsign: String) -> String {
         String(Java.trim(callsign).uppercased().prefix { $0 != "-" })
