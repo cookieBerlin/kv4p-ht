@@ -56,11 +56,11 @@ The structure is the same on all devices, and similar to the Android app:
   the pages, otherwise above **Push to talk** and in the 🖥 settings window.
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
 
-📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **APRS** and ⚙ **Settings**
-are pages: use the symbols in the bar at the bottom, or swipe sideways. With the largest text sizes, hold a symbol
-to see it large with its name. The app opens the page you
-used last. **Push to talk** is on the memories page, and the header on the memories and
-APRS pages.
+📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **Packets**, **Chats** (two speech bubbles) and
+⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. With the largest text sizes,
+hold a symbol to see it large with its name. The app opens the page you used last. **Push to talk** is on the
+memories page, and the header on all pages but the settings. On a page within the settings, a swipe to the right goes
+back to their list.
 
 Controls that are not self-explanatory explain themselves: 🖥 point at them for a
 tooltip; 📱 a short text is below each setting, and ⓘ explains the
@@ -99,6 +99,10 @@ both are in ⚙ **Settings** under *Connection*, together with the state of the 
   2 s (the default), also with a reply after the time set in *Reply after*, by rejecting it, or not at all, which lets
   a message fail to try *Send again*. A long *Reply after* gives time to put the app in the background and see the
   notification. These take effect at once.
+
+**Connect at start**, on by default, connects to the radio chosen last when the app starts: 📱 in ⚙ **Settings**
+under *Connection*, otherwise under *Radio*. It does so only for a radio you chose, or the simulator, not for
+*Bluetooth (first radio found)*, which could be anyone's, and not over USB.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
@@ -305,7 +309,8 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
-**Chats:** the switch at the top of the APRS page changes between *Packets* and *Chats*. *Chats* has one chat for
+**Chats:** the switch at the top of the APRS page changes between *Packets* and *Chats*; 📱 on an iPhone or in a
+narrow iPad window, they are pages of their own. *Chats* has one chat for
 each station you wrote with, with its SSID, newest first, and the number of unread messages. A chat shows the
 messages in the order they were written, yours on the right with their delivery. A tap on such a message in the
 packets opens its chat. Messages to and from you stay as long as ⚙ **Settings**, *APRS*, *History*, *Keep messages
@@ -319,7 +324,7 @@ the Mac) deletes it, and the trash button at the top deletes the whole chat, als
 Messages go over the radio; a station seen only on the internet gets them only if an iGate passes them on.
 
 **Answering and new messages:** a tap on a message to others fills in its sender as the recipient, and *Reply* in
-the ⋯ menu of its row does the same, also from the *Packets* page. The number on the APRS page, and on *Chats*,
+the ⋯ menu of its row does the same, also from the *Packets* page. The number on the APRS page (📱 on the *Chats* symbol), and on *Chats*,
 shows unread messages to your callsign, with any SSID, until you open their chat. While the app is in the background, each of them
 brings a notification with its sender and text. The app must be running for this, so nothing arrives after it has
 ended. A tap on the notification opens its chat. *Notify about messages to me* under ⚙ **Settings**, *APRS*,
@@ -386,7 +391,8 @@ modem, the app encodes and decodes the speech with Codec2.
 
 ⚙ **Settings** opens an overview of pages: a sidebar on the Mac, a list on iPhone and iPad.
 A short text below a setting explains it. 📱 On an iPhone or in a narrow iPad window, the list starts with
-*Connection*: the radio, the state of the connection and **Connect** or **Disconnect**.
+*Connection*: the radio, the state of the connection, **Connect** or **Disconnect** and *Connect at start*. While
+the simulator is the chosen radio, its page follows in a group of its own.
 
 | Page | What it holds |
 |---|---|

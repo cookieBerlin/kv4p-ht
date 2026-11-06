@@ -143,6 +143,8 @@ enum Composition {
         settings.isSimulatorChosen = true
         settings.isSettingsSyncEnabled = false
         settings.notifiesAboutMessages = false
+        // It connects below, once the demo content is there.
+        settings.connectsAtStart = false
         let store = UserDefaultsSettingsStore(defaults: defaults)
         if let data = try? settings.encoded() { store.save(data) }
         let model = RadioViewModel(

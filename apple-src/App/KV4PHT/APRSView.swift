@@ -5,6 +5,9 @@ import SwiftUI
 /// The APRS packets heard on air, newest first, and a line to send messages; the settings are in `SettingsView`.
 struct APRSView: View {
     @Bindable var model: RadioViewModel
+    /// On a phone, the packets and the chats are pages of their own, which say whether they are on screen; elsewhere
+    /// the view switches between them.
+    var page: APRSPage?
     @State private var text = ""
     @State private var isOnScreen = false
     @FocusState private var isWriting: Bool
@@ -23,20 +26,23 @@ struct APRSView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
             }
-            Picker("Show", selection: $model.aprsPage) {
-                Text("Packets").tag(APRSPage.packets)
-                Text(model.newAPRSMessages > 0 ? "Chats (\(model.newAPRSMessages))" : "Chats").tag(APRSPage.chats)
+            if page == nil {
+                Picker("Show", selection: $model.aprsPage) {
+                    Text("Packets").tag(APRSPage.packets)
+                    Text(model.newAPRSMessages > 0 ? "Chats (\(model.newAPRSMessages))" : "Chats")
+                        .tag(APRSPage.chats)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .padding(.horizontal)
+                .padding(.top, 6)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .padding(.horizontal)
-            .padding(.top, 6)
-            switch model.aprsPage {
+            switch shownPage {
             case .packets: APRSPacketList(model: model, list: .main)
             case .chats: APRSChatsView(model: model)
             }
             // A chat has its own line to write.
-            if model.aprsPage == .packets {
+            if shownPage == .packets {
                 Divider()
                 if model.canSendOnAir {
                     composer.padding(8)
@@ -57,7 +63,11 @@ struct APRSView: View {
         .onChange(of: isPageOnScreen) { updateVisibility() }
     }
 
+    private var shownPage: APRSPage { page ?? model.aprsPage }
+
+    /// A phone's pages tell it themselves, as both of them are there at once.
     private func updateVisibility() {
+        guard page == nil else { return }
         model.isAPRSVisible = isOnScreen && isPageOnScreen && scenePhase == .active
     }
 

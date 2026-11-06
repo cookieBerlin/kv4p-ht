@@ -30,18 +30,16 @@ final class AccessibilityAuditTests: XCTestCase {
         let size = textSize == nil ? "default" : "largest"
         XCTAssertTrue(waitForStart(), "The app did not start")
         try audit("\(size) memories")
-        tapPage("APRS")
+        tapPage("Packets")
         try audit("\(size) packets")
-        // With unread messages, the switch says how many, as "Chats (2)".
-        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Chats'")).firstMatch.tap()
+        tapPage("Chats")
         try audit("\(size) chats")
         let chat = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'N1CALL'")).firstMatch
         if chat.waitForExistence(timeout: 2) {
             chat.tap()
             try audit("\(size) chat")
-            app.buttons["Chats"].firstMatch.tap()
+            app.navigationBars.buttons["Chats"].firstMatch.tap()
         }
-        app.buttons["Packets"].firstMatch.tap()
         tapPage("Settings")
         try audit("\(size) settings")
         // In the list of the settings, as "Memories" and "APRS" also name pages of the bar below.
@@ -65,10 +63,14 @@ final class AccessibilityAuditTests: XCTestCase {
         add(attachment)
     }
 
-    /// The page bar of a phone; elsewhere the pages stand side by side, and the settings open from the toolbar.
+    /// The page bar of a phone; elsewhere the memories and APRS stand side by side, APRS switches between the packets
+    /// and the chats, and the settings open from the toolbar.
     private func tapPage(_ title: String) {
         let pageButton = app.buttons["page-\(title)"].firstMatch
-        if pageButton.exists {
+        if !pageButton.exists, title == "Packets" || title == "Chats" {
+            // With unread messages, the switch says how many, as "Chats (2)".
+            app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch.tap()
+        } else if pageButton.exists {
             pageButton.tap()
             // The pages scroll into place; an audit before that sees two halves.
             let selected = NSPredicate(format: "isSelected == true")

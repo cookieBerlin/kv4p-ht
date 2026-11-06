@@ -44,22 +44,34 @@ struct SettingsView: View {
                 if sizeClass == .compact {
                     ConnectionSection(model: model)
                 }
-                Section {
-                    ForEach(pages) { page in
-                        NavigationLink {
-                            content(of: page)
-                        } label: {
-                            Label(page.title, systemImage: page.systemImage)
-                        }
-                        // For the UI tests, as "Memories" and "APRS" also name pages of the bar below (ADR-0062).
-                        .accessibilityIdentifier("settings-\(page.title)")
-                    }
+                // Below the choice of radio, as it belongs to the simulator chosen there.
+                if pages.contains(.simulator) {
+                    Section { link(to: .simulator) }
                 }
-                Section { NavigationLink("About kv4p HT") { AboutView() } }
+                Section {
+                    ForEach(pages.filter { $0 != .simulator }) { link(to: $0) }
+                }
+                Section { NavigationLink("About kv4p HT", value: SettingsDestination.about) }
             }
             .settingsPage("Settings", model: model)
+            .navigationDestination(for: SettingsDestination.self) { destination in
+                switch destination {
+                case .page(let page): content(of: page)
+                case .about: AboutView()
+                }
+            }
         #endif
     }
+
+    #if os(iOS)
+        private func link(to page: SettingsPage) -> some View {
+            NavigationLink(value: SettingsDestination.page(page)) {
+                Label(page.title, systemImage: page.systemImage)
+            }
+            // For the UI tests, as "Memories" and "APRS" also name pages of the bar below (ADR-0062).
+            .accessibilityIdentifier("settings-\(page.title)")
+        }
+    #endif
 
     /// Without anything to set, a page is not offered.
     private var pages: [SettingsPage] {
@@ -97,6 +109,22 @@ struct SettingsView: View {
     }
 }
 
+/// A page of the settings, or the About page; a phone keeps the open ones, to go back to the list with a swipe.
+enum SettingsDestination: Hashable {
+    case page(SettingsPage)
+    case about
+}
+
+/// Whether the app connects by itself at the start, to the radio chosen last.
+struct ConnectAtStartToggle: View {
+    @Bindable var model: RadioViewModel
+
+    var body: some View {
+        Toggle("Connect at start", isOn: $model.connectsAtStart)
+            .explained(ControlHelp.connectAtStart)
+    }
+}
+
 #if os(iOS)
     /// The radio, the state of its connection and the way to connect it, on top of a phone's settings.
     private struct ConnectionSection: View {
@@ -121,6 +149,7 @@ struct SettingsView: View {
                 }
                 ConnectButton(model: model)
                     .tint(model.canConnect ? nil : .red)
+                ConnectAtStartToggle(model: model)
             } header: {
                 Text("Connection")
             } footer: {
