@@ -19,17 +19,28 @@ extension View {
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
-        .toolbar {
-            #if os(macOS)
-                SettingsLink { Label("Settings", systemImage: "gearshape") }
-            #else
-                NavigationLink {
-                    SettingsView(model: model)
-                } label: {
-                    Label("Settings", systemImage: "gearshape")
-                }
+        .modifier(SettingsEntry(model: model))
+    }
+}
+
+/// The way to the settings. On iPhone and iPad, a reply from their packets page comes back from them, to write it.
+private struct SettingsEntry: ViewModifier {
+    let model: RadioViewModel
+    @State private var isShowingSettings = false
+
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                #if os(macOS)
+                    SettingsLink { Label("Settings", systemImage: "gearshape") }
+                #else
+                    Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
+                #endif
+            }
+            #if os(iOS)
+                .navigationDestination(isPresented: $isShowingSettings) { SettingsView(model: model) }
+                .onChange(of: model.aprsReplyCount) { isShowingSettings = false }
             #endif
-        }
     }
 }
 
@@ -377,15 +388,20 @@ struct PermissionNotice: View {
 
     private var settings: URL? {
         #if os(iOS)
-            URL(string: UIApplication.openSettingsURLString)
+            URL(
+                string: permission == .notifications
+                    ? UIApplication.openNotificationSettingsURLString : UIApplication.openSettingsURLString
+            )
         #else
+            let security = "com.apple.preference.security?"
             let pane =
                 switch permission {
-                case .bluetooth: "Privacy_Bluetooth"
-                case .microphone: "Privacy_Microphone"
-                case .location: "Privacy_LocationServices"
+                case .bluetooth: security + "Privacy_Bluetooth"
+                case .microphone: security + "Privacy_Microphone"
+                case .location: security + "Privacy_LocationServices"
+                case .notifications: "com.apple.Notifications-Settings.extension"
                 }
-            return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")
+            return URL(string: "x-apple.systempreferences:\(pane)")
         #endif
     }
 }

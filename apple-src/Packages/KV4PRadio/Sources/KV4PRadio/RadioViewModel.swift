@@ -227,6 +227,23 @@ public final class RadioViewModel {
         }
     }
     public private(set) var storedPacketCount = 0
+    /// A message to this station in the background brings a notification (ADR-0058).
+    public var notifiesAboutMessages = true {
+        didSet {
+            saveSettings()
+            if notifiesAboutMessages, !isRestoring {
+                askForNotifications()
+            }
+        }
+    }
+    /// Messages to this station since a list was last on screen.
+    public private(set) var newAPRSMessages = 0
+    /// The recipient in the line to send messages.
+    public var aprsRecipient = ""
+    /// Goes up with each reply, for the views to bring the line to send messages to the front.
+    public private(set) var aprsReplyCount = 0
+    /// New messages have an id above this one.
+    private var lastCheckedAPRSId: Int64 = 0
     /// Without a store, the app can keep no packets; the settings say so.
     public var canStorePackets: Bool { aprsHistory != nil }
     /// The packets in memory that are not in the store: they go when the app ends.
@@ -402,11 +419,11 @@ public final class RadioViewModel {
     private var beaconOverride: Float?
     /// The APRS list is on screen, so it can use our position (ADR-0053).
     public var isAPRSVisible = false {
-        didSet { refreshOwnPosition() }
+        didSet { listVisibilityChanged() }
     }
     /// The same for the packets page of the settings.
     public var isPacketsPageVisible = false {
-        didSet { refreshOwnPosition() }
+        didSet { listVisibilityChanged() }
     }
     /// Our position, for the distances of the APRS list; it stays on this device.
     public private(set) var ownPosition: GeoPoint?
@@ -439,6 +456,7 @@ public final class RadioViewModel {
     private let serialDevices: () -> [String]
     private let bluetoothScanner: (any BLEScanning)?
     private let failureAlerts: (any FailureAlerting)?
+    private let messageNotifier: (any APRSMessageNotifying)?
     private let permissions: (any PermissionChecking)?
     private var deniedPermissions: Set<Permission> = []
     private var permissionObserver: Task<Void, Never>?
@@ -518,6 +536,7 @@ public final class RadioViewModel {
         syncedSettings: (any SyncedSettingsStore)? = nil,
         bluetoothScanner: (any BLEScanning)? = nil,
         failureAlerts: (any FailureAlerting)? = nil,
+        messageNotifier: (any APRSMessageNotifying)? = nil,
         permissions: (any PermissionChecking)? = nil,
         simulator: (any SimulatorControlling)? = nil,
         simulatedFlashStep: Duration = .milliseconds(400),
@@ -538,6 +557,7 @@ public final class RadioViewModel {
         self.settingsSyncSleep = settingsSyncSleep
         self.bluetoothScanner = bluetoothScanner
         self.failureAlerts = failureAlerts
+        self.messageNotifier = messageNotifier
         self.permissions = permissions
         self.location = location
         self.backgroundLocation = backgroundLocation
@@ -615,6 +635,7 @@ public final class RadioViewModel {
         settings.units = units
         settings.isKeepingPackets = isKeepingPackets
         settings.keepsInternetPackets = keepsInternetPackets
+        settings.notifiesAboutMessages = notifiesAboutMessages
         settings.packetRetentionDays = packetRetentionDays
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
@@ -668,6 +689,7 @@ public final class RadioViewModel {
         units = settings.units
         isKeepingPackets = settings.isKeepingPackets
         keepsInternetPackets = settings.keepsInternetPackets
+        notifiesAboutMessages = settings.notifiesAboutMessages
         packetRetentionDays = settings.packetRetentionDays
     }
 
@@ -847,10 +869,19 @@ public final class RadioViewModel {
 
     /// Everything but Bluetooth, which the connection itself asks for; the simulator needs nothing real.
     private func askForPermissions() {
+        if notifiesAboutMessages {
+            askForNotifications()
+        }
         guard selectedConnection != .simulator else { return }
         permissions?.request(.microphone)
         permissions?.request(.location)
         failureAlerts?.prepare()
+    }
+
+    /// Only where the app can notify. Also with the simulator, which brings messages as a radio does.
+    private func askForNotifications() {
+        guard messageNotifier != nil else { return }
+        permissions?.request(.notifications)
     }
 
     public func askForDistances() {
@@ -1349,6 +1380,7 @@ public final class RadioViewModel {
     }
 
     private func showAPRS() {
+        noticeNewAPRSMessages()
         storeAPRSEvents()
         aprsIdsNotStored = Set(
             aprs.events.map(\.id).filter { storedAPRSEvents[$0] == nil || aprsIdsNotSaved.contains($0) }
@@ -1363,6 +1395,44 @@ public final class RadioViewModel {
         if aprs.events.contains(where: { position(of: $0) != nil }) {
             refreshOwnPosition()
         }
+    }
+
+    // MARK: APRS messages
+
+    private func listVisibilityChanged() {
+        refreshOwnPosition()
+        if isAPRSVisible || isPacketsPageVisible {
+            newAPRSMessages = 0
+        }
+    }
+
+    /// Goes by the ids, as a repeat stays the same event. An event that arrives before the stored ones are back gets a new
+    /// id then, so it waits.
+    private func noticeNewAPRSMessages() {
+        guard aprsHistory == nil || isAPRSHistoryLoaded else { return }
+        let new = aprs.events.filter { $0.id > lastCheckedAPRSId }
+        lastCheckedAPRSId = new.map(\.id).max() ?? lastCheckedAPRSId
+        for event in new.sorted(by: { $0.id < $1.id }) where event.isMessage(to: callsign) {
+            if !isAPRSVisible, !isPacketsPageVisible {
+                newAPRSMessages += 1
+            }
+            if !isAppActive, notifiesAboutMessages, let text = event.body {
+                messageNotifier?.deliver(APRSMessageNotice(id: event.id, title: event.fromCallsign, text: text))
+            }
+        }
+    }
+
+    /// A message can be answered if this station can send.
+    public func canReply(to event: APRSEvent) -> Bool {
+        event.kind == .message && canSendOnAir
+    }
+
+    /// Fills in the other station of a message as the recipient.
+    public func reply(to event: APRSEvent) {
+        let isOwn = event.fromCallsign.uppercased() == callsign.uppercased()
+        guard canReply(to: event), let other = isOwn ? event.toCallsign : event.fromCallsign else { return }
+        aprsRecipient = other
+        aprsReplyCount += 1
     }
 
     // MARK: APRS history
@@ -1393,6 +1463,7 @@ public final class RadioViewModel {
             let stored = page.reversed().compactMap(Self.event)
             self.storedAPRSEvents = Dictionary(uniqueKeysWithValues: stored.map { ($0.id, $0) })
             self.aprs.restore(stored, highestId: highestId)
+            self.lastCheckedAPRSId = highestId
             self.isAPRSHistoryLoaded = true
             for list in APRSList.allCases {
                 if self.aprsFilter(in: list).isEmpty {

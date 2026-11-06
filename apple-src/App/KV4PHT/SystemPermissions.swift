@@ -2,6 +2,7 @@ import AVFoundation
 import CoreBluetooth
 import CoreLocation
 import KV4PRadio
+import UserNotifications
 
 /// The system's permissions. Forwarding only; the rules are in `RadioViewModel`.
 @MainActor
@@ -9,6 +10,8 @@ final class SystemPermissions: NSObject, PermissionChecking {
     let changes: AsyncStream<Void>
     private nonisolated let continuation: AsyncStream<Void>.Continuation
     private let location = CLLocationManager()
+    /// The system answers this one only later; a change is reported through `changes`.
+    private var notifications = PermissionState.notDetermined
 
     override init() {
         (changes, continuation) = AsyncStream.makeStream()
@@ -36,6 +39,29 @@ final class SystemPermissions: NSObject, PermissionChecking {
             case .denied, .restricted: .denied
             default: .granted
             }
+        case .notifications:
+            refreshedNotifications()
+        }
+    }
+
+    /// What is known now; a newer answer of the system follows through `changes`.
+    private func refreshedNotifications() -> PermissionState {
+        refreshNotifications()
+        return notifications
+    }
+
+    private func refreshNotifications() {
+        Task {
+            let state: PermissionState =
+                switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
+                case .notDetermined: .notDetermined
+                case .denied: .denied
+                default: .granted
+                }
+            if state != notifications {
+                notifications = state
+                continuation.yield()
+            }
         }
     }
 
@@ -50,6 +76,11 @@ final class SystemPermissions: NSObject, PermissionChecking {
             }
         case .location:
             location.requestWhenInUseAuthorization()
+        case .notifications:
+            Task {
+                _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+                refreshNotifications()
+            }
         }
     }
 }
