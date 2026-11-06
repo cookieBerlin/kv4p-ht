@@ -25,8 +25,20 @@
 		A1000000000000000000F002 /* firmware-nightly.json in Resources */ = {isa = PBXBuildFile; fileRef = A3000000000000000000F002 /* firmware-nightly.json */; platformFilters = (macos, ); };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AD000000000000000000F010 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A70000000000000000000001;
+			remoteInfo = KV4PHT;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		A30000000000000000000001 /* KV4PHT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KV4PHT.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A3000000000000000000F010 /* KV4PHTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KV4PHTUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A3000000000000000000F011 /* UITests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = UITests.xcconfig; path = ../Config/UITests.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000002 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Base.xcconfig; path = ../Config/Base.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000003 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../Config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000004 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../Config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -47,6 +59,11 @@
 			path = KV4PHT;
 			sourceTree = "<group>";
 		};
+		A40000000000000000000002 /* KV4PHTUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KV4PHTUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +82,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A5000000000000000000F010 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -72,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				A40000000000000000000001 /* KV4PHT */,
+				A40000000000000000000002 /* KV4PHTUITests */,
 				A30000000000000000000005 /* KV4PHT.entitlements */,
 				A60000000000000000000002 /* Config */,
 				A60000000000000000000004 /* Firmware */,
@@ -86,6 +111,7 @@
 				A30000000000000000000002 /* Base.xcconfig */,
 				A30000000000000000000003 /* Debug.xcconfig */,
 				A30000000000000000000004 /* Release.xcconfig */,
+				A3000000000000000000F011 /* UITests.xcconfig */,
 			);
 			name = Config;
 			sourceTree = "<group>";
@@ -94,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				A30000000000000000000001 /* KV4PHT.app */,
+				A3000000000000000000F010 /* KV4PHTUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -153,6 +180,27 @@
 			productReference = A30000000000000000000001 /* KV4PHT.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A7000000000000000000F010 /* KV4PHTUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A9000000000000000000F010 /* Build configuration list for PBXNativeTarget "KV4PHTUITests" */;
+			buildPhases = (
+				A8000000000000000000F010 /* Sources */,
+				A5000000000000000000F010 /* Frameworks */,
+				A8000000000000000000F011 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE000000000000000000F010 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A40000000000000000000002 /* KV4PHTUITests */,
+			);
+			name = KV4PHTUITests;
+			productName = KV4PHTUITests;
+			productReference = A3000000000000000000F010 /* KV4PHTUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -165,6 +213,10 @@
 				TargetAttributes = {
 					A70000000000000000000001 = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					A7000000000000000000F010 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = A70000000000000000000001;
 					};
 				};
 			};
@@ -186,6 +238,7 @@
 			projectRoot = "";
 			targets = (
 				A70000000000000000000001 /* KV4PHT */,
+				A7000000000000000000F010 /* KV4PHTUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -206,6 +259,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A8000000000000000000F011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -216,7 +276,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A8000000000000000000F010 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AE000000000000000000F010 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A70000000000000000000001 /* KV4PHT */;
+			targetProxy = AD000000000000000000F010 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AC0000000000000000000001 /* Debug */ = {
@@ -245,6 +320,20 @@
 			};
 			name = Release;
 		};
+		AC000000000000000000F010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3000000000000000000F011 /* UITests.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		AC000000000000000000F011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3000000000000000000F011 /* UITests.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -262,6 +351,15 @@
 			buildConfigurations = (
 				AC0000000000000000000003 /* Debug */,
 				AC0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A9000000000000000000F010 /* Build configuration list for PBXNativeTarget "KV4PHTUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC000000000000000000F010 /* Debug */,
+				AC000000000000000000F011 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
