@@ -516,6 +516,11 @@ public struct APRSController: Sendable {
             event.kind = .position
             event.latitude = position.position.latitude
             event.longitude = position.position.longitude
+            event.symbol = APRSSymbolInfo(
+                javaTable: position.position.symbolTable,
+                javaCode: position.position.symbolCode
+            )
+            event.device = position.source == "MICe" ? MicEDevice(payload: info.payload) : nil
         }
         event.comment = [info.position?.comment, info.object?.comment, nil].reduce(
             first(packet.comment, info.comment)

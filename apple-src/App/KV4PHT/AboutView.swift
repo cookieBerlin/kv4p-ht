@@ -20,6 +20,15 @@ struct AboutView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
+            Section("Data") {
+                ForEach(AboutInfo.dataSources) { source in
+                    if let url = URL(string: source.address) {
+                        Link(destination: url) {
+                            LabeledContent(source.name, value: source.licence)
+                        }
+                    }
+                }
+            }
             Section("Licences") {
                 ForEach(AboutInfo.components) { component in
                     LabeledContent {

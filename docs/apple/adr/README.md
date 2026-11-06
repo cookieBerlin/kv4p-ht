@@ -57,3 +57,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0051](0051-settings-sync.md) | Settings sync | Proposed |
 | [0052](0052-memory-sync.md) | Memory sync | Proposed |
 | [0053](0053-distance-to-stations.md) | Distance to stations | Proposed |
+| [0054](0054-aprs-symbols-and-devices.md) | APRS symbols and devices | Proposed |

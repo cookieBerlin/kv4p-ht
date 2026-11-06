@@ -32,6 +32,14 @@ struct AboutInfoTests {
         )
     }
 
+    @Test("the data the app uses names its source and licence")
+    func dataSources() {
+        let sources = AboutInfo.dataSources
+        #expect(sources.map(\.licence) == ["CC BY-SA 4.0", "CC BY-SA 2.0"])
+        #expect(sources.allSatisfy { $0.address.hasPrefix("https://github.com/") })
+        #expect(Set(sources.map(\.id)).count == sources.count)
+    }
+
     @Test("the components name their licences; bundled licence texts are named once")
     func components() {
         let components = AboutInfo.components

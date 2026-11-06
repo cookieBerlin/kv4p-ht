@@ -114,6 +114,13 @@ The Apple app decodes APRS exactly like the Android app, which uses the
 java-aprs library. Packets that library cannot decode, or decodes oddly, look the
 same in both apps.
 
+## Why does the app name a radio, and where did `_3` go?
+
+Mic-E radios mark themselves at the end of the comment, and `_3` is the mark of a Yaesu FT5D. The app
+shows such marks as the name of the radio. A mark it does not know stays in the comment. The names come
+from the [APRS device identification database](https://github.com/aprsorg/aprs-deviceid), and the
+meanings of the symbols from the [aprs.fi APRS symbols index](https://github.com/hessu/aprs-symbol-index).
+
 ## Does the app collect personal data?
 
 No data is sent anywhere except what you configure: APRS packets you transmit or
@@ -133,4 +140,8 @@ The app is free software under the GNU GPL 3.0, like the whole kv4p HT project
 ([source code](https://github.com/cookieBerlin/kv4p-ht)). It contains Codec2 1.2.0
 (GNU LGPL 2.1) and the esptool flasher stub (GNU GPL 2.0 or later), both
 unmodified, and ports code from the Android app, java-aprs, javAX25 and
-esp32-flash-lib. **About kv4p HT** lists them with their licence texts.
+esp32-flash-lib. **About kv4p HT** lists them with their licence texts. It also contains the names of
+the APRS symbols from the [aprs.fi symbols index](https://github.com/hessu/aprs-symbol-index)
+(CC BY-SA 4.0) and the list of radios from the
+[APRS device identification database](https://github.com/aprsorg/aprs-deviceid) (CC BY-SA 2.0), which it
+names there.

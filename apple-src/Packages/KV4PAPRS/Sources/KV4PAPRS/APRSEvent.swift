@@ -42,10 +42,33 @@ public struct APRSEvent: Equatable, Identifiable, Sendable {
     public internal(set) var isDigipeated = false
     /// Only seen on APRS-IS, never on RF.
     public internal(set) var isInternetOnly = false
+    /// The symbol of a packet with a position.
+    public internal(set) var symbol: APRSSymbolInfo?
+    /// The radio that sent a Mic-E packet, if it marks itself.
+    var device: MicEDevice?
     /// Outgoing numbered messages wait for an acknowledgement.
     public internal(set) var deliveryState = DeliveryState.none
     public internal(set) var transmitAttempts = 0
     public internal(set) var nextRetryAtMs: Int64?
+
+    /// The name of the radio that sent the packet, if it is known.
+    public var deviceName: String? { device?.name }
+
+    /// The comment to show: without the marks of a radio, which `comment` keeps as the Android code does.
+    public var displayComment: String? {
+        guard let device else { return comment }
+        return device.commentWithoutMark(comment)
+    }
+
+    /// What is known about the symbol and the radio, for a closer look.
+    public var symbolDetails: [String] {
+        [
+            symbol?.name,
+            symbol.map { "Code: \($0.codeText)" },
+            symbol?.overlay.map { "Overlay: \($0)" },
+            deviceName.map { "Device: \($0)" },
+        ].compactMap(\.self)
+    }
 
     /// `AprsEvent.DELIVERY_*`.
     public enum DeliveryState: Int, Sendable {

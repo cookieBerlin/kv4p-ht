@@ -30,6 +30,28 @@ public struct AboutInfo: Sendable {
         public var id: String { name }
     }
 
+    /// Data the app contains, which asks to be mentioned (ADR-0054).
+    public struct DataSource: Sendable, Identifiable {
+        public let name: String
+        public let licence: String
+        public let address: String
+
+        public var id: String { name }
+    }
+
+    public static let dataSources = [
+        DataSource(
+            name: "APRS symbols index of aprs.fi",
+            licence: "CC BY-SA 4.0",
+            address: "https://github.com/hessu/aprs-symbol-index"
+        ),
+        DataSource(
+            name: "APRS device identification database",
+            licence: "CC BY-SA 2.0",
+            address: "https://github.com/aprsorg/aprs-deviceid"
+        ),
+    ]
+
     /// The project, where the source code of every version is published.
     public static let sourceAddress = "https://github.com/cookieBerlin/kv4p-ht"
 
