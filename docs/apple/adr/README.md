@@ -65,4 +65,5 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0059](0059-logging-and-problem-reports.md) | Logging and problem reports | Proposed |
 | [0060](0060-minimum-os-27.md) | Minimum OS 27 | Proposed |
 | [0061](0061-aprs-chats.md) | APRS chats | Proposed |
+| [0062](0062-accessibility-audit.md) | Accessibility audit | Proposed |
 | [0063](0063-sstv.md) | SSTV receive and transmit | Proposed |
