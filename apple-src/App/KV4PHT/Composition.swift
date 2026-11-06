@@ -35,7 +35,13 @@ enum Composition {
     private static var cloudKitFailures: Task<Void, Never>?
     private static var notificationOpener: NotificationOpener?
 
+    /// Started with this, the app shows placeholder content on the simulator and keeps nothing (ADR-0062).
+    static let demoArgument = "-uitest-demo"
+
     static func makeViewModel() -> RadioViewModel {
+        if ProcessInfo.processInfo.arguments.contains(demoArgument) {
+            return makeDemoViewModel()
+        }
         diagnostics.log(.info, .app, "Started: \(appVersion) on \(ProblemReport.Environment.current.system)")
         cloudKitFailures = CloudKitSyncEvents.logFailures(to: diagnostics)
         let model = RadioViewModel(
@@ -119,6 +125,33 @@ enum Composition {
     /// `CFBundleShortVersionString`, sent in the APRS-IS login.
     private static var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+    }
+
+    /// For the accessibility audit: the simulator, stores in memory only, settings of their own that start anew, no
+    /// iCloud, no notifications and no permission asked, so that nothing in it depends on the device.
+    private static func makeDemoViewModel() -> RadioViewModel {
+        let defaults = UserDefaults(suiteName: "uitest-demo") ?? .standard
+        defaults.removePersistentDomain(forName: "uitest-demo")
+        var settings = AppSettings()
+        settings.callsign = "N0CALL"
+        settings.isSimulatorChosen = true
+        settings.isSettingsSyncEnabled = false
+        settings.notifiesAboutMessages = false
+        let store = UserDefaultsSettingsStore(defaults: defaults)
+        if let data = try? settings.encoded() { store.save(data) }
+        let model = RadioViewModel(
+            makeController: { _, rxAudio in RadioController(transport: simulator.makeTransport(), rxAudio: rxAudio) },
+            serialDevices: { [] },
+            memories: try? SwiftDataMemoryRepository.inMemory(),
+            aprsHistory: try? SwiftDataAPRSHistory.inMemory(),
+            settings: store,
+            simulator: simulator
+        )
+        Task {
+            await model.loadDemoContent()
+            await model.connect()
+        }
+        return model
     }
 
     /// The memories live in the app's Application Support folder; without it the app runs without memories. They sync
