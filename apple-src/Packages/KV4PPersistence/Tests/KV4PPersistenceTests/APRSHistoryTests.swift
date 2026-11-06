@@ -47,6 +47,55 @@ struct APRSHistoryTests {
         #expect(try await history.page(before: 40, limit: 2).map(\.id) == [4, 3])
     }
 
+    @Test("a filter finds by callsign and type, in any case, over all that is stored")
+    func filters() async throws {
+        let history = try SwiftDataAPRSHistory.inMemory()
+        let entries = [
+            APRSHistoryEntry(
+                id: 1,
+                lastSeenMs: 1,
+                kind: 1,
+                fromCallsign: "N1CALL",
+                toCallsign: "N0CALL",
+                isInternetOnly: false,
+                payload: Data()
+            ),
+            APRSHistoryEntry(
+                id: 2,
+                lastSeenMs: 2,
+                kind: 3,
+                fromCallsign: "N2CALL",
+                toCallsign: nil,
+                isInternetOnly: false,
+                payload: Data()
+            ),
+            APRSHistoryEntry(
+                id: 3,
+                lastSeenMs: 3,
+                kind: 4,
+                fromCallsign: "N1CALL-9",
+                toCallsign: nil,
+                isInternetOnly: false,
+                payload: Data()
+            ),
+        ]
+        try await history.save(entries)
+        func ids(_ filter: APRSHistoryFilter, before: Int64? = nil, limit: Int = 10) async throws -> [Int64] {
+            try await history.page(before: before, limit: limit, filter: filter).map(\.id)
+        }
+        #expect(try await ids(APRSHistoryFilter()) == [3, 2, 1])
+        #expect(try await ids(APRSHistoryFilter(callsign: "n1call")) == [3, 1])
+        #expect(try await ids(APRSHistoryFilter(callsign: " N0 ")) == [1])
+        #expect(try await ids(APRSHistoryFilter(kinds: [3, 4])) == [3, 2])
+        #expect(try await ids(APRSHistoryFilter(callsign: "N1", kinds: [4])) == [3])
+        #expect(try await ids(APRSHistoryFilter(callsign: "N1"), before: 2, limit: 1) == [1])
+        #expect(try await ids(APRSHistoryFilter(callsign: "N1", participant: "N0")) == [1])
+        #expect(!APRSHistoryFilter(participant: "x").isEmpty)
+        #expect(APRSHistoryFilter().isEmpty)
+        #expect(!APRSHistoryFilter(callsign: "x").isEmpty)
+        #expect(!APRSHistoryFilter(kinds: [1]).isEmpty)
+    }
+
     @Test("an entry, the old ones or all can go")
     func deletes() async throws {
         let history = try SwiftDataAPRSHistory.inMemory()
@@ -73,5 +122,21 @@ struct APRSHistoryTests {
         let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
         try await SwiftDataAPRSHistory(storeURL: url).save([Self.entry(1, at: 10)])
         #expect(try await SwiftDataAPRSHistory(storeURL: url).count() == 1)
+    }
+
+    @Test("the store of an earlier format goes, and the new one stays across restarts")
+    func dropsFormerStore() async throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let former = ["APRSHistory.store", "APRSHistory.store-wal", "APRSHistory.store-shm"]
+            .map { folder.appending(path: $0) }
+        for file in former {
+            try Data("old".utf8).write(to: file)
+        }
+        try await SwiftDataAPRSHistory.inFolder(folder).save([Self.entry(1, at: 10)])
+        for file in former {
+            #expect(!FileManager.default.fileExists(atPath: file.path))
+        }
+        #expect(try await SwiftDataAPRSHistory.inFolder(folder).count() == 1)
     }
 }

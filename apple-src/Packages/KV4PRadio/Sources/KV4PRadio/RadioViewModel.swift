@@ -227,16 +227,33 @@ public final class RadioViewModel {
         }
     }
     public private(set) var storedPacketCount = 0
-    /// Older packets are stored than the list shows.
-    public private(set) var hasMoreAPRSHistory = false
+    /// Without a store, the app can keep no packets; the settings say so.
+    public var canStorePackets: Bool { aprsHistory != nil }
+    /// The packets in memory that are not in the store: they go when the app ends.
+    private var aprsIdsNotStored: Set<Int64> = []
+    /// Saving these failed.
+    private var aprsIdsNotSaved: Set<Int64> = []
 
-    /// APRS packets heard on air, newest first, as `aprsDestinationFilter` lets through.
-    public private(set) var aprsEvents: [APRSEvent] = []
-    public var aprsDestinationFilter = APRSDestinationFilter.all {
-        didSet {
-            saveSettings()
-            showAPRS()
-        }
+    /// Whether a packet of the list stays when the app ends. What came from the store is in it.
+    public func isStored(_ event: APRSEvent) -> Bool {
+        !aprsIdsNotStored.contains(event.id)
+    }
+
+    /// The list on the main page, newest first.
+    public var aprsEvents: [APRSEvent] { aprsEvents(in: .main) }
+    public var hasMoreAPRSHistory: Bool { hasMoreAPRSHistory(in: .main) }
+
+    public func aprsEvents(in list: APRSList) -> [APRSEvent] {
+        self[list].events
+    }
+
+    /// Older packets are stored than the list shows.
+    public func hasMoreAPRSHistory(in list: APRSList) -> Bool {
+        self[list].hasMore
+    }
+
+    public func aprsFilter(in list: APRSList = .main) -> APRSListFilter {
+        self[list].filter
     }
 
     let rxAudio = RXAudioPlayer()
@@ -387,6 +404,10 @@ public final class RadioViewModel {
     public var isAPRSVisible = false {
         didSet { refreshOwnPosition() }
     }
+    /// The same for the packets page of the settings.
+    public var isPacketsPageVisible = false {
+        didSet { refreshOwnPosition() }
+    }
     /// Our position, for the distances of the APRS list; it stays on this device.
     public private(set) var ownPosition: GeoPoint?
     /// The question for location access is open, so the list can offer to ask it.
@@ -442,8 +463,19 @@ public final class RadioViewModel {
     private let aprsHistory: (any APRSHistoryStoring)?
     /// How many packets memory holds, and how many a step of the list brings.
     private let aprsListLimit: Int
-    /// Older packets the user has brought back to the list.
-    private var olderAPRSEvents: [APRSEvent] = []
+    /// What each list shows: both use the packets in memory, and each brings back its own older ones.
+    private var mainAPRSList = APRSListState()
+    private var pageAPRSList = APRSListState()
+    private subscript(list: APRSList) -> APRSListState {
+        get { list == .main ? mainAPRSList : pageAPRSList }
+        set {
+            if list == .main {
+                mainAPRSList = newValue
+            } else {
+                pageAPRSList = newValue
+            }
+        }
+    }
     /// The stored state of the packets in memory, to save only what changed.
     private var storedAPRSEvents: [Int64: APRSEvent] = [:]
     /// Packets wait to be stored until the stored ones are back, as ids must not repeat.
@@ -577,7 +609,8 @@ public final class RadioViewModel {
         settings.isDigipeatingEnabled = isDigipeatingEnabled
         settings.isIGateEnabled = isIGateEnabled
         settings.isInternetFeedEnabled = isInternetFeedEnabled
-        settings.aprsDestinationFilter = aprsDestinationFilter
+        settings.aprsListFilter = aprsFilter(in: .main)
+        settings.aprsPageFilter = aprsFilter(in: .packetsPage)
         settings.txLimits = txLimits
         settings.units = units
         settings.isKeepingPackets = isKeepingPackets
@@ -629,7 +662,8 @@ public final class RadioViewModel {
         beaconAccuracy = settings.beaconAccuracy
         beaconFrequency = settings.beaconFrequency
         beaconIntervalMinutes = settings.beaconIntervalMinutes
-        aprsDestinationFilter = settings.aprsDestinationFilter
+        self[.main].filter = settings.aprsListFilter
+        self[.packetsPage].filter = settings.aprsPageFilter
         txLimits = settings.txLimits
         units = settings.units
         isKeepingPackets = settings.isKeepingPackets
@@ -830,7 +864,8 @@ public final class RadioViewModel {
 
     /// Reads our position for the list: while it is shown, with access granted, and at most once a minute.
     private func refreshOwnPosition() {
-        guard isAPRSVisible, let location, permissions?.state(of: .location) == .granted, now() >= nextOwnPositionAtMs
+        guard isAPRSVisible || isPacketsPageVisible, let location, permissions?.state(of: .location) == .granted,
+            now() >= nextOwnPositionAtMs
         else { return }
         nextOwnPositionAtMs = now() + Self.ownPositionIntervalMs
         Task {
@@ -1315,9 +1350,17 @@ public final class RadioViewModel {
 
     private func showAPRS() {
         storeAPRSEvents()
-        aprsEvents = (aprs.events + olderAPRSEvents).filter { aprsDestinationFilter.shows($0, callsign: callsign) }
-            .sorted { $0.lastSeenMs > $1.lastSeenMs }
-        if aprsEvents.contains(where: { position(of: $0) != nil }) {
+        aprsIdsNotStored = Set(
+            aprs.events.map(\.id).filter { storedAPRSEvents[$0] == nil || aprsIdsNotSaved.contains($0) }
+        )
+        for list in APRSList.allCases {
+            var state = self[list]
+            state.events = (aprs.events + state.older)
+                .filter { state.filter.matches($0, ownCallsign: callsign) }
+                .sorted { $0.lastSeenMs > $1.lastSeenMs }
+            self[list] = state
+        }
+        if aprs.events.contains(where: { position(of: $0) != nil }) {
             refreshOwnPosition()
         }
     }
@@ -1350,8 +1393,14 @@ public final class RadioViewModel {
             let stored = page.reversed().compactMap(Self.event)
             self.storedAPRSEvents = Dictionary(uniqueKeysWithValues: stored.map { ($0.id, $0) })
             self.aprs.restore(stored, highestId: highestId)
-            self.hasMoreAPRSHistory = page.count == self.aprsListLimit
             self.isAPRSHistoryLoaded = true
+            for list in APRSList.allCases {
+                if self.aprsFilter(in: list).isEmpty {
+                    self.self[list].hasMore = page.count == self.aprsListLimit
+                } else {
+                    try await self.loadPage(of: list, from: history)
+                }
+            }
             self.showAPRS()
         }
     }
@@ -1373,12 +1422,24 @@ public final class RadioViewModel {
                     storedAPRSEvents[event.id] = event
                 }
                 let entries = changed.compactMap(Self.entry)
-                withAPRSHistory { try await $0.save(entries) }
+                withAPRSHistory { [weak self] history in
+                    do {
+                        try await history.save(entries)
+                    } catch {
+                        self?.aprsIdsNotSaved.formUnion(entries.map(\.id))
+                        self?.showAPRS()
+                        throw error
+                    }
+                }
             }
         }
         for event in aprs.trim(keeping: aprsListLimit) {
             storedAPRSEvents[event.id] = nil
-            hasMoreAPRSHistory = hasMoreAPRSHistory || (isKeepingPackets && shouldStore(event))
+            if isKeepingPackets, shouldStore(event) {
+                for list in APRSList.allCases where aprsFilter(in: list).isEmpty {
+                    self[list].hasMore = true
+                }
+            }
         }
     }
 
@@ -1406,7 +1467,9 @@ public final class RadioViewModel {
         guard packetRetentionDays > 0 else { return }
         let oldest = now() - Int64(packetRetentionDays) * 86_400_000
         aprs.removeEvents { $0.lastSeenMs < oldest && $0.deliveryState != .pending }
-        olderAPRSEvents.removeAll { $0.lastSeenMs < oldest }
+        for list in APRSList.allCases {
+            self[list].older.removeAll { $0.lastSeenMs < oldest }
+        }
         storedAPRSEvents = storedAPRSEvents.filter { $0.value.lastSeenMs >= oldest }
         withAPRSHistory { try await $0.deleteOlder(than: oldest) }
         if isAPRSHistoryLoaded {
@@ -1414,24 +1477,91 @@ public final class RadioViewModel {
         }
     }
 
-    /// Brings the next older packets to the list.
-    public func loadMoreAPRSHistory() async {
+    /// Brings the next older packets to a list.
+    public func loadMoreAPRSHistory(in list: APRSList = .main) async {
         withAPRSHistory { [weak self] history in
-            guard let self else { return }
-            let shown = self.aprs.events + self.olderAPRSEvents
-            // The oldest shown comes again, so that packets of the same moment are not missed.
-            let page = try await history.page(before: shown.map(\.lastSeenMs).min(), limit: self.aprsListLimit + 1)
-            let known = Set(shown.map(\.id))
-            self.olderAPRSEvents += page.compactMap(Self.event).filter { !known.contains($0.id) }
-            self.hasMoreAPRSHistory = page.count > self.aprsListLimit
-            self.showAPRS()
+            try await self?.loadPage(of: list, from: history)
+            self?.showAPRS()
         }
         await aprsHistoryWork?.value
     }
 
+    private func loadPage(of list: APRSList, from history: any APRSHistoryStoring) async throws {
+        var state = self[list]
+        let shown = aprs.events + state.older
+        // Without a filter, memory holds the newest; with one, a packet that fits can be anywhere.
+        let start = state.cursor ?? (state.filter.isEmpty ? shown.map(\.lastSeenMs).min() : nil)
+        // The last one comes again, so that packets of the same moment are not missed.
+        let page = try await history.page(
+            before: start,
+            limit: aprsListLimit + 1,
+            filter: historyFilter(state.filter)
+        )
+        let known = Set(shown.map(\.id))
+        state.older += page.compactMap(Self.event).filter { !known.contains($0.id) }
+        state.cursor = page.last?.lastSeenMs ?? start
+        state.hasMore = page.count > aprsListLimit
+        self[list] = state
+    }
+
+    /// Looks for packets over all that is stored. The filter is remembered on this device.
+    public func setAPRSFilter(_ filter: APRSListFilter, in list: APRSList = .main) async {
+        self[list] = APRSListState(filter: filter)
+        saveSettings()
+        showAPRS()
+        guard aprsHistory != nil else { return }
+        if filter.isEmpty {
+            await aprsHistoryWork?.value
+            self[list].hasMore = storedPacketCount > aprs.events.count
+        } else {
+            await loadMoreAPRSHistory(in: list)
+        }
+    }
+
+    /// What the store looks for: as near as it can, as `APRSListFilter` decides in the end.
+    private func historyFilter(_ filter: APRSListFilter) -> APRSHistoryFilter {
+        APRSHistoryFilter(
+            callsign: filter.callsign,
+            kinds: Set(filter.kinds.map(\.rawValue)),
+            participant: filter.isForMe ? APRSEvent.baseCallsign(callsign) : ""
+        )
+    }
+
+    /// A list as its filter shows it, oldest first: all that is stored, and what is only in memory. `nil` if the store
+    /// cannot be read.
+    public func exportAPRS(_ format: APRSExport.Format, from list: APRSList = .main) async -> String? {
+        let filter = aprsFilter(in: list)
+        var older: [APRSEvent] = []
+        var wasRead = aprsHistory == nil
+        withAPRSHistory { [weak self] history in
+            guard let self else { return }
+            var start: Int64?
+            var seen = Set<Int64>()
+            while true {
+                let page = try await history.page(
+                    before: start,
+                    limit: self.aprsListLimit + 1,
+                    filter: self.historyFilter(filter)
+                )
+                older += page.compactMap(Self.event).filter { seen.insert($0.id).inserted }
+                start = page.last?.lastSeenMs
+                if page.count <= self.aprsListLimit { break }
+            }
+            wasRead = true
+        }
+        await aprsHistoryWork?.value
+        guard wasRead else { return nil }
+        let known = Set(older.map(\.id))
+        let events = (older + aprs.events.filter { !known.contains($0.id) })
+            .filter { filter.matches($0, ownCallsign: callsign) }
+        return format.text(of: events.sorted { ($0.lastSeenMs, $0.id) < ($1.lastSeenMs, $1.id) })
+    }
+
     public func deleteAPRSEvent(_ event: APRSEvent) {
         aprs.removeEvents { $0.id == event.id }
-        olderAPRSEvents.removeAll { $0.id == event.id }
+        for list in APRSList.allCases {
+            self[list].older.removeAll { $0.id == event.id }
+        }
         storedAPRSEvents[event.id] = nil
         withAPRSHistory { try await $0.delete(id: event.id) }
         showAPRS()
@@ -1439,9 +1569,10 @@ public final class RadioViewModel {
 
     public func deleteAllAPRSEvents() {
         aprs.removeEvents { _ in true }
-        olderAPRSEvents = []
+        for list in APRSList.allCases {
+            self[list] = APRSListState(filter: aprsFilter(in: list))
+        }
         storedAPRSEvents = [:]
-        hasMoreAPRSHistory = false
         withAPRSHistory { try await $0.deleteAll() }
         showAPRS()
     }
@@ -1986,4 +2117,20 @@ public final class RadioViewModel {
     private static func label(_ tone: UInt8) -> String {
         CTCSS.label(for: tone) ?? CTCSS.none
     }
+}
+
+/// The two views of the APRS list: each has its own filter, so that looking through the history in the settings does not
+/// hide new packets on the main page.
+public enum APRSList: CaseIterable, Hashable, Sendable {
+    case main, packetsPage
+}
+
+private struct APRSListState {
+    var filter = APRSListFilter()
+    /// Older packets the user has brought back to this list.
+    var older: [APRSEvent] = []
+    /// How far back they go.
+    var cursor: Int64?
+    var hasMore = false
+    var events: [APRSEvent] = []
 }

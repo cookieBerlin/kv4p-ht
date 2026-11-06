@@ -65,7 +65,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isDigipeatingEnabled = false
     public var isIGateEnabled = false
     public var isInternetFeedEnabled = false
-    public var aprsDestinationFilter = APRSDestinationFilter.all
+    /// What the list on the main page looks for; local to the device (ADR-0057).
+    public var aprsListFilter = APRSListFilter()
+    /// What the packets page of the settings looks for; local to the device.
+    public var aprsPageFilter = APRSListFilter()
     /// The list stays across restarts; local to the device, as the packets are (ADR-0057).
     public var isKeepingPackets = true
     /// Packets only from the internet are stored as well, which can be many.
@@ -130,7 +133,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isDigipeatingEnabled = values.value(.isDigipeatingEnabled, or: defaults.isDigipeatingEnabled)
         isIGateEnabled = values.value(.isIGateEnabled, or: defaults.isIGateEnabled)
         isInternetFeedEnabled = values.value(.isInternetFeedEnabled, or: defaults.isInternetFeedEnabled)
-        aprsDestinationFilter = values.value(.aprsDestinationFilter, or: defaults.aprsDestinationFilter)
+        aprsListFilter = values.value(.aprsListFilter, or: defaults.aprsListFilter)
+        aprsPageFilter = values.value(.aprsPageFilter, or: defaults.aprsPageFilter)
         units = values.value(.units, or: defaults.units)
         isKeepingPackets = values.value(.isKeepingPackets, or: defaults.isKeepingPackets)
         keepsInternetPackets = values.value(.keepsInternetPackets, or: defaults.keepsInternetPackets)

@@ -7,5 +7,4 @@ android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/radio/RadioModuleControll
 android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/ui/ToneHelper.java
 android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/ui/AprsObjectSummary.java
 android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/firmware/FirmwareUtils.java
-android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/data/AprsFeedPolicy.java
 android-src/KV4PHT/app/src/main/java/com/vagell/kv4pht/javAX25

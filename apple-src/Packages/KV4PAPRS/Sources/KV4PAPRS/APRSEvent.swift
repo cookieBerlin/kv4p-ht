@@ -1,7 +1,7 @@
 /// What the APRS feed shows for one logical packet, observed one or more times (java-aprs `AprsEvent`).
 public struct APRSEvent: Codable, Equatable, Identifiable, Sendable {
     /// `AprsEvent.*_TYPE`.
-    public enum Kind: Int, Codable, Sendable {
+    public enum Kind: Int, Codable, Hashable, Sendable {
         case unknown = 0
         case message = 1
         case object = 2

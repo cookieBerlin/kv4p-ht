@@ -12,15 +12,14 @@ explanations appear only as tooltips, which nobody finds without hovering over a
 
 ## Decision
 
-- **An overview with pages:** Station, Radio, Transmit, Audio, APRS, Memories, Simulator,
-  Advanced and, on iPhone and iPad, About. A page without anything to set is not offered:
+- **An overview with pages:** Station, Radio, Transmit, Audio, APRS, Memories, Simulator and,
+  on iPhone and iPad, About. A page without anything to set is not offered:
   the simulator only while it is the chosen radio, Audio only where it has a setting.
 - **The usual form of each platform:** a sidebar in the Mac's settings window, a list that
   leads to the pages on iPhone and iPad.
 - **Memories lead directly to the editor,** not to a button that opens it in a sheet. Its
   *Done* button goes.
-- **The frequency limits are always open on the Advanced page,** which is already out of
-  the way, instead of in a closed group.
+- **The frequency limits are on the Radio page,** always open.
 - **Explanations are visible on every platform.** `explained` puts the text below the row
   on the Mac as well, and has no tooltip any more, as it would say the same.
 - **The simulator actions stay visible without a connection,** greyed out and with a note

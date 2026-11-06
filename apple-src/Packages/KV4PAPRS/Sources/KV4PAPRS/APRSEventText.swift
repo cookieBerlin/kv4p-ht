@@ -38,14 +38,6 @@ extension APRSEvent {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
-    /// A message to or from this callsign.
-    public func isMessage(of callsign: String) -> Bool {
-        guard kind == .message else { return false }
-        let local = APRSDestinationFilter.normalize(callsign)
-        return APRSDestinationFilter.normalize(fromCallsign) == local
-            || toCallsign.map(APRSDestinationFilter.normalize) == local
-    }
-
     /// The name the map gives its pin.
     public var mapLabel: String {
         kind == .object ? objectSummary.mapLabel : fromCallsign
@@ -71,7 +63,7 @@ extension APRSEvent {
 
     private var isBulletin: Bool {
         guard kind == .message, let toCallsign else { return false }
-        let destination = APRSDestinationFilter.normalize(toCallsign)
+        let destination = Self.baseCallsign(toCallsign)
         return ["ALL", "QST", "CQ"].contains(destination) || destination.hasPrefix("BLN")
     }
 
