@@ -100,7 +100,8 @@ struct RadioSettings: View {
                     Text("25 kHz").tag(true)
                 }
                 .explained(ControlHelp.bandwidth)
-                Stepper("Squelch \(model.squelch)", value: $model.squelch, in: 0...8)
+                Stepper("Squelch \(model.squelch)", value: $model.squelch, in: SquelchMark.levels)
+                    .disabled(!model.canChangeSquelch)
                     .explained(ControlHelp.squelch)
                 if let warning = model.squelchWarning {
                     Label(warning, systemImage: "exclamationmark.triangle")

@@ -654,7 +654,7 @@ public final class RadioViewModel {
     }
 
     /// The bars of the S-meter, the last one for overload.
-    public static let sMeterBarCount = SMeter.overload
+    public nonisolated static let sMeterBarCount = SMeter.overload
 
     public var sMeter: Int { snapshot.sMeter }
 
@@ -1429,6 +1429,15 @@ public final class RadioViewModel {
             let squelch = UInt8(clamping: newValue)
             update { $0.setSquelch(squelch) }
         }
+    }
+
+    /// Transmitting makes no use of the squelch, and a scan works with its own.
+    public var canChangeSquelch: Bool { isReady && !isTransmitting && !isScanning }
+
+    /// A change on the S-meter, or by VoiceOver; only while the squelch can change.
+    public func changeSquelch(to level: Int) {
+        guard canChangeSquelch else { return }
+        squelch = min(max(level, SquelchMark.levels.lowerBound), SquelchMark.levels.upperBound)
     }
 
     /// A squelch of 0 sounds like a fault: noise without a signal.
