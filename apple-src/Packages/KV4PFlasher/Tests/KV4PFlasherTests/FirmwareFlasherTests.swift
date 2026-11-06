@@ -34,12 +34,12 @@ struct FirmwareFlasherTests {
         let vector = try FlasherVectorTests.vector("flash")
         let clock = VirtualClock()
         let port = TranscriptPort(transcript: vector.expected.transcript, clock: clock)
-        let flasher = FirmwareFlasher(images: try vector.input.images, stub: try .esp32(), clock: clock) { path in
+        let flasher = FirmwareFlasher(stub: try .esp32(), clock: clock) { path in
             #expect(path == "/dev/cu.usbserial-0001")
             return port
         }
         let percent = Mutex(0)
-        try await flasher.flash(serialPath: "/dev/cu.usbserial-0001") { event in
+        try await flasher.flash(try vector.input.images, serialPath: "/dev/cu.usbserial-0001") { event in
             if case .progress(let value) = event { percent.withLock { $0 = value } }
         }
         #expect(percent.withLock { $0 } == 100)
@@ -49,11 +49,11 @@ struct FirmwareFlasherTests {
     func noAnswer() async {
         let serial = FakeSerialPort()
         let clock = VirtualClock()
-        let flasher = FirmwareFlasher(images: Self.images, stub: FlasherStub(), clock: clock) { _ in
+        let flasher = FirmwareFlasher(stub: FlasherStub(), clock: clock) { _ in
             SerialBootloaderPort(port: serial, clock: clock)
         }
         await #expect(throws: FlashError.noAnswer) {
-            try await flasher.flash(serialPath: "/dev/cu.usbserial-0001") { _ in }
+            try await flasher.flash(Self.images, serialPath: "/dev/cu.usbserial-0001") { _ in }
         }
         let calls = serial.calls
         #expect(calls.first == .open)
@@ -66,10 +66,12 @@ struct FirmwareFlasherTests {
     func portUnavailable() async {
         let failure = TransportError.portUnavailable(path: "/dev/x", errno: 16)
         let clock = VirtualClock()
-        let flasher = FirmwareFlasher(images: Self.images, stub: FlasherStub(), clock: clock) { _ in
+        let flasher = FirmwareFlasher(stub: FlasherStub(), clock: clock) { _ in
             SerialBootloaderPort(port: FakeSerialPort(failures: .init(open: failure)), clock: clock)
         }
-        await #expect(throws: FlashError.port(failure)) { try await flasher.flash(serialPath: "/dev/x") { _ in } }
+        await #expect(throws: FlashError.port(failure)) {
+            try await flasher.flash(Self.images, serialPath: "/dev/x") { _ in }
+        }
     }
 }
 

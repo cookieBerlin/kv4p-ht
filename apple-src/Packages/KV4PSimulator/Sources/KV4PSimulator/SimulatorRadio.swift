@@ -50,12 +50,28 @@ public enum SimulatedSignal: Int, CaseIterable, Sendable {
     }
 }
 
+/// The firmware on the simulated radio (ADR-0049).
+public enum SimulatedFirmware: String, Codable, CaseIterable, Sendable {
+    /// The nightly build, for this app.
+    case current
+    /// Firmware 17 as released, for the Android app.
+    case android
+    /// A version older than the app requires.
+    case tooOld
+
+    public var label: String {
+        switch self {
+        case .current: "For this app"
+        case .android: "For Android"
+        case .tooOld: "Too old"
+        }
+    }
+}
+
 /// What the user can choose about the simulated radio; takes effect at the next connection.
 public struct SimulatorSettings: Codable, Equatable, Sendable {
     public var band = SimulatedBand.vhf
-    /// Otherwise a version older than the app requires.
-    public var hasCurrentFirmware = true
-    public var hasFreeDVModem = true
+    public var firmware = SimulatedFirmware.current
     public var hasPowerSwitch = true
     public var hasRadioModule = true
     /// Otherwise the radio never sends `HELLO`.
@@ -67,8 +83,8 @@ public struct SimulatorSettings: Codable, Equatable, Sendable {
         var scenario = Scenario.ble
         scenario.moduleType = band == .uhf ? .sa818UHF : .sa818VHF
         scenario.startFrequency = band == .uhf ? 435 : 145.5  // the firmware's 144 MHz is at the band edge
-        scenario.firmwareVersion = hasCurrentFirmware ? Firmware.version : Firmware.version - 1
-        if hasFreeDVModem { scenario.features.insert(.freeDV2400B) }
+        scenario.firmwareVersion = firmware == .tooOld ? Firmware.version - 1 : Firmware.version
+        if firmware != .current { scenario.features.remove(.freeDV2400B) }
         if !hasPowerSwitch { scenario.features.remove(.highLowPower) }
         scenario.radioModuleStatus = hasRadioModule ? .found : .notFound
         scenario.faults.omitsHello = !answers
@@ -94,14 +110,19 @@ public protocol SimulatorControlling: AnyObject {
 public final class SimulatorRadio<C: Clock>: SimulatorControlling where C.Duration == Duration {
     public var settings = SimulatorSettings()
     private let clock: C
+    /// iPhone and iPad reach a radio over Bluetooth only, which firmware older than the nightly build lacks.
+    private let isOverBluetooth: Bool
     private var transport: SimulatorTransport<C>?
 
-    public init(clock: C) {
+    public init(clock: C, isOverBluetooth: Bool = false) {
         self.clock = clock
+        self.isOverBluetooth = isOverBluetooth
     }
 
     public func makeTransport() -> SimulatorTransport<C> {
-        let transport = SimulatorTransport(simulator: RadioSimulator(scenario: settings.scenario), clock: clock)
+        var scenario = settings.scenario
+        scenario.faults.hasNoBluetoothService = isOverBluetooth && settings.firmware != .current
+        let transport = SimulatorTransport(simulator: RadioSimulator(scenario: scenario), clock: clock)
         self.transport = transport
         return transport
     }

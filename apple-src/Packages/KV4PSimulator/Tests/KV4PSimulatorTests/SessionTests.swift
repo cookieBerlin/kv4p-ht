@@ -18,7 +18,7 @@ struct SessionTests {
                 moduleType: .sa818VHF,
                 minRadioFreq: 134,
                 maxRadioFreq: 174,
-                features: [.highLowPower, .esp32AFSK]
+                features: [.highLowPower, .esp32AFSK, .freeDV2400B]
             ),
             deviceState: DeviceState(
                 radio: RadioState(

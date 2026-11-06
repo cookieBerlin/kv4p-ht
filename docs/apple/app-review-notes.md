@@ -23,9 +23,10 @@ no permission and records, stores and sends nothing.
 **Licence:** transmitting on air requires an amateur radio licence. The simulator
 sends nothing on air.
 
-**On the Mac:** the radio can also connect over USB, and the app can update the
-radio's firmware over USB. That is why the Mac app uses the serial and USB
-entitlements.
+**On the Mac:** the radio can also connect over USB, and the app can write one of the two
+firmwares it contains to the radio over USB, on the user's choice. It downloads no firmware. That
+is why the Mac app uses the serial and USB entitlements. With the simulator, the update writes
+nothing to a device. On iPhone and iPad there is no firmware update.
 
 **Background modes (iOS):**
 

@@ -33,6 +33,10 @@ public actor SimulatorTransport<C: Clock>: RadioTransport where C.Duration == Du
     public func connect() async throws(TransportError) {
         guard streams.state != .connected else { return }
         streams.publish(.connecting)
+        guard !simulator.scenario.faults.hasNoBluetoothService else {
+            streams.publish(.failed(.serviceNotFound))
+            throw .serviceNotFound
+        }
         streams.publish(.connected)
         streams.deliver(simulator.connect(at: elapsed))
         startTicking()

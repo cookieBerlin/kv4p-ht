@@ -19,7 +19,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-10](#hw-10) | APRS-IS feed and iGate | ⬜ | ⬜ |
 | [HW-11](#hw-11) | Position beacon and digipeating | ⬜ | ⬜ |
 | [HW-12](#hw-12) | Memory with offset and tone, scan | ⬜ | ⬜ |
-| [HW-13](#hw-13) | Firmware update over USB | ⬜ | – |
+| [HW-13](#hw-13) | Firmware update over USB | ✅ | – |
 | [HW-14](#hw-14) | FreeDV 2400B | ⬜ | ⬜ |
 | [HW-15](#hw-15) | Audio session | – | ⬜ |
 | [HW-16](#hw-16) | Background operation | – | ⬜ |
@@ -113,11 +113,12 @@ frequency with the tone. The scan stops on a busy memory.
 
 ### HW-13
 
-Choose *Update firmware…*, or run `swift run kv4p-probe --flash <directory>` with
-images built from `microcontroller-src`. The update flashes and verifies, and the
-radio answers afterwards. The image the app ships has no Bluetooth LE, so the
-radio answers over USB only until images built from `microcontroller-src` are
-flashed again.
+Choose *Update firmware…*. The nightly build is preselected, with its build time, commit and
+SHA-256. It flashes and verifies, and the radio answers over USB and Bluetooth LE, with sound
+in both directions into a dummy load. Then flash firmware 17: the app stays disconnected and says
+so, the Android app 2.0 works with the radio, and connecting from this app is refused without
+anything going on air. Flash the nightly build again: a radio with a board configuration
+keeps it throughout. Firmware 17 uses the larger partition table here, unlike the release.
 
 ### HW-14
 
@@ -144,8 +145,8 @@ After a restart of the app, they are unchanged.
 
 ### HW-18
 
-Connect a radio with outdated firmware. The bottom of the screen shows the notice, with links
-to the web flasher and the manual.
+Try to connect to a radio with firmware 17, which has no Bluetooth LE. The bottom of the screen
+shows the notice, which points to a Mac and the Android nightly app, with a link to the manual.
 
 ### HW-19
 

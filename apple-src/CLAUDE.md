@@ -32,7 +32,7 @@ apple-src/
 │   ├── KV4PSimulatorPeripheral/ # kv4p-sim-peripheral: simulated kv4p HT over real BLE (macOS)
 │   ├── KV4PTestSupport/ # Test doubles shared by test targets (ManualClock); not shipped
 │   └── KV4PProbe/       # kv4p-probe: prints the HELLO of real hardware (macOS dev tool)
-├── App/                 # KV4PHT.xcodeproj + thin SwiftUI app target (ADR-0019)
+├── App/                 # KV4PHT.xcodeproj + thin SwiftUI app target (ADR-0019); Firmware/: nightly image (ADR-0049)
 ├── Config/              # xcconfig files
 ├── scripts/             # coverage gate, privacy check, change detection
 ├── apple-paths.txt      # Apple port paths (CI change detection, privacy check)
@@ -59,6 +59,7 @@ make icon       # render the app icon from ../artwork/app-icon.svg (commit the r
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors (Android code, vendored Codec2) and the app version
 make vectors-check # make vectors, then fail if the committed vectors or Codec2 sources differ
+make nightly-firmware # replace the bundled nightly firmware from the upstream release; commit after a hardware test
 swift run kv4p-probe [--ble | --serial [<device>] [--reset] | --list] [--tune <MHz>] [--listen <s>]  # hardware check
 swift run kv4p-probe --flash <directory> [<device>]  # flash bootloader/partitions/boot_app0/firmware.bin over USB
 swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]  # simulated radio over BLE

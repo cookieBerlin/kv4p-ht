@@ -1,3 +1,4 @@
+import KV4PFlasher
 import KV4PRadio
 import SwiftUI
 
@@ -28,6 +29,11 @@ struct SettingsView: View {
                 .id(selection)
             }
             .safeAreaInset(edge: .bottom, spacing: 0) { NoticeBanner(model: model) }
+            .task(id: model.isFirmwareSettingsRequested) {
+                guard model.isFirmwareSettingsRequested else { return }
+                selection = .radio
+                model.firmwareSettingsShown()
+            }
             .onChange(of: pages) {
                 if let selection, !pages.contains(selection) { self.selection = .station }
             }
@@ -117,15 +123,18 @@ private struct SettingsPageStyle: ViewModifier {
     }
 }
 
-/// `FirmwareActivity`: flashes the packaged firmware after a confirmation, with progress and the result.
+/// `FirmwareActivity`: flashes the firmware the user chooses, with progress and the result.
 struct FirmwareUpdateRow: View {
     let model: RadioViewModel
-    @State private var isConfirming = false
+    @State private var isChoosing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if model.isFirmwareOutdated {
+            if model.offersFirmwareSettings {
                 Text("The radio needs a firmware update.").foregroundStyle(.orange)
+            }
+            if let hint = model.firmwareUpdateHint {
+                Text(hint).font(.footnote).foregroundStyle(.secondary)
             }
             switch model.firmwareUpdate {
             case .idle: EmptyView()
@@ -133,37 +142,92 @@ struct FirmwareUpdateRow: View {
             case .flashing(let percent):
                 ProgressView(value: Double(percent), total: 100) { Text("Updating firmware… \(percent) %") }
             case .finished: Label("Firmware updated and verified.", systemImage: "checkmark.circle")
+            case .finishedForAndroid:
+                Label(
+                    "Firmware updated and verified. The radio is now set up for the Android app.",
+                    systemImage: "checkmark.circle"
+                )
             case .failed(let message): Text(message).foregroundStyle(.red)
             }
-            Button("Update firmware…") { isConfirming = true }
+            Button("Update firmware…") { isChoosing = true }
                 .disabled(!model.canUpdateFirmware)
         }
-        .confirmationDialog("Flash firmware?", isPresented: $isConfirming) {
-            Button("Flash") { Task { await model.updateFirmware() } }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            if model.canConfigureSimulator {
-                Text("This gives the simulated radio the current firmware. No real radio is changed.")
-            } else {
-                Text(
-                    "This replaces the firmware on your kv4p HT with the version the app ships. Keep the USB cable "
-                        + "connected until the update is finished."
-                )
-            }
+        .sheet(isPresented: $isChoosing) {
+            FirmwareChoiceSheet(model: model)
         }
     }
 }
 
-/// iOS: the app cannot reach the radio's USB port, so it points to the web flasher and the manual.
-struct WebFlasherNotice: View {
+/// The firmwares the app contains; the one for this app is preselected (ADR-0049).
+struct FirmwareChoiceSheet: View {
+    let model: RadioViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var chosen: FirmwareChoice.ID?
+
+    private var selection: FirmwareChoice? {
+        model.firmwareChoices.first { $0.id == chosen } ?? model.firmwareChoices.first
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Choose the firmware").font(.headline)
+            ForEach(model.firmwareChoices) { choice in
+                Button {
+                    chosen = choice.id
+                } label: {
+                    row(choice)
+                }
+                .buttonStyle(.plain)
+            }
+            Text(
+                model.canConfigureSimulator
+                    ? "This changes the simulated radio. No real radio is changed."
+                    : "This replaces the firmware on your kv4p HT. Keep the USB cable connected until the update is finished."
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Flash") {
+                    guard let selection else { return }
+                    dismiss()
+                    Task { await model.updateFirmware(to: selection) }
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(selection == nil)
+            }
+        }
+        .padding()
+        .frame(minWidth: 460)
+    }
+
+    private func row(_ choice: FirmwareChoice) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: choice.id == selection?.id ? "largecircle.fill.circle" : "circle")
+                .foregroundStyle(.tint)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(choice.title).fontWeight(.semibold)
+                Text(choice.suitability).foregroundStyle(choice.isForThisApp ? Color.secondary : Color.orange)
+                ForEach(choice.details, id: \.self) {
+                    Text($0).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                }
+            }
+        }
+        .contentShape(Rectangle())
+    }
+}
+
+/// iOS: the app cannot reach the radio's USB port, so it points to a Mac, the Android nightly app and the manual.
+struct FirmwareElsewhereNotice: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("The radio needs a firmware update.").foregroundStyle(.orange)
-            Text("Connect the radio by USB to a computer and update it with the web flasher in a desktop browser.")
-                .foregroundStyle(.secondary)
-            if let flasher = URL(string: FirmwareHelp.webFlasherAddress) {
-                Link("Open the web flasher", destination: flasher)
-            }
+            Text(
+                "Connect the radio by USB to a Mac with this app and choose the firmware for this app there. The Android nightly app can write it too."
+            )
+            .foregroundStyle(.secondary)
             if let manual = URL(string: FirmwareHelp.manualAddress) {
                 Link("Firmware updates in the manual", destination: manual)
             }

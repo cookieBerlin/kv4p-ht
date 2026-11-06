@@ -76,10 +76,13 @@ struct FreeDVTests {
 
 @Suite("Simulator FreeDV scenario")
 struct FreeDVScenarioTests {
-    @Test("the FreeDV scenario is a BLE radio with the FreeDV modem, like the current firmware")
+    @Test("a radio has the FreeDV modem, like the current firmware; the released firmware 17 does not")
     func scenario() {
-        #expect(Scenario.freeDV.features == [.highLowPower, .esp32AFSK, .freeDV2400B])
-        #expect(Scenario.freeDV.windowSize == Scenario.ble.windowSize)
+        #expect(Scenario.ble.features == [.highLowPower, .esp32AFSK, .freeDV2400B])
+        #expect(Scenario.androidFirmware.features == [.highLowPower, .esp32AFSK])
+        #expect(Scenario.androidFirmware.firmwareVersion == Scenario.ble.firmwareVersion)
+        #expect(Scenario.noFreeDVModem.firmwareVersion > Scenario.ble.firmwareVersion)
+        #expect(!Scenario.noFreeDVModem.features.contains(.freeDV2400B))
     }
 
     @Test("the FreeDV voice signal is a tone that carries voice frames")

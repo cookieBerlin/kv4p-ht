@@ -11,7 +11,19 @@ import KV4PTransport
 @MainActor
 enum Composition {
     /// The simulated radio, which the settings configure.
-    private static let simulator = SimulatorRadio(clock: ContinuousClock())
+    private static let simulator = SimulatorRadio(clock: ContinuousClock(), isOverBluetooth: isOverBluetoothOnly)
+
+    /// iPhone and iPad reach a radio over Bluetooth only, so the simulator behaves like such a radio there.
+    private static var isOverBluetoothOnly: Bool {
+        #if os(iOS)
+            true
+        #else
+            false
+        #endif
+    }
+
+    /// The firmwares of the app's bundle, which only the Mac has (ADR-0049).
+    private static let firmwareChoices = Bundle.main.resourceURL.map(FirmwareChoice.bundled(in:)) ?? []
 
     static func makeViewModel() -> RadioViewModel {
         RadioViewModel(
@@ -26,6 +38,7 @@ enum Composition {
             location: CoreLocationProvider(),
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
             firmware: firmwareFlasher(),
+            firmwareChoices: firmwareChoices,
             settings: settingsStore(),
             bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
             failureAlerts: PlatformFailureAlerts(),
@@ -89,12 +102,10 @@ enum Composition {
     }
 
     #if os(macOS)
-        /// The firmware images the build copies from the Android app (ADR-0009); flashing keeps the Mac awake.
+        /// Flashing keeps the Mac awake.
         private static func firmwareFlasher() -> (any FirmwareFlashing)? {
-            guard let resources = Bundle.main.resourceURL, let images = FirmwareImages.packaged(in: resources),
-                let stub = try? FlasherStub.esp32()
-            else { return nil }
-            let flasher = FirmwareFlasher(images: images, stub: stub, clock: ContinuousClock()) {
+            guard !firmwareChoices.isEmpty, let stub = try? FlasherStub.esp32() else { return nil }
+            let flasher = FirmwareFlasher(stub: stub, clock: ContinuousClock()) {
                 SerialBootloaderPort(port: POSIXSerialPort(path: $0), clock: ContinuousClock())
             }
             return AwakeFirmwareFlasher(flasher: flasher)
@@ -127,12 +138,16 @@ enum Composition {
 private struct AwakeFirmwareFlasher: FirmwareFlashing {
     let flasher: any FirmwareFlashing
 
-    func flash(serialPath: String, events: @Sendable (FlashEvent) -> Void) async throws(FlashError) {
+    func flash(
+        _ images: FirmwareImages,
+        serialPath: String,
+        events: @Sendable (FlashEvent) -> Void
+    ) async throws(FlashError) {
         let activity = ProcessInfo.processInfo.beginActivity(
             options: [.userInitiated, .idleSystemSleepDisabled],
             reason: "Updating the radio's firmware"
         )
         defer { ProcessInfo.processInfo.endActivity(activity) }
-        try await flasher.flash(serialPath: serialPath, events: events)
+        try await flasher.flash(images, serialPath: serialPath, events: events)
     }
 }

@@ -52,3 +52,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0046](0046-lock-screen-ptt.md) | PTT from the lock screen | Proposed (deferred) |
 | [0047](0047-callsign-and-listen-only.md) | Callsign and listen-only | Proposed |
 | [0048](0048-settings-structure.md) | Settings structure | Proposed |
+| [0049](0049-two-bundled-firmwares.md) | Two bundled firmwares | Proposed |

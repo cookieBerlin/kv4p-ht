@@ -19,7 +19,7 @@ APP_PROJECT := App/KV4PHT.xcodeproj
 APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check ios-build app icon testflight ci
+.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci
 
 test:
 	$(SWIFT) test
@@ -59,6 +59,10 @@ vectors-check: vectors
 		git status --short --untracked-files=all -- '$(VECTORS)' $(VENDORED) >&2; \
 		git diff --unified=0 -- '$(VECTORS)' $(VENDORED) | cut -c1-200 | head -60 >&2; exit 1; fi
 	@echo "vectors: ok"
+
+# Replaces the bundled nightly firmware (ADR-0049); commit the result after a hardware test. Not part of `ci`.
+nightly-firmware:
+	scripts/update-nightly-firmware.sh
 
 ios-build:
 	xcodebuild build -quiet -scheme '$(SCHEME)' -destination '$(IOS_DESTINATION)'

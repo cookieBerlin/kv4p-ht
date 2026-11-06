@@ -135,17 +135,21 @@ struct RadioSettings: View {
                 Toggle("Low-pass", isOn: $model.filters.lowPass)
                     .explained(ControlHelp.lowPass)
             }
-            if model.firmwareText != nil || model.canUpdateFirmware || model.firmwareUpdate != .idle {
+            if model.firmwareText != nil || showsFirmwareUpdate {
                 Section("Firmware") {
                     if let firmware = model.firmwareText {
                         Text(firmware).foregroundStyle(.secondary)
                     }
-                    if model.canUpdateFirmware || model.firmwareUpdate != .idle {
+                    if showsFirmwareUpdate {
                         FirmwareUpdateRow(model: model)
                     }
                 }
             }
         }
+    }
+
+    private var showsFirmwareUpdate: Bool {
+        model.canUpdateFirmware || model.firmwareUpdate != .idle || model.offersFirmwareSettings
     }
 }
 
@@ -296,11 +300,9 @@ struct SimulatorSettings: View {
                 Picker("Band", selection: $model.simulatorSettings.band) {
                     ForEach(SimulatedBand.allCases, id: \.self) { Text($0.label) }
                 }
-                Picker("Firmware", selection: $model.simulatorSettings.hasCurrentFirmware) {
-                    Text("Current").tag(true)
-                    Text("Too old").tag(false)
+                Picker("Firmware", selection: $model.simulatorSettings.firmware) {
+                    ForEach(SimulatedFirmware.allCases, id: \.self) { Text($0.label) }
                 }
-                Toggle("FreeDV modem", isOn: $model.simulatorSettings.hasFreeDVModem)
                 Toggle("Power switch", isOn: $model.simulatorSettings.hasPowerSwitch)
                 Toggle("SA818 module found", isOn: $model.simulatorSettings.hasRadioModule)
                 Toggle("Radio answers", isOn: $model.simulatorSettings.answers)

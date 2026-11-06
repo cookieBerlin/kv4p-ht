@@ -208,7 +208,7 @@ struct BottomBar: View {
                 Divider()
                 Text(model.statusText)
                     .font(.caption)
-                    .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
+                    .foregroundStyle(model.isStatusFailure ? Color.red : Color.secondary)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
@@ -219,13 +219,34 @@ struct BottomBar: View {
     }
 
     @ViewBuilder private var firmware: some View {
-        if model.isWebFlasherNeeded {
-            WebFlasherNotice().padding(.horizontal).padding(.vertical, 8)
-        } else if model.isFirmwareOutdated || model.firmwareUpdate != .idle {
-            FirmwareUpdateRow(model: model).padding(.horizontal).padding(.vertical, 8)
+        if model.needsFirmwareUpdateElsewhere {
+            FirmwareElsewhereNotice().padding(.horizontal).padding(.vertical, 8)
+        } else if model.offersFirmwareSettings {
+            #if os(macOS)
+                FirmwareSettingsNotice(model: model).padding(.horizontal).padding(.vertical, 8)
+            #endif
         }
     }
 }
+
+#if os(macOS)
+    /// The radio needs another firmware; the update itself is in the settings.
+    struct FirmwareSettingsNotice: View {
+        let model: RadioViewModel
+        @Environment(\.openSettings) private var openSettings
+
+        var body: some View {
+            HStack(alignment: .firstTextBaseline) {
+                Text("The radio needs a firmware update.").foregroundStyle(.orange)
+                Spacer()
+                Button("Open Settings") {
+                    model.requestFirmwareSettings()
+                    openSettings()
+                }
+            }
+        }
+    }
+#endif
 
 /// The state of the connection; red with the reason when it has failed.
 struct StatusLine: View {
@@ -235,7 +256,7 @@ struct StatusLine: View {
         Text(model.statusText)
             .font(.footnote)
             .multilineTextAlignment(.center)
-            .foregroundStyle(model.hasFailed ? Color.red : Color.secondary)
+            .foregroundStyle(model.isStatusFailure ? Color.red : Color.secondary)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal)
     }

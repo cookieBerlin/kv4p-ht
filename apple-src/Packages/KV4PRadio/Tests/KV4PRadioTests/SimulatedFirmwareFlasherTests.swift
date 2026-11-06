@@ -11,7 +11,8 @@ struct SimulatedFirmwareFlasherTests {
     func progress() async throws {
         let events = Mutex<[FlashEvent]>([])
         let flasher = SimulatedFirmwareFlasher(step: .zero)
-        try await flasher.flash(serialPath: "") { event in events.withLock { $0.append(event) } }
+        let images = FirmwareImages(bootloader: [], partitions: [], bootApp0: [], app: [])
+        try await flasher.flash(images, serialPath: "") { event in events.withLock { $0.append(event) } }
         let seen = events.withLock { $0 }
         #expect(seen.first == .connected)
         #expect(seen.last == .progress(100))

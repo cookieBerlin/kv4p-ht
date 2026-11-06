@@ -21,6 +21,8 @@ public enum RadioFailure: Error, Equatable, Sendable {
     case invalidHello
     /// Older than the firmware the Android app ships (`FirmwareUtils.PACKAGED_FIRMWARE_VER`).
     case firmwareTooOld(UInt16)
+    /// Firmware 17 as released: its voice is Opus, so this app would transmit without sound (ADR-0049).
+    case firmwareForAndroid
     /// The SA818 did not answer at boot; any radio configuration would stall the firmware.
     case radioModuleNotFound
 }
@@ -599,12 +601,18 @@ public actor RadioController<C: Clock> where C.Duration == Duration {
         }
     }
 
+    /// The nightly build reports the same version as the released firmware 17; only it has the FreeDV modem.
+    private static func isForAndroid(_ version: FirmwareVersion) -> Bool {
+        version.version == KV4P.packagedFirmwareVersion && !version.features.contains(.freeDV2400B)
+    }
+
     /// `RadioAudioService.validateHello`.
     private func handleHello(_ payload: [UInt8]) async {
         helloTimer?.cancel()
         guard let hello = try? Hello(decoding: payload) else { return fail(.invalidHello) }
         let version = hello.version
         guard version.version >= Self.minimumFirmwareVersion else { return fail(.firmwareTooOld(version.version)) }
+        guard !Self.isForAndroid(version) else { return fail(.firmwareForAndroid) }
         desiredState.seed(version)
         guard version.radioModuleStatus != .notFound else { return fail(.radioModuleNotFound) }
         desiredState.seed(hello.deviceState)

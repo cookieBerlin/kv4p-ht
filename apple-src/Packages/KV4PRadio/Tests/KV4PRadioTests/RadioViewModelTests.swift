@@ -128,11 +128,9 @@ struct RadioViewModelTests {
 
     @Test("FreeDV 2400B is offered and switched only if the firmware supports it")
     func freeDV() async {
-        let analog = await connected()
+        let analog = await connected(.noFreeDVModem)
         #expect(!analog.supportsFreeDV)
-        var scenario = Scenario.ble
-        scenario.features.insert(.freeDV2400B)
-        let model = await connected(scenario)
+        let model = await connected(.ble)
         #expect(model.supportsFreeDV)
         #expect(!model.isFreeDV)
         model.isFreeDV = true
@@ -171,9 +169,17 @@ struct RadioViewModelTests {
     @Test(
         "failures are explained",
         arguments: [
-            (RadioFailure.helloTimeout, "The radio did not answer. Check that it is on and has firmware 17 or later."),
-            (.invalidHello, "The firmware of the radio is too old. Update it to version 17 or later."),
-            (.firmwareTooOld(16), "Firmware 16 is too old. Update the radio to version 17 or later."),
+            (
+                RadioFailure.helloTimeout,
+                "The radio did not answer. Check that it is on and has the firmware for this app."
+            ),
+            (.invalidHello, "The firmware of the radio is too old. Update it to the firmware for this app."),
+            (.firmwareTooOld(16), "Firmware 16 is too old. Update it to the firmware for this app."),
+            (
+                .firmwareForAndroid,
+                "This radio has the firmware for the Android app, with which this app has no sound. "
+                    + "Update it to the firmware for this app."
+            ),
             (.radioModuleNotFound, "The SA818 radio module did not respond. Restart the radio."),
             (
                 .transport(.bluetoothUnavailable(.unauthorized)),
@@ -183,7 +189,8 @@ struct RadioViewModelTests {
             (.transport(.bluetoothUnavailable(.unsupported)), "Bluetooth is not available."),
             (
                 .transport(.serviceNotFound),
-                "This device is not a kv4p HT, or its firmware has no Bluetooth LE service."
+                "This device is not a kv4p HT, or its firmware has no Bluetooth LE service. "
+                    + "Update it to the firmware for this app."
             ),
             (.transport(.connectionLost), "The connection to the radio was lost."),
             (.transport(.portUnavailable(path: "/dev/cu.x", errno: 16)), "/dev/cu.x cannot be opened."),

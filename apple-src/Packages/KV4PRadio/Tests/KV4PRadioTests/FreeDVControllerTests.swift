@@ -14,9 +14,7 @@ struct FreeDVControllerTests {
     static let speech = (0..<1280).map { Int16(truncatingIfNeeded: $0 * 211 % 16000 - 8000) }
 
     static var freeDVScenario: Scenario {
-        var scenario = Scenario.ble
-        scenario.features.insert(.freeDV2400B)
-        return scenario
+        Scenario.ble
     }
 
     /// A ready radio on a scripted transport, its RX audio recorded.
@@ -54,7 +52,7 @@ struct FreeDVControllerTests {
 
     @Test("FreeDV is switched on only if the firmware supports it")
     func firmwareSupport() async throws {
-        var analog = Scripted(scenario: .ble)
+        var analog = Scripted(scenario: .noFreeDVModem)
         try await analog.ready()
         await analog.controller.setFreeDV(true)
         #expect(await !analog.controller.snapshot.supportsFreeDV)
