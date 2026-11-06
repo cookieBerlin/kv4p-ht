@@ -1,12 +1,25 @@
+import Foundation
 import KV4PAPRS
 import KV4PRadio
 import SwiftUI
+
+/// The icon after the text, for a link that leaves the app.
+private struct TrailingIcon: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 2) {
+            configuration.title
+            configuration.icon
+        }
+    }
+}
 
 /// The APRS packets heard on air, newest first, and a line to send messages; the settings are in `SettingsView`.
 struct APRSView: View {
     @Bindable var model: RadioViewModel
     @State private var recipient = ""
     @State private var text = ""
+    @State private var isOnScreen = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack(spacing: 0) {
@@ -67,6 +80,9 @@ struct APRSView: View {
 
     private var feed: some View {
         List {
+            if model.offersDistances {
+                Button("Show distances", systemImage: "location") { model.askForDistances() }
+            }
             Picker("Show", selection: $model.aprsDestinationFilter) {
                 Text("All packets").tag(APRSDestinationFilter.all)
                 Text("Only messages for me").tag(APRSDestinationFilter.mine)
@@ -76,6 +92,15 @@ struct APRSView: View {
                 row(event)
             }
         }
+        .onAppear {
+            isOnScreen = true
+            updateVisibility()
+        }
+        .onDisappear {
+            isOnScreen = false
+            updateVisibility()
+        }
+        .onChange(of: scenePhase) { updateVisibility() }
         .overlay {
             if model.aprsEvents.isEmpty {
                 ContentUnavailableView(
@@ -85,6 +110,10 @@ struct APRSView: View {
                 )
             }
         }
+    }
+
+    private func updateVisibility() {
+        model.isAPRSVisible = isOnScreen && scenePhase == .active
     }
 
     private func row(_ event: APRSEvent) -> some View {
@@ -108,14 +137,38 @@ struct APRSView: View {
                 if let text = Self.text(event), !text.isEmpty {
                     Text(text)
                 }
-                if event.kind == .position || event.kind == .weather, event.latitude != 0 || event.longitude != 0 {
-                    Text(String(format: "%.5f, %.5f", event.latitude, event.longitude))
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                if let position = model.position(of: event) {
+                    location(position)
                 }
             }
         }
         .textSelection(.enabled)
+    }
+
+    /// The coordinates lead to the map; the distance stands below them, as a phone has little room.
+    @ViewBuilder private func location(_ position: StationPosition) -> some View {
+        let coordinates = String(format: "%.5f, %.5f", position.point.latitude, position.point.longitude)
+        if let map = position.mapURL {
+            Link(destination: map) {
+                Label(coordinates, systemImage: "arrow.up.right").labelStyle(TrailingIcon())
+            }
+            .font(.caption.monospacedDigit())
+            .accessibilityLabel("Open \(coordinates) in Maps")
+        }
+        if let distance = position.distanceMeters {
+            Text(Self.text(distance: distance, direction: position.direction))
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// In the unit of the system; one decimal is enough for a list.
+    private static func text(distance: Double, direction: CompassPoint?) -> String {
+        let number = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(0...1))
+        let length = Measurement(value: distance, unit: UnitLength.meters).formatted(
+            .measurement(width: .abbreviated, usage: .road, numberFormatStyle: number)
+        )
+        return [length, direction?.label].compactMap(\.self).joined(separator: " ")
     }
 
     private static func delivery(_ state: APRSEvent.DeliveryState) -> (String, String)? {

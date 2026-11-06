@@ -38,6 +38,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-29](#hw-29) | Callsign and listen-only | ⬜ | ⬜ |
 | [HW-30](#hw-30) | Settings sync between two devices | ⬜ | ⬜ |
 | [HW-31](#hw-31) | Memory sync between two devices | ⬜ | ⬜ |
+| [HW-32](#hw-32) | Distance to APRS stations | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -257,3 +258,10 @@ that already exist on both devices, the first sync leaves one of each. Tune to a
 others change. Turn off the network, change on both, turn it on again: nothing is lost, and the
 later change of a field counts. Turn *iCloud sync* off and restart: changes stay on the device.
 A TestFlight build additionally needs the schema deployed to production.
+
+### HW-32
+
+With a real position and packets of stations whose place you know: distance and direction fit,
+in the unit of the system. The coordinates open Apple Maps with a pin named after the station.
+Before location access is decided, *Show distances* asks for it; denied, the list shows only the
+coordinates, without a hint. The location indicator stays off while the APRS list is not on screen.

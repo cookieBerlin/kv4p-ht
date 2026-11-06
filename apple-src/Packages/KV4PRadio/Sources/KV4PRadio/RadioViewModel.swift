@@ -334,6 +334,18 @@ public final class RadioViewModel {
     }
     /// `aprsBeaconTxOverrideMhz`: set while a beacon is submitted.
     private var beaconOverride: Float?
+    /// The APRS list is on screen, so it can use our position (ADR-0053).
+    public var isAPRSVisible = false {
+        didSet { refreshOwnPosition() }
+    }
+    /// Our position, for the distances of the APRS list; it stays on this device.
+    public private(set) var ownPosition: GeoPoint?
+    /// The question for location access is open, so the list can offer to ask it.
+    public private(set) var offersDistances = false
+    private var nextOwnPositionAtMs: Int64 = 0
+    /// How often the list reads the position at most.
+    private static let ownPositionIntervalMs: Int64 = 60_000
+
     /// A location is available for beacons.
     public var canBeacon: Bool { location != nil && !isDenied(.location) }
 
@@ -692,7 +704,12 @@ public final class RadioViewModel {
     /// Reads the permissions again; the beacon ends without location access and stays off afterwards.
     public func refreshPermissions() {
         deniedPermissions = Set(Permission.allCases.filter { permissions?.state(of: $0) == .denied })
-        if isDenied(.location) { isBeaconEnabled = false }
+        if isDenied(.location) {
+            isBeaconEnabled = false
+            ownPosition = nil
+        }
+        offersDistances = location != nil && permissions?.state(of: .location) == .notDetermined
+        refreshOwnPosition()
         updateBluetoothScan()
     }
 
@@ -711,6 +728,27 @@ public final class RadioViewModel {
         permissions?.request(.microphone)
         permissions?.request(.location)
         failureAlerts?.prepare()
+    }
+
+    public func askForDistances() {
+        permissions?.request(.location)
+    }
+
+    /// Where the station of a packet is, and how far from here. A packet of our own has no distance.
+    public func position(of event: APRSEvent) -> StationPosition? {
+        StationPosition(event: event, own: event.fromCallsign == callsign ? nil : ownPosition)
+    }
+
+    /// Reads our position for the list: while it is shown, with access granted, and at most once a minute.
+    private func refreshOwnPosition() {
+        guard isAPRSVisible, let location, permissions?.state(of: .location) == .granted, now() >= nextOwnPositionAtMs
+        else { return }
+        nextOwnPositionAtMs = now() + Self.ownPositionIntervalMs
+        Task {
+            if let point = await location.currentLocation() {
+                ownPosition = point
+            }
+        }
     }
 
     public func dismissNotice() {
@@ -1147,6 +1185,7 @@ public final class RadioViewModel {
             message = "Your location is unknown."
             return
         }
+        ownPosition = point
         let beacon = APRSBeacon(
             latitude: beaconAccuracy.rounded(point.latitude),
             longitude: beaconAccuracy.rounded(point.longitude),
@@ -1162,6 +1201,9 @@ public final class RadioViewModel {
     private func showAPRS() {
         aprsEvents = aprs.events.filter { aprsDestinationFilter.shows($0, callsign: callsign) }
             .sorted { $0.lastSeenMs > $1.lastSeenMs }
+        if aprsEvents.contains(where: { position(of: $0) != nil }) {
+            refreshOwnPosition()
+        }
     }
 
     /// `ServiceAprsCallbacks.submitAprsIs`.
@@ -1189,6 +1231,7 @@ public final class RadioViewModel {
     /// `refreshAprsIsFilterLocation`: the feed shows packets around our position.
     private func locateInternetFilter(with location: any LocationProvider) async {
         guard let point = await location.currentLocation(), isInternetFeedEnabled else { return }
+        ownPosition = point
         internetLocation = point
         updateInternet()
     }
