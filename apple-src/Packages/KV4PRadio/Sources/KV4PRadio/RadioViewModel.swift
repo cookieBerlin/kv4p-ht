@@ -209,6 +209,27 @@ public final class RadioViewModel {
         didSet { saveSettings() }
     }
 
+    /// The list stays across restarts (ADR-0057).
+    public var isKeepingPackets = true {
+        didSet { saveSettings() }
+    }
+    /// Packets only from the internet are stored as well.
+    public var keepsInternetPackets = false {
+        didSet { saveSettings() }
+    }
+    /// How long packets stay, in days; 0 for without limit.
+    public var packetRetentionDays = 30 {
+        didSet {
+            saveSettings()
+            if !isRestoring {
+                pruneAPRSHistory()
+            }
+        }
+    }
+    public private(set) var storedPacketCount = 0
+    /// Older packets are stored than the list shows.
+    public private(set) var hasMoreAPRSHistory = false
+
     /// APRS packets heard on air, newest first, as `aprsDestinationFilter` lets through.
     public private(set) var aprsEvents: [APRSEvent] = []
     public var aprsDestinationFilter = APRSDestinationFilter.all {
@@ -418,6 +439,18 @@ public final class RadioViewModel {
     private let firmware: (any FirmwareFlashing)?
     /// What the flasher can write, the one for this app first (ADR-0049).
     public let firmwareChoices: [FirmwareChoice]
+    private let aprsHistory: (any APRSHistoryStoring)?
+    /// How many packets memory holds, and how many a step of the list brings.
+    private let aprsListLimit: Int
+    /// Older packets the user has brought back to the list.
+    private var olderAPRSEvents: [APRSEvent] = []
+    /// The stored state of the packets in memory, to save only what changed.
+    private var storedAPRSEvents: [Int64: APRSEvent] = [:]
+    /// Packets wait to be stored until the stored ones are back, as ids must not repeat.
+    private var isAPRSHistoryLoaded = false
+    private var nextAPRSPruneAtMs: Int64 = 0
+    private var aprsHistoryWork: Task<Void, Never>?
+    private static let aprsPruneIntervalMs: Int64 = 3_600_000
     private let settingsStore: (any SettingsStore)?
     private let syncedSettings: (any SyncedSettingsStore)?
     private let settingsSyncSleep: @Sendable (Duration) async throws -> Void
@@ -448,6 +481,7 @@ public final class RadioViewModel {
         internet: (any APRSInternetLink)? = nil,
         firmware: (any FirmwareFlashing)? = nil,
         firmwareChoices: [FirmwareChoice] = [],
+        aprsHistory: (any APRSHistoryStoring)? = nil,
         settings: (any SettingsStore)? = nil,
         syncedSettings: (any SyncedSettingsStore)? = nil,
         bluetoothScanner: (any BLEScanning)? = nil,
@@ -459,11 +493,14 @@ public final class RadioViewModel {
         otherAudioSleep: @escaping @Sendable (Duration) async throws -> Void = RadioViewModel.systemSleep,
         settingsSyncSleep: @escaping @Sendable (Duration) async throws -> Void = RadioViewModel.systemSleep,
         now: @escaping () -> Int64 = RadioViewModel.systemTimeMs,
-        aprsTickInterval: Duration = .milliseconds(500)
+        aprsTickInterval: Duration = .milliseconds(500),
+        aprsListLimit: Int = 500
     ) {
         repository = memories
         self.firmware = firmware
         self.firmwareChoices = firmwareChoices
+        self.aprsHistory = aprsHistory
+        self.aprsListLimit = aprsListLimit
         settingsStore = settings
         self.syncedSettings = syncedSettings
         self.settingsSyncSleep = settingsSyncSleep
@@ -511,6 +548,7 @@ public final class RadioViewModel {
         }
         startSettingsSync()
         refreshPermissions()
+        loadAPRSHistory()
     }
 
     // MARK: Settings
@@ -542,6 +580,9 @@ public final class RadioViewModel {
         settings.aprsDestinationFilter = aprsDestinationFilter
         settings.txLimits = txLimits
         settings.units = units
+        settings.isKeepingPackets = isKeepingPackets
+        settings.keepsInternetPackets = keepsInternetPackets
+        settings.packetRetentionDays = packetRetentionDays
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
         settings.isSimulatorChosen = selectedConnection == .simulator
@@ -591,6 +632,9 @@ public final class RadioViewModel {
         aprsDestinationFilter = settings.aprsDestinationFilter
         txLimits = settings.txLimits
         units = settings.units
+        isKeepingPackets = settings.isKeepingPackets
+        keepsInternetPackets = settings.keepsInternetPackets
+        packetRetentionDays = settings.packetRetentionDays
     }
 
     private func saveSettings() {
@@ -1270,11 +1314,136 @@ public final class RadioViewModel {
     }
 
     private func showAPRS() {
-        aprsEvents = aprs.events.filter { aprsDestinationFilter.shows($0, callsign: callsign) }
+        storeAPRSEvents()
+        aprsEvents = (aprs.events + olderAPRSEvents).filter { aprsDestinationFilter.shows($0, callsign: callsign) }
             .sorted { $0.lastSeenMs > $1.lastSeenMs }
         if aprsEvents.contains(where: { position(of: $0) != nil }) {
             refreshOwnPosition()
         }
+    }
+
+    // MARK: APRS history
+
+    /// One step after the other, so that a later change of a packet is not overwritten by an earlier one.
+    private func withAPRSHistory(_ work: @escaping @MainActor (any APRSHistoryStoring) async throws -> Void) {
+        guard let aprsHistory else { return }
+        let previous = aprsHistoryWork
+        aprsHistoryWork = Task { [weak self] in
+            await previous?.value
+            do {
+                try await work(aprsHistory)
+                self?.storedPacketCount = try await aprsHistory.count()
+            } catch {
+                self?.message = "The APRS history could not be read or saved."
+            }
+        }
+    }
+
+    private func loadAPRSHistory() {
+        withAPRSHistory { [weak self] history in
+            guard let self else { return }
+            defer { self.isAPRSHistoryLoaded = true }
+            guard self.isKeepingPackets else { return }
+            self.pruneAPRSHistory()
+            let page = try await history.page(before: nil, limit: self.aprsListLimit)
+            let highestId = try await history.highestId()
+            let stored = page.reversed().compactMap(Self.event)
+            self.storedAPRSEvents = Dictionary(uniqueKeysWithValues: stored.map { ($0.id, $0) })
+            self.aprs.restore(stored, highestId: highestId)
+            self.hasMoreAPRSHistory = page.count == self.aprsListLimit
+            self.isAPRSHistoryLoaded = true
+            self.showAPRS()
+        }
+    }
+
+    private static func event(_ entry: APRSHistoryEntry) -> APRSEvent? {
+        try? JSONDecoder().decode(APRSEvent.self, from: entry.payload)
+    }
+
+    /// Stores what is new or changed, and keeps memory from growing with the history.
+    private func storeAPRSEvents() {
+        guard isAPRSHistoryLoaded else { return }
+        if isKeepingPackets {
+            if now() >= nextAPRSPruneAtMs {
+                pruneAPRSHistory()
+            }
+            let changed = aprs.events.filter { shouldStore($0) && storedAPRSEvents[$0.id] != $0 }
+            if !changed.isEmpty {
+                for event in changed {
+                    storedAPRSEvents[event.id] = event
+                }
+                let entries = changed.compactMap(Self.entry)
+                withAPRSHistory { try await $0.save(entries) }
+            }
+        }
+        for event in aprs.trim(keeping: aprsListLimit) {
+            storedAPRSEvents[event.id] = nil
+            hasMoreAPRSHistory = hasMoreAPRSHistory || (isKeepingPackets && shouldStore(event))
+        }
+    }
+
+    /// Messages to or from this station stay, wherever they came from.
+    private func shouldStore(_ event: APRSEvent) -> Bool {
+        !event.isInternetOnly || keepsInternetPackets || event.isMessage(of: callsign)
+    }
+
+    private static func entry(_ event: APRSEvent) -> APRSHistoryEntry? {
+        (try? JSONEncoder().encode(event)).map { payload in
+            APRSHistoryEntry(
+                id: event.id,
+                lastSeenMs: event.lastSeenMs,
+                kind: event.kind.rawValue,
+                fromCallsign: event.fromCallsign,
+                toCallsign: event.toCallsign,
+                isInternetOnly: event.isInternetOnly,
+                payload: payload
+            )
+        }
+    }
+
+    private func pruneAPRSHistory() {
+        nextAPRSPruneAtMs = now() + Self.aprsPruneIntervalMs
+        guard packetRetentionDays > 0 else { return }
+        let oldest = now() - Int64(packetRetentionDays) * 86_400_000
+        aprs.removeEvents { $0.lastSeenMs < oldest && $0.deliveryState != .pending }
+        olderAPRSEvents.removeAll { $0.lastSeenMs < oldest }
+        storedAPRSEvents = storedAPRSEvents.filter { $0.value.lastSeenMs >= oldest }
+        withAPRSHistory { try await $0.deleteOlder(than: oldest) }
+        if isAPRSHistoryLoaded {
+            showAPRS()
+        }
+    }
+
+    /// Brings the next older packets to the list.
+    public func loadMoreAPRSHistory() async {
+        withAPRSHistory { [weak self] history in
+            guard let self else { return }
+            let shown = self.aprs.events + self.olderAPRSEvents
+            // The oldest shown comes again, so that packets of the same moment are not missed.
+            let page = try await history.page(before: shown.map(\.lastSeenMs).min(), limit: self.aprsListLimit + 1)
+            let known = Set(shown.map(\.id))
+            self.olderAPRSEvents += page.compactMap(Self.event).filter { !known.contains($0.id) }
+            self.hasMoreAPRSHistory = page.count > self.aprsListLimit
+            self.showAPRS()
+        }
+        await aprsHistoryWork?.value
+    }
+
+    public func deleteAPRSEvent(_ event: APRSEvent) {
+        aprs.removeEvents { $0.id == event.id }
+        olderAPRSEvents.removeAll { $0.id == event.id }
+        storedAPRSEvents[event.id] = nil
+        withAPRSHistory { try await $0.delete(id: event.id) }
+        showAPRS()
+    }
+
+    public func deleteAllAPRSEvents() {
+        aprs.removeEvents { _ in true }
+        olderAPRSEvents = []
+        storedAPRSEvents = [:]
+        hasMoreAPRSHistory = false
+        withAPRSHistory { try await $0.deleteAll() }
+        showAPRS()
     }
 
     /// `ServiceAprsCallbacks.submitAprsIs`.

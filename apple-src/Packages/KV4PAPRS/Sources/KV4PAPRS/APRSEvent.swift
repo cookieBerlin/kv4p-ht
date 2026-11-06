@@ -1,7 +1,7 @@
 /// What the APRS feed shows for one logical packet, observed one or more times (java-aprs `AprsEvent`).
-public struct APRSEvent: Equatable, Identifiable, Sendable {
+public struct APRSEvent: Codable, Equatable, Identifiable, Sendable {
     /// `AprsEvent.*_TYPE`.
-    public enum Kind: Int, Sendable {
+    public enum Kind: Int, Codable, Sendable {
         case unknown = 0
         case message = 1
         case object = 2
@@ -42,6 +42,8 @@ public struct APRSEvent: Equatable, Identifiable, Sendable {
     public internal(set) var isDigipeated = false
     /// Only seen on APRS-IS, never on RF.
     public internal(set) var isInternetOnly = false
+    /// The packet as a line of text, for the export.
+    public internal(set) var rawLine: String?
     /// The weather as reported, where the fields above have a 0 for what was not.
     var weather: WeatherField?
     /// An object its owner has taken back.
@@ -75,7 +77,7 @@ public struct APRSEvent: Equatable, Identifiable, Sendable {
     }
 
     /// `AprsEvent.DELIVERY_*`.
-    public enum DeliveryState: Int, Sendable {
+    public enum DeliveryState: Int, Codable, Sendable {
         case none = 0
         case pending = 1
         case delivered = 2

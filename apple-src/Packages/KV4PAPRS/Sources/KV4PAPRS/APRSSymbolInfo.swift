@@ -5,13 +5,29 @@ public enum APRSSymbolIcon: Equatable, Sendable {
 }
 
 /// A received or own APRS symbol: its table and code, and what they mean.
-public struct APRSSymbolInfo: Equatable, Sendable {
+public struct APRSSymbolInfo: Codable, Equatable, Sendable {
     public let tableCharacter: Character
     public let code: Character
 
     public init(table: Character, code: Character) {
         tableCharacter = table
         self.code = code
+    }
+
+    /// Stored as the table and code as they stand in the packet.
+    public init(from decoder: any Decoder) throws {
+        let text = Array(try decoder.singleValueContainer().decode(String.self))
+        guard text.count == 2 else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Not a symbol")
+            )
+        }
+        self.init(table: text[0], code: text[1])
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(codeText)
     }
 
     /// Java `char` values, as `Position` keeps them; they come from single bytes of a packet.

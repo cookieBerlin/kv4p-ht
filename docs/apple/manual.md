@@ -273,7 +273,7 @@ position is known, the distance and direction from you stand below them, such as
 the units you chose under ⚙ **Settings**, *APRS*, *Units*: those of your system by default, or metric
 or imperial, also for the weather. Pressure stays in hPa; very near stations show no direction. Before you have decided on location
 access, **Show distances** at the top of the list asks for it. Without access, the list works as
-before. The list starts empty each time the app starts. *Only messages for
+before. The list stays when the app ends: see *History* below. *Only messages for
 me* hides messages between other stations; messages from or to you, to `ALL`,
 `QST`, `CQ` and bulletins stay, as do all positions, weather reports and
 objects.
@@ -294,6 +294,13 @@ bulletin BLN1CQ.
   second.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
+
+**History:** under ⚙ **Settings**, *APRS*, *History*, *Keep packets* keeps the list across restarts, for 1, 7
+or 30 days or without limit, 30 by default. The packets stay on this device and are not synced. Packets only
+from the internet can be many, so they stay only with *Keep internet packets* on; messages to or from you
+always stay. The list shows the newest 500; **Load more** at its end brings older ones. The ⋯ button of a
+row deletes that packet at once, and *Delete all packets* in the settings all of them, after a question. A message
+that had no acknowledgement when the app ended shows as not delivered, and is not sent again.
 
 **Position beacon** (licence required): choose how often under *Every*, from 2 to 60 minutes, 5 by default.
 All stations share the frequency, so choose no more often than you need. 📱 *Beacon in the background*, on

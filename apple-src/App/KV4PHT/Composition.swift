@@ -40,6 +40,7 @@ enum Composition {
             internet: APRSISClient(software: "kv4p-ht", version: appVersion, connector: NetworkLineConnector()),
             firmware: firmwareFlasher(),
             firmwareChoices: firmwareChoices,
+            aprsHistory: aprsHistory(),
             settings: settingsStore(),
             syncedSettings: UbiquitousSettingsStore(),
             bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
@@ -101,6 +102,13 @@ enum Composition {
         let syncs = AppSettings(data: UserDefaultsSettingsStore().load()).isSettingsSyncEnabled
         return (try? SwiftDataMemoryRepository(storeURL: url, syncs: syncs))
             ?? (try? SwiftDataMemoryRepository(storeURL: url, syncs: false))
+    }
+
+    /// The APRS packets, in a store of their own that never syncs (ADR-0057).
+    private static func aprsHistory() -> (any APRSHistoryStoring)? {
+        let folder = URL.applicationSupportDirectory
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return try? SwiftDataAPRSHistory(storeURL: folder.appending(path: "APRSHistory.store"))
     }
 
     private static func transport(for connection: RadioViewModel.Connection) -> any RadioTransport {

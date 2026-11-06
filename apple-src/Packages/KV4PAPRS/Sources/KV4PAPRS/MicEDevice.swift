@@ -2,7 +2,7 @@ import Foundation
 
 /// The radio that sent a Mic-E packet, which marks itself by bytes around the comment (ADR-0054). The list comes from
 /// the APRS device identification database (CC BY-SA 2.0, https://github.com/aprsorg/aprs-deviceid).
-struct MicEDevice: Equatable, Sendable {
+struct MicEDevice: Codable, Equatable, Sendable {
     /// The whole mark at the end of the comment.
     let mark: String
     let name: String

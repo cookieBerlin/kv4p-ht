@@ -42,6 +42,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-33](#hw-33) | APRS symbols and radios | ⬜ | ⬜ |
 | [HW-34](#hw-34) | APRS packet types and units | ⬜ | ⬜ |
 | [HW-35](#hw-35) | Beacons with the screen locked (iPhone) | ⬜ | ⬜ |
+| [HW-36](#hw-36) | APRS history | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -293,3 +294,12 @@ shows the beacons at that interval, also after an hour, and the system's locatio
 ending the beacon, the indicator goes. With *Beacon in the background* off, no beacon goes out with
 the screen locked, there is no indicator, and the beacon goes out when the app returns. Take away
 location access or go without a position: one notice comes, not one per beacon. Note the battery used.
+
+### HW-36
+
+Receive packets on the APRS frequency and end the app: after a new start the list is back. Send a
+message and end the app before an acknowledgement comes: after a new start it shows as not delivered,
+and is not sent again. With the APRS-IS feed on, its packets stay in the list but are gone after a
+restart, unless *Keep internet packets* is on; a message to you stays either way. Delete one packet
+with the button on its row, and all of them in the settings. Turn *Keep packets* off and answer the
+question both ways. With a long list, **Load more** brings older packets, and the app stays smooth.
