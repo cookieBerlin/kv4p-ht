@@ -99,9 +99,9 @@ struct RootView: View {
 }
 
 #if os(iOS)
-    /// iPhone and narrow iPad windows: one page each for the memories, the APRS packets, the chats and the settings. The
-    /// header and PTT stay outside the pages, so that a moving finger on PTT does not change the page and end the
-    /// transmission.
+    /// iPhone and narrow iPad windows: one page each for the memories, the APRS packets, the chats and the settings, in a
+    /// ring, so that a swipe goes from the memories straight to the settings and back. The header and PTT stay outside
+    /// the pages, so that a moving finger on PTT does not change the page and end the transmission.
     private struct CompactScreen: View {
         private enum Page: String, CaseIterable, Identifiable {
             case memories, packets, chats, settings
@@ -136,11 +136,26 @@ struct RootView: View {
             }
         }
 
+        /// A place in the row of pages: a scroll view does not close into a ring, so a copy of the last page stands
+        /// before the first and a copy of the first after the last; a swipe that ends on a copy jumps to the page.
+        private enum Slot: Hashable {
+            case page(Page)
+            case copyBefore, copyAfter
+
+            var page: Page {
+                switch self {
+                case .page(let page): page
+                case .copyBefore: .settings
+                case .copyAfter: .memories
+                }
+            }
+        }
+
         let model: RadioViewModel
         /// The page shown last, also after a restart.
         @AppStorage("mainPage") private var page = Page.memories
         /// Where the scroll view stands, which follows `page` and leads it when swiped.
-        @State private var shownPage: Page?
+        @State private var shownSlot: Slot?
         /// The bars below the pages make way for the keyboard, so that the line to write stays above it.
         @State private var isKeyboardShown = false
         /// The pages opened in the settings. While one is open, a swipe goes back to the list rather than to another page.
@@ -154,7 +169,17 @@ struct RootView: View {
                 .environment(\.isScrollEnabled, true)
                 .containerRelativeFrame(.horizontal)
                 .environment(\.isPageOnScreen, page == item)
-                .id(item)
+                .id(Slot.page(item))
+        }
+
+        /// A copy shows the page while a swipe passes it; it is there to look at only.
+        private func copyView(_ slot: Slot, @ViewBuilder content: () -> some View) -> some View {
+            content()
+                .containerRelativeFrame(.horizontal)
+                .environment(\.isPageOnScreen, false)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+                .id(slot)
         }
 
         var body: some View {
@@ -167,26 +192,35 @@ struct RootView: View {
                 // UIKit stops the app when the navigation stack of the settings sits in one while a page changes.
                 ScrollView(.horizontal) {
                     HStack(spacing: 0) {
+                        copyView(.copyBefore) { NavigationStack { SettingsView(model: model) } }
                         pageView(.memories) { MemoriesView(model: model) }
                         pageView(.packets) { APRSView(model: model, page: .packets) }
                         pageView(.chats) { APRSView(model: model, page: .chats) }
                         pageView(.settings) {
                             NavigationStack(path: $settingsPath) { SettingsView(model: model) }
                         }
+                        copyView(.copyAfter) { MemoriesView(model: model) }
                     }
                     .scrollTargetLayout()
                 }
                 .scrollTargetBehavior(.paging)
                 .scrollIndicators(.hidden)
                 // On a page of the settings, a swipe goes back to their list.
-                .scrollDisabled(!settingsPath.isEmpty)
-                .scrollPosition(id: $shownPage)
-                .onAppear { shownPage = page }
-                .onChange(of: shownPage) {
-                    if let shownPage, shownPage != page { page = shownPage }
+                .scrollDisabled(page == .settings && !settingsPath.isEmpty)
+                .scrollPosition(id: $shownSlot)
+                .onAppear { shownSlot = .page(page) }
+                .onChange(of: shownSlot) {
+                    if let shownSlot, shownSlot.page != page { page = shownSlot.page }
                 }
                 .onChange(of: page) {
-                    if shownPage != page { withAnimation { shownPage = page } }
+                    if shownSlot?.page != page { withAnimation { shownSlot = .page(page) } }
+                }
+                .onScrollPhaseChange { _, phase in
+                    if phase == .idle, let shownSlot, shownSlot != .page(shownSlot.page) {
+                        var jump = Transaction()
+                        jump.disablesAnimations = true
+                        withTransaction(jump) { self.shownSlot = .page(shownSlot.page) }
+                    }
                 }
                 .onChange(of: model.aprsReplyCount) { withAnimation { page = .packets } }
                 .onChange(of: model.chatRequestCount) { withAnimation { page = .chats } }

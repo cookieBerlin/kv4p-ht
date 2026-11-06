@@ -57,7 +57,9 @@ The structure is the same on all devices, and similar to the Android app:
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
 
 📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **Packets**, **Chats** (two speech bubbles) and
-⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. With the largest text sizes,
+⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. The pages form a ring: a swipe to the right
+on the memories goes straight to the settings, and a swipe to the left there back to the memories. With the largest
+text sizes,
 hold a symbol to see it large with its name. The app opens the page you used last. **Push to talk** is on the
 memories page, and the header on all pages but the settings. On a page within the settings, a swipe to the right goes
 back to their list.
