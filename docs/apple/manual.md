@@ -42,19 +42,23 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 The structure is the same on all devices, and similar to the Android app:
 
-- **On top:** the choice of radio, **Connect**, the name of the active memory, the frequency, the band,
-  the squelch state and the S-meter. Type a frequency and press Return to tune.
+- **On top:** the choice of radio, **Connect** (📱 on an iPhone, both are in ⚙ **Settings**), the name of the
+  active memory, the frequency, the band, the squelch state and the S-meter. Type a frequency and press Return to
+  tune.
 - **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
 - **At the bottom:** a large **Push to talk** button, the connection status above it
-  (🖥 in a status bar at the bottom of the window) and any messages.
+  (🖥 in a status bar at the bottom of the window) and any messages. 📱 On an iPhone the button shows only a
+  microphone, and only while the radio is connected; otherwise the status stands in its place, with
+  **Connect in Settings** to get there.
 - A message, red for a problem such as a missing location and green for a finished
   import, shows at the
   bottom of the screen until you dismiss it with ✕: 📱 on an iPhone above the bar with
   the pages, otherwise above **Push to talk** and in the 🖥 settings window.
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
 
-📱 On an iPhone or in a narrow iPad window, **Memories**, **APRS** and ⚙ **Settings**
-are pages: use the bar at the bottom, or swipe sideways. The app opens the page you
+📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **APRS** and ⚙ **Settings**
+are pages: use the symbols in the bar at the bottom, or swipe sideways. With the largest text sizes, hold a symbol
+to see it large with its name. The app opens the page you
 used last. **Push to talk** is on the memories page, and the header on the memories and
 APRS pages.
 
@@ -68,7 +72,8 @@ them denied: the functions that need one say so and offer **Open Settings**.
 
 ## Connecting the radio
 
-Choose the connection under **Radio** at the top (📱 on an iPhone, tap the chosen radio) and click **Connect**:
+Choose the connection under **Radio** at the top and click **Connect**. 📱 On an iPhone or in a narrow iPad window,
+both are in ⚙ **Settings** under *Connection*, together with the state of the connection:
 
 - **Bluetooth:** power on the radio. Once Bluetooth access is settled, at your first
   connection, the app looks for radios while nothing is connected and lists them under **Radio**, each with its name and the end of its ID.
@@ -105,8 +110,8 @@ disconnect yourself:
 
 - 🖥 A dialog opens, and the status bar at the bottom of the window shows the reason.
   While the app is in the background, its Dock icon also bounces.
-- 📱 The reason shows in red above **Push to talk**. In the background, you also get a
-  notification if you allowed it.
+- 📱 The reason shows in red at the bottom of the screen (on an iPhone in place of **Push to talk**, and in
+  ⚙ **Settings** under *Connection*). In the background, you also get a notification if you allowed it.
 
 ## Receiving
 
@@ -217,7 +222,7 @@ memory can have its own tone and length, or use the settings, which is the defau
   and the transmitter stops by itself, also if you still hold the button.
 - Releasing earlier stops at once, and the app says that the repeater may not have opened.
   The next press removes this message.
-- The button shows the frequency of the tone.
+- The button shows the frequency of the tone; 📱 on an iPhone below a symbol of a tone burst.
 - If the radio does not transmit within 2 s, the app stops and says so.
 - 📱 The iPhone vibrates all the time while the button is held.
 - The microphone stays closed, so other apps keep playing. Sticky PTT has no effect on the
@@ -380,7 +385,8 @@ modem, the app encodes and decodes the speech with Codec2.
 ## Settings
 
 ⚙ **Settings** opens an overview of pages: a sidebar on the Mac, a list on iPhone and iPad.
-A short text below a setting explains it.
+A short text below a setting explains it. 📱 On an iPhone or in a narrow iPad window, the list starts with
+*Connection*: the radio, the state of the connection and **Connect** or **Disconnect**.
 
 | Page | What it holds |
 |---|---|

@@ -68,7 +68,10 @@ struct RadioHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            connection
+            // A phone chooses and connects the radio in the settings, which leaves the room here to the frequency.
+            if !isCompact {
+                connection
+            }
             if let name = model.activeMemoryName {
                 Text(name).font(.headline).lineLimit(1)
             }
@@ -108,38 +111,12 @@ struct RadioHeader: View {
         .padding(.vertical, 8)
     }
 
-    /// A phone has no room for a labelled picker, so the chosen radio opens the list.
     private var connection: some View {
         HStack {
-            if isCompact {
-                if model.canConnect, !model.firmwareUpdate.isRunning {
-                    Menu {
-                        radioPicker
-                    } label: {
-                        Label(model.selectedConnection.label, systemImage: "chevron.up.chevron.down")
-                    }
-                } else {
-                    Text(model.selectedConnection.label).foregroundStyle(.secondary)
-                }
-            } else {
-                radioPicker.fixedSize()
-            }
+            RadioPicker(model: model).fixedSize()
             Spacer()
-            if model.canConnect {
-                Button("Connect") { Task { await model.connect() } }
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(!model.canStartConnection)
-            } else {
-                Button("Disconnect") { Task { await model.disconnect() } }
-            }
+            ConnectButton(model: model).keyboardShortcut(.defaultAction)
         }
-    }
-
-    private var radioPicker: some View {
-        Picker("Radio", selection: $model.selectedConnection) {
-            ForEach(model.connections) { Text($0.label).tag($0) }
-        }
-        .disabled(!model.canConnect || model.firmwareUpdate.isRunning)
     }
 
     private var frequency: some View {
@@ -163,6 +140,32 @@ struct RadioHeader: View {
                 .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
                 .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
                 .help(ControlHelp.meter)
+        }
+    }
+}
+
+/// The choice of radio; while connected, it stays as it is.
+struct RadioPicker: View {
+    @Bindable var model: RadioViewModel
+
+    var body: some View {
+        Picker("Radio", selection: $model.selectedConnection) {
+            ForEach(model.connections) { Text($0.label).tag($0) }
+        }
+        .disabled(!model.canConnect || model.firmwareUpdate.isRunning)
+    }
+}
+
+/// Connect, or disconnect while connected or connecting.
+struct ConnectButton: View {
+    let model: RadioViewModel
+
+    var body: some View {
+        if model.canConnect {
+            Button("Connect") { Task { await model.connect() } }
+                .disabled(!model.canStartConnection)
+        } else {
+            Button("Disconnect") { Task { await model.disconnect() } }
         }
     }
 }
@@ -294,18 +297,27 @@ private struct SquelchArrow: Shape {
 struct BottomBar: View {
     let model: RadioViewModel
     let showsPTT: Bool
+    /// On a phone, the way to the settings, where it connects. There, PTT stands in for the status while connected,
+    /// and the status for PTT otherwise.
+    var openSettings: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
             Divider()
             #if os(iOS)
-                StatusLine(model: model).padding(.top, 6)
+                if let openSettings {
+                    if !model.isReady {
+                        ConnectionStatus(model: model, openSettings: openSettings).padding(.vertical, 8)
+                    }
+                } else {
+                    StatusLine(model: model).padding(.top, 6)
+                }
             #endif
             firmware
             if model.isBluetoothBlocked {
                 PermissionNotice(permission: .bluetooth).padding(.horizontal).padding(.vertical, 8)
             }
-            if showsPTT {
+            if showsPTT, openSettings == nil || model.isReady {
                 if model.isDenied(.microphone) {
                     PermissionNotice(permission: .microphone).padding(.horizontal).padding(.vertical, 8)
                 } else {
@@ -370,6 +382,32 @@ struct StatusLine: View {
             .padding(.horizontal)
     }
 }
+
+#if os(iOS)
+    /// Without a connection, the status in place of PTT; while the radio can be connected, it leads to the settings.
+    private struct ConnectionStatus: View {
+        let model: RadioViewModel
+        let openSettings: () -> Void
+
+        var body: some View {
+            if model.canConnect {
+                Button(action: openSettings) {
+                    VStack(spacing: 4) {
+                        StatusLine(model: model)
+                        Label("Connect in Settings", systemImage: "gearshape")
+                            .font(.footnote)
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            } else {
+                StatusLine(model: model).frame(minHeight: 44)
+            }
+        }
+    }
+#endif
 
 /// Why a function is not available, with the way to the system settings.
 struct PermissionNotice: View {
@@ -476,21 +514,44 @@ private struct PTTButton: View {
     let model: RadioViewModel
     @Environment(\.isEnabled) private var isEnabled
     @State private var isPressed = false
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
+
+    /// A phone shows the microphone alone, which says enough and keeps its size with large text.
+    private var isSymbolOnly: Bool {
+        #if os(iOS)
+            sizeClass == .compact
+        #else
+            false
+        #endif
+    }
+
+    private var label: some View {
+        Label(model.isOnAir ? "On air" : "Push to talk", systemImage: model.isTransmitting ? "mic.fill" : "mic")
+    }
 
     var body: some View {
-        Label(model.isOnAir ? "On air" : "Push to talk", systemImage: model.isTransmitting ? "mic.fill" : "mic")
-            .font(.headline)
-            .frame(maxWidth: .infinity, minHeight: 64)
-            .foregroundStyle(model.isTransmitting ? Color.white : isEnabled ? Color.primary : Color.secondary)
-            .background(
-                model.isTransmitting ? Color.red : Color.secondary.opacity(isEnabled ? 0.2 : 0.08),
-                in: .rect(cornerRadius: 8)
-            )
-            .holdable(onDown: pressed, onUp: released)
-            .sensoryFeedback(.impact(weight: .light), trigger: isPressed) { _, pressed in pressed }
-            .sensoryFeedback(.impact, trigger: model.isTransmitting)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
+        Group {
+            if isSymbolOnly {
+                label.labelStyle(.iconOnly).font(.largeTitle)
+            } else {
+                label.font(.headline)
+            }
+        }
+        // No large view of the content: it shows on a long press, which is how PTT is held.
+        .dynamicTypeSize(...(isSymbolOnly ? .accessibility1 : .accessibility5))
+        .frame(maxWidth: .infinity, minHeight: 64)
+        .foregroundStyle(model.isTransmitting ? Color.white : isEnabled ? Color.primary : Color.secondary)
+        .background(
+            model.isTransmitting ? Color.red : Color.secondary.opacity(isEnabled ? 0.2 : 0.08),
+            in: .rect(cornerRadius: 8)
+        )
+        .holdable(onDown: pressed, onUp: released)
+        .sensoryFeedback(.impact(weight: .light), trigger: isPressed) { _, pressed in pressed }
+        .sensoryFeedback(.impact, trigger: model.isTransmitting)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
     }
 
     private func pressed() {
@@ -512,11 +573,42 @@ private struct AccessToneButton: View {
     @Environment(\.isEnabled) private var isEnabled
     @State private var isPressed = false
 
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
+
+    /// A phone shows the tone burst with its frequency below, as PTT shows only its symbol there.
+    private var isSymbolOnly: Bool {
+        #if os(iOS)
+            sizeClass == .compact
+        #else
+            false
+        #endif
+    }
+
+    @ViewBuilder private var label: some View {
+        if isSymbolOnly {
+            VStack(spacing: 2) {
+                Image("tone.burst").font(.title)
+                    .imageScale(.large)
+                if let tone = model.accessTone {
+                    Text("\(tone.frequency) Hz").font(.caption)
+                }
+            }
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Tone")
+            .accessibilityValue(model.accessTone.map { "\($0.frequency) Hz" } ?? "")
+        } else {
+            Label(title, systemImage: "waveform")
+                .labelStyle(.titleAndIcon)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+        }
+    }
+
     var body: some View {
-        Label(title, systemImage: "waveform")
-            .labelStyle(.titleAndIcon)
-            .font(.headline)
-            .multilineTextAlignment(.center)
+        label
             .frame(minWidth: 96, minHeight: 64)
             .foregroundStyle(model.isSendingAccessTone ? Color.white : isEnabled ? Color.primary : Color.secondary)
             .background(

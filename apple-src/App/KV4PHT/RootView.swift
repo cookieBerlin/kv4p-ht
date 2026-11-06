@@ -169,12 +169,12 @@ struct RootView: View {
                 .onChange(of: page) { dismissKeyboard() }
                 if !isKeyboardShown {
                     if page == .settings {
-                        if model.hasFailed {
-                            StatusLine(model: model).padding(.vertical, 6)
-                        }
+                        // The settings show the state of the connection themselves.
                         NoticeBanner(model: model)
                     } else {
-                        BottomBar(model: model, showsPTT: page == .memories)
+                        BottomBar(model: model, showsPTT: page == .memories) {
+                            withAnimation { page = .settings }
+                        }
                     }
                     pageBar
                 }
@@ -199,18 +199,21 @@ struct RootView: View {
                     Button {
                         withAnimation { page = item }
                     } label: {
-                        VStack(spacing: 2) {
-                            Image(systemName: item.symbol)
-                                .font(.title3)
-                                .overlay(alignment: .topTrailing) {
-                                    if item == .aprs, model.newAPRSMessages > 0 {
-                                        newMessages
-                                    }
+                        Image(systemName: item.symbol)
+                            .font(.title)
+                            .imageScale(.large)
+                            .overlay(alignment: .topTrailing) {
+                                if item == .aprs, model.newAPRSMessages > 0 {
+                                    newMessages
                                 }
-                            Text(item.title).font(.caption2)
-                        }
-                        .frame(maxWidth: .infinity)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .contentShape(.rect)
                     }
+                    // As the system's tab bar: the symbols grow only a little, and a long press shows a page large.
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    .accessibilityLabel(item.title)
+                    .accessibilityShowsLargeContentViewer { Label(item.title, systemImage: item.symbol) }
                     .accessibilityValue(
                         item == .aprs && model.newAPRSMessages > 0 ? "\(model.newAPRSMessages) new" : ""
                     )
@@ -220,7 +223,7 @@ struct RootView: View {
                     .accessibilityIdentifier("page-\(item.title)")
                 }
             }
-            .padding(.top, 6)
+            .padding(.top, 4)
             .background(.bar)
         }
     }

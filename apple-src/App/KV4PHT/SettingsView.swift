@@ -40,6 +40,10 @@ struct SettingsView: View {
             .frame(minWidth: 680, minHeight: 560)
         #else
             Form {
+                // A phone chooses and connects the radio here, as its header has no room for it.
+                if sizeClass == .compact {
+                    ConnectionSection(model: model)
+                }
                 Section {
                     ForEach(pages) { page in
                         NavigationLink {
@@ -92,6 +96,41 @@ struct SettingsView: View {
         .settingsPage(page.title, model: model)
     }
 }
+
+#if os(iOS)
+    /// The radio, the state of its connection and the way to connect it, on top of a phone's settings.
+    private struct ConnectionSection: View {
+        let model: RadioViewModel
+
+        var body: some View {
+            Section {
+                RadioPicker(model: model)
+                // A failure says why at length, so it gets a row of its own.
+                if model.isStatusFailure {
+                    Text(model.statusText).foregroundStyle(.red)
+                } else {
+                    LabeledContent("State") {
+                        HStack(spacing: 6) {
+                            if model.isReady {
+                                // Green text is too faint on white; the mark carries the colour.
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                            }
+                            Text(model.statusText)
+                        }
+                    }
+                }
+                ConnectButton(model: model)
+                    .tint(model.canConnect ? nil : .red)
+            } header: {
+                Text("Connection")
+            } footer: {
+                if model.canConnect {
+                    Text("The radio connects over Bluetooth, or the simulator stands in for it.")
+                }
+            }
+        }
+    }
+#endif
 
 extension View {
     /// What every page of the settings has in common. On a phone, the screen around the settings shows the notices;
