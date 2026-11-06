@@ -938,7 +938,7 @@ public final class RadioViewModel {
         startAudio()
         let snapshots = controller.snapshots
         observer = Task { [weak self] in
-            for await snapshot in snapshots {
+            for await snapshot in snapshots where !Task.isCancelled {
                 self?.show(snapshot)
             }
         }
