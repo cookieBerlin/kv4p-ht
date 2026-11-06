@@ -21,8 +21,8 @@
 
 ## Requirements
 
-- 🖥 Mac with Apple Silicon, macOS 26 or later.
-- 📱 iPhone or iPad with iOS/iPadOS 26 or later.
+- 🖥 Mac with Apple Silicon, macOS 27 or later.
+- 📱 iPhone or iPad with iOS/iPadOS 27 or later.
 - A kv4p HT radio with the firmware for this app, the nightly build. The released firmware 17
   is for the Android app, and this app does not connect to it
   (see [FAQ](faq.md#which-firmware-do-i-need)). 🖥 The Mac app can write it over USB.
@@ -301,6 +301,12 @@ the ⋯ menu of its row does the same, also from the *Packets* page. On an iPhon
 new messages to your callsign, with any SSID, until you open it. While the app is in the background, each of them
 brings a notification with its sender and text. The app must be running for this, so nothing arrives after it has
 ended. *Notify about messages to me* under ⚙ **Settings**, *APRS*, *History* turns this off.
+
+**If something goes wrong:** the app keeps a log on your device, with frequencies and times but without callsigns, message texts or positions.
+⚙ **Settings**, *Logging*, *Live log* shows what is being logged as it happens: you can search, filter by level
+and category, pause and copy. On the same page, *Report a problem* shows a report, which you can share or attach to a
+GitHub issue after looking through it. Issues are public. Nothing leaves your device without you. There you can
+also delete the log, and turn on *Detailed logging*, which ends by itself after a day. After a crash, the app asks once whether to report it.
 
 **History:** under ⚙ **Settings**, *APRS*, *History*, *Keep packets* keeps the list across restarts, for 1, 7
 or 30 days or without limit, 30 by default. The packets stay on this device and are not synced. Packets only

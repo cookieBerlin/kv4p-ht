@@ -17,6 +17,10 @@ final class MemorySettingsStore: SettingsStore {
         stored.withLock { $0 = try? settings?.encoded() }
     }
 
+    init(data: Data) {
+        stored.withLock { $0 = data }
+    }
+
     var settings: AppSettings { AppSettings(data: load()) }
 
     func load() -> Data? {

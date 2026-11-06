@@ -51,6 +51,8 @@ enum ControlHelp {
     static let forMe = "Only messages from or to your callsign, with any SSID."
     static let packetTypes = "Shows only the chosen types of packet."
     static let exportPackets = "Saves the packets this list shows, also those stored, as a file."
+    static let detailedLogging =
+        "Also logs each packet by its kind, each scan step and the traffic per minute, without callsigns or text. Turns itself off after a day."
     static let notifyMessages =
         "A message to your callsign, with any SSID, brings a notification while the app is in the background."
     static let keepPackets = "The APRS list stays when the app ends. The packets stay on this device."

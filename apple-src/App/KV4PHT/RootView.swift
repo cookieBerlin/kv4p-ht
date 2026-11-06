@@ -6,6 +6,7 @@ import SwiftUI
 /// otherwise they and the settings are pages to swipe between.
 struct RootView: View {
     let model: RadioViewModel
+    @State private var isReporting = false
     @Environment(\.scenePhase) private var scenePhase
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
@@ -34,6 +35,19 @@ struct RootView: View {
             } message: {
                 Text(model.alertMessage ?? "")
             }
+            .alert(
+                "The app has crashed",
+                isPresented: Binding(
+                    get: { model.offersCrashReport },
+                    set: { if !$0 { model.dismissCrashOffer() } }
+                )
+            ) {
+                Button("Report…") { isReporting = true }
+                Button("Not now", role: .cancel) {}
+            } message: {
+                Text("A report helps to find the cause. You see it first, and nothing is sent without you.")
+            }
+            .sheet(isPresented: $isReporting) { ProblemReportSheet(model: model) }
             .onAppear { model.refreshConnections() }
             .onChange(of: scenePhase, initial: true) {
                 #if os(iOS)

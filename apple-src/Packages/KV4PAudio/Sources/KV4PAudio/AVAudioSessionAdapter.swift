@@ -1,42 +1,45 @@
 #if os(iOS)
     import AVFoundation
-    import os
+    import KV4PDiagnostics
 
     /// Configures the shared `AVAudioSession` for play and record and forwards its notifications. All logic lives in
     /// `RadioViewModel`; this file is excluded from coverage (ADR-0011).
     public final class AVAudioSessionAdapter: AudioSession, @unchecked Sendable {
         public let events: AsyncStream<AudioSessionEvent>
-        private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "session")
 
         private let observers: [any NSObjectProtocol]
         private let queue = DispatchQueue(label: "kv4p.audio-session", qos: .userInitiated)
 
-        public init() {
+        private let diagnostics: DiagnosticLog?
+
+        public init(diagnostics: DiagnosticLog? = nil) {
+            self.diagnostics = diagnostics
             let (events, continuation) = AsyncStream.makeStream(of: AudioSessionEvent.self)
             self.events = events
             let center = NotificationCenter.default
             let session = AVAudioSession.sharedInstance()
             observers = [
-                center.addObserver(forName: AVAudioSession.interruptionNotification, object: session, queue: nil) {
-                    let info = $0.userInfo ?? [:]
-                    let details = info.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
+                center.addObserver(forName: AVAudioSession.didBecomeInactiveNotification, object: session, queue: nil) {
+                    let context =
+                        $0.userInfo?[AVAudioSession.deactivationContextKey] as? AVAudioSession.DeactivationContext
                     let other = session.isOtherAudioPlaying
-                    Self.log.info(
-                        "other audio: INTERRUPTION \(details, privacy: .public) other=\(other, privacy: .public)"
+                    diagnostics?.log(
+                        .info,
+                        .audio,
+                        "other audio: INACTIVE system=\(context?.source == .system) other=\(other)"
                     )
-                    switch (info[AVAudioSessionInterruptionTypeKey] as? UInt).flatMap(
-                        AVAudioSession.InterruptionType.init
-                    ) {
-                    case .began:
-                        continuation.yield(.interruptionBegan)
-                    case .ended:
-                        let options = AVAudioSession.InterruptionOptions(
-                            rawValue: info[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
-                        )
-                        continuation.yield(.interruptionEnded(shouldResume: options.contains(.shouldResume)))
-                    default:
-                        break
-                    }
+                    // The app also ends the session itself, when it hands the audio back to other apps.
+                    if context?.source == .system { continuation.yield(.interruptionBegan) }
+                },
+                center.addObserver(
+                    forName: AVAudioSession.resumptionRecommendationNotification,
+                    object: session,
+                    queue: nil
+                ) {
+                    let context = $0.userInfo?[AVAudioSession.resumptionContextKey] as? AVAudioSession.ResumptionContext
+                    let shouldResume = context?.recommendation == .shouldResume
+                    diagnostics?.log(.info, .audio, "other audio: RESUMPTION shouldResume=\(shouldResume)")
+                    continuation.yield(.interruptionEnded(shouldResume: shouldResume))
                 },
                 center.addObserver(forName: AVAudioSession.routeChangeNotification, object: session, queue: nil) {
                     let reason = ($0.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt)
@@ -44,9 +47,7 @@
                     let route = session.currentRoute
                     let inputs = route.inputs.map(\.portType.rawValue).joined(separator: ",")
                     let outputs = route.outputs.map(\.portType.rawValue).joined(separator: ",")
-                    Self.log.info(
-                        "other audio: route inputs=[\(inputs, privacy: .public)] outputs=[\(outputs, privacy: .public)]"
-                    )
+                    diagnostics?.log(.info, .audio, "other audio: route inputs=[\(inputs)] outputs=[\(outputs)]")
                     if reason == .oldDeviceUnavailable { continuation.yield(.deviceUnavailable) }
                 },
                 center.addObserver(
@@ -110,8 +111,12 @@
         }
 
         public func releaseOtherAudio() async {
-            try? await onSessionQueue {
-                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            do {
+                try await onSessionQueue {
+                    try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                }
+            } catch {
+                diagnostics?.log(.error, .audio, "Handing the audio back: \(DiagnosticLog.describe(error))")
             }
         }
 
@@ -120,7 +125,11 @@
         }
 
         public func deactivate() {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            do {
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            } catch {
+                diagnostics?.log(.error, .audio, "Ending the session: \(DiagnosticLog.describe(error))")
+            }
         }
     }
 #endif

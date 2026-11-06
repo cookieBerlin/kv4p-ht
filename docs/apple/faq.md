@@ -52,7 +52,7 @@ refuses.
 
 ## Which Macs are supported?
 
-Macs with Apple Silicon running macOS 26 or later. Intel Macs are not supported.
+Macs with Apple Silicon running macOS 27 or later. Intel Macs are not supported.
 
 ## Does the Apple app have the same features as the Android app?
 

@@ -1,3 +1,4 @@
+import KV4PDiagnostics
 import KV4PTestSupport
 import Synchronization
 import Testing
@@ -283,5 +284,88 @@ struct APRSISClientClockTests {
         #expect(await eventually { !client.isLoggedIn })
         client.close()
         #expect(APRSISClient<ContinuousClock>.singleWord("") == "unknown")
+    }
+
+    // MARK: Log
+
+    private static func logged(
+        _ connector: FakeConnector
+    ) -> (MemoryLogStore, APRSISClient<ManualClock>, ManualClock) {
+        let store = MemoryLogStore()
+        let clock = ManualClock()
+        let client = APRSISClient(
+            software: "kv4p-ht",
+            version: "1.0",
+            connector: connector,
+            clock: clock,
+            diagnostics: DiagnosticLog(store: store, now: { 0 })
+        )
+        client.update(
+            APRSISSettings(
+                isEnabled: true,
+                isReceiveEnabled: true,
+                isTransmitEnabled: true,
+                callsign: "N0CALL",
+                latitude: 49.1,
+                longitude: 7.2
+            )
+        )
+        return (store, client, clock)
+    }
+
+    @Test("a refused connection is logged, without the callsign")
+    func logsRefusal() async {
+        let (store, client, _) = Self.logged(FakeConnector(refuses: true))
+        #expect(await eventually { store.read().contains("ERROR aprs: APRS-IS: connecting failed") })
+        #expect(await eventually { store.read().contains("session ended, next try in") })
+        #expect(!store.read().contains("N0CALL"))
+        client.close()
+    }
+
+    @Test("a login is logged by its result, without the callsign or position")
+    func logsLogin() async {
+        let connector = FakeConnector()
+        let (store, client, _) = Self.logged(connector)
+        #expect(await eventually { connector.connections.count == 1 })
+        connector.connections[0].say("# aprsc 2.1")
+        #expect(await eventually { connector.connections[0].sent.count == 1 })
+        connector.connections[0].say("# logresp N0CALL verified, server T2TEST")
+        #expect(await eventually { store.read().contains("APRS-IS: logged in") })
+        #expect(!store.read().contains("N0CALL"))
+        #expect(!store.read().contains("49.1"))
+        client.close()
+    }
+
+    @Test("a rejected login and a silent server are logged")
+    func logsRejection() async {
+        let connector = FakeConnector()
+        let (store, client, clock) = Self.logged(connector)
+        #expect(await eventually { connector.connections.count == 1 })
+        connector.connections[0].say("# aprsc 2.1")
+        #expect(await eventually { connector.connections[0].sent.count == 1 })
+        connector.connections[0].say("# logresp N0CALL unverified, server T2TEST")
+        #expect(await eventually { store.read().contains("login rejected") })
+        client.close()
+
+        let hanging = FakeConnector(hangs: true)
+        let (other, second, otherClock) = Self.logged(hanging)
+        #expect(
+            await eventually {
+                otherClock.advance(by: .seconds(5))
+                return other.read().contains("did not answer in time")
+            }
+        )
+        second.close()
+        _ = clock
+    }
+
+    @Test("a failed send is logged")
+    func logsSendFailure() async {
+        let connector = FakeConnector(failsToSend: true)
+        let (store, client, _) = Self.logged(connector)
+        #expect(await eventually { connector.connections.count == 1 })
+        connector.connections[0].say("# aprsc 2.1")
+        #expect(await eventually { store.read().contains("sending failed") })
+        client.close()
     }
 }

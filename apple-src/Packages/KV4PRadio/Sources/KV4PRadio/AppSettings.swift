@@ -77,6 +77,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var packetRetentionDays = 30
     /// A message to this station in the background brings a notification; local to the device (ADR-0058).
     public var notifiesAboutMessages = true
+    /// Detailed logging ends by itself at this time; local to the device (ADR-0059).
+    public var detailedLoggingUntilMs: Int64 = 0
+    /// What the live view of the log looks for; local to the device.
+    public var logFilter = LogFilter()
     /// The units of the APRS list (ADR-0055).
     public var units = APRSUnits.system
     public var txLimits = TXLimits()
@@ -103,6 +107,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     /// Decodes stored settings; values that are missing or unreadable keep their defaults.
     public init(data: Data?) {
         self = data.flatMap { try? JSONDecoder().decode(AppSettings.self, from: $0) } ?? AppSettings()
+    }
+
+    /// Stored settings are there, but as a whole cannot be read, so all fall back to their defaults.
+    public static func isUnreadable(_ data: Data?) -> Bool {
+        guard let data else { return false }
+        return (try? JSONDecoder().decode(AppSettings.self, from: data)) == nil
     }
 
     public func encoded() throws -> Data {
@@ -142,6 +152,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         keepsInternetPackets = values.value(.keepsInternetPackets, or: defaults.keepsInternetPackets)
         packetRetentionDays = values.value(.packetRetentionDays, or: defaults.packetRetentionDays)
         notifiesAboutMessages = values.value(.notifiesAboutMessages, or: defaults.notifiesAboutMessages)
+        detailedLoggingUntilMs = values.value(.detailedLoggingUntilMs, or: defaults.detailedLoggingUntilMs)
+        logFilter = values.value(.logFilter, or: defaults.logFilter)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)

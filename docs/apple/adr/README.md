@@ -11,7 +11,7 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0005](0005-codec2-freedv.md) | Codec2 for FreeDV 2400B | Accepted |
 | [0006](0006-aprs-ax25.md) | APRS and AX.25 implementation | Accepted |
 | [0007](0007-persistence.md) | Persistence | Accepted |
-| [0008](0008-minimum-os-versions.md) | Minimum OS versions | Accepted |
+| [0008](0008-minimum-os-versions.md) | Minimum OS versions | Superseded by 0060 |
 | [0009](0009-firmware-updates.md) | Firmware updates | Accepted |
 | [0010](0010-repository-structure.md) | Repository structure | Accepted |
 | [0011](0011-coverage-policy.md) | Test coverage policy | Accepted |
@@ -62,4 +62,6 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0056](0056-background-beacons.md) | Background beacons | Proposed |
 | [0057](0057-aprs-history.md) | APRS history | Proposed |
 | [0058](0058-aprs-messages.md) | APRS messages | Proposed |
+| [0059](0059-logging-and-problem-reports.md) | Logging and problem reports | Proposed |
+| [0060](0060-minimum-os-27.md) | Minimum OS 27 | Proposed |
 | [0063](0063-sstv.md) | SSTV receive and transmit | Proposed |
