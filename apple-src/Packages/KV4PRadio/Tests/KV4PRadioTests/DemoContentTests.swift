@@ -20,7 +20,7 @@ struct DemoContentTests {
         await model.loadDemoContent()
         #expect(await KV4PTestSupport.eventually { model.memories.count == DemoContent.memories.count })
         #expect(Set(model.aprsEvents.map(\.kind)).isSuperset(of: [.message, .position, .object, .weather, .status]))
-        #expect(model.conversations.map(\.peer) == ["N1CALL", "N2CALL-7"])
+        #expect(model.conversations.map(\.peer) == ["N2CALL-7", "N1CALL"])
         #expect(model.newAPRSMessages > 0)
     }
 
