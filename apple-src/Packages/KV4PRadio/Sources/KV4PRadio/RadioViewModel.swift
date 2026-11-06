@@ -204,6 +204,11 @@ public final class RadioViewModel {
         didSet { saveSettings() }
     }
 
+    /// The units of the APRS list.
+    public var units = APRSUnits.system {
+        didSet { saveSettings() }
+    }
+
     /// APRS packets heard on air, newest first, as `aprsDestinationFilter` lets through.
     public private(set) var aprsEvents: [APRSEvent] = []
     public var aprsDestinationFilter = APRSDestinationFilter.all {
@@ -504,6 +509,7 @@ public final class RadioViewModel {
         settings.isInternetFeedEnabled = isInternetFeedEnabled
         settings.aprsDestinationFilter = aprsDestinationFilter
         settings.txLimits = txLimits
+        settings.units = units
         settings.selectedGroup = selectedGroup
         settings.bluetoothRadio = bluetoothRadio
         settings.isSimulatorChosen = selectedConnection == .simulator
@@ -550,6 +556,7 @@ public final class RadioViewModel {
         beaconFrequency = settings.beaconFrequency
         aprsDestinationFilter = settings.aprsDestinationFilter
         txLimits = settings.txLimits
+        units = settings.units
     }
 
     private func saveSettings() {

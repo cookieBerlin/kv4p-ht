@@ -121,7 +121,7 @@ struct APRSView: View {
             icon(event)
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text(Self.title(event)).font(.headline)
+                    Text(Self.title(event)).font(.headline).strikethrough(event.isRemovedObject)
                     Spacer()
                     if let state = Self.delivery(event.deliveryState) {
                         Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
@@ -132,11 +132,11 @@ struct APRSView: View {
                     Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: .time)
                         .foregroundStyle(.secondary)
                 }
-                if let text = Self.text(event), !text.isEmpty {
-                    Text(text)
+                if let text = event.text(units: model.units, locale: .current) {
+                    Text(text).font(event.isRawText ? .footnote.monospaced() : .body)
                 }
-                if let origin = Self.origin(event) {
-                    Text(origin).font(.caption).foregroundStyle(.secondary)
+                if let caption = event.caption {
+                    Text(caption).font(.caption).foregroundStyle(.secondary)
                 }
                 if let position = model.position(of: event) {
                     location(position)
@@ -146,32 +146,26 @@ struct APRSView: View {
         .textSelection(.enabled)
     }
 
-    /// A packet's symbol, or what kind of packet it is. The symbol tells more when looked at closer: a tooltip on the Mac,
-    /// holding it on iPhone and iPad, as holding the text of the row selects it.
-    @ViewBuilder private func icon(_ event: APRSEvent) -> some View {
-        if let symbol = event.symbol {
-            APRSSymbolView(symbol: symbol)
-                .frame(width: 24)
-                #if os(macOS)
-                    .help(event.symbolDetails.joined(separator: "\n"))
-                #else
-                    .contentShape(.rect)
-                    .contextMenu {
-                        ForEach(event.symbolDetails, id: \.self) { Text($0) }
-                    }
-                #endif
-                .accessibilityLabel(event.symbolDetails.joined(separator: ", "))
-        } else {
-            Image(systemName: Self.symbol(event.kind))
-                .foregroundStyle(.secondary)
-                .frame(width: 24)
+    /// A packet's symbol, or what kind of packet it is. It tells more when looked at closer: a tooltip on the Mac, holding it
+    /// on iPhone and iPad, as holding the text of the row selects it.
+    private func icon(_ event: APRSEvent) -> some View {
+        Group {
+            if let symbol = event.symbol {
+                APRSSymbolView(symbol: symbol)
+            } else {
+                Image(systemName: Self.symbol(event.kind)).foregroundStyle(.secondary)
+            }
         }
-    }
-
-    /// What the symbol means, and the radio it came from.
-    private static func origin(_ event: APRSEvent) -> String? {
-        let parts = [event.symbol?.name, event.deviceName].compactMap(\.self)
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        .frame(width: 24)
+        #if os(macOS)
+            .help(event.details.joined(separator: "\n"))
+        #else
+            .contentShape(.rect)
+            .contextMenu {
+                ForEach(event.details, id: \.self) { Text($0) }
+            }
+        #endif
+        .accessibilityLabel(event.details.joined(separator: ", "))
     }
 
     /// The coordinates lead to the map; the distance stands below them, as a phone has little room.
@@ -185,19 +179,13 @@ struct APRSView: View {
             .accessibilityLabel("Open \(coordinates) in Maps")
         }
         if let distance = position.distanceMeters {
-            Text(Self.text(distance: distance, direction: position.direction))
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
+            Text(
+                [model.units.distance(meters: distance, locale: .current), position.direction?.label]
+                    .compactMap(\.self).joined(separator: " ")
+            )
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary)
         }
-    }
-
-    /// In the unit of the system; one decimal is enough for a list.
-    private static func text(distance: Double, direction: CompassPoint?) -> String {
-        let number = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(0...1))
-        let length = Measurement(value: distance, unit: UnitLength.meters).formatted(
-            .measurement(width: .abbreviated, usage: .road, numberFormatStyle: number)
-        )
-        return [length, direction?.label].compactMap(\.self).joined(separator: " ")
     }
 
     private static func delivery(_ state: APRSEvent.DeliveryState) -> (String, String)? {
@@ -228,20 +216,6 @@ struct APRSView: View {
         case .message: return "\(from) → \(event.toCallsign ?? "?")"
         case .object: return "\(event.objectName ?? "?") (\(from))"
         default: return event.relayCallsign.map { "\(from) via \($0)" } ?? from
-        }
-    }
-
-    private static func text(_ event: APRSEvent) -> String? {
-        switch event.kind {
-        case .message: event.body
-        case .weather:
-            [
-                String(format: "%.0f °F", event.temperature),
-                String(format: "%.0f %%", event.humidity),
-                event.pressure > 0 ? String(format: "%.1f hPa", event.pressure) : "",
-                event.windDirection.map { "wind \($0) \(event.windForce) mph" } ?? "",
-            ].filter { !$0.isEmpty }.joined(separator: " · ")
-        default: event.displayComment
         }
     }
 }

@@ -42,6 +42,10 @@ public struct APRSEvent: Equatable, Identifiable, Sendable {
     public internal(set) var isDigipeated = false
     /// Only seen on APRS-IS, never on RF.
     public internal(set) var isInternetOnly = false
+    /// The weather as reported, where the fields above have a 0 for what was not.
+    var weather: WeatherField?
+    /// An object its owner has taken back.
+    public internal(set) var isRemovedObject = false
     /// The symbol of a packet with a position.
     public internal(set) var symbol: APRSSymbolInfo?
     /// The radio that sent a Mic-E packet, if it marks itself.

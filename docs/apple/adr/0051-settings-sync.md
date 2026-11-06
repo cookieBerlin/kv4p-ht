@@ -14,7 +14,8 @@ holds 1 MB and 1024 keys, and these settings take a few hundred bytes in ten key
 - **iCloud's key-value store,** behind a protocol with a thin adapter. There is no server of
   our own, and no account other than the Apple ID.
 - **What syncs is what is the same for a person:** callsign, sticky PTT, access tone, APRS
-  symbol, position accuracy, beacon frequency, APRS filter and frequency limits.
+  symbol, position accuracy, beacon frequency, APRS filter, frequency limits and, from
+  [ADR-0055](0055-aprs-packet-types-and-units.md), the units.
 - **What stays on the device** depends on the device or makes it send: the radio, the
   simulator, the memory group, other audio, mic gain, listen only, and the switches for
   the beacon, digipeating, iGate and the APRS-IS feed. Turning on one device must not make

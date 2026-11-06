@@ -40,6 +40,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-31](#hw-31) | Memory sync between two devices | ⬜ | ⬜ |
 | [HW-32](#hw-32) | Distance to APRS stations | ⬜ | ⬜ |
 | [HW-33](#hw-33) | APRS symbols and radios | ⬜ | ⬜ |
+| [HW-34](#hw-34) | APRS packet types and units | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -274,3 +275,11 @@ meaning. A Yaesu or Kenwood Mic-E radio shows its name, and no longer marks such
 comment. The tooltip on the Mac and holding the icon on iPhone and iPad show the details, and holding
 the text of a row still selects it. A digipeater with an overlay shows its letter. The icons are
 readable in light and dark mode, and the beacon symbols in the settings show theirs.
+
+### HW-34
+
+On the APRS frequency or with APRS-IS: a weather station shows only what it reports, and the units
+follow *Units* under *APRS* in the settings, and so does the distance. A repeater object reads as
+frequency, offset and range, a removed object is crossed out, and packets only from the internet and
+digipeated ones are marked. Status, capabilities, telemetry and bulletins say what they are. Holding
+or pointing at any icon shows its details. On a second device, *Units* follows.

@@ -527,6 +527,7 @@ public struct APRSController: Sendable {
         ) { first($0, $1) }
         if let weather = info.weather {
             event.kind = .weather
+            event.weather = weather
             event.temperature = Double(weather.temperature ?? 0)
             event.humidity = weather.humidity ?? 0
             event.pressure = weather.pressure ?? 0
@@ -550,6 +551,7 @@ public struct APRSController: Sendable {
         if info.payload[0] == UInt8(ascii: ";") {
             event.kind = .object
             event.objectName = info.object?.name
+            event.isRemovedObject = info.object?.isLive == false
         }
         if let message = info.message {
             event.kind = .message

@@ -62,6 +62,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isIGateEnabled = false
     public var isInternetFeedEnabled = false
     public var aprsDestinationFilter = APRSDestinationFilter.all
+    /// The units of the APRS list (ADR-0055).
+    public var units = APRSUnits.system
     public var txLimits = TXLimits()
     /// The memory group shown (`lastGroup`); `nil` for all.
     public var selectedGroup: String?
@@ -111,6 +113,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isIGateEnabled = values.value(.isIGateEnabled, or: defaults.isIGateEnabled)
         isInternetFeedEnabled = values.value(.isInternetFeedEnabled, or: defaults.isInternetFeedEnabled)
         aprsDestinationFilter = values.value(.aprsDestinationFilter, or: defaults.aprsDestinationFilter)
+        units = values.value(.units, or: defaults.units)
         txLimits = values.value(.txLimits, or: defaults.txLimits)
         selectedGroup = values.value(.selectedGroup, or: defaults.selectedGroup)
         bluetoothRadio = values.value(.bluetoothRadio, or: defaults.bluetoothRadio)

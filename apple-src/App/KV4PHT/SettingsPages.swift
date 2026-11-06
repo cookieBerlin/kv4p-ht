@@ -284,6 +284,12 @@ struct APRSSettings: View {
                 }
                 .explained(ControlHelp.beaconFrequency)
             }
+            Section("List") {
+                Picker("Units", selection: $model.units) {
+                    ForEach(APRSUnits.allCases, id: \.self) { Text($0.label) }
+                }
+                .explained(ControlHelp.units)
+            }
             Section("Network") {
                 Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
                     .disabled(!model.canSendOnAir)

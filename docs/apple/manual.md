@@ -265,9 +265,13 @@ relayed by another station (third-party) show *via* that station. Tune to the
 APRS frequency of your region (e.g. 144.800 MHz in Europe, 144.390 MHz in North
 America). The icon of a packet shows its APRS symbol, and the line below names it, along with the
 radio if a Mic-E packet says which one it is, such as *Car · Yaesu FT5D*. For the details, 🖥 point at
-the icon or 📱 hold it. The coordinates of a station open Apple Maps with a pin named after it. Once your
+the icon or 📱 hold it. The line also says what else a packet is, such as a bulletin, a status report or
+telemetry, and marks those only from the internet, those your radio digipeated, and objects their owner
+removed, which are crossed out. A weather report shows only what the station sends, and a repeater object
+its frequency, offset and range. Telemetry and queries are named and shown as they arrive. The coordinates of a station open Apple Maps with a pin named after it. Once your
 position is known, the distance and direction from you stand below them, such as *12.3 km NE*, in
-the unit of your system; very near stations show no direction. Before you have decided on location
+the units you chose under ⚙ **Settings**, *APRS*, *Units*: those of your system by default, or metric
+or imperial, also for the weather. Pressure stays in hPa; very near stations show no direction. Before you have decided on location
 access, **Show distances** at the top of the list asks for it. Without access, the list works as
 before. The list starts empty each time the app starts. *Only messages for
 me* hides messages between other stations; messages from or to you, to `ALL`,
@@ -349,7 +353,7 @@ A short text below a setting explains it.
 | **About kv4p HT** | 📱 Version and licences; on the Mac in the **kv4p HT** menu |
 
 **iCloud sync**, in its own group under *Station* and on by default, takes your memories and groups, your callsign, sticky PTT, the access
-tone, the APRS symbol, position accuracy, beacon frequency and list filter and the frequency
+tone, the APRS symbol, position accuracy, beacon frequency and list filter, the units and the frequency
 limits to your other iPhones, iPads and Macs with the same Apple ID. A change can take a
 while to arrive. The radio, the memory group, other audio, mic gain, listen only and the
 switches for the beacon, digipeating, the iGate and the APRS-IS feed stay on each device.
