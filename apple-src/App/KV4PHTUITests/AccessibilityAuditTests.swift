@@ -70,6 +70,10 @@ final class AccessibilityAuditTests: XCTestCase {
         let pageButton = app.buttons["page-\(title)"].firstMatch
         if pageButton.exists {
             pageButton.tap()
+            // The pages scroll into place; an audit before that sees two halves.
+            let selected = NSPredicate(format: "isSelected == true")
+            _ = XCTWaiter.wait(for: [expectation(for: selected, evaluatedWith: pageButton)], timeout: 5)
+            Thread.sleep(forTimeInterval: 1)
         } else if title == "Settings" {
             app.buttons["Settings"].firstMatch.tap()
         }
@@ -87,15 +91,26 @@ final class AccessibilityAuditTests: XCTestCase {
         return false
     }
 
-    /// The kinds of check one at a time, as all at once can run out of the time XCTest gives an audit on a busy
-    /// simulator; and once more if one does. A screen without findings says so, to show that it was checked.
+    /// All kinds of check at once, which is quick; if that runs out of the time XCTest gives an audit on a busy
+    /// simulator, one kind at a time, each once more if it does too. A screen without findings says so, to show that it
+    /// was checked.
     private func audit(_ screen: String) throws {
+        // To judge a finding by looking at the screen; `make a11y` exports them.
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = screen
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
         let before = findings.count
-        for type in Self.auditTypes {
-            do {
-                try runAudit(screen, type)
-            } catch let error as NSError where error.code == -56 {
-                try runAudit(screen, type)
+        do {
+            try runAudit(screen, Self.auditTypes)
+        } catch let error as NSError where error.code == Self.timedOut {
+            findings.removeSubrange(before...)
+            for type in Self.eachAuditType {
+                do {
+                    try runAudit(screen, type)
+                } catch let error as NSError where error.code == Self.timedOut {
+                    try runAudit(screen, type)
+                }
             }
         }
         if findings.count == before {
@@ -103,9 +118,12 @@ final class AccessibilityAuditTests: XCTestCase {
         }
     }
 
-    private static let auditTypes: [XCUIAccessibilityAuditType] = [
+    private static let eachAuditType: [XCUIAccessibilityAuditType] = [
         .contrast, .elementDetection, .hitRegion, .sufficientElementDescription, .dynamicType, .textClipped, .trait,
     ]
+    private static let auditTypes = XCUIAccessibilityAuditType(eachAuditType)
+    /// The error of an audit that ran out of time.
+    private static let timedOut = -56
 
     private func runAudit(_ screen: String, _ type: XCUIAccessibilityAuditType) throws {
         try app.performAccessibilityAudit(for: type) { issue in

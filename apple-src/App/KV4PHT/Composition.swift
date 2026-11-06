@@ -37,9 +37,15 @@ enum Composition {
 
     /// Started with this, the app shows placeholder content on the simulator and keeps nothing (ADR-0062).
     static let demoArgument = "-uitest-demo"
+    private static let demoSuite = "uitest-demo"
+    private static let isDemo = ProcessInfo.processInfo.arguments.contains(demoArgument)
+
+    /// Where the views keep what they remember, such as the page shown last: in the demo mode the settings of its own,
+    /// which start anew, so that each audit begins on the same page.
+    static let viewDefaults = isDemo ? UserDefaults(suiteName: demoSuite) ?? .standard : .standard
 
     static func makeViewModel() -> RadioViewModel {
-        if ProcessInfo.processInfo.arguments.contains(demoArgument) {
+        if isDemo {
             return makeDemoViewModel()
         }
         diagnostics.log(.info, .app, "Started: \(appVersion) on \(ProblemReport.Environment.current.system)")
@@ -130,8 +136,8 @@ enum Composition {
     /// For the accessibility audit: the simulator, stores in memory only, settings of their own that start anew, no
     /// iCloud, no notifications and no permission asked, so that nothing in it depends on the device.
     private static func makeDemoViewModel() -> RadioViewModel {
-        let defaults = UserDefaults(suiteName: "uitest-demo") ?? .standard
-        defaults.removePersistentDomain(forName: "uitest-demo")
+        let defaults = viewDefaults
+        defaults.removePersistentDomain(forName: demoSuite)
         var settings = AppSettings()
         settings.callsign = "N0CALL"
         settings.isSimulatorChosen = true
