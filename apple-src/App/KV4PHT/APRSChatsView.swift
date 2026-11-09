@@ -122,6 +122,7 @@ private struct APRSConversationView: View {
                 .padding(8)
             }
             .defaultScrollAnchor(.bottom)
+            .scrollDismissesKeyboard(.interactively)
             .overlay {
                 if model.messages(with: peer).isEmpty {
                     ContentUnavailableView(
@@ -156,6 +157,7 @@ private struct APRSConversationView: View {
                         // A stop rather than a cut when it is sent, so that nothing goes missing.
                         if text.count > limit { text = String(text.prefix(limit)) }
                     }
+                KeyboardDismissButton()
                 Text("\(text.count)/\(limit)")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(text.count == limit ? .red : .secondary)

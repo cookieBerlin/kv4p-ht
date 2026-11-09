@@ -37,12 +37,13 @@ final class FakeAudioSession: AudioSession {
         self.lowerFails = lowerFails
     }
 
-    func activate() throws {
+    /// Asynchronous, as the session takes up to a second and must not hold the main thread.
+    func activate() async throws {
         log.append("activate")
         if fails { throw Failure() }
     }
 
-    func deactivate() {
+    func deactivate() async {
         log.append("deactivate")
     }
 

@@ -21,7 +21,10 @@ Several controls do not say what they do.
 - **Room decides, not the device:** with a regular width, and always on the Mac, the
   memories and APRS stand side by side. A compact width, which includes an iPad in a
   narrow window, shows the memories, APRS and the settings as pages to swipe between,
-  with a bar of its own at the bottom, as the system tab bar cannot swipe.
+  with a bar of its own at the bottom, as the system tab bar cannot swipe. The pages sit in a scroll view that
+  pages, not in a paged `TabView`: that one wraps each page in a controller of its own, and UIKit stopped the app
+  when the navigation stack of the settings sat in one while a page changed. All pages are there at once, so each
+  is told whether it is the one shown.
 - **PTT outside the pages:** the header and PTT do not move with a page. A moving
   finger on PTT therefore cannot change the page and end the transmission.
 - **Settings:** the Mac uses its settings window (⌘,), and a wide iPad pushes a page.

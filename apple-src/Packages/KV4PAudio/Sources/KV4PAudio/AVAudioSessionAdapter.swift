@@ -64,12 +64,20 @@
             observers.forEach(NotificationCenter.default.removeObserver)
         }
 
-        public func activate() throws {
+        /// The category on the session's queue, then the asynchronous activation of iOS 27, so that neither holds the
+        /// caller, which is the main thread.
+        public func activate() async throws {
             // Other apps keep playing.
-            try activate(otherAudio: .mixWithOthers)
+            try await onSessionQueue { [self] in try configure(otherAudio: .mixWithOthers) }
+            try await AVAudioSession.sharedInstance().activate(options: [])
         }
 
         private func activate(otherAudio: AVAudioSession.CategoryOptions) throws {
+            try configure(otherAudio: otherAudio)
+            try AVAudioSession.sharedInstance().setActive(true)
+        }
+
+        private func configure(otherAudio: AVAudioSession.CategoryOptions) throws {
             let session = AVAudioSession.sharedInstance()
             // The speaker instead of the earpiece; Bluetooth headsets for both directions.
             try session.setCategory(
@@ -79,7 +87,6 @@
             )
             // iOS mutes haptics during a recording session by default, and PTT confirms a press with one.
             try session.setAllowHapticsAndSystemSoundsDuringRecording(true)
-            try session.setActive(true)
         }
 
         /// Session calls block for up to a second, too long for the main thread.
@@ -124,9 +131,9 @@
             try await onSessionQueue { [self] in try activate(otherAudio: .mixWithOthers) }
         }
 
-        public func deactivate() {
+        public func deactivate() async {
             do {
-                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                try await AVAudioSession.sharedInstance().deactivate(options: .notifyOthersOnDeactivation)
             } catch {
                 diagnostics?.log(.error, .audio, "Ending the session: \(DiagnosticLog.describe(error))")
             }

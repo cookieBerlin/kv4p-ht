@@ -24,6 +24,12 @@ public final class RXAudioPlayer: RXAudioSink {
         public var buffered: Int
         public var underruns: Int
         public var droppedSamples: Int
+        /// From the radio, and asked for by the output: if they differ for long, the rates do not match.
+        public var receivedSamples = 0
+        public var requestedSamples = 0
+
+        /// Before anything was received or played.
+        public static let zero = Statistics(buffered: 0, underruns: 0, droppedSamples: 0)
     }
 
     private struct State {
@@ -33,6 +39,8 @@ public final class RXAudioPlayer: RXAudioSink {
         let fadesIn: Bool
         /// Reused by `render(into:)`, so the audio thread does not allocate.
         var scratch = [Int16](repeating: 0, count: 1024)
+        var receivedSamples = 0
+        var requestedSamples = 0
     }
 
     private let state: Mutex<State>
@@ -56,7 +64,9 @@ public final class RXAudioPlayer: RXAudioSink {
             Statistics(
                 buffered: $0.buffer.count,
                 underruns: $0.buffer.underruns,
-                droppedSamples: $0.buffer.droppedSamples
+                droppedSamples: $0.buffer.droppedSamples,
+                receivedSamples: $0.receivedSamples,
+                requestedSamples: $0.requestedSamples
             )
         }
     }
@@ -69,6 +79,7 @@ public final class RXAudioPlayer: RXAudioSink {
     public func receive(samples: [Int16]) {
         state.withLock { state in
             state.buffer.push(samples)
+            state.receivedSamples += samples.count
             state.fade = Self.fadeStep + (1 - Self.fadeStep) * state.fade
         }
     }
@@ -100,6 +111,7 @@ public final class RXAudioPlayer: RXAudioSink {
     /// Fills `output` with samples in -1…1, silence where no audio is buffered.
     public func render(into output: UnsafeMutableBufferPointer<Float>) {
         state.withLock { state in
+            state.requestedSamples += output.count
             if state.scratch.count < output.count {
                 state.scratch = [Int16](repeating: 0, count: output.count)
             }

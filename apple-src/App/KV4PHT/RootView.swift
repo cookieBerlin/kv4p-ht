@@ -124,6 +124,18 @@ struct RootView: View {
         let model: RadioViewModel
         /// The page shown last, also after a restart.
         @AppStorage("mainPage") private var page = Page.memories
+        /// Where the scroll view stands, which follows `page` and leads it when swiped.
+        @State private var shownPage: Page?
+        /// The bars below the pages make way for the keyboard, so that the line to write stays above it.
+        @State private var isKeyboardShown = false
+
+        /// One page over the full width; all are there at once, so each is told whether it is the one shown.
+        private func pageView(_ item: Page, @ViewBuilder content: () -> some View) -> some View {
+            content()
+                .containerRelativeFrame(.horizontal)
+                .environment(\.isPageOnScreen, page == item)
+                .id(item)
+        }
 
         var body: some View {
             VStack(spacing: 0) {
@@ -131,24 +143,43 @@ struct RootView: View {
                     RadioHeader(model: model)
                     Divider()
                 }
-                TabView(selection: $page) {
-                    MemoriesView(model: model).tag(Page.memories)
-                    APRSView(model: model).tag(Page.aprs)
-                    NavigationStack { SettingsView(model: model) }.tag(Page.settings)
+                // A scroll view rather than a paged `TabView`: that one wraps each page in a controller of its own, and
+                // UIKit stops the app when the navigation stack of the settings sits in one while a page changes.
+                ScrollView(.horizontal) {
+                    HStack(spacing: 0) {
+                        pageView(.memories) { MemoriesView(model: model) }
+                        pageView(.aprs) { APRSView(model: model) }
+                        pageView(.settings) { NavigationStack { SettingsView(model: model) } }
+                    }
+                    .scrollTargetLayout()
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
+                .scrollTargetBehavior(.paging)
+                .scrollIndicators(.hidden)
+                .scrollPosition(id: $shownPage)
+                .onAppear { shownPage = page }
+                .onChange(of: shownPage) {
+                    if let shownPage, shownPage != page { page = shownPage }
+                }
+                .onChange(of: page) {
+                    if shownPage != page { withAnimation { shownPage = page } }
+                }
                 .onChange(of: model.aprsReplyCount) { withAnimation { page = .aprs } }
                 .onChange(of: model.chatRequestCount) { withAnimation { page = .aprs } }
-                if page == .settings {
-                    if model.hasFailed {
-                        StatusLine(model: model).padding(.vertical, 6)
+                // A text field on a page that is swiped away keeps the keyboard otherwise, with no way to close it.
+                .onChange(of: page) { dismissKeyboard() }
+                if !isKeyboardShown {
+                    if page == .settings {
+                        if model.hasFailed {
+                            StatusLine(model: model).padding(.vertical, 6)
+                        }
+                        NoticeBanner(model: model)
+                    } else {
+                        BottomBar(model: model, showsPTT: page == .memories)
                     }
-                    NoticeBanner(model: model)
-                } else {
-                    BottomBar(model: model, showsPTT: page == .memories)
+                    pageBar
                 }
-                pageBar
             }
+            .observesKeyboard($isKeyboardShown)
         }
 
         /// The number of new messages on the APRS page (ADR-0058).
@@ -192,3 +223,8 @@ struct RootView: View {
         }
     }
 #endif
+
+extension EnvironmentValues {
+    /// Whether the page that holds a view is the one shown, where pages sit side by side; elsewhere always.
+    @Entry var isPageOnScreen = true
+}
