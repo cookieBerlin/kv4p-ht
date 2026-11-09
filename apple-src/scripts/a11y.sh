@@ -28,6 +28,9 @@ for device in "${devices[@]}"; do
 done
 echo "a11y: screenshots in $results/runs/$run"
 
-grep -h '^A11Y' "$results"/*.log | sort -u > "$results/findings.txt" || true
+# Each finding with the device it was found on.
+for device in "${devices[@]}"; do
+  grep -h '^A11Y' "$results/$device.log" | sed "s/^A11Y /A11Y $device, /" || true
+done | sort -u > "$results/findings.txt"
 echo "a11y: $(grep -vc 'no findings' "$results/findings.txt" || true) findings in $results/findings.txt"
 exit "$status"
