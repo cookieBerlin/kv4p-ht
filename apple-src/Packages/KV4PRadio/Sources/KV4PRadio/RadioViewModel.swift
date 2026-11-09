@@ -292,6 +292,12 @@ public final class RadioViewModel {
     public var aprsPage = APRSPage.packets {
         didSet { saveSettings() }
     }
+    /// The app connects by itself at the start, to the radio chosen last; local to the device.
+    public var connectsAtStart = true {
+        didSet { saveSettings() }
+    }
+    /// The start has tried it already; a window that opens again does not connect once more.
+    private var hasConnectedAtStart = false
     /// How the simulated station answers messages; it takes effect at once.
     public var simulatedMessageAnswer = SimulatedMessageAnswer.acknowledge {
         didSet { saveSettings() }
@@ -744,6 +750,7 @@ public final class RadioViewModel {
         settings.detailedLoggingUntilMs = detailedLoggingUntilMs
         settings.messageRetentionDays = messageRetentionDays
         settings.aprsPage = aprsPage
+        settings.connectsAtStart = connectsAtStart
         settings.chatReadUntilMs = chatReadUntilMs
         settings.simulatedMessageAnswer = simulatedMessageAnswer
         settings.lastFirmware = lastFirmwareText
@@ -769,6 +776,7 @@ public final class RadioViewModel {
         isBackgroundBeaconEnabled = settings.isBackgroundBeaconEnabled
         lastMemorySync = settings.lastMemorySync
         isListenOnly = settings.isListenOnly
+        connectsAtStart = settings.connectsAtStart
         isStationSetupPending = callsign.isEmpty && !isListenOnly
         micGain = settings.micGain
         otherAudioMode = otherAudioModes.contains(settings.otherAudioMode) ? settings.otherAudioMode : .keepPlaying
@@ -1276,6 +1284,15 @@ public final class RadioViewModel {
     }
 
     // MARK: Connection
+
+    /// Connects at the start, if wanted, to a radio chosen by the user: the first radio found over Bluetooth may be
+    /// anyone's. Once per start, and only what a tap on Connect would do.
+    public func connectAtStart() async {
+        guard connectsAtStart, !hasConnectedAtStart else { return }
+        hasConnectedAtStart = true
+        guard canStartConnection, selectedConnection != .bluetooth else { return }
+        await connect()
+    }
 
     public func connect() async {
         switch firmwareUpdate {

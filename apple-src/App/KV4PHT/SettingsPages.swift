@@ -112,9 +112,24 @@ private struct RadioSection<Rows: View>: View {
 /// What the radio itself does: its channel, its audio filters, the limits of transmitting and its firmware.
 struct RadioSettings: View {
     @Bindable var model: RadioViewModel
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
+
+    /// A phone has it with the connection, on top of the settings.
+    private var hasConnectAtStart: Bool {
+        #if os(iOS)
+            sizeClass != .compact
+        #else
+            true
+        #endif
+    }
 
     var body: some View {
         Form {
+            if hasConnectAtStart {
+                Section("Connection") { ConnectAtStartToggle(model: model) }
+            }
             RadioSection(title: "Channel", model: model) {
                 Picker("Bandwidth", selection: $model.isWideBandwidth) {
                     Text("12.5 kHz").tag(false)

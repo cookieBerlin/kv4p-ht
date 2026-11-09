@@ -42,21 +42,27 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 The structure is the same on all devices, and similar to the Android app:
 
-- **On top:** the choice of radio, **Connect**, the name of the active memory, the frequency, the band,
-  the squelch state and the S-meter. Type a frequency and press Return to tune.
+- **On top:** the choice of radio, **Connect** (📱 on an iPhone, both are in ⚙ **Settings**), the name of the
+  active memory, the frequency, the band, the squelch state and the S-meter. Type a frequency and press Return to
+  tune.
 - **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
 - **At the bottom:** a large **Push to talk** button, the connection status above it
-  (🖥 in a status bar at the bottom of the window) and any messages.
+  (🖥 in a status bar at the bottom of the window) and any messages. 📱 On an iPhone the button shows only a
+  microphone, and only while the radio is connected; otherwise the status stands in its place, with
+  **Connect in Settings** to get there.
 - A message, red for a problem such as a missing location and green for a finished
   import, shows at the
   bottom of the screen until you dismiss it with ✕: 📱 on an iPhone above the bar with
   the pages, otherwise above **Push to talk** and in the 🖥 settings window.
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
 
-📱 On an iPhone or in a narrow iPad window, **Memories**, **APRS** and ⚙ **Settings**
-are pages: use the bar at the bottom, or swipe sideways. The app opens the page you
-used last. **Push to talk** is on the memories page, and the header on the memories and
-APRS pages.
+📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **Packets**, **Chats** (two speech bubbles) and
+⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. The pages form a ring: a swipe
+to the right on the memories goes straight to the settings, and a swipe to the left there back to the memories. The
+symbols keep their size with larger text; hold one to see it large with its name. The app opens the page you used
+last. **Push to talk** is on the memories page, and the header on all pages but the settings. On a page within the
+settings, a swipe to the right goes back to their list. With the largest text sizes, the header grows less than the
+rest, and rows that no longer fit side by side, such as the line to write a message, stand one below the other.
 
 Controls that are not self-explanatory explain themselves: 🖥 point at them for a
 tooltip; 📱 a short text is below each setting, and ⓘ explains the
@@ -68,7 +74,8 @@ them denied: the functions that need one say so and offer **Open Settings**.
 
 ## Connecting the radio
 
-Choose the connection under **Radio** at the top (📱 on an iPhone, tap the chosen radio) and click **Connect**:
+Choose the connection under **Radio** at the top and click **Connect**. 📱 On an iPhone or in a narrow iPad window,
+both are in ⚙ **Settings** under *Connection*, together with the state of the connection:
 
 - **Bluetooth:** power on the radio. Once Bluetooth access is settled, at your first
   connection, the app looks for radios while nothing is connected and lists them under **Radio**, each with its name and the end of its ID.
@@ -95,6 +102,10 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
   a message fail to try *Send again*. A long *Reply after* gives time to put the app in the background and see the
   notification. These take effect at once.
 
+**Connect at start**, on by default, connects to the radio chosen last when the app starts: 📱 in ⚙ **Settings**
+under *Connection*, otherwise under *Radio*. It does so only for a radio you chose, or the simulator, not for
+*Bluetooth (first radio found)*, which could be anyone's, and not over USB.
+
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
 confirmed the latest change. **Disconnect** ends the session; the radio keeps its
@@ -105,8 +116,8 @@ disconnect yourself:
 
 - 🖥 A dialog opens, and the status bar at the bottom of the window shows the reason.
   While the app is in the background, its Dock icon also bounces.
-- 📱 The reason shows in red above **Push to talk**. In the background, you also get a
-  notification if you allowed it.
+- 📱 The reason shows in red at the bottom of the screen (on an iPhone in place of **Push to talk**, and in
+  ⚙ **Settings** under *Connection*). In the background, you also get a notification if you allowed it.
 
 ## Receiving
 
@@ -217,7 +228,7 @@ memory can have its own tone and length, or use the settings, which is the defau
   and the transmitter stops by itself, also if you still hold the button.
 - Releasing earlier stops at once, and the app says that the repeater may not have opened.
   The next press removes this message.
-- The button shows the frequency of the tone.
+- The button shows the frequency of the tone; 📱 on an iPhone below a symbol of a tone burst.
 - If the radio does not transmit within 2 s, the app stops and says so.
 - 📱 The iPhone vibrates all the time while the button is held.
 - The microphone stays closed, so other apps keep playing. Sticky PTT has no effect on the
@@ -300,7 +311,8 @@ bulletin BLN1CQ.
 - `|`, `~` and `{` are sent as spaces; text and number together are limited to
   67 characters.
 
-**Chats:** the switch at the top of the APRS page changes between *Packets* and *Chats*. *Chats* has one chat for
+**Chats:** the switch at the top of the APRS page changes between *Packets* and *Chats*; 📱 on an iPhone or in a
+narrow iPad window, they are pages of their own. *Chats* has one chat for
 each station you wrote with, with its SSID, newest first, and the number of unread messages. A chat shows the
 messages in the order they were written, yours on the right with their delivery. A tap on such a message in the
 packets opens its chat. Messages to and from you stay as long as ⚙ **Settings**, *APRS*, *History*, *Keep messages
@@ -314,7 +326,7 @@ the Mac) deletes it, and the trash button at the top deletes the whole chat, als
 Messages go over the radio; a station seen only on the internet gets them only if an iGate passes them on.
 
 **Answering and new messages:** a tap on a message to others fills in its sender as the recipient, and *Reply* in
-the ⋯ menu of its row does the same, also from the *Packets* page. The number on the APRS page, and on *Chats*,
+the ⋯ menu of its row does the same, also from the *Packets* page. The number on the APRS page (📱 on the *Chats* symbol), and on *Chats*,
 shows unread messages to your callsign, with any SSID, until you open their chat. While the app is in the background, each of them
 brings a notification with its sender and text. The app must be running for this, so nothing arrives after it has
 ended. A tap on the notification opens its chat. *Notify about messages to me* under ⚙ **Settings**, *APRS*,
@@ -380,7 +392,9 @@ modem, the app encodes and decodes the speech with Codec2.
 ## Settings
 
 ⚙ **Settings** opens an overview of pages: a sidebar on the Mac, a list on iPhone and iPad.
-A short text below a setting explains it.
+A short text below a setting explains it. 📱 On an iPhone or in a narrow iPad window, the list starts with
+*Connection*: the radio, the state of the connection, **Connect** or **Disconnect** and *Connect at start*. While
+the simulator is the chosen radio, its page follows in a group of its own.
 
 | Page | What it holds |
 |---|---|

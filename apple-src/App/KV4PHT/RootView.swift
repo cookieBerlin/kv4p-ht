@@ -70,7 +70,10 @@ struct RootView: View {
                     model.isAppActive = false
                 }
             #endif
-            .task { await model.loadMemories() }
+            .task {
+                await model.loadMemories()
+                await model.connectAtStart()
+            }
             .sheet(isPresented: .constant(model.isStationSetupPending)) { StationSetupView(model: model) }
     }
 
@@ -96,18 +99,20 @@ struct RootView: View {
 }
 
 #if os(iOS)
-    /// iPhone and narrow iPad windows: one page each for the memories, APRS and the settings. The header and PTT stay
-    /// outside the pages, so that a moving finger on PTT does not change the page and end the transmission.
+    /// iPhone and narrow iPad windows: one page each for the memories, the APRS packets, the chats and the settings, in a
+    /// ring, so that a swipe goes from the memories straight to the settings and back. The header and PTT stay outside
+    /// the pages, so that a moving finger on PTT does not change the page and end the transmission.
     private struct CompactScreen: View {
         private enum Page: String, CaseIterable, Identifiable {
-            case memories, aprs, settings
+            case memories, packets, chats, settings
 
             var id: Self { self }
 
             var title: String {
                 switch self {
                 case .memories: "Memories"
-                case .aprs: "APRS"
+                case .packets: "Packets"
+                case .chats: "Chats"
                 case .settings: "Settings"
                 }
             }
@@ -115,8 +120,33 @@ struct RootView: View {
             var symbol: String {
                 switch self {
                 case .memories: "list.bullet"
-                case .aprs: "point.3.connected.trianglepath.dotted"
+                case .packets: "point.3.connected.trianglepath.dotted"
+                case .chats: "bubble.left.and.bubble.right"
                 case .settings: "gearshape"
+                }
+            }
+
+            /// What the APRS page of a wider screen would show.
+            var aprsPage: APRSPage? {
+                switch self {
+                case .packets: .packets
+                case .chats: .chats
+                case .memories, .settings: nil
+                }
+            }
+        }
+
+        /// A place in the row of pages: a scroll view does not close into a ring, so a copy of the last page stands
+        /// before the first and a copy of the first after the last; a swipe that ends on a copy jumps to the page.
+        private enum Slot: Hashable {
+            case page(Page)
+            case copyBefore, copyAfter
+
+            var page: Page {
+                switch self {
+                case .page(let page): page
+                case .copyBefore: .settings
+                case .copyAfter: .memories
                 }
             }
         }
@@ -125,16 +155,31 @@ struct RootView: View {
         /// The page shown last, also after a restart.
         @AppStorage("mainPage") private var page = Page.memories
         /// Where the scroll view stands, which follows `page` and leads it when swiped.
-        @State private var shownPage: Page?
+        @State private var shownSlot: Slot?
         /// The bars below the pages make way for the keyboard, so that the line to write stays above it.
         @State private var isKeyboardShown = false
+        /// The pages opened in the settings. While one is open, a swipe goes back to the list rather than to another page.
+        @State private var settingsPath: [SettingsDestination] = []
+        @Environment(\.scenePhase) private var scenePhase
 
         /// One page over the full width; all are there at once, so each is told whether it is the one shown.
         private func pageView(_ item: Page, @ViewBuilder content: () -> some View) -> some View {
             content()
+                // Scrolling within a page stays, also while the pages do not move.
+                .environment(\.isScrollEnabled, true)
                 .containerRelativeFrame(.horizontal)
                 .environment(\.isPageOnScreen, page == item)
-                .id(item)
+                .id(Slot.page(item))
+        }
+
+        /// A copy shows the page while a swipe passes it; it is there to look at only.
+        private func copyView(_ slot: Slot, @ViewBuilder content: () -> some View) -> some View {
+            content()
+                .containerRelativeFrame(.horizontal)
+                .environment(\.isPageOnScreen, false)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+                .id(slot)
         }
 
         var body: some View {
@@ -147,34 +192,57 @@ struct RootView: View {
                 // UIKit stops the app when the navigation stack of the settings sits in one while a page changes.
                 ScrollView(.horizontal) {
                     HStack(spacing: 0) {
+                        copyView(.copyBefore) { NavigationStack { SettingsView(model: model) } }
                         pageView(.memories) { MemoriesView(model: model) }
-                        pageView(.aprs) { APRSView(model: model) }
-                        pageView(.settings) { NavigationStack { SettingsView(model: model) } }
+                        pageView(.packets) { APRSView(model: model, page: .packets) }
+                        pageView(.chats) { APRSView(model: model, page: .chats) }
+                        pageView(.settings) {
+                            NavigationStack(path: $settingsPath) { SettingsView(model: model) }
+                        }
+                        copyView(.copyAfter) { MemoriesView(model: model) }
                     }
                     .scrollTargetLayout()
                 }
                 .scrollTargetBehavior(.paging)
                 .scrollIndicators(.hidden)
-                .scrollPosition(id: $shownPage)
-                .onAppear { shownPage = page }
-                .onChange(of: shownPage) {
-                    if let shownPage, shownPage != page { page = shownPage }
+                // On a page of the settings, a swipe goes back to their list.
+                .scrollDisabled(page == .settings && !settingsPath.isEmpty)
+                .scrollPosition(id: $shownSlot)
+                .onAppear { shownSlot = .page(page) }
+                .onChange(of: shownSlot) {
+                    if let shownSlot, shownSlot.page != page { page = shownSlot.page }
                 }
                 .onChange(of: page) {
-                    if shownPage != page { withAnimation { shownPage = page } }
+                    if shownSlot?.page != page { withAnimation { shownSlot = .page(page) } }
                 }
-                .onChange(of: model.aprsReplyCount) { withAnimation { page = .aprs } }
-                .onChange(of: model.chatRequestCount) { withAnimation { page = .aprs } }
+                .onScrollPhaseChange { _, phase in
+                    if phase == .idle, let shownSlot, shownSlot != .page(shownSlot.page) {
+                        var jump = Transaction()
+                        jump.disablesAnimations = true
+                        withTransaction(jump) { self.shownSlot = .page(shownSlot.page) }
+                    }
+                }
+                .onChange(of: model.aprsReplyCount) { withAnimation { page = .packets } }
+                .onChange(of: model.chatRequestCount) { withAnimation { page = .chats } }
+                // A message of a chat in the packets opens the chat.
+                .onChange(of: model.aprsPage) {
+                    if page.aprsPage != nil, model.aprsPage == .chats { withAnimation { page = .chats } }
+                }
+                .onChange(of: page, initial: true) {
+                    if let aprsPage = page.aprsPage { model.aprsPage = aprsPage }
+                    updateAPRSVisibility()
+                }
+                .onChange(of: scenePhase) { updateAPRSVisibility() }
                 // A text field on a page that is swiped away keeps the keyboard otherwise, with no way to close it.
                 .onChange(of: page) { dismissKeyboard() }
                 if !isKeyboardShown {
                     if page == .settings {
-                        if model.hasFailed {
-                            StatusLine(model: model).padding(.vertical, 6)
-                        }
+                        // The settings show the state of the connection themselves.
                         NoticeBanner(model: model)
                     } else {
-                        BottomBar(model: model, showsPTT: page == .memories)
+                        BottomBar(model: model, showsPTT: page == .memories) {
+                            withAnimation { page = .settings }
+                        }
                     }
                     pageBar
                 }
@@ -182,13 +250,14 @@ struct RootView: View {
             .observesKeyboard($isKeyboardShown)
         }
 
-        /// The number of new messages on the APRS page (ADR-0058).
+        /// For the chats to count as read and the list to show distances while one of them is on screen.
+        private func updateAPRSVisibility() {
+            model.isAPRSVisible = page.aprsPage != nil && scenePhase == .active
+        }
+
+        /// The number of new messages in the chats (ADR-0058).
         private var newMessages: some View {
-            Text(model.newAPRSMessages, format: .number)
-                .font(.caption2.bold())
-                .foregroundStyle(.white)
-                .padding(.horizontal, 4)
-                .background(.red, in: .capsule)
+            CountBadge(count: model.newAPRSMessages, color: .red)
                 .fixedSize()
                 .offset(x: 10, y: -6)
         }
@@ -199,20 +268,23 @@ struct RootView: View {
                     Button {
                         withAnimation { page = item }
                     } label: {
-                        VStack(spacing: 2) {
-                            Image(systemName: item.symbol)
-                                .font(.title3)
-                                .overlay(alignment: .topTrailing) {
-                                    if item == .aprs, model.newAPRSMessages > 0 {
-                                        newMessages
-                                    }
+                        Image(systemName: item.symbol)
+                            .font(.title)
+                            .imageScale(.large)
+                            .overlay(alignment: .topTrailing) {
+                                if item == .chats, model.newAPRSMessages > 0 {
+                                    newMessages
                                 }
-                            Text(item.title).font(.caption2)
-                        }
-                        .frame(maxWidth: .infinity)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .contentShape(.rect)
                     }
+                    // The symbols are large already and keep their size; a long press shows a page large instead.
+                    .dynamicTypeSize(...DynamicTypeSize.large)
+                    .accessibilityLabel(item.title)
+                    .accessibilityShowsLargeContentViewer { Label(item.title, systemImage: item.symbol) }
                     .accessibilityValue(
-                        item == .aprs && model.newAPRSMessages > 0 ? "\(model.newAPRSMessages) new" : ""
+                        item == .chats && model.newAPRSMessages > 0 ? "\(model.newAPRSMessages) new" : ""
                     )
                     .foregroundStyle(page == item ? Color.accentColor : Color.secondary)
                     .accessibilityAddTraits(page == item ? .isSelected : [])
@@ -220,7 +292,7 @@ struct RootView: View {
                     .accessibilityIdentifier("page-\(item.title)")
                 }
             }
-            .padding(.top, 6)
+            .padding(.top, 4)
             .background(.bar)
         }
     }

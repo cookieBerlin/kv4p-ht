@@ -85,6 +85,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var messageRetentionDays = 0
     /// Packets or chats on the APRS page; local to the device.
     public var aprsPage = APRSPage.packets
+    /// The app connects by itself at the start, to the radio chosen last; local to the device.
+    public var connectsAtStart = true
     /// When each chat was last read; local to the device.
     public var chatReadUntilMs: [String: Int64] = [:]
     /// How the simulated station answers messages, and after how many seconds it replies; local to the device.
@@ -171,6 +173,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         logFilter = values.value(.logFilter, or: defaults.logFilter)
         messageRetentionDays = values.value(.messageRetentionDays, or: defaults.messageRetentionDays)
         aprsPage = values.value(.aprsPage, or: defaults.aprsPage)
+        connectsAtStart = values.value(.connectsAtStart, or: defaults.connectsAtStart)
         chatReadUntilMs = values.value(.chatReadUntilMs, or: defaults.chatReadUntilMs)
         simulatedMessageAnswer = values.value(.simulatedMessageAnswer, or: defaults.simulatedMessageAnswer)
         simulatedReplyDelaySeconds = values.value(.simulatedReplyDelaySeconds, or: defaults.simulatedReplyDelaySeconds)

@@ -6,7 +6,14 @@ import KV4PPersistence
 public enum DemoContent {
     public static let memories = [
         ChannelMemory(name: "Calling channel", frequency: 145.5),
-        ChannelMemory(name: "Repeater", frequency: 145.6, offset: .down, txTone: "88.5", group: "Repeaters"),
+        ChannelMemory(
+            name: "Repeater",
+            frequency: 145.6,
+            offset: .down,
+            txTone: "88.5",
+            group: "Repeaters",
+            accessToneHz: 1750
+        ),
         ChannelMemory(name: "APRS", frequency: 144.8, group: "Digital"),
     ]
 

@@ -6,6 +6,7 @@ enum ControlHelp {
         "S-meter: the strength of the received signal. The mark above it is the squelch level; weaker signals stay "
         + "muted; drag on the bars to change it, on iPhone and iPad after a short hold. The speaker icon shows whether "
         + "the squelch is open."
+    static let connectAtStart = "Connects to the radio chosen last when the app starts."
     static let scan = "Steps through the memories shown and stops on a signal."
     static let manageMemories = "Sort the memories and groups, change several at once and import repeaters."
     static let importCSV = "Adds repeaters from a CSV file exported from RepeaterBook."
@@ -94,6 +95,7 @@ struct HelpButton: View {
         #if os(iOS)
             Button("Explain", systemImage: "info.circle") { isShown = true }
                 .labelStyle(.iconOnly)
+                .capsuleButton()
                 .popover(isPresented: $isShown) {
                     Text(text)
                         .font(.footnote)

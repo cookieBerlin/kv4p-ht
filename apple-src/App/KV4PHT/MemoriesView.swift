@@ -8,6 +8,7 @@ struct MemoriesView: View {
     @Bindable var model: RadioViewModel
     @State private var editing: ChannelMemory?
     @State private var deleting: [ChannelMemory]?
+    @Environment(\.dynamicTypeSize) private var textSize
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,8 +25,30 @@ struct MemoriesView: View {
         .confirmsDeletion(of: $deleting, model: model)
     }
 
-    /// The group shown and what acts on the memories, above the list.
+    /// The group shown and what acts on the memories, above the list; in two rows with the accessibility text sizes.
     private var controls: some View {
+        Group {
+            if textSize.isAccessibilitySize {
+                VStack(alignment: .leading) {
+                    groupChoice
+                    HStack {
+                        Spacer()
+                        actions
+                    }
+                }
+            } else {
+                HStack {
+                    groupChoice
+                    Spacer()
+                    actions
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
+
+    private var groupChoice: some View {
         HStack {
             Text("Group")
             Picker("Group", selection: $model.selectedGroup) {
@@ -34,20 +57,21 @@ struct MemoriesView: View {
             }
             .labelsHidden()
             .fixedSize()
-            Spacer()
-            Button(model.isScanning ? "Stop scan" : "Scan") {
-                Task { await model.toggleScan() }
-            }
-            .buttonStyle(.bordered)
-            .disabled(!model.isReady || model.visibleMemories.isEmpty)
-            .help(ControlHelp.scan)
-            Button("Add memory", systemImage: "plus") {
-                editing = model.draftMemory(group: model.selectedGroup ?? "")
-            }
-            .labelStyle(.iconOnly)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder private var actions: some View {
+        Button(model.isScanning ? "Stop scan" : "Scan") {
+            Task { await model.toggleScan() }
+        }
+        .capsuleButton(isActive: model.isScanning)
+        .disabled(!model.isReady || model.visibleMemories.isEmpty)
+        .help(ControlHelp.scan)
+        Button("Add memory", systemImage: "plus") {
+            editing = model.draftMemory(group: model.selectedGroup ?? "")
+        }
+        .labelStyle(.iconOnly)
+        .capsuleButton()
     }
 
     private var list: some View {
@@ -56,8 +80,12 @@ struct MemoriesView: View {
                 HStack {
                     VStack(alignment: .leading) {
                         Text(memory.name)
-                        Text(HamFrequency.format(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
+                        Text(HamFrequency.format(memory.frequency) + " MHz").font(.caption)
+                            .foregroundStyle(Color.strongSecondary)
                     }
+                    // One element to tap and to read, with the active one marked.
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(memory.id == model.activeMemoryId ? .isSelected : [])
                     Spacer()
                     #if os(iOS)
                         // iOS lists select only in edit mode: a tap tunes, a checkmark marks the active memory.

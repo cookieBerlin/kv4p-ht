@@ -8,6 +8,7 @@ struct KV4PHTApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(model: model)
+                .defaultAppStorage(Composition.viewDefaults)
         }
         #if os(macOS)
             .defaultSize(width: 900, height: 720)

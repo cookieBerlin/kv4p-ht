@@ -100,8 +100,9 @@ struct APRSPacketList: View {
 
     // MARK: Search, filter, export
 
+    /// The search with the icons beside it, or below it with the accessibility text sizes.
     private var filterBar: some View {
-        HStack(spacing: 8) {
+        AdaptiveStack(spacing: 8) {
             TextField("Callsign", text: $search, prompt: Text("Callsign"))
                 .textFieldStyle(.roundedBorder)
                 #if os(iOS)
@@ -115,6 +116,8 @@ struct APRSPacketList: View {
             }
             // The icons end where the rows do, not their wider tap areas.
             .padding(.trailing, -10)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal)
         .padding(.vertical, 2)
@@ -126,7 +129,7 @@ struct APRSPacketList: View {
             .labelStyle(.iconOnly)
             .font(.title3)
             .foregroundStyle(.tint)
-            .frame(width: 44, height: 44)
+            .frame(minWidth: 44, minHeight: 44)
             .contentShape(.rect)
     }
 
@@ -242,42 +245,23 @@ struct APRSPacketList: View {
         HStack(alignment: .top) {
             icon(event)
             VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(Self.title(event)).font(.headline).strikethrough(event.isRemovedObject)
-                    Spacer()
-                    if let state = Self.delivery(event.deliveryState) {
-                        Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
+                // The details move below the title where they leave it too little room.
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        title(event)
+                        Spacer()
+                        details(event)
                     }
-                    storedMark(event)
-                    if event.packetCount > 1 {
-                        Text("×\(event.packetCount)").foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        title(event)
+                        HStack { details(event) }
                     }
-                    Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: Self.timeStyle(event))
-                        .foregroundStyle(.secondary)
-                    Menu {
-                        if model.canReply(to: event) {
-                            Button("Reply", systemImage: "arrowshape.turn.up.left") { reply(to: event) }
-                        }
-                        if list == .main, model.chatPeer(of: event) != nil {
-                            Button("Open chat", systemImage: "bubble.left.and.bubble.right") { model.open(event) }
-                        }
-                        Button("Delete", systemImage: "trash", role: .destructive) { model.deleteAPRSEvent(event) }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(.secondary)
-                            .frame(width: 24, height: 24)
-                            .contentShape(.rect)
-                    }
-                    .menuIndicator(.hidden)
-                    .buttonStyle(.plain)
-                    .fixedSize()
-                    .accessibilityLabel("More for this packet")
                 }
                 if let text = event.text(units: model.units, locale: .current) {
                     Text(text).font(event.isRawText ? .footnote.monospaced() : .body)
                 }
                 if let caption = event.caption {
-                    Text(caption).font(.caption).foregroundStyle(.secondary)
+                    Text(caption).font(.caption).foregroundStyle(Color.strongSecondary)
                 }
                 if let position = model.position(of: event) {
                     location(position)
@@ -292,6 +276,39 @@ struct APRSPacketList: View {
             }
         }
         .textSelection(.enabled)
+    }
+
+    private func title(_ event: APRSEvent) -> some View {
+        Text(Self.title(event)).font(.headline).strikethrough(event.isRemovedObject)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// The delivery, whether it is kept, how often it came, when, and what can be done with it.
+    @ViewBuilder private func details(_ event: APRSEvent) -> some View {
+        if let state = Self.delivery(event.deliveryState) {
+            Label(state.0, systemImage: state.1).labelStyle(.iconOnly).help(state.0)
+        }
+        storedMark(event)
+        if event.packetCount > 1 {
+            Text("×\(event.packetCount)").foregroundStyle(.secondary)
+        }
+        Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: Self.timeStyle(event))
+            .foregroundStyle(Color.strongSecondary)
+        Menu {
+            if model.canReply(to: event) {
+                Button("Reply", systemImage: "arrowshape.turn.up.left") { reply(to: event) }
+            }
+            if list == .main, model.chatPeer(of: event) != nil {
+                Button("Open chat", systemImage: "bubble.left.and.bubble.right") { model.open(event) }
+            }
+            Button("Delete", systemImage: "trash", role: .destructive) { model.deleteAPRSEvent(event) }
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+        .menuIndicator(.hidden)
+        .capsuleButton()
+        .fixedSize()
+        .accessibilityLabel("More for this packet")
     }
 
     /// From the packets page, this goes back to the main page, where the message is written.
@@ -347,6 +364,7 @@ struct APRSPacketList: View {
                 Label(coordinates, systemImage: "arrow.up.right").labelStyle(TrailingIcon())
             }
             .font(.caption.monospacedDigit())
+            .tint(Color.strongAccent)
             .accessibilityLabel("Open \(coordinates) in Maps")
         }
         if let distance = position.distanceMeters {
@@ -355,7 +373,7 @@ struct APRSPacketList: View {
                     .compactMap(\.self).joined(separator: " ")
             )
             .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.strongSecondary)
         }
     }
 

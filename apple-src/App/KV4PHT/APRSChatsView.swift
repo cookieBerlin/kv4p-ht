@@ -66,7 +66,7 @@ struct APRSChatsView: View {
     }
 
     private func row(_ conversation: APRSConversation) -> some View {
-        HStack(alignment: .top) {
+        AdaptiveStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(conversation.peer).font(.headline)
                 Text(conversation.last.body ?? "")
@@ -79,11 +79,7 @@ struct APRSChatsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if conversation.unread > 0 {
-                    Text(conversation.unread, format: .number)
-                        .font(.caption.bold())
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 6)
-                        .background(.tint, in: .capsule)
+                    CountBadge(count: conversation.unread, color: .accentColor)
                         .accessibilityLabel("\(conversation.unread) unread")
                 }
             }
@@ -101,17 +97,32 @@ private struct APRSConversationView: View {
     @State private var isConfirmingDelete = false
     @FocusState private var isWriting: Bool
 
+    @Environment(\.dynamicTypeSize) private var textSize
+
     private var limit: Int { model.chatTextLimit(for: peer) }
+
+    /// With the accessibility text sizes, the arrow alone, which leaves the callsign room.
+    @ViewBuilder private var backButton: some View {
+        let button = Button("Chats", systemImage: "chevron.left") { model.openChat = nil }
+        if textSize.isAccessibilitySize {
+            button.labelStyle(.iconOnly)
+        } else {
+            button
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button("Chats", systemImage: "chevron.left") { model.openChat = nil }
+                backButton
+                    // For the UI tests, as "Chats" also names a page of the bar below (ADR-0062).
+                    .accessibilityIdentifier("chat-back")
                 Spacer()
                 Text(peer).font(.headline)
                 Spacer()
                 Button("Delete chat…", systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
                     .labelStyle(.iconOnly)
+                    .capsuleButton()
             }
             .padding(8)
             Divider()
@@ -147,7 +158,7 @@ private struct APRSConversationView: View {
 
     @ViewBuilder private var input: some View {
         if model.canSendOnAir {
-            HStack {
+            AdaptiveStack {
                 TextField("Message", text: $text, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...4)
@@ -157,14 +168,18 @@ private struct APRSConversationView: View {
                         // A stop rather than a cut when it is sent, so that nothing goes missing.
                         if text.count > limit { text = String(text.prefix(limit)) }
                     }
-                KeyboardDismissButton()
-                Text("\(text.count)/\(limit)")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(text.count == limit ? .red : .secondary)
-                    .accessibilityLabel("\(limit - text.count) characters left")
-                Button("Send", systemImage: "paperplane", action: send)
-                    .labelStyle(.iconOnly)
-                    .disabled(!model.isReady || text.isEmpty)
+                HStack {
+                    KeyboardDismissButton()
+                    Text("\(text.count)/\(limit)")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(text.count == limit ? Color.red : Color.strongSecondary)
+                        .fixedSize()
+                        .accessibilityLabel("\(limit - text.count) characters left")
+                    Spacer(minLength: 0).frame(maxWidth: textSize.isAccessibilitySize ? .infinity : 0)
+                    Button("Send", systemImage: "paperplane", action: send)
+                        .labelStyle(.iconOnly)
+                        .disabled(!model.isReady || text.isEmpty)
+                }
             }
             .padding(8)
             if !model.isReady {
@@ -210,8 +225,8 @@ private struct APRSConversationView: View {
                             .buttonStyle(.borderless)
                     }
                 }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(Color.strongSecondary)
             }
             if !isMine { Spacer(minLength: 40) }
         }

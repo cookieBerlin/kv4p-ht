@@ -40,22 +40,38 @@ struct SettingsView: View {
             .frame(minWidth: 680, minHeight: 560)
         #else
             Form {
-                Section {
-                    ForEach(pages) { page in
-                        NavigationLink {
-                            content(of: page)
-                        } label: {
-                            Label(page.title, systemImage: page.systemImage)
-                        }
-                        // For the UI tests, as "Memories" and "APRS" also name pages of the bar below (ADR-0062).
-                        .accessibilityIdentifier("settings-\(page.title)")
-                    }
+                // A phone chooses and connects the radio here, as its header has no room for it.
+                if sizeClass == .compact {
+                    ConnectionSection(model: model)
                 }
-                Section { NavigationLink("About kv4p HT") { AboutView() } }
+                // Below the choice of radio, as it belongs to the simulator chosen there.
+                if pages.contains(.simulator) {
+                    Section { link(to: .simulator) }
+                }
+                Section {
+                    ForEach(pages.filter { $0 != .simulator }) { link(to: $0) }
+                }
+                Section { NavigationLink("About kv4p HT", value: SettingsDestination.about) }
             }
             .settingsPage("Settings", model: model)
+            .navigationDestination(for: SettingsDestination.self) { destination in
+                switch destination {
+                case .page(let page): content(of: page)
+                case .about: AboutView()
+                }
+            }
         #endif
     }
+
+    #if os(iOS)
+        private func link(to page: SettingsPage) -> some View {
+            NavigationLink(value: SettingsDestination.page(page)) {
+                Label(page.title, systemImage: page.systemImage)
+            }
+            // For the UI tests, as "Memories" and "APRS" also name pages of the bar below (ADR-0062).
+            .accessibilityIdentifier("settings-\(page.title)")
+        }
+    #endif
 
     /// Without anything to set, a page is not offered.
     private var pages: [SettingsPage] {
@@ -92,6 +108,58 @@ struct SettingsView: View {
         .settingsPage(page.title, model: model)
     }
 }
+
+/// A page of the settings, or the About page; a phone keeps the open ones, to go back to the list with a swipe.
+enum SettingsDestination: Hashable {
+    case page(SettingsPage)
+    case about
+}
+
+/// Whether the app connects by itself at the start, to the radio chosen last.
+struct ConnectAtStartToggle: View {
+    @Bindable var model: RadioViewModel
+
+    var body: some View {
+        Toggle("Connect at start", isOn: $model.connectsAtStart)
+            .explained(ControlHelp.connectAtStart)
+    }
+}
+
+#if os(iOS)
+    /// The radio, the state of its connection and the way to connect it, on top of a phone's settings.
+    private struct ConnectionSection: View {
+        let model: RadioViewModel
+
+        var body: some View {
+            Section {
+                RadioPicker(model: model)
+                // A failure says why at length, so it gets a row of its own.
+                if model.isStatusFailure {
+                    Text(model.statusText).foregroundStyle(.red)
+                } else {
+                    LabeledContent("State") {
+                        HStack(spacing: 6) {
+                            if model.isReady {
+                                // Green text is too faint on white; the mark carries the colour.
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                            }
+                            Text(model.statusText)
+                        }
+                    }
+                }
+                ConnectButton(model: model)
+                    .tint(model.canConnect ? nil : .red)
+                ConnectAtStartToggle(model: model)
+            } header: {
+                Text("Connection")
+            } footer: {
+                if model.canConnect {
+                    Text("The radio connects over Bluetooth, or the simulator stands in for it.")
+                }
+            }
+        }
+    }
+#endif
 
 extension View {
     /// What every page of the settings has in common. On a phone, the screen around the settings shows the notices;
