@@ -95,6 +95,7 @@ struct HelpButton: View {
         #if os(iOS)
             Button("Explain", systemImage: "info.circle") { isShown = true }
                 .labelStyle(.iconOnly)
+                .capsuleButton()
                 .popover(isPresented: $isShown) {
                     Text(text)
                         .font(.footnote)

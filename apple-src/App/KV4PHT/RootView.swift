@@ -257,11 +257,7 @@ struct RootView: View {
 
         /// The number of new messages in the chats (ADR-0058).
         private var newMessages: some View {
-            Text(model.newAPRSMessages, format: .number)
-                .font(.caption2.bold())
-                .foregroundStyle(.white)
-                .padding(.horizontal, 4)
-                .background(.red, in: .capsule)
+            CountBadge(count: model.newAPRSMessages, color: .red)
                 .fixedSize()
                 .offset(x: 10, y: -6)
         }
@@ -283,8 +279,8 @@ struct RootView: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                             .contentShape(.rect)
                     }
-                    // As the system's tab bar: the symbols grow only a little, and a long press shows a page large.
-                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    // The symbols are large already and keep their size; a long press shows a page large instead.
+                    .dynamicTypeSize(...DynamicTypeSize.large)
                     .accessibilityLabel(item.title)
                     .accessibilityShowsLargeContentViewer { Label(item.title, systemImage: item.symbol) }
                     .accessibilityValue(

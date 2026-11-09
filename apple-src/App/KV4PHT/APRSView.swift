@@ -13,6 +13,9 @@ struct APRSView: View {
     @FocusState private var isWriting: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isPageOnScreen) private var isPageOnScreen
+    @Environment(\.dynamicTypeSize) private var textSize
+
+    private var isAccessibilitySize: Bool { textSize.isAccessibilitySize }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,13 +74,18 @@ struct APRSView: View {
         model.isAPRSVisible = isOnScreen && isPageOnScreen && scenePhase == .active
     }
 
+    /// The recipient and the message side by side, or one below the other with the accessibility text sizes.
     private var composer: some View {
-        HStack {
-            recipientField.frame(width: 140).help(ControlHelp.recipient)
-            HelpButton(ControlHelp.recipient)
-            messageField
-            KeyboardDismissButton()
-            sendButton.labelStyle(.iconOnly)
+        AdaptiveStack {
+            HStack {
+                recipientField.frame(maxWidth: isAccessibilitySize ? .infinity : 140).help(ControlHelp.recipient)
+                HelpButton(ControlHelp.recipient)
+            }
+            HStack {
+                messageField
+                KeyboardDismissButton()
+                sendButton.labelStyle(.iconOnly)
+            }
         }
         .textFieldStyle(.roundedBorder)
         .onChange(of: model.aprsReplyCount) { isWriting = true }

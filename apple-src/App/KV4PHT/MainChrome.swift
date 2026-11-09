@@ -57,6 +57,8 @@ struct RadioHeader: View {
     #endif
     /// The level while the squelch mark is being dragged (ADR-0050).
     @State private var draggedSquelch: Int?
+    /// The room for the level beside the bars, which grows with the text.
+    @ScaledMetric(relativeTo: .footnote) private var levelWidth = 68
 
     private var isCompact: Bool {
         #if os(iOS)
@@ -88,9 +90,9 @@ struct RadioHeader: View {
                 Text(draggedSquelch.map { "Squelch \($0)" } ?? model.sMeterText)
                     .font(.footnote.monospacedDigit())
                     .fontWeight(draggedSquelch == nil ? .regular : .semibold)
-                    .foregroundStyle(draggedSquelch == nil ? .secondary : .primary)
+                    .foregroundStyle(draggedSquelch == nil ? Color.strongSecondary : .primary)
                     .lineLimit(1)
-                    .frame(width: 68, alignment: .trailing)
+                    .frame(width: levelWidth, alignment: .trailing)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("S-meter")
@@ -109,6 +111,9 @@ struct RadioHeader: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
+        // Like an instrument, with the frequency in a size of its own: larger text would push the unit and the band
+        // off the line and take the room of the lists below.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 
     private var connection: some View {
@@ -131,9 +136,9 @@ struct RadioHeader: View {
                 .font(.system(size: isCompact ? 34 : 40, weight: .medium, design: .monospaced))
                 .fixedSize()
                 .disabled(!model.isReady)
-            Text("MHz").foregroundStyle(.secondary)
+            Text("MHz").foregroundStyle(Color.strongSecondary).fixedSize()
             if let band = model.bandText {
-                Text(band).font(.caption.bold()).foregroundStyle(.secondary)
+                Text(band).font(.caption.bold()).foregroundStyle(Color.strongSecondary).fixedSize()
             }
             Spacer()
             Image(systemName: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash")
@@ -377,7 +382,7 @@ struct StatusLine: View {
         Text(model.statusText)
             .font(.footnote)
             .multilineTextAlignment(.center)
-            .foregroundStyle(model.isStatusFailure ? Color.red : Color.secondary)
+            .foregroundStyle(model.isStatusFailure ? Color.red : Color.strongSecondary)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal)
     }
