@@ -44,6 +44,8 @@ open until the maintainer marks it as done for that platform.
 | [HW-35](#hw-35) | Beacons with the screen locked (iPhone) | – | ⬜ |
 | [HW-36](#hw-36) | APRS history | ✅ | ✅ |
 | [HW-37](#hw-37) | APRS messages and notifications | ⬜ | ⬜ |
+| [HW-38](#hw-38) | Audio after the move to version 27 | ⬜ | ⬜ |
+| [HW-39](#hw-39) | Log and problem report | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -318,3 +320,19 @@ With the app in the background, also on a Mac behind another app, a message to y
 brings one notification with its sender and text, despite repeats. A bulletin or a message to others brings none,
 and neither does anything with *Notify about messages to me* off. On an iPhone, new messages show as a number on
 the APRS page, which ends when you open it. Refuse notifications in the system settings: the switch offers a way there.
+
+### HW-38
+
+The audio adapters use the calls of version 27. Listen to a real radio, and transmit into a dummy load: sound
+comes out in both directions. Change the output device while listening, and start transmitting again afterwards.
+On iOS, a phone call or Siri while listening stops the audio, and it comes back afterwards, or the app says that it
+cannot. With *Pause podcasts, lower music*, a podcast that returns after a transmission brings no such message.
+
+### HW-39
+
+*Settings*, *Logging*, *Live log*: connect the radio and new lines appear as they happen. Scrolling up stops following, and
+*New lines* goes back. Pause, filter and copy work, and a remembered filter says that it is on. *Report a problem*: *Show the report* lists your connection with its firmware and frequencies, and neither your
+callsign, message texts, positions, the port's name nor other apps' names. Switch the radio off while connected over
+Bluetooth: the report gives a reason. Stop iCloud with a failed sync, if you can: the report gives its code. Share the file, and open the prepared issue without sending it. *Detailed logging* adds
+packets by their kind. Delete the log: the report starts anew. On a TestFlight build, after a crash, the app asks once
+at a later start whether to report it; when the system delivers this is up to the system, so it can take a while.

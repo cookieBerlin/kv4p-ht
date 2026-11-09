@@ -110,8 +110,14 @@ struct TransmitControllerTests {
         var snapshots: AsyncStream<RadioSnapshot>.Iterator
         var simulator = RadioSimulator(scenario: .ble)
 
-        init(microphone: FakeMicrophone, rxAudio: RecordingSink? = nil) {
-            controller = RadioController(transport: transport, clock: clock, rxAudio: rxAudio, microphone: microphone)
+        init(microphone: FakeMicrophone, rxAudio: RecordingSink? = nil, diagnostics: DiagnosticLog? = nil) {
+            controller = RadioController(
+                transport: transport,
+                clock: clock,
+                rxAudio: rxAudio,
+                microphone: microphone,
+                diagnostics: diagnostics
+            )
             snapshots = controller.snapshots.makeAsyncIterator()
         }
 

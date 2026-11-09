@@ -1,6 +1,5 @@
 import KV4PAudio
 import KV4PProtocol
-import os
 
 /// Lowers other apps while the radio receives or transmits, and hands their sound back afterwards (ADR-0043).
 ///
@@ -28,11 +27,11 @@ final class OtherAudioController {
     /// A podcast app was back after about 1.15 s in the tests on an iPhone.
     static let podcastReturnWait: Duration = .seconds(2)
     private static let audioFailure = "The audio output cannot be started."
-    private static let log = Logger(subsystem: "io.github.cookieberlin.kv4pht", category: "other-audio")
 
     var mode = OtherAudioMode.pausePodcasts
     var resumeAfter: Duration = .seconds(3)
 
+    private let diagnostics: DiagnosticLog?
     private let session: any OtherAudioSwitching
     private let output: (any AudioOutput)?
     private let player: RXAudioPlayer
@@ -60,8 +59,10 @@ final class OtherAudioController {
         prepareMicrophone: @escaping () async -> Void,
         reportFailure: @escaping (String) -> Void,
         sleep: @escaping Sleep,
-        releaseWait: Duration = OtherAudioController.podcastReturnWait
+        releaseWait: Duration = OtherAudioController.podcastReturnWait,
+        diagnostics: DiagnosticLog? = nil
     ) {
+        self.diagnostics = diagnostics
         self.session = session
         self.output = output
         self.player = player
@@ -167,9 +168,7 @@ final class OtherAudioController {
     }
 
     private func note(_ step: String) {
-        Self.log.info(
-            "other audio: \(step, privacy: .public), playing=\(self.session.isOtherAudioPlaying, privacy: .public), buffered=\(self.player.statistics.buffered, privacy: .public), underruns=\(self.player.statistics.underruns, privacy: .public)"
-        )
+        diagnostics?.log(.info, .audio, "Other audio: \(step), playing=\(session.isOtherAudioPlaying)")
     }
 
     private func run(_ body: @escaping @MainActor () async -> Void) {
@@ -200,6 +199,7 @@ final class OtherAudioController {
         do {
             try await session.lowerOtherAudio(mode)
         } catch {
+            note("lowering failed, \(DiagnosticLog.describe(error))")
             await mix()
         }
         await restartOutput()
@@ -211,6 +211,7 @@ final class OtherAudioController {
         do {
             try await session.silenceOtherAudio()
         } catch {
+            note("pausing failed, \(DiagnosticLog.describe(error))")
             await mix()
         }
         await restartOutput()

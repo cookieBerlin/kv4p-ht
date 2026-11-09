@@ -84,6 +84,7 @@ struct SettingsView: View {
             case .aprs: APRSSettings(model: model)
             case .memories: ManageMemoriesView(model: model)
             case .simulator: SimulatorSettings(model: model)
+            case .logging: LoggingSettings(model: model)
             }
         }
         .settingsPage(page.title, model: model)

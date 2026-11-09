@@ -6,6 +6,7 @@ import KV4PRadio
     /// The Mac: a dialog, and the Dock icon bounces until the user comes back. The system ignores the request while
     /// the app is active.
     struct PlatformFailureAlerts: FailureAlerting {
+        let diagnostics: DiagnosticLog
         let usesDialog = true
 
         func prepare() {}
@@ -21,6 +22,7 @@ import KV4PRadio
     /// no notification delegate. The app also shows the failure as a notice.
     struct PlatformFailureAlerts: FailureAlerting {
         private static let identifier = "radio-failure"
+        let diagnostics: DiagnosticLog
 
         let usesDialog = false
 
@@ -34,7 +36,11 @@ import KV4PRadio
             content.body = message
             content.sound = .default
             let request = UNNotificationRequest(identifier: Self.identifier, content: content, trigger: nil)
-            UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+            UNUserNotificationCenter.current().add(request) { [diagnostics] error in
+                if let error {
+                    diagnostics.log(.error, .app, "Failure notification: \(DiagnosticLog.describe(error))")
+                }
+            }
         }
     }
 #endif

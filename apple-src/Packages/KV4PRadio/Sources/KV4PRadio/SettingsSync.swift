@@ -28,15 +28,21 @@ struct SettingsSync {
         return changed
     }
 
+    /// What could not be read of the last changes from the cloud, as by a later version on another device.
+    private(set) var unreadableKeys: [String] = []
+
     /// The settings with what the cloud has changed. A change that waits here to be sent is newer, and stays.
     mutating func incoming(_ remote: [String: Data], into settings: AppSettings) -> AppSettings {
         let current = Self.values(of: settings)
         var merged = settings
+        unreadableKeys = []
         for field in Self.fields {
             guard let value = remote[field.key], value != agreed[field.key], current[field.key] == agreed[field.key]
             else { continue }
             if field.write(&merged, value) {
                 agreed[field.key] = value
+            } else {
+                unreadableKeys.append(field.key)
             }
         }
         return merged

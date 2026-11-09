@@ -1,6 +1,6 @@
 # ADR-0008: Minimum OS versions
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0060](0060-minimum-os-27.md)
 - **Date:** 2026-10-31
 
 ## Context
