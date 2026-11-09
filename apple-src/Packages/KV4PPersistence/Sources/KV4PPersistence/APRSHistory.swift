@@ -60,7 +60,10 @@ public protocol APRSHistoryStoring: Sendable {
     /// The newest entries that fit, up to and including `lastSeenMs`, newest first.
     func page(before lastSeenMs: Int64?, limit: Int, filter: APRSHistoryFilter) async throws -> [APRSHistoryEntry]
     func delete(id: Int64) async throws
-    func deleteOlder(than lastSeenMs: Int64) async throws
+    /// Entries older than `lastSeenMs`, apart from those that fit `filter`.
+    func deleteOlder(than lastSeenMs: Int64, except filter: APRSHistoryFilter) async throws
+    /// Entries older than `lastSeenMs` that fit `filter`.
+    func deleteOlder(than lastSeenMs: Int64, matching filter: APRSHistoryFilter) async throws
     func deleteAll() async throws
     func count() async throws -> Int
     /// 0 if there are none.
@@ -173,9 +176,36 @@ public actor SwiftDataAPRSHistory: APRSHistoryStoring {
         try modelContext.save()
     }
 
-    public func deleteOlder(than lastSeenMs: Int64) throws {
-        try modelContext.delete(model: StoredAPRSPacket.self, where: #Predicate { $0.lastSeenMs < lastSeenMs })
+    public func deleteOlder(than lastSeenMs: Int64, except filter: APRSHistoryFilter) throws {
+        let (term, kinds, hasNoKinds, participant) = Self.parts(of: filter)
+        try modelContext.delete(
+            model: StoredAPRSPacket.self,
+            where: #Predicate { packet in
+                packet.lastSeenMs < lastSeenMs
+                    && !((term.isEmpty || packet.callsigns.contains(term))
+                        && (hasNoKinds || kinds.contains(packet.kind))
+                        && (participant.isEmpty || packet.callsigns.contains(participant)))
+            }
+        )
         try modelContext.save()
+    }
+
+    public func deleteOlder(than lastSeenMs: Int64, matching filter: APRSHistoryFilter) throws {
+        let (term, kinds, hasNoKinds, participant) = Self.parts(of: filter)
+        try modelContext.delete(
+            model: StoredAPRSPacket.self,
+            where: #Predicate { packet in
+                packet.lastSeenMs < lastSeenMs && (term.isEmpty || packet.callsigns.contains(term))
+                    && (hasNoKinds || kinds.contains(packet.kind))
+                    && (participant.isEmpty || packet.callsigns.contains(participant))
+            }
+        )
+        try modelContext.save()
+    }
+
+    /// A predicate takes plain values only.
+    private static func parts(of filter: APRSHistoryFilter) -> (String, [Int], Bool, String) {
+        (filter.term, Array(filter.kinds), filter.kinds.isEmpty, filter.participant)
     }
 
     public func deleteAll() throws {

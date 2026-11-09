@@ -277,8 +277,29 @@ public final class RadioViewModel {
             }
         }
     }
-    /// Messages to this station since a list was last on screen.
-    public private(set) var newAPRSMessages = 0
+    /// Messages to this station that are not read yet, over all chats (ADR-0061).
+    public var newAPRSMessages: Int { conversations.reduce(0) { $0 + $1.unread } }
+    /// How long messages to and from this station stay, in days; 0 for without limit.
+    public var messageRetentionDays = 0 {
+        didSet {
+            saveSettings()
+            if !isRestoring {
+                pruneAPRSHistory()
+            }
+        }
+    }
+    public var aprsPage = APRSPage.packets {
+        didSet { saveSettings() }
+    }
+    /// Newest first.
+    public private(set) var conversations: [APRSConversation] = []
+    /// The chat on screen, if a list of APRS is; it marks what comes in as read.
+    public var openChat: String? {
+        didSet { markOpenChatRead() }
+    }
+    private var chatReadUntilMs: [String: Int64] = [:]
+    /// The messages of the chats, also those no longer in memory, by id.
+    private var chatEvents: [Int64: APRSEvent] = [:]
     /// The recipient in the line to send messages.
     public var aprsRecipient = ""
     /// Goes up with each reply, for the views to bring the line to send messages to the front.
@@ -327,6 +348,9 @@ public final class RadioViewModel {
             saveSettings()
             endTransmissionIfBlocked()
             updateBeaconSession()
+            if callsign != oldValue {
+                reloadChats()
+            }
         }
     }
     /// The app does not transmit, by the user's choice; the iGate and the feed stay available (ADR-0047).
@@ -707,6 +731,9 @@ public final class RadioViewModel {
         settings.keepsInternetPackets = keepsInternetPackets
         settings.notifiesAboutMessages = notifiesAboutMessages
         settings.detailedLoggingUntilMs = detailedLoggingUntilMs
+        settings.messageRetentionDays = messageRetentionDays
+        settings.aprsPage = aprsPage
+        settings.chatReadUntilMs = chatReadUntilMs
         if let liveLog {
             settings.logFilter = liveLog.filter
         }
@@ -765,6 +792,9 @@ public final class RadioViewModel {
         keepsInternetPackets = settings.keepsInternetPackets
         notifiesAboutMessages = settings.notifiesAboutMessages
         detailedLoggingUntilMs = settings.detailedLoggingUntilMs
+        messageRetentionDays = settings.messageRetentionDays
+        aprsPage = settings.aprsPage
+        chatReadUntilMs = settings.chatReadUntilMs
         diagnostics?.detailedUntilMs = settings.detailedLoggingUntilMs
         liveLog?.filter = settings.logFilter
         packetRetentionDays = settings.packetRetentionDays
@@ -1577,6 +1607,7 @@ public final class RadioViewModel {
     private func showAPRS() {
         noticeNewAPRSMessages()
         storeAPRSEvents()
+        showChats()
         aprsIdsNotStored = Set(
             aprs.events.map(\.id).filter { storedAPRSEvents[$0] == nil || aprsIdsNotSaved.contains($0) }
         )
@@ -1641,8 +1672,81 @@ public final class RadioViewModel {
 
     private func listVisibilityChanged() {
         refreshOwnPosition()
-        if isAPRSVisible || isPacketsPageVisible {
-            newAPRSMessages = 0
+        markOpenChatRead()
+    }
+
+    // MARK: Chats
+
+    /// The chat a message belongs to, if any.
+    public func chatPeer(of event: APRSEvent) -> String? {
+        event.chatPeer(ownCallsign: callsign)
+    }
+
+    public func messages(with peer: String) -> [APRSEvent] {
+        APRSChats.messages(with: peer, in: Array(chatEvents.values), ownCallsign: callsign)
+    }
+
+    /// A message of a chat opens it, with its station as the recipient; any other one fills in the recipient.
+    public func open(_ event: APRSEvent) {
+        guard let peer = chatPeer(of: event) else {
+            reply(to: event)
+            return
+        }
+        aprsPage = .chats
+        aprsRecipient = peer
+        openChat = peer
+    }
+
+    private func markOpenChatRead() {
+        guard let openChat, isAPRSVisible else { return }
+        chatReadUntilMs[openChat] = now()
+        saveSettings()
+        showChats()
+    }
+
+    /// The messages of this station from the store, as memory holds only the newest packets.
+    private func loadChats(from history: any APRSHistoryStoring) async throws {
+        var start: Int64?
+        var stored: [APRSEvent] = []
+        while let filter = chatFilter {
+            let page = try await history.page(before: start, limit: aprsListLimit + 1, filter: filter)
+            stored += page.compactMap(Self.event)
+            start = page.last?.lastSeenMs
+            if page.count <= aprsListLimit { break }
+        }
+        for event in stored where chatEvents[event.id] == nil && chatPeer(of: event) != nil {
+            chatEvents[event.id] = event
+        }
+        showChats()
+    }
+
+    /// Another callsign has other chats.
+    private func reloadChats() {
+        chatEvents = [:]
+        showChats()
+        guard isAPRSHistoryLoaded, isKeepingPackets else { return }
+        withAPRSHistory { [weak self] history in
+            try await self?.loadChats(from: history)
+        }
+    }
+
+    /// The messages of this station as the store can look for them, as near as it can.
+    private var chatFilter: APRSHistoryFilter? {
+        let own = APRSEvent.baseCallsign(callsign)
+        return own.isEmpty ? nil : APRSHistoryFilter(kinds: [APRSEvent.Kind.message.rawValue], participant: own)
+    }
+
+    private func showChats() {
+        for event in aprs.events where chatPeer(of: event) != nil {
+            chatEvents[event.id] = event
+        }
+        conversations = APRSChats.conversations(
+            in: Array(chatEvents.values),
+            ownCallsign: callsign,
+            readUntilMs: chatReadUntilMs
+        )
+        if let openChat, isAPRSVisible, conversations.contains(where: { $0.peer == openChat && $0.unread > 0 }) {
+            markOpenChatRead()
         }
     }
 
@@ -1657,9 +1761,6 @@ public final class RadioViewModel {
             diagnostics?.log(.detail, .aprs, "Packet: \(event.kind)")
         }
         for event in new.sorted(by: { $0.id < $1.id }) where event.isMessage(to: callsign) {
-            if !isAPRSVisible, !isPacketsPageVisible {
-                newAPRSMessages += 1
-            }
             if !isAppActive, notifiesAboutMessages, let text = event.body {
                 messageNotifier?.deliver(APRSMessageNotice(id: event.id, title: event.fromCallsign, text: text))
             }
@@ -1721,6 +1822,7 @@ public final class RadioViewModel {
             self.storedAPRSEvents = Dictionary(uniqueKeysWithValues: stored.map { ($0.id, $0) })
             self.aprs.restore(stored, highestId: highestId)
             self.lastCheckedAPRSId = highestId
+            try await self.loadChats(from: history)
             self.isAPRSHistoryLoaded = true
             for list in APRSList.allCases {
                 if self.aprsFilter(in: list).isEmpty {
@@ -1792,17 +1894,36 @@ public final class RadioViewModel {
 
     private func pruneAPRSHistory() {
         nextAPRSPruneAtMs = now() + Self.aprsPruneIntervalMs
-        guard packetRetentionDays > 0 else { return }
-        let oldest = now() - Int64(packetRetentionDays) * 86_400_000
-        aprs.removeEvents { $0.lastSeenMs < oldest && $0.deliveryState != .pending }
-        for list in APRSList.allCases {
-            self[list].older.removeAll { $0.lastSeenMs < oldest }
+        let oldest = Self.oldest(now(), days: packetRetentionDays)
+        let oldestMessage = Self.oldest(now(), days: messageRetentionDays)
+        // Messages to and from this station go by a time of their own (ADR-0061).
+        let isExpired: (APRSEvent) -> Bool = { [callsign] event in
+            let limit = event.chatPeer(ownCallsign: callsign) == nil ? oldest : oldestMessage
+            return event.lastSeenMs < limit && event.deliveryState != .pending
         }
-        storedAPRSEvents = storedAPRSEvents.filter { $0.value.lastSeenMs >= oldest }
-        withAPRSHistory { try await $0.deleteOlder(than: oldest) }
+        aprs.removeEvents(where: isExpired)
+        for list in APRSList.allCases {
+            self[list].older.removeAll(where: isExpired)
+        }
+        storedAPRSEvents = storedAPRSEvents.filter { !isExpired($0.value) }
+        chatEvents = chatEvents.filter { !isExpired($0.value) }
+        let chats = chatFilter
+        withAPRSHistory { history in
+            if let chats {
+                try await history.deleteOlder(than: oldest, except: chats)
+                try await history.deleteOlder(than: oldestMessage, matching: chats)
+            } else {
+                try await history.deleteOlder(than: oldest, matching: APRSHistoryFilter())
+            }
+        }
         if isAPRSHistoryLoaded {
             showAPRS()
         }
+    }
+
+    /// The time before which entries go; without a limit, nothing is that old.
+    private static func oldest(_ now: Int64, days: Int) -> Int64 {
+        days > 0 ? now - Int64(days) * 86_400_000 : .min
     }
 
     /// Brings the next older packets to a list.
@@ -1891,6 +2012,7 @@ public final class RadioViewModel {
             self[list].older.removeAll { $0.id == event.id }
         }
         storedAPRSEvents[event.id] = nil
+        chatEvents[event.id] = nil
         withAPRSHistory { try await $0.delete(id: event.id) }
         showAPRS()
     }
@@ -1901,6 +2023,7 @@ public final class RadioViewModel {
             self[list] = APRSListState(filter: aprsFilter(in: list))
         }
         storedAPRSEvents = [:]
+        chatEvents = [:]
         withAPRSHistory { try await $0.deleteAll() }
         showAPRS()
     }

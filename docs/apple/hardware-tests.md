@@ -46,6 +46,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-37](#hw-37) | APRS messages and notifications | ⬜ | ⬜ |
 | [HW-38](#hw-38) | Audio after the move to version 27 | ⬜ | ⬜ |
 | [HW-39](#hw-39) | Log and problem report | ⬜ | ⬜ |
+| [HW-40](#hw-40) | APRS chats | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -336,3 +337,12 @@ callsign, message texts, positions, the port's name nor other apps' names. Switc
 Bluetooth: the report gives a reason. Stop iCloud with a failed sync, if you can: the report gives its code. Share the file, and open the prepared issue without sending it. *Detailed logging* adds
 packets by their kind. Delete the log: the report starts anew. On a TestFlight build, after a crash, the app asks once
 at a later start whether to report it; when the system delivers this is up to the system, so it can take a while.
+
+### HW-40
+
+Receive messages from two stations, one with an SSID, and send one: *Chats* lists both, newest first, with the
+number of unread messages, and a tap opens one with your message on the right and its delivery. The number on the
+APRS page goes down when you open the chat, and stays down after a restart. A tap on such a message under *Packets*
+opens its chat. With more than 500 packets, older messages still show in their chat. *Keep messages for* set to 30
+days lets an older message go, while with *No limit* it stays as other packets go. Change your callsign: the chats
+change with it.

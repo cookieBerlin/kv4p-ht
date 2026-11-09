@@ -291,6 +291,7 @@ struct APRSSettings: View {
         switch days {
         case 0: "No limit"
         case 1: "1 day"
+        case 365: "1 year"
         default: "\(days) days"
         }
     }
@@ -359,6 +360,12 @@ struct APRSSettings: View {
                             Text(Self.retentionLabel(days)).tag(days)
                         }
                     }
+                    Picker("Keep messages for", selection: $model.messageRetentionDays) {
+                        ForEach(AppSettings.messageRetentionOptions, id: \.self) { days in
+                            Text(Self.retentionLabel(days)).tag(days)
+                        }
+                    }
+                    .explained(ControlHelp.keepMessages)
                 }
                 Toggle("Notify about messages to me", isOn: $model.notifiesAboutMessages)
                     .explained(ControlHelp.notifyMessages)
