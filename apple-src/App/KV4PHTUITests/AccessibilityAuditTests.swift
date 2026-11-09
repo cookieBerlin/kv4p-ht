@@ -226,8 +226,6 @@ final class AccessibilityAuditTests: XCTestCase {
         }
         // 7. Findings without an element, which no screen element can be matched to.
         if issue.element == nil { return 7 }
-        // 8. The status above PTT, which grows on the screenshots; two audits of the same screen flag it once and once not.
-        if isDynamicType, label == "Connected" { return 8 }
         return nil
     }
 

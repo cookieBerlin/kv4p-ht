@@ -51,13 +51,12 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
    cut.
 7. **Findings without an element:** the audit names no element, so none can be matched or fixed; the screenshot of the
    screen is checked instead.
-8. **Dynamic Type of the status above PTT:** it grows on the screenshots, and two audits of the same screen, one right
-   after the other, flag it once and once not.
 - **The Mac follows in 3.7c,** as there the test runner must be signed and the user allows it to control the app once.
 
 ## Consequences
 
-- A run takes about ten minutes for both simulators.
+- A run takes about ten minutes for each simulator. The simulators run one after the other and nothing else should
+  run beside them: on a fully loaded machine the audit can catch a screen before its text has grown, and flag it.
 - The audit only finds what a machine can see; a screen it does not reach is not checked.
 - The exceptions are kept narrow, by kind of check, element and screen. A new screen or control that the audit flags
   fails the test, and needs a fix or a new exception here.
