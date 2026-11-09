@@ -5,6 +5,8 @@ public struct APRSMessageNotice: Equatable, Sendable {
     /// The sender.
     public let title: String
     public let text: String
+    /// The chat a tap on the notification opens (ADR-0061).
+    public let peer: String
 }
 
 /// The system's notifications; implemented in the app target.
