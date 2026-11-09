@@ -19,7 +19,7 @@ APP_PROJECT := App/KV4PHT.xcodeproj
 APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci
+.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci a11y
 
 test:
 	$(SWIFT) test
@@ -74,6 +74,12 @@ app:
 		-derivedDataPath $(APP_DERIVED_DATA)
 	scripts/app-plist-check.sh $(APP_DERIVED_DATA)/Build/Products/Debug-iphoneos/KV4PHT.app
 	DRY_RUN=1 scripts/release-testflight.sh
+
+# Apple's accessibility audit on every screen, in the app's demo mode, on an iPhone and an iPad simulator (ADR-0062). The
+# findings go to .build/a11y/findings.txt. Not part of `ci`, as it needs the simulator; CI runs it as a job of its own.
+A11Y_DEVICES ?= iPhone 18 Pro,iPad Pro 11-inch (M5)
+a11y:
+	scripts/a11y.sh '$(APP_PROJECT)' '$(A11Y_DEVICES)'
 
 # Signed iOS and macOS builds, uploaded to App Store Connect for TestFlight (ADR-0035). Needs TEAM_ID in the environment and the
 # account in Xcode; DRY_RUN=1 makes an unsigned dry run. Not part of `ci`.

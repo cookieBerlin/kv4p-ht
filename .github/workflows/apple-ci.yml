@@ -107,3 +107,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: make app
+
+  # Apple's accessibility audit in the simulator (ADR-0062); its findings are kept, and only a run that cannot go
+  # through the screens fails.
+  a11y:
+    needs: changes
+    if: needs.changes.outputs.apple == 'true'
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v4
+      - run: make a11y
+        working-directory: apple-src
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-findings
+          path: apple-src/.build/a11y/findings.txt

@@ -2273,6 +2273,15 @@ public final class RadioViewModel {
         ]
     }
 
+    /// The packets of the demo mode, as if from APRS-IS, a minute apart up to now.
+    func receiveDemo(_ lines: [String]) {
+        let start = now() - Int64(lines.count) * 60_000
+        for (index, line) in lines.enumerated() {
+            aprs.receive(internetLine: line, atMs: start + Int64(index + 1) * 60_000)
+        }
+        showAPRS()
+    }
+
     private func receiveInternet(_ line: String) {
         aprs.receive(internetLine: line, atMs: now())
         showAPRS()
