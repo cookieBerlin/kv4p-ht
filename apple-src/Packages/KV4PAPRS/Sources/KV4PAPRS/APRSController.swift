@@ -436,6 +436,13 @@ public struct APRSController: Sendable {
 
     /// Takes back stored events, oldest first. A message that waited for its acknowledgement is not sent again. Events
     /// that came in the meantime follow, with new ids, as ids must not repeat.
+    /// A message sent again from a chat leaves it; the packet stays.
+    public mutating func markResent(id: Int64) {
+        if let index = events.firstIndex(where: { $0.id == id }) {
+            events[index].markResent()
+        }
+    }
+
     public mutating func restore(_ stored: [APRSEvent], highestId: Int64) {
         let restored = stored.map { event in
             var event = event

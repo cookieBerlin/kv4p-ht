@@ -13,7 +13,8 @@ extension APRSEvent {
     /// The other station of a message to or from this one, with any SSID of this one; `nil` for anything else, also for
     /// a message to everyone.
     public func chatPeer(ownCallsign: String) -> String? {
-        guard isMessage(of: ownCallsign), let to = toCallsign, APRSController.requiresAcknowledgement(to) else {
+        guard !isResent, isMessage(of: ownCallsign), let to = toCallsign, APRSController.requiresAcknowledgement(to)
+        else {
             return nil
         }
         let own = Java.trim(ownCallsign).uppercased()
@@ -45,6 +46,21 @@ public enum APRSChats {
     /// In the order they were written.
     public static func messages(with peer: String, in events: [APRSEvent], ownCallsign: String) -> [APRSEvent] {
         events.filter { $0.chatPeer(ownCallsign: ownCallsign) == peer }.sorted(by: isEarlier)
+    }
+
+    /// How much text a message to `recipient` can hold without being cut: one that is acknowledged also carries its
+    /// number of up to five characters after a `{`.
+    public static func textLimit(to recipient: String) -> Int {
+        APRSController.requiresAcknowledgement(recipient) ? 61 : 67
+    }
+
+    /// A callsign as a chat can start with, in upper case; `nil` for what cannot be one, also for a bulletin.
+    public static func callsign(from text: String) -> String? {
+        let callsign = Java.trim(text).uppercased()
+        guard callsign.wholeMatch(of: /[A-Z0-9]{3,6}(-[A-Z0-9]{1,2})?/) != nil,
+            APRSController.requiresAcknowledgement(callsign)
+        else { return nil }
+        return callsign
     }
 
     private static func isEarlier(_ first: APRSEvent, _ second: APRSEvent) -> Bool {

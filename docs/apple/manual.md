@@ -90,6 +90,10 @@ Choose the connection under **Radio** at the top (📱 on an iPhone, tap the cho
   strengths up and down, lose the connection and receive APRS test packets. A weak signal
   is quiet noise, out of which the tone grows up to S9; a real FM signal stays equally
   loud and only gets less noisy. Each squelch level opens from the same S value on.
+  The station you write to over the simulator answers as *Answer to messages* says: with an acknowledgement after
+  2 s (the default), also with a reply after the time set in *Reply after*, by rejecting it, or not at all, which lets
+  a message fail to try *Send again*. A long *Reply after* gives time to put the app in the background and see the
+  notification. These take effect at once.
 
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
@@ -301,6 +305,13 @@ each station you wrote with, with its SSID, newest first, and the number of unre
 messages in the order they were written, yours on the right with their delivery. A tap on such a message in the
 packets opens its chat. Messages to and from you stay as long as ⚙ **Settings**, *APRS*, *History*, *Keep messages
 for* says, without limit by default; with *Keep packets* off, chats end with the app.
+
+**Writing in a chat:** the line at the bottom of a chat sends to its station, with a counter that stops at 61
+characters, as the message's number takes the rest of APRS's 67. *New chat* at the top of the list starts one with a
+callsign, with its SSID if it has one. A message that was not delivered shows *Send again*; it is never sent again by
+itself, and the new one takes its place in the chat, while the packets keep both. Holding a message (right-click on
+the Mac) deletes it, and the trash button at the top deletes the whole chat, also from the packets, after a question.
+Messages go over the radio; a station seen only on the internet gets them only if an iGate passes them on.
 
 **Answering and new messages:** a tap on a message to others fills in its sender as the recipient, and *Reply* in
 the ⋯ menu of its row does the same, also from the *Packets* page. The number on the APRS page, and on *Chats*,

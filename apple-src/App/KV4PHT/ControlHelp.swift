@@ -55,6 +55,10 @@ enum ControlHelp {
         "Also logs each packet by its kind, each scan step and the traffic per minute, without callsigns or text. Turns itself off after a day."
     static let notifyMessages =
         "A message to your callsign, with any SSID, brings a notification while the app is in the background."
+    static let simulatedAnswer =
+        "How the station you write to over the simulator answers: with an acknowledgement after 2 s, also with a reply, by rejecting it, or not at all, as to try Send again."
+    static let simulatedReplyDelay =
+        "Time to put the app in the background, to see the notification of the reply."
     static let keepMessages =
         "Messages to and from you, which the chats show, stay this long, apart from the other packets."
     static let keepPackets = "The APRS list stays when the app ends. The packets stay on this device."

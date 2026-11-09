@@ -56,6 +56,14 @@ public struct APRSEvent: Codable, Equatable, Identifiable, Sendable {
     public internal(set) var deliveryState = DeliveryState.none
     public internal(set) var transmitAttempts = 0
     public internal(set) var nextRetryAtMs: Int64?
+    /// Sent again from a chat, which shows the new one instead (ADR-0061); optional, so that stored events read.
+    var isResentMark: Bool?
+
+    public var isResent: Bool { isResentMark == true }
+
+    public mutating func markResent() {
+        isResentMark = true
+    }
 
     /// The name of the radio that sent the packet, if it is known.
     public var deviceName: String? { device?.name }

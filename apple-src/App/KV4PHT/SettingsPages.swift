@@ -446,6 +446,18 @@ struct SimulatorSettings: View {
                     model.toggleSignalRamp()
                 }
                 Button("Lose connection") { model.loseSimulatedConnection() }
+                Picker("Answer to messages", selection: $model.simulatedMessageAnswer) {
+                    ForEach(SimulatedMessageAnswer.allCases, id: \.self) { Text($0.label) }
+                }
+                .explained(ControlHelp.simulatedAnswer)
+                if model.simulatedMessageAnswer == .acknowledgeAndReply {
+                    Picker("Reply after", selection: $model.simulatedReplyDelaySeconds) {
+                        ForEach(AppSettings.simulatedReplyDelayOptions, id: \.self) { seconds in
+                            Text(seconds < 60 ? "\(seconds) s" : "\(seconds / 60) min").tag(seconds)
+                        }
+                    }
+                    .explained(ControlHelp.simulatedReplyDelay)
+                }
                 ForEach(SimulatedPacket.allCases, id: \.self) { packet in
                     Button("Receive APRS \(packet.label.lowercased())") { model.simulatePacket(packet) }
                 }
