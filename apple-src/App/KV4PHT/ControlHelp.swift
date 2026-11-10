@@ -12,7 +12,8 @@ enum ControlHelp {
     static let connectAtStart = "Connects to the radio chosen last when the app starts."
     static let scan = "Steps through the memories shown and stops on a signal."
     static let manageMemories = "Sort the memories and groups, change several at once and import repeaters."
-    static let importCSV = "Adds repeaters from a CSV file exported from RepeaterBook."
+    static let importRepeaterBook = "Adds repeaters from a CSV file exported from RepeaterBook."
+    static let importDARC = "Adds FM repeaters and beacons from a CSV file exported from the DARC repeater lists."
     static let recipient = "The callsign to send to. Leave it empty to send a bulletin to everyone."
     static let bandwidth = "Use the bandwidth of the channel: 12.5 kHz is narrow FM, 25 kHz is wide FM."
     #if os(iOS)

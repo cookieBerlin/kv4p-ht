@@ -107,8 +107,18 @@ hold ⌥ on the Mac, or hold the digit for a moment before you swipe on iPhone a
 
 ## Can I import my memories from the Android app?
 
-Not yet; the Android app has no export. RepeaterBook CSV exports can be
-imported (see the [manual](manual.md#memories-and-scanning)).
+Not yet; the Android app has no export. RepeaterBook CSV exports and the CSV exports of the DARC repeater lists can
+be imported (see the [manual](manual.md#memories-and-scanning)).
+
+## Why does the DARC import leave out some repeaters?
+
+The radio is an FM radio, so only FM entries are imported; an entry without a mode counts as FM. The radio also
+receives only its own band, so entries for 70 cm on a VHF radio, or for 23 cm, are left out. The preview says how
+many entries it leaves out and why. A beacon is imported as a beacon: it only transmits, and you listen to it.
+
+## Why does the app not download the DARC repeater lists itself?
+
+The lists have no licence for a download by an app. You download the CSV export in your browser and import the file.
 
 ## Why does the app not download repeaters from RepeaterBook itself?
 

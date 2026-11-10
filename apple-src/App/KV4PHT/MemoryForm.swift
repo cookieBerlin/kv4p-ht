@@ -19,6 +19,8 @@ struct MemoryForm: View {
     // As typed: a field with a number format reports its value only when it loses focus, which Save does not cause.
     @State private var frequency: String
     @State private var offset: String
+    @State private var latitude: String
+    @State private var longitude: String
     @Environment(\.dismiss) private var dismiss
 
     init(model: RadioViewModel, memory: ChannelMemory, save: @escaping (ChannelMemory) -> Void) {
@@ -27,6 +29,8 @@ struct MemoryForm: View {
         _memory = State(initialValue: memory)
         _frequency = State(initialValue: model.shown(memory.frequency))
         _offset = State(initialValue: "\(memory.offsetKHz)")
+        _latitude = State(initialValue: model.shownDegrees(memory.latitude))
+        _longitude = State(initialValue: model.shownDegrees(memory.longitude))
     }
 
     /// The memory as entered; a number that cannot be read makes `memoryProblem` report it.
@@ -36,6 +40,9 @@ struct MemoryForm: View {
         entered.group = memory.group.trimmingCharacters(in: .whitespaces)
         entered.frequency = HamFrequency.parse(frequency) ?? .nan
         entered.offsetKHz = Int(offset) ?? -1
+        entered.comment = memory.comment.trimmingCharacters(in: .whitespacesAndNewlines)
+        entered.latitude = Coordinate.parse(latitude)
+        entered.longitude = Coordinate.parse(longitude)
         return entered
     }
 
@@ -43,7 +50,11 @@ struct MemoryForm: View {
         Form {
             Section {
                 LabeledField("Name", text: $memory.name)
+                Picker("Kind", selection: $memory.kind) {
+                    ForEach(MemoryKind.allCases, id: \.self) { Text($0.title) }
+                }
                 GroupField(groups: model.groups, group: $memory.group)
+                LabeledField("Comment", text: $memory.comment)
             }
             Section {
                 LabeledField("Frequency (MHz)", text: $frequency, kind: .decimal)
@@ -80,9 +91,18 @@ struct MemoryForm: View {
                 }
             } header: {
                 Text("Repeater access tone")
+            }
+            Section {
+                LabeledField("Latitude", text: $latitude, kind: .coordinate)
+                LabeledField("Longitude", text: $longitude, kind: .coordinate)
+            } header: {
+                Text("Position")
             } footer: {
-                if let problem = model.memoryProblem(entered) {
-                    Text(problem)
+                VStack(alignment: .leading) {
+                    Text("In decimal degrees: north and east positive, south and west negative.")
+                    if let problem = model.memoryProblem(entered) {
+                        Text(problem)
+                    }
                 }
             }
         }
@@ -110,7 +130,8 @@ struct MemoryForm: View {
 /// takes digits and, for a decimal number, one separator; on iPhone and iPad it brings a number keyboard with Done.
 struct LabeledField: View {
     enum Kind {
-        case text, decimal, whole
+        /// A coordinate is a decimal number with a sign.
+        case text, decimal, whole, coordinate
     }
 
     let label: String
@@ -131,7 +152,7 @@ struct LabeledField: View {
                 .multilineTextAlignment(.trailing)
                 .focused($isFocused)
                 #if os(iOS)
-                    .keyboardType(kind == .decimal ? .decimalPad : kind == .whole ? .numberPad : .default)
+                    .keyboardType(keyboard)
                     .toolbar {
                         if isFocused, kind != .text {
                             ToolbarItemGroup(placement: .keyboard) {
@@ -144,12 +165,24 @@ struct LabeledField: View {
         }
     }
 
+    #if os(iOS)
+        /// The decimal pad has no minus.
+        private var keyboard: UIKeyboardType {
+            switch kind {
+            case .text: .default
+            case .decimal: .decimalPad
+            case .whole: .numberPad
+            case .coordinate: .numbersAndPunctuation
+            }
+        }
+    #endif
+
     private var filtered: Binding<String> {
         guard kind != .text else { return $text }
         return Binding {
             text
         } set: {
-            text = NumberInput.filtered($0, allowsSeparator: kind == .decimal)
+            text = NumberInput.filtered($0, allowsSeparator: kind != .whole, allowsSign: kind == .coordinate)
         }
     }
 }
@@ -159,19 +192,24 @@ struct GroupField: View {
     private static let newGroup = "\u{0}new"
     let groups: [String]
     @Binding var group: String
+    /// Offers "No group"; an import that asks for a group does not.
+    let allowsNone: Bool
     @State private var isNew: Bool
 
     /// A group that does not exist yet, as from "New group" or an imported file, opens as a new one.
-    init(groups: [String], group: Binding<String>) {
+    init(groups: [String], group: Binding<String>, allowsNone: Bool = true) {
         self.groups = groups
         _group = group
+        self.allowsNone = allowsNone
         let current = group.wrappedValue
-        _isNew = State(initialValue: !current.isEmpty && !groups.contains(current))
+        _isNew = State(initialValue: (!current.isEmpty || !allowsNone) && !groups.contains(current))
     }
 
     var body: some View {
         Picker("Group", selection: choice) {
-            Text("No group").tag("")
+            if allowsNone {
+                Text("No group").tag("")
+            }
             ForEach(groups, id: \.self) { Text($0).tag($0) }
             Text("New group…").tag(Self.newGroup)
         }

@@ -48,6 +48,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-39](#hw-39) | Log and problem report | ⬜ | ⬜ |
 | [HW-40](#hw-40) | APRS chats | ⬜ | ⬜ |
 | [HW-41](#hw-41) | Frequency steps | ⬜ | ⬜ |
+| [HW-42](#hw-42) | Memory kinds and DARC import | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -366,3 +367,14 @@ Check:
 - While the frequency steps, the window does not scroll.
 - On a device in a language with a decimal comma, the frequencies show a comma, and a frequency typed with a comma or
   a point tunes.
+
+### HW-42
+
+Receive only; do not transmit. On a device with memories of an earlier version, start the new version: memories
+with an offset are repeaters, the others frequencies. With two devices on the same Apple ID and *iCloud sync* on,
+change the kind, comment and position of a memory on one: the other follows, and its memories migrate the same way.
+A TestFlight build needs the schema deployed to production first.
+
+Download a CSV export from the DARC repeater lists and import it with **Import from DARC**, once into a new group
+and once without a group. The preview counts repeaters, beacons and what it leaves out. The imported repeaters
+tune with the right offset and tone, and a known repeater is heard. Import the same file again: nothing is added.

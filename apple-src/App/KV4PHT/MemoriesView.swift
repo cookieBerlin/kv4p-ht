@@ -78,12 +78,19 @@ struct MemoriesView: View {
         List(selection: Binding(get: { model.activeMemoryId }, set: { id in tune(id) })) {
             ForEach(model.visibleMemories) { memory in
                 HStack {
-                    VStack(alignment: .leading) {
-                        Text(memory.name)
-                        Text(model.shown(memory.frequency) + " MHz").font(.caption)
-                            .foregroundStyle(Color.strongSecondary)
+                    HStack {
+                        MemoryKindSymbol(kind: memory.kind)
+                        VStack(alignment: .leading) {
+                            Text(memory.name)
+                            Text(model.shown(memory.frequency) + " MHz").font(.caption)
+                                .foregroundStyle(Color.strongSecondary)
+                            if !memory.comment.isEmpty, !textSize.isAccessibilitySize {
+                                Text(memory.comment).font(.caption).lineLimit(1)
+                                    .foregroundStyle(Color.strongSecondary)
+                            }
+                        }
                     }
-                    // One element to tap and to read, with the active one marked.
+                    // One element to tap and to read, with the kind and the active one marked.
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(memory.id == model.activeMemoryId ? .isSelected : [])
                     Spacer()
