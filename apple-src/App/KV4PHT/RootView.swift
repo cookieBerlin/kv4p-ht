@@ -293,7 +293,7 @@ struct RootView: View {
                 }
             }
             .padding(.top, 4)
-            .background(.bar)
+            .background(Color.opaqueBar)
         }
     }
 #endif

@@ -71,6 +71,13 @@ extension Color {
     static let strongSecondary = Color.primary.opacity(0.7)
     /// For small links: darker than the system's blue on a light background and lighter on a dark one.
     static let strongAccent = Color("StrongAccent")
+    /// The background of the bars above and below the lists: opaque, as text that a list scrolls behind a translucent bar
+    /// shows through it, too faint to read (ADR-0062).
+    #if os(macOS)
+        static let opaqueBar = Color(nsColor: .windowBackgroundColor)
+    #else
+        static let opaqueBar = Color(uiColor: .secondarySystemBackground)
+    #endif
 }
 
 /// A count in a capsule, such as the new messages; its colour darkened, so that the white digits stand out.

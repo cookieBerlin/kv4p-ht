@@ -7,16 +7,17 @@ import SwiftUI
 #endif
 
 extension View {
-    /// With room for it, the parts around the memories and APRS: the header, the PTT bar and the settings button.
+    /// With room for it, the parts around the memories and APRS: the header, the PTT bar and the settings button. The
+    /// bars stand above and below the lists rather than over them, so that nothing scrolls out of sight behind them, as
+    /// on a phone (ADR-0062).
     func mainChrome(_ model: RadioViewModel, title: String) -> some View {
-        safeAreaInset(edge: .top, spacing: 0) {
+        VStack(spacing: 0) {
             VStack(spacing: 0) {
                 RadioHeader(model: model)
                 Divider()
             }
-            .background(.bar)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+            .background(Color.opaqueBar)
+            frame(maxHeight: .infinity)
             BottomBar(model: model, showsPTT: true)
         }
         .navigationTitle(title)
@@ -170,12 +171,18 @@ struct ConnectButton: View {
     let model: RadioViewModel
 
     var body: some View {
-        if model.canConnect {
-            Button("Connect") { Task { await model.connect() } }
-                .disabled(!model.canStartConnection)
-        } else {
-            Button("Disconnect") { Task { await model.disconnect() } }
+        Group {
+            if model.canConnect {
+                Button("Connect") { Task { await model.connect() } }
+                    .disabled(!model.canStartConnection)
+            } else {
+                Button("Disconnect") { Task { await model.disconnect() } }
+            }
         }
+        #if os(iOS)
+            // The system's blue is too faint for this small text on the grey of the header (ADR-0062).
+            .tint(Color.strongAccent)
+        #endif
     }
 }
 
@@ -345,7 +352,7 @@ struct BottomBar: View {
                     .padding(.vertical, 4)
             #endif
         }
-        .background(.bar)
+        .background(Color.opaqueBar)
     }
 
     @ViewBuilder private var firmware: some View {
@@ -475,7 +482,7 @@ struct NoticeBanner: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
-            .background(.bar)
+            .background(Color.opaqueBar)
         }
     }
 }
