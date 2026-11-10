@@ -346,7 +346,7 @@ struct APRSSettings: View {
                 Picker("Beacon on", selection: $model.beaconFrequency) {
                     Text("Current frequency").tag(Float?.none)
                     ForEach(AppSettings.beaconFrequencyOptions, id: \.self) { frequency in
-                        Text(HamFrequency.format(frequency) + " MHz").tag(Float?.some(frequency))
+                        Text(model.shown(frequency) + " MHz").tag(Float?.some(frequency))
                     }
                 }
                 .explained(ControlHelp.beaconFrequency)

@@ -44,6 +44,9 @@ enum Composition {
     /// which start anew, so that each audit begins on the same page.
     static let viewDefaults = isDemo ? UserDefaults(suiteName: demoSuite) ?? .standard : .standard
 
+    /// Frequencies show the decimal separator of the user's language (ADR-0064).
+    private static var decimalSeparator: String { Locale.current.decimalSeparator ?? "." }
+
     static func makeViewModel() -> RadioViewModel {
         if isDemo {
             return makeDemoViewModel()
@@ -85,6 +88,7 @@ enum Composition {
             crashReports: CrashReportStore(folder: diagnosticsFolder.appending(path: "Crashes")),
             simulator: simulator
         )
+        model.decimalSeparator = decimalSeparator
         crashReports = MetricKitCrashReports(model: model)
         notificationOpener = NotificationOpener(model: model)
         return model
@@ -155,6 +159,7 @@ enum Composition {
             settings: store,
             simulator: simulator
         )
+        model.decimalSeparator = decimalSeparator
         Task {
             await model.loadDemoContent()
             await model.connect()

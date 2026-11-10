@@ -47,6 +47,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-38](#hw-38) | Audio after the move to version 27 | ⬜ | ⬜ |
 | [HW-39](#hw-39) | Log and problem report | ⬜ | ⬜ |
 | [HW-40](#hw-40) | APRS chats | ⬜ | ⬜ |
+| [HW-41](#hw-41) | Frequency steps | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -350,3 +351,18 @@ chat with *New chat*. Let a message go unanswered until it fails, and *Send agai
 packets keep both. Delete a message and a whole chat. In listen-only mode, a chat has no input.
 With the app in the background, a tap on the notification of a message opens its chat, also from the settings. With
 the simulator, try each *Answer to messages*: delivered, a reply after *Reply after*, rejected, and no answer.
+
+### HW-41
+
+Receive only; do not transmit. Connect the real radio and step the frequency.
+- 🖥 Mac: scroll over each digit, with a mouse and with a trackpad, and press ↑ and ↓ in the field. Repeat with ⌥.
+- 📱 iPhone and iPad: swipe on each digit, hold **−** and **+**, and swipe after a hold.
+
+Check:
+- Narrow steps by 12.5 kHz and wide by 25 kHz.
+- A step carries over and stops at the limits of the radio.
+- After fast steps, the shown frequency stays where you stopped. A known signal on that frequency is heard, so the
+  radio has the same frequency.
+- While the frequency steps, the window does not scroll.
+- On a device in a language with a decimal comma, the frequencies show a comma, and a frequency typed with a comma or
+  a point tunes.

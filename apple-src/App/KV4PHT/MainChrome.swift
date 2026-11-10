@@ -86,9 +86,14 @@ struct RadioHeader: View {
             if !isCompact {
                 connection
             }
-            if let name = model.activeMemoryName {
-                Text(name).font(.headline).lineLimit(1)
+            // The line stays without a memory, so that the frequency does not move under a finger that steps it.
+            ZStack(alignment: .leading) {
+                Text(verbatim: " ").hidden()
+                if let name = model.activeMemoryName {
+                    Text(name).lineLimit(1)
+                }
             }
+            .font(.headline)
             frequency
             HStack {
                 SMeterBars(
@@ -134,21 +139,12 @@ struct RadioHeader: View {
 
     private var frequency: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            TextField("Frequency", text: $model.frequencyText)
-                .onSubmit { Task { await model.applyFrequency() } }
-                #if os(iOS)
-                    .keyboardType(.numbersAndPunctuation)
-                    .submitLabel(.done)
-                #endif
-                .textFieldStyle(.plain)
-                .font(.system(size: isCompact ? 34 : 40, weight: .medium, design: .monospaced))
-                .fixedSize()
-                .disabled(!model.isReady)
+            FrequencyField(model: model, size: isCompact ? 34 : 40)
             Text("MHz").foregroundStyle(Color.strongSecondary).fixedSize()
-            if let band = model.bandText {
-                Text(band).font(.caption.bold()).foregroundStyle(Color.strongSecondary).fixedSize()
-            }
             Spacer()
+            #if os(iOS)
+                FrequencyStepButtons(model: model)
+            #endif
             Image(systemName: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash")
                 .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
                 .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")

@@ -1098,9 +1098,6 @@ public final class RadioViewModel {
         }
     }
 
-    /// `VHF` or `UHF`, once the radio has reported its module.
-    public var bandText: String? { snapshot.firmware.map(Self.band) }
-
     private static func band(of firmware: FirmwareVersion) -> String {
         firmware.moduleType == .sa818UHF ? "UHF" : "VHF"
     }

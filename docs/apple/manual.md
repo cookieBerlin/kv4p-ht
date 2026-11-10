@@ -43,8 +43,8 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 The structure is the same on all devices, and similar to the Android app:
 
 - **On top:** the choice of radio, **Connect** (📱 on an iPhone, both are in ⚙ **Settings**), the name of the
-  active memory, the frequency, the band, the squelch state and the S-meter. Type a frequency and press Return to
-  tune.
+  active memory, the frequency, the squelch state and the S-meter. Type a frequency and press Return to
+  tune, or step it digit by digit (see *Receiving*).
 - **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
 - **At the bottom:** a large **Push to talk** button, the connection status above it
   (🖥 in a status bar at the bottom of the window) and any messages. 📱 On an iPhone the button shows only a
@@ -121,10 +121,24 @@ disconnect yourself:
 
 ## Receiving
 
-- **Frequency:** type it in MHz and press Return. As in the Android app, `1467`
+- **Frequency:** type it in MHz and press Return (📱 **Done**). Before the radio is connected, the field shows
+  `---.----`. As in the Android app, `1467`
   becomes 146.7 MHz and frequencies outside the module range are set to the
   nearest limit. RX and TX use the same frequency (simplex); repeater offsets come
-  with memories.
+  with memories. Frequencies show the decimal separator of your language, and you can type a comma or a point.
+- **Step the frequency:** a digit changes in the channel raster, 12.5 kHz with a narrow and 25 kHz with a wide
+  bandwidth.
+  - A digit at or above the raster steps by its value and goes to the nearest channel. A lower digit steps by one
+    channel.
+  - The steps carry over (145.995 + 10 kHz = 146.005 MHz) and stop at the limits of the radio.
+  - The radio tunes at once. While you transmit, the frequency stays as it is.
+  - A step leaves the memory, so its name above the frequency goes. The line stays, and the frequency does not move.
+  - 🖥 Scroll over a digit, which is highlighted. In the field, ↑ and ↓ step the digit at the cursor.
+  - 📱 Swipe up or down on a digit. **−** and **+** beside the frequency step by one channel, and repeat while you hold
+    them.
+  - For a station a little off the raster, step by the digit exactly: 🖥 hold ⌥, 📱 hold the digit for a moment before
+    you swipe.
+  - With VoiceOver, swipe up or down on the frequency to step it by one channel.
 - **Bandwidth:** 12.5 or 25 kHz. **Squelch:** 0 (open) to 8. With 0, the speaker is always on, also without a
   signal; the settings warn about it in red.
 - **TX/RX tone (CTCSS):** one of the 38 standard tones or *None*.
@@ -248,7 +262,7 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   set to the nearest limit, as in the Android app.
 - **Add:** **+** creates a memory from the current frequency. **Edit…** and
   **Delete** are behind the ⋯ button of each memory. Deleting always asks first. A
-  memory has a name, frequency, offset (none, down or up, in kHz, default 600), TX and
+  memory has a name, frequency, offset (none, down or up, in whole kHz, default 600), TX and
   RX tone, an optional group and *Skip during scan*. With an offset, the form shows
   where the memory transmits.
 - **Groups:** the **Group** picker above the list shows one group or all memories.

@@ -98,6 +98,13 @@ Like the Android app, the Apple app only transmits inside the 2 m (144–148 MHz
 or 70 cm (420–450 MHz) ham band, depending on the RF module. Receiving works on
 the whole range of the module.
 
+## Why does a digit of the frequency jump to another value?
+
+A step goes to the next channel of the raster: 12.5 kHz with a narrow and 25 kHz with a wide bandwidth. A digit
+smaller than the raster, such as the kHz digit, steps by one channel. A larger one steps by its value and goes to the
+nearest channel, so 146.520 MHz becomes 146.625 MHz. To step by the digit exactly, as for a station off the raster,
+hold ⌥ on the Mac, or hold the digit for a moment before you swipe on iPhone and iPad.
+
 ## Can I import my memories from the Android app?
 
 Not yet; the Android app has no export. RepeaterBook CSV exports can be
