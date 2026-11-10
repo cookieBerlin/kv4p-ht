@@ -220,8 +220,8 @@ struct RadioViewModelFrequencyStepTests {
         memory.offsetKHz = 600
         #expect(model.transmitText(for: memory) == "Transmits on 146,3400 MHz")
         #expect(
-            model.memoryProblem(ChannelMemory(name: "N0CALL", frequency: 440))
-                == "This radio receives from 134,0000 to 174,0000 MHz."
+            model.memoryProblem(ChannelMemory(name: "N0CALL", frequency: 300))
+                == "Enter a frequency from 134,0000 to 174,0000 or from 400,0000 to 480,0000 MHz."
         )
         model.isWideBandwidth = false
         #expect(await eventually(model) { !$0.isWideBandwidth })

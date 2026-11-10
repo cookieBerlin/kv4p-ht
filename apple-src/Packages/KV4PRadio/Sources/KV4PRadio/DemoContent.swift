@@ -7,13 +7,20 @@ public enum DemoContent {
     public static let memories = [
         ChannelMemory(name: "Calling channel", frequency: 145.5),
         ChannelMemory(
-            name: "Repeater",
+            name: "Local repeater",
             frequency: 145.6,
             offset: .down,
             txTone: "88.5",
             group: "Repeaters",
-            accessToneHz: 1750
+            accessToneHz: 1750,
+            kind: .repeater,
+            comment: "Example repeater",
+            latitude: 49.058_33,
+            longitude: -72.029_17
         ),
+        ChannelMemory(name: "Local beacon", frequency: 144.49, group: "Repeaters", kind: .beacon),
+        // For 70 cm: the demo radio is one for 2 m, so the list hides it and says so.
+        ChannelMemory(name: "Far repeater", frequency: 439.1, offset: .down, offsetKHz: 7600, kind: .repeater),
         ChannelMemory(name: "APRS", frequency: 144.8, group: "Digital"),
     ]
 

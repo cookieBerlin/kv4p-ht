@@ -19,6 +19,11 @@ final class StoredMemory {
     var skipDuringScan: Bool = false
     var accessToneHz: Int?
     var accessToneLengthMs: Int?
+    /// A `MemoryKind`; empty in a store of an earlier version, until it is migrated (ADR-0065).
+    var kind: String = ""
+    var comment: String = ""
+    var latitude: Double?
+    var longitude: Double?
     /// The place in the stored order, from 1; 0 in a store of an earlier version, until it is migrated.
     var position: Int = 0
 
@@ -26,16 +31,7 @@ final class StoredMemory {
         self.globalId = globalId
         self.position = position
         memoryId = memory.id
-        name = memory.name
-        frequency = memory.frequency
-        offset = memory.offset
-        offsetKHz = memory.offsetKHz
-        txTone = memory.txTone
-        rxTone = memory.rxTone
-        group = memory.group
-        skipDuringScan = memory.skipDuringScan
-        accessToneHz = memory.accessToneHz
-        accessToneLengthMs = memory.accessToneLengthMs
+        update(from: memory)
     }
 
     func update(from memory: ChannelMemory) {
@@ -49,6 +45,20 @@ final class StoredMemory {
         skipDuringScan = memory.skipDuringScan
         accessToneHz = memory.accessToneHz
         accessToneLengthMs = memory.accessToneLengthMs
+        kind = memory.kind.rawValue
+        comment = memory.comment
+        latitude = memory.latitude
+        longitude = memory.longitude
+    }
+
+    /// The kind; for a memory of an earlier version, a repeater with an offset and a frequency without.
+    private var memoryKind: MemoryKind { MemoryKind(rawValue: kind) ?? (offset == .none ? .frequency : .repeater) }
+
+    /// Stores the kind of a memory of an earlier version, so that it stays as the offset changes.
+    func migrateKind() {
+        if kind != memoryKind.rawValue {
+            kind = memoryKind.rawValue
+        }
     }
 
     func memory(id: Int32) -> ChannelMemory {
@@ -63,7 +73,11 @@ final class StoredMemory {
             group: group,
             skipDuringScan: skipDuringScan,
             accessToneHz: accessToneHz,
-            accessToneLengthMs: accessToneLengthMs
+            accessToneLengthMs: accessToneLengthMs,
+            kind: memoryKind,
+            comment: comment,
+            latitude: latitude,
+            longitude: longitude
         )
     }
 }
@@ -171,8 +185,11 @@ public actor SwiftDataMemoryRepository: MemoryRepository {
         var stored = try context.fetch(
             FetchDescriptor<StoredMemory>(sortBy: [SortDescriptor(\.position), SortDescriptor(\.memoryId)])
         )
-        for memory in stored where memory.globalId.isEmpty {
-            memory.globalId = UUID().uuidString
+        for memory in stored {
+            if memory.globalId.isEmpty {
+                memory.globalId = UUID().uuidString
+            }
+            memory.migrateKind()
         }
         if stored.first?.position == 0 {
             // Groups alphabetically, no group last, and each group in the order the memories were added (ADR-0042).

@@ -14,6 +14,15 @@ struct MemoriesView: View {
         VStack(spacing: 0) {
             controls
             list
+            if let hidden = model.hiddenMemoriesText {
+                Text(hidden)
+                    .font(.footnote)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(Color.strongSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+            }
         }
         .sheet(item: $editing) { memory in
             NavigationStack {
@@ -76,44 +85,55 @@ struct MemoriesView: View {
 
     private var list: some View {
         List(selection: Binding(get: { model.activeMemoryId }, set: { id in tune(id) })) {
-            ForEach(model.visibleMemories) { memory in
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(memory.name)
-                        Text(model.shown(memory.frequency) + " MHz").font(.caption)
-                            .foregroundStyle(Color.strongSecondary)
-                    }
-                    // One element to tap and to read, with the active one marked.
-                    .accessibilityElement(children: .combine)
-                    .accessibilityAddTraits(memory.id == model.activeMemoryId ? .isSelected : [])
-                    Spacer()
-                    #if os(iOS)
-                        // iOS lists select only in edit mode: a tap tunes, a checkmark marks the active memory.
-                        if memory.id == model.activeMemoryId {
-                            Image(systemName: "checkmark").foregroundStyle(.tint)
+            Section {
+                ForEach(model.visibleMemories) { memory in
+                    HStack {
+                        HStack {
+                            MemoryKindSymbol(kind: memory.kind)
+                            VStack(alignment: .leading) {
+                                Text(memory.name)
+                                Text(model.shown(memory.frequency) + " MHz").font(.caption)
+                                    .foregroundStyle(Color.strongSecondary)
+                                if !memory.comment.isEmpty, !textSize.isAccessibilitySize {
+                                    Text(memory.comment).font(.caption).lineLimit(1)
+                                        .foregroundStyle(Color.strongSecondary)
+                                }
+                            }
                         }
-                    #endif
-                    Menu {
-                        actions(memory)
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.title2)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(.rect)
+                        // One element to tap and to read, with the kind and the active one marked.
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(model.spokenRow(memory, withComment: !textSize.isAccessibilitySize))
+                        .accessibilityAddTraits(.isStaticText)
+                        .accessibilityAddTraits(memory.id == model.activeMemoryId ? .isSelected : [])
+                        Spacer()
+                        #if os(iOS)
+                            // iOS lists select only in edit mode: a tap tunes, a checkmark marks the active memory.
+                            if memory.id == model.activeMemoryId {
+                                Image(systemName: "checkmark").foregroundStyle(.tint)
+                            }
+                        #endif
+                        Menu {
+                            actions(memory)
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.title2)
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(.rect)
+                        }
+                        .menuIndicator(.hidden)
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("Actions for \(memory.name)")
                     }
-                    .menuIndicator(.hidden)
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel("Actions for \(memory.name)")
-                }
-                .tag(memory.id)
-                #if os(iOS)
-                    .contentShape(.rect)
-                    .onTapGesture { tune(memory.id) }
-                #endif
-                .contextMenu { actions(memory) }
-                .swipeActions {
-                    Button("Delete", role: .destructive) { deleting = [memory] }
-                    Button("Edit…") { editing = memory }
+                    .tag(memory.id)
+                    #if os(iOS)
+                        .contentShape(.rect)
+                        .onTapGesture { tune(memory.id) }
+                    #endif
+                    .contextMenu { actions(memory) }
+                    .swipeActions {
+                        Button("Delete", role: .destructive) { deleting = [memory] }
+                        Button("Edit…") { editing = memory }
+                    }
                 }
             }
         }

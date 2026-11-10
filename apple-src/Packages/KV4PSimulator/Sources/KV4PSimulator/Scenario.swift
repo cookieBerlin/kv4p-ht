@@ -32,7 +32,7 @@ public struct Scenario: Equatable, Sendable {
     public static let androidFirmware = ble.with { $0.features.remove(.freeDV2400B) }
 
     /// `moduleMinRadioFreq()` … `moduleMaxRadioFreq()`, MHz.
-    var frequencyRange: ClosedRange<Float> { moduleType == .sa818UHF ? 400...480 : 134...174 }
+    var frequencyRange: ClosedRange<Float> { moduleType.frequencyRange }
 
     /// `moduleDefaultRadioFreq()`, MHz.
     var defaultFrequency: Float { startFrequency ?? (moduleType == .sa818UHF ? 435 : 144) }

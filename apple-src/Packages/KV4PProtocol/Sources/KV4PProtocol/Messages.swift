@@ -187,9 +187,20 @@ public struct DeviceState: Equatable, Sendable {
 }
 
 /// RF module fitted to the board.
-public enum RFModuleType: UInt8, Equatable, Sendable {
+public enum RFModuleType: UInt8, CaseIterable, Equatable, Sendable {
     case sa818VHF = 0
     case sa818UHF = 1
+
+    /// What the module receives, in MHz, as the firmware gives it (`moduleMinRadioFreq`, `moduleMaxRadioFreq`).
+    public var frequencyRange: ClosedRange<Float> { self == .sa818UHF ? 400...480 : 134...174 }
+
+    /// The amateur band of the module.
+    public var band: String { self == .sa818UHF ? "70 cm" : "2 m" }
+
+    /// The module that receives `frequency`, if any.
+    public static func receiving(_ frequency: Float) -> RFModuleType? {
+        allCases.first { $0.frequencyRange.contains(frequency) }
+    }
 }
 
 /// Optional hardware and firmware capabilities (`Version.features`).

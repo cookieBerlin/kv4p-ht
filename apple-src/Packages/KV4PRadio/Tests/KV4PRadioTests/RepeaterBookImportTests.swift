@@ -39,6 +39,7 @@ struct RepeaterBookImportTests {
         #expect(memories.map(\.offsetKHz) == [600, 600, 0])
         #expect(memories.map(\.txTone) == ["100", "None", "123"])
         #expect(memories.allSatisfy { $0.rxTone == "None" && $0.group == "Local" && !$0.skipDuringScan && $0.id == 0 })
+        #expect(memories.allSatisfy { $0.kind == .repeater && $0.comment.isEmpty && $0.latitude == nil })
     }
 
     @Test("international format")

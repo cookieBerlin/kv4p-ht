@@ -10,7 +10,7 @@ struct ManageMemoriesView: View {
     @State private var editing: ChannelMemory?
     @State private var isNamingGroup = false
     @State private var groupName = ""
-    @State private var isImporting = false
+    @State private var importing: RepeaterList?
 
     var body: some View {
         List {
@@ -48,8 +48,10 @@ struct ManageMemoriesView: View {
                     groupName = ""
                     isNamingGroup = true
                 }
-                Button("Import from RepeaterBook", systemImage: "square.and.arrow.down") { isImporting = true }
-                    .explained(ControlHelp.importCSV)
+                Button("Import from RepeaterBook", systemImage: "square.and.arrow.down") { importing = .repeaterBook }
+                    .explained(ControlHelp.importRepeaterBook)
+                Button("Import from DARC", systemImage: "square.and.arrow.down") { importing = .darc }
+                    .explained(ControlHelp.importDARC)
             }
         }
         .macName("Groups")
@@ -61,8 +63,16 @@ struct ManageMemoriesView: View {
         .asksForGroupName("New group", isPresented: $isNamingGroup, name: $groupName) { name in
             editing = model.draftMemory(group: name.trimmingCharacters(in: .whitespaces))
         }
-        .sheet(isPresented: $isImporting) {
-            NavigationStack { RepeaterImportView(model: model) }
+        .sheet(
+            isPresented: Binding {
+                importing != nil
+            } set: {
+                if !$0 { importing = nil }
+            }
+        ) {
+            if let importing {
+                NavigationStack { RepeaterImportView(model: model, list: importing) }
+            }
         }
     }
 }
@@ -141,6 +151,7 @@ struct GroupMemoriesView: View {
 
     @ViewBuilder private func row(_ memory: ChannelMemory) -> some View {
         let content = HStack {
+            MemoryKindSymbol(kind: memory.kind)
             VStack(alignment: .leading) {
                 Text(memory.name)
                 Text(model.shown(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
@@ -148,6 +159,9 @@ struct GroupMemoriesView: View {
             Spacer()
         }
         .contentShape(.rect)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(model.spokenRow(memory, withComment: false))
+        .accessibilityAddTraits(.isStaticText)
 
         if isSelecting {
             content

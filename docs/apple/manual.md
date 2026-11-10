@@ -258,13 +258,22 @@ analog voice.
 The memory list is next to APRS (on an iPhone, in the **Memories** tab).
 
 - **Tune:** click (📱 tap) a memory; 📱 a checkmark marks the active one. The radio switches to its frequency, repeater
-  offset (TX = RX ± offset) and tones. Frequencies outside the module range are
-  set to the nearest limit, as in the Android app.
+  offset (TX = RX ± offset) and tones.
+- **Only what the radio receives:** memories may be for 2 m or 70 cm. With a radio connected, the list shows only
+  those its module receives, and a line below it says how many it hides. Before you connect, it shows all of them.
+  ⚙ **Settings** → *Memories* always shows all. The memory form takes both bands, and notes when the connected
+  radio cannot receive the frequency.
 - **Add:** **+** creates a memory from the current frequency. **Edit…** and
   **Delete** are behind the ⋯ button of each memory. Deleting always asks first. A
-  memory has a name, frequency, offset (none, down or up, in whole kHz, default 600), TX and
-  RX tone, an optional group and *Skip during scan*. With an offset, the form shows
+  memory has a name, a kind, frequency, offset (none, down or up, in whole kHz, default 600), TX and
+  RX tone, an optional group, a comment, a position and *Skip during scan*. With an offset, the form shows
   where the memory transmits.
+- **Kinds:** a memory is a *frequency*, a *repeater* or a *beacon*, an automatic station that only sends a beacon.
+  New memories are frequencies; changing the offset does not change the kind. The list marks a repeater with an
+  antenna sending both ways and a beacon with one sending to one side, and shows the comment below the frequency (not with the
+  largest text sizes). Memories from an earlier version became repeaters if they had an offset, otherwise frequencies.
+- **Position:** latitude and longitude in decimal degrees, such as `52.51667`, with the decimal separator of your
+  language: north and east positive, south and west negative. Enter both or neither.
 - **Groups:** the **Group** picker above the list shows one group or all memories.
   **Scan** and **+** are next to it.
 - **Scan:** steps through the memories shown, in order, and stays on a memory
@@ -280,10 +289,18 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   the group; deleting asks whether its memories go too or stay without a group.
 - **RepeaterBook import:** **Import from RepeaterBook** in ⚙ **Settings** under *Memories* asks for a
   CSV export, which you download from [RepeaterBook](https://www.repeaterbook.com) in
-  your browser (US or international format). It then shows how many repeaters it would
-  add, and how many it leaves out because the radio cannot receive them or the group
-  already has them (same name and frequency). You choose the group. Connect the radio
-  first.
+  your browser (US or international format).
+- **DARC import:** **Import from DARC**, next to it, asks for the CSV export of a list from the
+  [DARC repeater lists](https://relaislisten.darc.de), which you download in your browser (UTF-8 or
+  Windows-1252). It imports FM repeaters and beacons: an entry without a mode counts as FM, and one that names FM
+  among others, such as *FM/DMR*, too. The call becomes the name, *Info* the comment, and the position, offset and
+  CTCSS tone come along. *Set the access tone* (on by default: 1750 Hz for 3 s) gives the new repeaters the tone
+  most German repeaters need.
+- **Both imports** need no connected radio and take 2 m and 70 cm. A memory the group already has (same name and
+  frequency) is completed: it gets a missing comment, and a position if it has none or only half of one. What you
+  set stays. The preview names what it would add and complete. It also says how many entries it leaves out: of
+  another mode, outside 2 m and 70 cm, or already complete in the group. Both ask *Add to a group*, on by default:
+  choose a group or a new one, named after the file at first. Turned off, the memories go without a group.
 - Memories are stored on this device.
 
 ## APRS
@@ -502,7 +519,7 @@ Settings**, which leads straight to the update.
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
 | *The APRS message was not accepted for transmission.* | Wait until PTT or the scan has ended, tune inside the ham band, and use a callsign of at most six characters plus SSID. |
 | *This file is not a RepeaterBook CSV export.* | Download the CSV export (not the web page) from RepeaterBook. |
-| *Connect the radio first, …* | The import needs the radio's frequency range; connect, then import again. |
+| *This file is not a DARC repeater list.* | Download the CSV export (not the web page) from the DARC repeater lists, or use **Import from RepeaterBook** for a RepeaterBook file. |
 | *The radio did not start its bootloader.* | Check the USB cable (it must carry data) and close other apps that use the port, then update again. |
 | *The radio stopped answering during the update.* / *The firmware could not be verified.* | Start the update again; it can always be repeated. |
 | *The audio output cannot be started.* | Check the output device in System Settings → Sound, then connect again. The radio works without audio. |

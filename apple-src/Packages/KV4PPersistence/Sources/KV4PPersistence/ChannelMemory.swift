@@ -7,6 +7,13 @@ public enum MemoryOffset: Int, CaseIterable, Codable, Sendable {
     case up = 2
 }
 
+/// What a memory is (ADR-0065): a repeater, a beacon that only transmits, or any other frequency.
+public enum MemoryKind: String, CaseIterable, Codable, Sendable {
+    case frequency
+    case repeater
+    case beacon
+}
+
 /// A stored channel (Android `ChannelMemory`). `frequency` is the RX frequency in MHz; tones are `CTCSS` labels.
 public struct ChannelMemory: Hashable, Identifiable, Sendable {
     /// Assigned by the repository, for this device; it is also the memory id sent to the radio.
@@ -24,6 +31,12 @@ public struct ChannelMemory: Hashable, Identifiable, Sendable {
     public var accessToneHz: Int?
     /// How long that tone lasts, in ms; `nil` to follow the settings.
     public var accessToneLengthMs: Int?
+    public var kind: MemoryKind
+    /// Empty for none.
+    public var comment: String
+    /// The position in decimal degrees, north and east positive; `nil` if unknown.
+    public var latitude: Double?
+    public var longitude: Double?
 
     public init(
         id: Int32 = 0,
@@ -36,7 +49,11 @@ public struct ChannelMemory: Hashable, Identifiable, Sendable {
         group: String = "",
         skipDuringScan: Bool = false,
         accessToneHz: Int? = nil,
-        accessToneLengthMs: Int? = nil
+        accessToneLengthMs: Int? = nil,
+        kind: MemoryKind = .frequency,
+        comment: String = "",
+        latitude: Double? = nil,
+        longitude: Double? = nil
     ) {
         self.id = id
         self.name = name
@@ -49,6 +66,10 @@ public struct ChannelMemory: Hashable, Identifiable, Sendable {
         self.skipDuringScan = skipDuringScan
         self.accessToneHz = accessToneHz
         self.accessToneLengthMs = accessToneLengthMs
+        self.kind = kind
+        self.comment = comment
+        self.latitude = latitude
+        self.longitude = longitude
     }
 
     /// The distinct, non-empty group names, in the order of their memories.

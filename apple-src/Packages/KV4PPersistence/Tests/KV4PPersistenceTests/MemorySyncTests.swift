@@ -10,19 +10,25 @@ import Testing
 /// a device and what iCloud delivers to it.
 @Suite("Memory sync")
 struct MemorySyncTests {
-    private static func storeURL() -> URL {
+    static func storeURL() -> URL {
         FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
     }
 
-    /// Writes rows as they would arrive from another device.
-    private static func arrive(_ url: URL, _ rows: [(ChannelMemory, position: Int, globalId: String)]) throws {
+    /// Writes rows as they would arrive from another device, of this version or, by `changing`, an earlier one.
+    static func arrive(
+        _ url: URL,
+        _ rows: [(ChannelMemory, position: Int, globalId: String)],
+        changing change: (StoredMemory) -> Void = { _ in }
+    ) throws {
         let container = try ModelContainer(
             for: StoredMemory.self,
             configurations: ModelConfiguration(url: url, cloudKitDatabase: .none)
         )
         let context = ModelContext(container)
         for row in rows {
-            context.insert(StoredMemory(row.0, position: row.position, globalId: row.globalId))
+            let stored = StoredMemory(row.0, position: row.position, globalId: row.globalId)
+            change(stored)
+            context.insert(stored)
         }
         try context.save()
     }
