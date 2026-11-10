@@ -2556,7 +2556,25 @@ public final class RadioViewModel {
             let highest = shown(firmware.maxRadioFreq)
             return "This radio receives from \(lowest) to \(highest) MHz."
         }
-        return memory.offset != .none && memory.offsetKHz < 0 ? "Enter the offset in kHz." : nil
+        if memory.offset != .none, memory.offsetKHz < 0 {
+            return "Enter the offset in kHz."
+        }
+        return positionProblem(memory)
+    }
+
+    private func positionProblem(_ memory: ChannelMemory) -> String? {
+        switch (memory.latitude, memory.longitude) {
+        case (nil, nil): return nil
+        case (let latitude?, let longitude?):
+            if !(-90...90).contains(latitude) { return "Enter a latitude from -90 to 90." }
+            return (-180...180).contains(longitude) ? nil : "Enter a longitude from -180 to 180."
+        default: return "Enter both latitude and longitude, or neither."
+        }
+    }
+
+    /// A latitude or a longitude as the form shows it.
+    public func shownDegrees(_ degrees: Double?) -> String {
+        Coordinate.format(degrees, separator: decimalSeparator)
     }
 
     /// Where a memory with an offset transmits; the radio may still limit it when tuning.
