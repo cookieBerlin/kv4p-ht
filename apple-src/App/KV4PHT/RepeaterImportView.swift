@@ -1,3 +1,4 @@
+import KV4PAudio
 import KV4PRadio
 import SwiftUI
 import UniformTypeIdentifiers
@@ -14,25 +15,26 @@ struct RepeaterImportView: View {
     /// Numbers the chosen files, so that the group field starts anew with the name of each.
     @State private var fileNumber = 0
     @State private var cannotRead = false
+    @State private var setsAccessTone = true
+    @State private var accessTone = ImportAccessTone.standard
     @Environment(\.dismiss) private var dismiss
 
     private var targetGroup: String { inGroup ? group.trimmingCharacters(in: .whitespaces) : "" }
     private var preview: RepeaterImportPreview? {
-        csv.flatMap { model.importPreview($0, of: list, group: targetGroup) }
+        csv.flatMap { model.importPreview($0, of: list, group: targetGroup, accessTone: chosenAccessTone) }
     }
-    private var canImport: Bool { preview?.memories.isEmpty == false && (!inGroup || !targetGroup.isEmpty) }
+    private var chosenAccessTone: ImportAccessTone? { list == .darc && setsAccessTone ? accessTone : nil }
+    private var canImport: Bool {
+        guard let preview, !preview.memories.isEmpty || !preview.completed.isEmpty else { return false }
+        return !inGroup || !targetGroup.isEmpty
+    }
 
     var body: some View {
         Form {
             Section("CSV file") {
                 Text(instructions)
                 Text(link)
-                if !model.canImportRepeaters {
-                    Text("Connect the radio first, so that only repeaters it can receive are imported.")
-                        .foregroundStyle(.red)
-                }
                 Button("Choose file…", systemImage: "doc") { isChoosingFile = true }
-                    .disabled(!model.canImportRepeaters)
                 if let fileName {
                     LabeledContent("File", value: fileName)
                 }
@@ -46,6 +48,9 @@ struct RepeaterImportView: View {
                         Toggle("Add to a group", isOn: $inGroup)
                         if inGroup {
                             GroupField(groups: model.groups, group: $group, allowsNone: false).id(fileNumber)
+                        }
+                        if list == .darc {
+                            accessToneChoice
                         }
                         Text(preview.summary)
                     } else {
@@ -66,7 +71,8 @@ struct RepeaterImportView: View {
                     let csv = csv ?? ""
                     let group = targetGroup
                     let list = list
-                    Task { await model.importRepeaters(csv, of: list, group: group) }
+                    let accessTone = chosenAccessTone
+                    Task { await model.importRepeaters(csv, of: list, group: group, accessTone: accessTone) }
                     dismiss()
                 }
                 .disabled(!canImport)
@@ -81,6 +87,19 @@ struct RepeaterImportView: View {
             fileName = url.lastPathComponent
             group = url.deletingPathExtension().lastPathComponent
             fileNumber += 1
+        }
+    }
+
+    /// The access tone of the new repeaters, as most German ones need one.
+    @ViewBuilder private var accessToneChoice: some View {
+        Toggle("Set the access tone", isOn: $setsAccessTone)
+        if setsAccessTone {
+            Picker("Access tone", selection: $accessTone.hz) {
+                ForEach(AccessTone.frequencies, id: \.self) { Text("\($0) Hz") }
+            }
+            Picker("Tone length", selection: $accessTone.lengthMs) {
+                ForEach(AccessTone.lengthsMs, id: \.self) { Text(AccessTone.lengthLabel($0)) }
+            }
         }
     }
 

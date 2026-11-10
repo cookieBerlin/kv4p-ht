@@ -159,6 +159,9 @@ struct GroupMemoriesView: View {
             Spacer()
         }
         .contentShape(.rect)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(model.spokenRow(memory, withComment: false))
+        .accessibilityAddTraits(.isStaticText)
 
         if isSelecting {
             content

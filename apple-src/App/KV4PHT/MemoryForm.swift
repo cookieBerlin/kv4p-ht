@@ -51,7 +51,7 @@ struct MemoryForm: View {
             Section {
                 LabeledField("Name", text: $memory.name)
                 Picker("Kind", selection: $memory.kind) {
-                    ForEach(MemoryKind.allCases, id: \.self) { Text($0.title) }
+                    ForEach(MemoryKind.allCases, id: \.self) { Text(verbatim: $0.title) }
                 }
                 GroupField(groups: model.groups, group: $memory.group)
                 LabeledField("Comment", text: $memory.comment)
@@ -68,6 +68,9 @@ struct MemoryForm: View {
                 }
                 if entered.frequency.isFinite, let text = model.transmitText(for: entered) {
                     Text(text).font(.footnote).foregroundStyle(.secondary)
+                }
+                if let note = model.receptionNote(entered) {
+                    Text(note).font(.footnote).foregroundStyle(.secondary)
                 }
             }
             Section {

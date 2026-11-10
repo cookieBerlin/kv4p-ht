@@ -375,6 +375,9 @@ with an offset are repeaters, the others frequencies. With two devices on the sa
 change the kind, comment and position of a memory on one: the other follows, and its memories migrate the same way.
 A TestFlight build needs the schema deployed to production first.
 
-Download a CSV export from the DARC repeater lists and import it with **Import from DARC**, once into a new group
-and once without a group. The preview counts repeaters, beacons and what it leaves out. The imported repeaters
-tune with the right offset and tone, and a known repeater is heard. Import the same file again: nothing is added.
+Download a CSV export from the DARC repeater lists and import it with **Import from DARC** without a radio
+connected, once into a new group and once without a group. The preview counts repeaters, beacons and what it leaves
+out. Both bands are imported, with the position (latitude and longitude) and, if chosen, 1750 Hz for 3 s. Connect a
+2 m radio: the 70 cm memories are hidden and the list says so; with a 70 cm radio, the other way round. The
+imported repeaters tune with the right offset and tone, and a known repeater is heard. Clear the comment of one
+memory and import the same file again: only that memory is completed, nothing is added.

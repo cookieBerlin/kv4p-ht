@@ -19,6 +19,8 @@ public enum DemoContent {
             longitude: -72.029_17
         ),
         ChannelMemory(name: "Local beacon", frequency: 144.49, group: "Repeaters", kind: .beacon),
+        // For 70 cm: the demo radio is one for 2 m, so the list hides it and says so.
+        ChannelMemory(name: "Far repeater", frequency: 439.1, offset: .down, offsetKHz: 7600, kind: .repeater),
         ChannelMemory(name: "APRS", frequency: 144.8, group: "Digital"),
     ]
 

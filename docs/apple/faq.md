@@ -112,9 +112,15 @@ be imported (see the [manual](manual.md#memories-and-scanning)).
 
 ## Why does the DARC import leave out some repeaters?
 
-The radio is an FM radio, so only FM entries are imported; an entry without a mode counts as FM. The radio also
-receives only its own band, so entries for 70 cm on a VHF radio, or for 23 cm, are left out. The preview says how
-many entries it leaves out and why. A beacon is imported as a beacon: it only transmits, and you listen to it.
+The radio is an FM radio, so only FM entries are imported; an entry without a mode counts as FM. A kv4p HT receives
+2 m or 70 cm, so entries for other bands, such as 23 cm, are left out. The preview says how many entries it leaves
+out and why. A beacon is imported as a beacon: it only transmits, and you listen to it.
+
+## Why does the list show fewer memories than I imported?
+
+With a radio connected, the list shows only the memories its module receives: a 2 m radio hides those for 70 cm,
+and the other way round. The line below the list says how many are hidden. They show again when a radio for their
+band is connected, and ⚙ **Settings** → *Memories* always shows all of them.
 
 ## Why does the app not download the DARC repeater lists itself?
 
