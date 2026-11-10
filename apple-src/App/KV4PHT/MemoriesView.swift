@@ -117,6 +117,7 @@ struct MemoriesView: View {
                 }
             }
         }
+        .macName("Memories")
     }
 
     @ViewBuilder private func actions(_ memory: ChannelMemory) -> some View {

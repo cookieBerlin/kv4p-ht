@@ -52,6 +52,7 @@ struct ManageMemoriesView: View {
                     .explained(ControlHelp.importCSV)
             }
         }
+        .macName("Groups")
         .sortableList()
         .navigationDestination(item: $opened) { name in
             GroupMemoriesView(model: model, name: name)
@@ -94,6 +95,7 @@ struct GroupMemoriesView: View {
                 Task { await model.moveMemories(inGroup: name, offsets, to: destination) }
             }
         }
+        .macName("Memories")
         .sortableList()
         .navigationTitle(name.isEmpty ? "No group" : name)
         .toolbar {
