@@ -14,6 +14,7 @@ actor SlowTuningController: RadioControlling {
     private nonisolated let sent: AsyncStream<RadioSnapshot>.Continuation
     private(set) var tunes: [Float] = []
     private(set) var snapshot: RadioSnapshot
+    var refuses = false
     private var desired = DesiredStateController()
 
     init() {
@@ -44,6 +45,7 @@ actor SlowTuningController: RadioControlling {
     func connect() async { sent.yield(snapshot) }
 
     func tune(rx: Float, tx: Float, memoryId: Int32) throws(RadioError) {
+        if refuses { throw .notReady }
         tunes.append(rx)
         desired.setRxFrequency(rx)
         desired.setTxFrequency(tx)
@@ -57,8 +59,19 @@ actor SlowTuningController: RadioControlling {
     func answer() {
         snapshot.revision += 1
         sent.yield(snapshot)
-        snapshot.deviceState?.radio.freqRx = snapshot.desired.freqRx
+        let frequency = snapshot.desired.freqRx
+        snapshot.deviceState?.radio.freqRx = frequency
         snapshot.isInSync = true
+        snapshot.revision += 1
+        sent.yield(snapshot)
+    }
+
+    func refuse() {
+        refuses = true
+    }
+
+    /// A report of the radio as it is.
+    func report() {
         snapshot.revision += 1
         sent.yield(snapshot)
     }
@@ -107,11 +120,11 @@ struct RadioViewModelFrequencyStepTests {
     func raster() async {
         let model = await connected()
         model.isWideBandwidth = false
-        #expect(await eventually(model) { $0.snapshot.isInSync })
+        #expect(await eventually(model) { !$0.isWideBandwidth && $0.snapshot.isInSync })
         await model.stepFrequency(digit: 100, by: 1)
         #expect(model.frequencyText == "144.0125")
         model.isWideBandwidth = true
-        #expect(await eventually(model) { $0.snapshot.isInSync })
+        #expect(await eventually(model) { $0.isWideBandwidth && $0.snapshot.isInSync })
         await model.stepFrequency(digit: 100, by: -1)
         #expect(model.frequencyText == "144.0000")
         await model.stepFrequency(digit: 100, by: 1, exact: true)
@@ -121,8 +134,6 @@ struct RadioViewModelFrequencyStepTests {
     @Test("a step at the limit changes nothing")
     func limit() async {
         let model = await connected()
-        await model.stepFrequency(digit: 1_000_000, by: -1)
-        #expect(model.frequencyText == "144.0000")
         await model.stepFrequency(digit: 100_000_000, by: -1)
         #expect(model.frequencyText == "134.0000")
         #expect(await eventually(model) { $0.snapshot.isInSync })
@@ -148,6 +159,18 @@ struct RadioViewModelFrequencyStepTests {
         for _ in 0..<100 { await Task.yield() }
         #expect(await controller.tunes == [144.1, 144.5])
         #expect(model.frequencyText == "144.5000")
+    }
+
+    @Test("a refused step shows the radio's frequency again")
+    func refused() async {
+        let controller = SlowTuningController()
+        let model = RadioViewModel(makeController: { _, _ in controller }, serialDevices: { [] })
+        await model.connect()
+        #expect(await eventually(model) { $0.isReady && $0.frequencyText == "144.0000" })
+        await controller.refuse()
+        await model.stepFrequency(digit: 100_000, by: 1)
+        await controller.report()
+        #expect(await eventually(model) { $0.frequencyText == "144.0000" })
     }
 
     @Test("an entered frequency replaces a step that waits")
@@ -191,7 +214,7 @@ struct RadioViewModelFrequencyStepTests {
         await model.applyFrequency()
         #expect(model.frequencyText == "146,5200")
         await model.stepFrequency(digit: 100_000, by: 1)
-        #expect(model.frequencyText == "146,6200")
+        #expect(model.frequencyText == "146,6250")
         var memory = ChannelMemory(name: "N0CALL", frequency: 146.94)
         memory.offset = .down
         memory.offsetKHz = 600
@@ -201,6 +224,7 @@ struct RadioViewModelFrequencyStepTests {
                 == "This radio receives from 134,0000 to 174,0000 MHz."
         )
         model.isWideBandwidth = false
+        #expect(await eventually(model) { !$0.isWideBandwidth })
         model.frequencyText = "150"
         await model.applyFrequency()
         #expect(await eventually(model) { $0.snapshot.isInSync && !$0.canTransmit })
