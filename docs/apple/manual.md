@@ -134,7 +134,9 @@ disconnect yourself:
   the bars shows the squelch level you set.
   Drag on the bars to change it: 📱 hold for a moment until it vibrates, then drag;
   🖥 drag or click directly. The level shows to the right of the bars and applies when
-  you let go. While you transmit or scan, the squelch cannot change.
+  you let go. While you transmit or scan, the squelch cannot change. VoiceOver reads the
+  S-meter as a slider of the squelch: it reads the level and the squelch, and changes the
+  squelch by one step up or down.
 - **Squelch indicator:** a green speaker while a signal is received and played, a
   crossed-out speaker otherwise. The radio mutes the audio itself while the squelch
   is closed.

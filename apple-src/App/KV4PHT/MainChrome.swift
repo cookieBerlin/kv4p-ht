@@ -60,6 +60,18 @@ struct RadioHeader: View {
     /// The room for the level beside the bars, which grows with the text.
     @ScaledMetric(relativeTo: .footnote) private var levelWidth = 68
 
+    private var squelchLevel: Binding<Double> {
+        Binding {
+            Double(model.squelch)
+        } set: {
+            model.changeSquelch(to: Int($0.rounded()))
+        }
+    }
+
+    private var squelchRange: ClosedRange<Double> {
+        Double(SquelchMark.levels.lowerBound)...Double(SquelchMark.levels.upperBound)
+    }
+
     private var isCompact: Bool {
         #if os(iOS)
             sizeClass == .compact
@@ -94,16 +106,12 @@ struct RadioHeader: View {
                     .lineLimit(1)
                     .frame(width: levelWidth, alignment: .trailing)
             }
-            .accessibilityElement(children: .ignore)
+            // A slider of the squelch to VoiceOver, which the Mac needs to know what kind of element it is.
+            .accessibilityRepresentation {
+                Slider(value: squelchLevel, in: squelchRange, step: 1) { Text("S-meter") }
+            }
             .accessibilityLabel("S-meter")
             .accessibilityValue(model.isReady ? "\(model.sMeterText), squelch \(model.squelch)" : model.sMeterText)
-            .accessibilityAdjustableAction { direction in
-                switch direction {
-                case .increment: model.changeSquelch(to: model.squelch + 1)
-                case .decrement: model.changeSquelch(to: model.squelch - 1)
-                @unknown default: break
-                }
-            }
             .help(ControlHelp.meter)
             if !isCompact {
                 VolumeSlider(model: model)

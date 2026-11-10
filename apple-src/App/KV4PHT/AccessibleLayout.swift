@@ -38,6 +38,34 @@ extension View {
     }
 }
 
+extension View {
+    /// A name for the Mac's VoiceOver, which reads a list or a text field as an element of its own; iOS takes it from
+    /// the rows of a list and the placeholder of a field (ADR-0062).
+    @ViewBuilder func macName(_ name: LocalizedStringKey) -> some View {
+        #if os(macOS)
+            accessibilityLabel(name)
+        #else
+            self
+        #endif
+    }
+}
+
+extension View {
+    /// A menu in the look of `capsuleButton`. On the Mac drawn around a plain menu, as in a bordered style the Mac's
+    /// VoiceOver cannot show its menu (ADR-0062).
+    @ViewBuilder func capsuleMenu() -> some View {
+        #if os(macOS)
+            buttonStyle(.plain)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(.quaternary, in: .capsule)
+                .fixedSize()
+        #else
+            capsuleButton().fixedSize()
+        #endif
+    }
+}
+
 extension Color {
     /// For small text that must stay readable: darker than the system's secondary grey, which is too faint for it.
     static let strongSecondary = Color.primary.opacity(0.7)

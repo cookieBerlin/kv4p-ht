@@ -104,6 +104,7 @@ struct APRSPacketList: View {
     private var filterBar: some View {
         AdaptiveStack(spacing: 8) {
             TextField("Callsign", text: $search, prompt: Text("Callsign"))
+                .macName("Callsign")
                 .textFieldStyle(.roundedBorder)
                 #if os(iOS)
                     .textInputAutocapitalization(.characters)
@@ -215,6 +216,7 @@ struct APRSPacketList: View {
                 }
             }
         }
+        .macName("Packets")
         .overlay {
             if events.isEmpty, !model.hasMoreAPRSHistory(in: list) {
                 emptyState
@@ -306,8 +308,7 @@ struct APRSPacketList: View {
             Image(systemName: "ellipsis")
         }
         .menuIndicator(.hidden)
-        .capsuleButton()
-        .fixedSize()
+        .capsuleMenu()
         .accessibilityLabel("More for this packet")
     }
 

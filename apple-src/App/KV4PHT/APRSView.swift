@@ -94,7 +94,7 @@ struct APRSView: View {
     private var recipientField: some View {
         // iOS: a phone has room for the short label only.
         #if os(macOS)
-            TextField("To (empty: bulletin)", text: $model.aprsRecipient)
+            TextField("To (empty: bulletin)", text: $model.aprsRecipient).macName("To")
         #else
             TextField("To", text: $model.aprsRecipient)
         #endif
@@ -102,6 +102,7 @@ struct APRSView: View {
 
     private var messageField: some View {
         TextField("Message", text: $text)
+            .macName("Message")
             .focused($isWriting)
             .onSubmit(send)
     }

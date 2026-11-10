@@ -12,3 +12,6 @@ INFOPLIST_FILE[sdk=macosx*] =
 CODE_SIGN_ENTITLEMENTS =
 CODE_SIGN_ENTITLEMENTS[sdk=iphone*] =
 CODE_SIGN_ENTITLEMENTS[sdk=macosx*] =
+// Signed ad hoc on the Mac, the test runner must load the test bundle without library validation, which the hardened
+// runtime of the app would ask for.
+ENABLE_HARDENED_RUNTIME = NO

@@ -40,6 +40,7 @@ struct APRSChatsView: View {
                 .buttonStyle(.plain)
             }
         }
+        .macName("Chats")
         .alert("New chat", isPresented: $isStartingChat) {
             TextField("Callsign", text: $newCallsign)
                 .autocorrectionDisabled()
@@ -130,6 +131,7 @@ private struct APRSConversationView: View {
                 LazyVStack(spacing: 6) {
                     ForEach(model.messages(with: peer)) { bubble($0) }
                 }
+                .macName("Messages")
                 .padding(8)
             }
             .defaultScrollAnchor(.bottom)
@@ -160,6 +162,7 @@ private struct APRSConversationView: View {
         if model.canSendOnAir {
             AdaptiveStack {
                 TextField("Message", text: $text, axis: .vertical)
+                    .macName("Message")
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...4)
                     .focused($isWriting)

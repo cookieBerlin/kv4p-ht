@@ -16,6 +16,7 @@ struct SettingsView: View {
             NavigationSplitView {
                 List(pages, selection: $selection) { page in
                     Label(page.title, systemImage: page.systemImage).tag(page)
+                        .accessibilityIdentifier(page.testIdentifier)
                 }
                 .navigationSplitViewColumnWidth(180)
                 .toolbar(removing: .sidebarToggle)
@@ -68,8 +69,7 @@ struct SettingsView: View {
             NavigationLink(value: SettingsDestination.page(page)) {
                 Label(page.title, systemImage: page.systemImage)
             }
-            // For the UI tests, as "Memories" and "APRS" also name pages of the bar below (ADR-0062).
-            .accessibilityIdentifier("settings-\(page.title)")
+            .accessibilityIdentifier(page.testIdentifier)
         }
     #endif
 
@@ -303,4 +303,9 @@ struct FirmwareElsewhereNotice: View {
             }
         }
     }
+}
+
+extension SettingsPage {
+    /// For the UI tests, as "Memories" and "APRS" also name pages of the main window (ADR-0062).
+    fileprivate var testIdentifier: String { "settings-\(title)" }
 }
