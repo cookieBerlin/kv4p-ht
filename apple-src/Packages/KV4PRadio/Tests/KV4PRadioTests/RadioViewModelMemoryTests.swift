@@ -135,18 +135,18 @@ struct RadioViewModelMemoryTests {
     func importCSV() async throws {
         let repository = try SwiftDataMemoryRepository.inMemory()
         let model = await connected(repository)
-        await model.importRepeaterBook(Self.csv, group: "Trip")
+        await model.importRepeaters(Self.csv, of: .repeaterBook, group: "Trip")
         #expect(model.memories.map(\.name) == ["N1CALL • Sample Town"])
         #expect(model.groups == ["Trip"])
         #expect(model.message == "Imported 1 repeater.")
-        await model.importRepeaterBook("Name\nA", group: "")
+        await model.importRepeaters("Name\nA", of: .repeaterBook, group: "")
         #expect(model.message == "This file is not a RepeaterBook CSV export.")
     }
 
     @Test("importing needs the radio's frequency range")
     func importNeedsRadio() async throws {
         let model = Self.model(try SwiftDataMemoryRepository.inMemory())
-        await model.importRepeaterBook(Self.csv, group: "")
+        await model.importRepeaters(Self.csv, of: .repeaterBook, group: "")
         #expect(model.message == "Connect the radio first, so that only repeaters it can receive are imported.")
         #expect(model.memories.isEmpty)
     }

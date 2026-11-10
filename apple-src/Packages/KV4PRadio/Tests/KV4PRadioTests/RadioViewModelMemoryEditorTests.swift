@@ -157,13 +157,13 @@ struct RadioViewModelMemoryEditorTests {
         _ = try await repository.insert([ChannelMemory(name: "N2CALL • Other Town", frequency: 146.94, group: "Trip")])
         let model = RadioViewModelMemoryTests.model(repository)
         await model.loadMemories()
-        #expect(model.importPreview(Self.csv, group: "Trip") == nil)  // no radio yet
+        #expect(model.importPreview(Self.csv, of: .repeaterBook, group: "Trip") == nil)  // no radio yet
         #expect(!model.canImportRepeaters)
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
         #expect(model.canImportRepeaters)
 
-        let inTrip = try #require(model.importPreview(Self.csv, group: "Trip"))
+        let inTrip = try #require(model.importPreview(Self.csv, of: .repeaterBook, group: "Trip"))
         #expect(inTrip.memories.map(\.name) == ["N1CALL • Sample Town"])
         #expect(inTrip.outOfRange == 1)
         #expect(inTrip.duplicates == 2)
@@ -171,7 +171,7 @@ struct RadioViewModelMemoryEditorTests {
             inTrip.summary == "1 repeater to import. Left out: 1 outside the radio's range, 2 already in this group."
         )
 
-        let elsewhere = try #require(model.importPreview(Self.csv, group: "Other"))
+        let elsewhere = try #require(model.importPreview(Self.csv, of: .repeaterBook, group: "Other"))
         #expect(elsewhere.memories.count == 2)
         #expect(elsewhere.duplicates == 1)
         #expect(
@@ -179,12 +179,12 @@ struct RadioViewModelMemoryEditorTests {
                 == "2 repeaters to import. Left out: 1 outside the radio's range, 1 already in this group."
         )
 
-        #expect(model.importPreview("Name\nA", group: "") == nil)
+        #expect(model.importPreview("Name\nA", of: .repeaterBook, group: "") == nil)
     }
 
     @Test("a plain file has nothing left out")
     func previewPlain() {
-        let preview = RepeaterBookPreview(memories: [], outOfRange: 0, duplicates: 0)
+        let preview = RepeaterImportPreview(memories: [], outOfRange: 0, duplicates: 0, otherModes: 0)
         #expect(preview.summary == "0 repeaters to import.")
     }
 
@@ -195,11 +195,29 @@ struct RadioViewModelMemoryEditorTests {
         await model.loadMemories()
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
-        await model.importRepeaterBook(Self.csv, group: "Trip")
+        await model.importRepeaters(Self.csv, of: .repeaterBook, group: "Trip")
         #expect(model.memories.count == 2)
         #expect(model.message == "Imported 2 repeaters.")
-        await model.importRepeaterBook(Self.csv, group: "Trip")
+        await model.importRepeaters(Self.csv, of: .repeaterBook, group: "Trip")
         #expect(model.memories.count == 2)
         #expect(model.message == "Imported 0 repeaters.")
+    }
+
+    @Test("a DARC list is previewed and imported as repeaters and beacons")
+    func importDARC() async throws {
+        let model = RadioViewModelMemoryTests.model(try SwiftDataMemoryRepository.inMemory())
+        await model.loadMemories()
+        #expect(model.importPreview(DARCImportTests.list, of: .darc, group: "") == nil)  // no radio yet
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
+        let preview = try #require(model.importPreview(DARCImportTests.list, of: .darc, group: "Trip"))
+        #expect(preview.memories.count == 5)
+        #expect(model.importPreview(Self.csv, of: .darc, group: "Trip") == nil)
+        #expect(model.importPreview(DARCImportTests.list, of: .repeaterBook, group: "Trip") == nil)
+        await model.importRepeaters(DARCImportTests.list, of: .darc, group: "Trip")
+        #expect(model.message == "Imported 4 repeaters and 1 beacon.")
+        #expect(model.memories.map(\.kind) == [.repeater, .beacon, .repeater, .repeater, .repeater])
+        await model.importRepeaters(Self.csv, of: .darc, group: "Trip")
+        #expect(model.message == "This file is not a DARC repeater list.")
     }
 }
