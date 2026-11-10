@@ -17,6 +17,7 @@ struct MemoriesView: View {
             if let hidden = model.hiddenMemoriesText {
                 Text(hidden)
                     .font(.footnote)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(Color.strongSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
