@@ -28,7 +28,15 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
   exception for each finding it lets pass, so that the list here and the code stay in step. A busy simulator lets an
   audit run out of time now and then; it then runs one kind of check at a time, each up to three times. The check of
   Dynamic Type always runs on its own: together with the others it flags text that grows, such as all of a chat.
-- **The Mac follows in 3.7c,** as there the test runner must be signed and the user allows it to control the app once.
+- **The Mac since 3.7c, with `make a11y-mac`:** the same test, run by hand only, as it takes over the mouse and the
+  keyboard. Its own kinds of check stand in for Dynamic Type, clipped text and traits, which the Mac does not have: the
+  actions of an element and the match of parent and child. It goes through the main window, the chats and a chat, each
+  page of the settings window by its sidebar, and the About window. The test runner is signed ad hoc, without a team,
+  and without the hardened runtime, which would not let it load the tests; it is built outside the checkout, as macOS
+  asks each new build for access to a folder such as Documents. Screenshots show the app's window only, cut out of the
+  screen, which shows whatever else is open; for the same reason the scheme keeps no attachments of its own, such as
+  screen recordings, and the test fails on its findings at the end rather than through issues of XCTest, which would
+  attach the whole screen. macOS opens the windows of the last run again; the test closes the About window first.
 
 ### Exceptions
 
@@ -40,7 +48,7 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
    screenshot of the screen, its lightest against its darkest pixel, and lets it pass at 4.5:1 or more, with the value
    in the log. The element's frame may hold more than its text, so this is its best case; a light text on a light
    background still fails. A row that a list scrolls below a bar is covered and has nothing to read; the test knows it
-   as it cannot be tapped.
+   as it cannot be tapped, or as it sticks out of its list.
 3. **Dynamic Type of the header, the page bar and PTT:** kept small on purpose. The header grows up to the second
    accessibility size, like an instrument whose frequency has a size of its own; the symbols of the page bar keep
    their size, and a long press shows them large instead; PTT has a limit of its own.
@@ -51,11 +59,19 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
    cut.
 7. **Findings without an element:** the audit names no element, so none can be matched or fixed; the screenshot of the
    screen is checked instead.
-- **The Mac follows in 3.7c,** as there the test runner must be signed and the user allows it to control the app once.
+8. **Mac: the action "show menu" of a pop-up button:** SwiftUI's pickers offer "press" only, which opens their menu
+   all the same. Menus of the app's own keep both: in a bordered style SwiftUI drops "show menu", so a menu in the look of
+   a capsule is drawn around a plain one on the Mac.
+9. **Mac: groups without a name as high as a window:** the containers SwiftUI puts around a window's content and its
+   sidebar column.
+10. **Mac: the knob of a slider:** a part of AppKit's own, without a name; the slider has it.
+11. **Mac: contrast in a window behind the front one, or cut off at its edge:** macOS dims a window that is not in front.
+12. **Mac: the header of a section in the list of groups of memories:** SwiftUI shows it as a group without a name and
+    not as a child of its parent.
 
 ## Consequences
 
-- A run takes about ten minutes for each simulator. The simulators run one after the other and nothing else should
+- A run takes about ten minutes for each simulator, and about seven on the Mac. The simulators run one after the other and nothing else should
   run beside them: on a fully loaded machine the audit can catch a screen before its text has grown, and flag it.
 - The audit only finds what a machine can see; a screen it does not reach is not checked.
 - The exceptions are kept narrow, by kind of check, element and screen. A new screen or control that the audit flags

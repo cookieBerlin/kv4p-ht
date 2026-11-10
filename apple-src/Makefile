@@ -19,7 +19,7 @@ APP_PROJECT := App/KV4PHT.xcodeproj
 APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci a11y
+.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci a11y a11y-mac
 
 test:
 	$(SWIFT) test
@@ -80,6 +80,10 @@ app:
 A11Y_DEVICES ?= iPhone 18 Pro,iPad Pro 11-inch (M5)
 a11y:
 	scripts/a11y.sh '$(APP_PROJECT)' '$(A11Y_DEVICES)'
+
+# The same audit on this Mac. It takes over the mouse and the keyboard while it runs, so it is started by hand only.
+a11y-mac:
+	scripts/a11y.sh '$(APP_PROJECT)' 'Mac'
 
 # Signed iOS and macOS builds, uploaded to App Store Connect for TestFlight (ADR-0035). Needs TEAM_ID in the environment and the
 # account in Xcode; DRY_RUN=1 makes an unsigned dry run. Not part of `ci`.

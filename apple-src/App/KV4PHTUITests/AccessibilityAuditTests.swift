@@ -1,5 +1,10 @@
 import XCTest
 
+#if os(macOS)
+    import ImageIO
+    import UniformTypeIdentifiers
+#endif
+
 /// Apple's accessibility audit on every screen of the app, in its demo mode (ADR-0062). A finding fails the test unless
 /// it is one of the exceptions the ADR names. Each one that fails is listed with a line that starts with `A11Y`, which
 /// `make a11y` collects.
@@ -18,7 +23,11 @@ final class AccessibilityAuditTests: XCTestCase {
     }
 
     func testLargestTextSize() throws {
-        try runAudit(textSize: "UICTContentSizeCategoryAccessibilityXXXL")
+        #if os(macOS)
+            throw XCTSkip("The Mac has no Dynamic Type")
+        #else
+            try runAudit(textSize: "UICTContentSizeCategoryAccessibilityXXXL")
+        #endif
     }
 
     private func runAudit(textSize: String?) throws {
@@ -30,6 +39,10 @@ final class AccessibilityAuditTests: XCTestCase {
         app.launch()
         let size = textSize == nil ? "default" : "largest"
         XCTAssertTrue(waitForStart(), "The app did not start")
+        #if os(macOS)
+            // The Mac opens the windows of the last run again, such as the About window.
+            closeAbout()
+        #endif
         try audit("\(size) memories")
         tapPage("Packets")
         try audit("\(size) packets")
@@ -37,29 +50,26 @@ final class AccessibilityAuditTests: XCTestCase {
         try audit("\(size) chats")
         let chat = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'N1CALL'")).firstMatch
         if chat.waitForExistence(timeout: 2) {
-            chat.tap()
+            chat.press()
             try audit("\(size) chat")
-            app.buttons["chat-back"].firstMatch.tap()
+            let back = app.buttons["chat-back"].firstMatch
+            if back.waitForExistence(timeout: 2) {
+                back.press()
+            } else {
+                let finding = "A11Y \(size) chat: did not open"
+                print(finding)
+                findings.append(finding)
+            }
         }
         tapPage("Settings")
         try audit("\(size) settings")
         // In the list of the settings, as "Memories" and "APRS" also name pages of the bar below.
         for page in ["Station", "Radio", "Transmit", "Audio", "APRS", "Memories", "Simulator", "Logging"] {
-            let link = app.buttons["settings-\(page)"].firstMatch
-            switch reveal(link) {
-            case .onScreen: break
-            case .notOffered: continue
-            case .notReached:
-                let finding = "A11Y \(size) settings \(page): not reached"
-                print(finding)
-                findings.append(finding)
-                continue
-            }
-            link.tap()
-            try audit("\(size) settings \(page)")
-            let back = app.navigationBars.buttons["Settings"].firstMatch
-            if back.waitForExistence(timeout: 2) { back.tap() }
+            try auditSettings(page, size: size)
         }
+        #if os(macOS)
+            try auditAbout()
+        #endif
         let report = findings.isEmpty ? "A11Y \(size): no findings" : findings.joined(separator: "\n")
         XCTAssertTrue(findings.isEmpty, "\(findings.count) findings with \(size) text")
         let attachment = XCTAttachment(string: report)
@@ -68,13 +78,73 @@ final class AccessibilityAuditTests: XCTestCase {
         add(attachment)
     }
 
+    #if os(macOS)
+        /// A page of the settings window, chosen in its sidebar.
+        private func auditSettings(_ page: String, size: String) throws {
+            let row = app.descendants(matching: .any)["settings-\(page)"].firstMatch
+            guard row.waitForExistence(timeout: 2) else {
+                // A page without anything to set has no row, such as the simulator's without the simulator; the first
+                // page always has one, or the sidebar cannot be found.
+                guard page != "Station" else {
+                    let finding = "A11Y \(size) settings: no sidebar"
+                    print(finding)
+                    findings.append(finding)
+                    return
+                }
+                print("A11Y-NOT-OFFERED \(size) settings \(page)")
+                return
+            }
+            row.click()
+            Thread.sleep(forTimeInterval: 1)
+            try audit("\(size) settings \(page)")
+        }
+
+        /// The About window, which the app menu opens: the first menu after Apple's.
+        private func auditAbout() throws {
+            app.activate()
+            app.menuBars.menuBarItems.element(boundBy: 1).click()
+            app.menuItems["About kv4p HT"].firstMatch.click()
+            XCTAssertTrue(app.windows["About kv4p HT"].waitForExistence(timeout: 5), "The About window did not open")
+            try audit("default about")
+            closeAbout()
+        }
+
+        private func closeAbout() {
+            let close = app.windows["About kv4p HT"].buttons[XCUIIdentifierCloseWindow]
+            if close.exists { close.click() }
+        }
+    #else
+        /// A page of the settings, opened from their list and closed again.
+        private func auditSettings(_ page: String, size: String) throws {
+            let link = app.buttons["settings-\(page)"].firstMatch
+            switch reveal(link) {
+            case .onScreen: break
+            case .notOffered: return
+            case .notReached:
+                let finding = "A11Y \(size) settings \(page): not reached"
+                print(finding)
+                findings.append(finding)
+                return
+            }
+            link.tap()
+            try audit("\(size) settings \(page)")
+            let back = app.navigationBars.buttons["Settings"].firstMatch
+            if back.waitForExistence(timeout: 2) { back.tap() }
+        }
+    #endif
+
     /// The page bar of a phone; elsewhere the memories and APRS stand side by side, APRS switches between the packets
     /// and the chats, and the settings open from the toolbar.
     private func tapPage(_ title: String) {
         let pageButton = app.buttons["page-\(title)"].firstMatch
         if !pageButton.exists, title == "Packets" || title == "Chats" {
-            // With unread messages, the switch says how many, as "Chats (2)".
-            app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch.tap()
+            // With unread messages, the switch says how many, as "Chats (2)". The Mac shows its parts as radio buttons.
+            let part = NSPredicate(format: "label BEGINSWITH %@", title)
+            #if os(macOS)
+                app.radioButtons.matching(part).firstMatch.click()
+            #else
+                app.buttons.matching(part).firstMatch.tap()
+            #endif
         } else if pageButton.exists {
             pageButton.tap()
             // The pages scroll into place; an audit before that sees two halves.
@@ -82,30 +152,36 @@ final class AccessibilityAuditTests: XCTestCase {
             _ = XCTWaiter.wait(for: [expectation(for: selected, evaluatedWith: pageButton)], timeout: 5)
             Thread.sleep(forTimeInterval: 1)
         } else if title == "Settings" {
-            app.buttons["Settings"].firstMatch.tap()
+            #if os(macOS)
+                app.typeKey(",", modifierFlags: .command)
+            #else
+                app.buttons["Settings"].firstMatch.tap()
+            #endif
         }
     }
 
-    /// Scrolls the settings until the link is on screen: the list makes rows out of sight only once they come near,
-    /// and after a page, the list may stand below or above the next link. The swipe starts in the middle of the screen,
-    /// as the pages beside it hold lists too.
-    private func reveal(_ link: XCUIElement) -> Reveal {
-        var wasSeen = false
-        for isDown in [false, true] {
-            for _ in 0..<8 {
-                wasSeen = wasSeen || link.exists
-                if link.exists, link.isHittable { return .onScreen }
-                if isDown { app.swipeDown() } else { app.swipeUp() }
+    #if os(iOS)
+        /// Scrolls the settings until the link is on screen: the list makes rows out of sight only once they come near,
+        /// and after a page, the list may stand below or above the next link. The swipe starts in the middle of the screen,
+        /// as the pages beside it hold lists too.
+        private func reveal(_ link: XCUIElement) -> Reveal {
+            var wasSeen = false
+            for isDown in [false, true] {
+                for _ in 0..<8 {
+                    wasSeen = wasSeen || link.exists
+                    if link.exists, link.isHittable { return .onScreen }
+                    if isDown { app.swipeDown() } else { app.swipeUp() }
+                }
             }
+            if link.exists, link.isHittable { return .onScreen }
+            // A page without anything to set on this device, such as the audio on an iPad, has no link.
+            return wasSeen || link.exists ? .notReached : .notOffered
         }
-        if link.exists, link.isHittable { return .onScreen }
-        // A page without anything to set on this device, such as the audio on an iPad, has no link.
-        return wasSeen || link.exists ? .notReached : .notOffered
-    }
 
-    private enum Reveal {
-        case onScreen, notOffered, notReached
-    }
+        private enum Reveal {
+            case onScreen, notOffered, notReached
+        }
+    #endif
 
     /// The page bar on a phone, or PTT elsewhere, whatever the text size.
     private func waitForStart() -> Bool {
@@ -124,7 +200,11 @@ final class AccessibilityAuditTests: XCTestCase {
     /// findings says so, to show that it was checked.
     private func audit(_ screen: String) throws {
         // To judge a finding by looking at the screen; `make a11y` exports them.
-        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        #if os(macOS)
+            let screenshot = windowScreenshot()
+        #else
+            let screenshot = XCTAttachment(screenshot: app.screenshot())
+        #endif
         screenshot.name = screen
         screenshot.lifetime = .keepAlways
         add(screenshot)
@@ -137,16 +217,49 @@ final class AccessibilityAuditTests: XCTestCase {
                 try runAuditRetrying(screen, type)
             }
         }
-        // On its own: together with the other kinds, it flags text that grows, such as all of a chat.
-        try runAuditRetrying(screen, .dynamicType)
+        #if os(iOS)
+            // On its own: together with the other kinds, it flags text that grows, such as all of a chat.
+            try runAuditRetrying(screen, .dynamicType)
+        #endif
         if findings.count == before {
             print("A11Y \(screen): no findings")
         }
     }
 
-    private static let eachAuditType: [XCUIAccessibilityAuditType] = [
-        .contrast, .elementDetection, .hitRegion, .sufficientElementDescription, .textClipped, .trait,
-    ]
+    #if os(macOS)
+        /// The front window, cut out of the screen, which shows whatever else is open. The test runner cannot take a
+        /// window on its own.
+        private func windowScreenshot() -> XCTAttachment {
+            let data = NSMutableData()
+            let frame = app.windows.firstMatch.frame
+            if let image = XCUIScreen.main.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+                let scale = screenScale(of: image),
+                let window = image.cropping(to: frame.applying(CGAffineTransform(scaleX: scale, y: scale)).integral),
+                let png = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)
+            {
+                CGImageDestinationAddImage(png, window, nil)
+                CGImageDestinationFinalize(png)
+            }
+            return XCTAttachment(data: data as Data, uniformTypeIdentifier: UTType.png.identifier)
+        }
+
+        /// The pixels of the main screen for each point: its menu bar spans it, and the test runner cannot ask AppKit.
+        private func screenScale(of image: CGImage) -> CGFloat? {
+            let width = app.menuBars.firstMatch.frame.width
+            return width > 0 ? CGFloat(image.width) / width : nil
+        }
+    #endif
+
+    /// The kinds of check of each platform, but Dynamic Type, which runs on its own.
+    #if os(macOS)
+        private static let eachAuditType: [XCUIAccessibilityAuditType] = [
+            .contrast, .elementDetection, .hitRegion, .sufficientElementDescription, .action, .parentChild,
+        ]
+    #else
+        private static let eachAuditType: [XCUIAccessibilityAuditType] = [
+            .contrast, .elementDetection, .hitRegion, .sufficientElementDescription, .textClipped, .trait,
+        ]
+    #endif
     private static let auditTypes = XCUIAccessibilityAuditType(eachAuditType)
     /// The error of an audit that ran out of time.
     private static let timedOut = -56
@@ -179,14 +292,20 @@ final class AccessibilityAuditTests: XCTestCase {
             // At once, so that a run that stops early keeps what it found.
             print(finding)
             self.findings.append(finding)
-            return false
+            // Handled here, as the test fails on its findings at the end: an issue of XCTest would attach a screenshot of
+            // the whole screen, which on the Mac shows whatever else is open.
+            return true
         }
     }
 
     private static func describe(_ issue: XCUIAccessibilityAuditIssue) -> String {
         // Without an element, the long description tells where it is.
+        // The Mac names many elements by nothing but their place.
         let element =
-            issue.element.map { "\(name(of: $0.elementType)) '\($0.label)'" }
+            issue.element.map { element in
+                let identifier = element.identifier.isEmpty ? "" : " #\(element.identifier)"
+                return "\(name(of: element.elementType)) '\(element.label)'\(identifier) at \(element.frame)"
+            }
             ?? "no element: \(issue.detailedDescription)"
         return "\(name(of: issue.auditType)) — \(issue.compactDescription) — \(element)"
     }
@@ -198,14 +317,22 @@ final class AccessibilityAuditTests: XCTestCase {
         let label = issue.element?.label ?? ""
         let elementType = issue.element?.elementType
         let isContrast = issue.auditType == .contrast
-        let isDynamicType = issue.auditType == .dynamicType
+        #if os(macOS)
+            let isDynamicType = false
+            let isTrait = false
+            let isTextClipped = false
+        #else
+            let isDynamicType = issue.auditType == .dynamicType
+            let isTrait = issue.auditType == .trait
+            let isTextClipped = issue.auditType == .textClipped
+        #endif
         // 1. Apple's secondary grey, a little below the line, also in the footers of the settings.
         if isContrast, issue.compactDescription.contains("nearly passed") { return 1 }
         if isContrast, screen.contains("settings"), elementType == .staticText { return 1 }
         // 2. Enough contrast on the screenshot: the audit misreads the background now and then, such as the material of a
         // bar. Or none to read: a row that a list scrolls below a bar is covered, and cannot be tapped either.
         if isContrast, let element = issue.element {
-            if !element.isHittable {
+            if !element.isHittable || isCutOff(element) {
                 print("A11Y-COVERED \(screen): \(label)")
                 return 2
             }
@@ -219,14 +346,56 @@ final class AccessibilityAuditTests: XCTestCase {
         // 4. SwiftUI's text fields, whose text grows on the screenshots.
         if isDynamicType, elementType == .textField { return 4 }
         // 5. SwiftUI's disabled choices, which VoiceOver reads as dimmed all the same.
-        if issue.auditType == .trait, issue.compactDescription.contains("NotEnabled") { return 5 }
+        if isTrait, issue.compactDescription.contains("NotEnabled") { return 5 }
         // 6. The rows of SwiftUI's lists and forms, which wrap on the screenshots rather than being cut.
-        if isDynamicType || issue.auditType == .textClipped, screen.contains("settings") || label == "New chat" {
+        if isDynamicType || isTextClipped, screen.contains("settings") || label == "New chat" {
             return 6
         }
         // 7. Findings without an element, which no screen element can be matched to.
         if issue.element == nil { return 7 }
+        #if os(macOS)
+            if let element = issue.element, let exception = macException(for: issue, element, on: screen) {
+                return exception
+            }
+        #endif
         return nil
+    }
+
+    #if os(macOS)
+        /// The exceptions of the Mac, where SwiftUI and AppKit add parts of their own.
+        private func macException(for issue: XCUIAccessibilityAuditIssue, _ element: XCUIElement, on screen: String)
+            -> Int?
+        {
+            let isUnnamedGroup = element.elementType == .group && element.label.isEmpty
+            let isDescription = issue.auditType == .sufficientElementDescription
+            // 8. SwiftUI's pop-up buttons, which VoiceOver opens by showing their menu rather than by pressing them.
+            if issue.auditType == .action, element.elementType == .popUpButton { return 8 }
+            // 9. The groups that SwiftUI puts around the content of a window and its columns, as high as the window.
+            if isDescription, isUnnamedGroup, isAsHighAsAWindow(element) { return 9 }
+            // 10. The knob of a slider, a part of AppKit's own; the slider has the name.
+            if isDescription, element.elementType == .valueIndicator { return 10 }
+            // 11. Text in a window behind the front one, which macOS dims, or cut off at the front one's edge.
+            if issue.auditType == .contrast, !app.windows.firstMatch.frame.contains(element.frame) { return 11 }
+            // 12. The header of a section of a SwiftUI list, the one of the groups of memories.
+            if isDescription || issue.auditType == .parentChild, isUnnamedGroup, screen.hasSuffix("settings Memories") {
+                return 12
+            }
+            return nil
+        }
+
+        private func isAsHighAsAWindow(_ element: XCUIElement) -> Bool {
+            app.windows.allElementsBoundByIndex.contains { window in
+                window.frame.minY == element.frame.minY && window.frame.height == element.frame.height
+            }
+        }
+    #endif
+
+    /// A row that sticks out of its list, below a bar: still hittable by the part that shows.
+    private func isCutOff(_ element: XCUIElement) -> Bool {
+        let lists = app.collectionViews.allElementsBoundByIndex + app.tables.allElementsBoundByIndex
+        return lists.contains { list in
+            list.frame.intersects(element.frame) && !list.frame.contains(element.frame)
+        }
     }
 
     /// WCAG's minimum for text, which the audit's contrast check stands for.
@@ -235,12 +404,19 @@ final class AccessibilityAuditTests: XCTestCase {
     /// The contrast of an element on a screenshot: its lightest against its darkest pixel, which for text is the text
     /// against its background. Its frame may hold more than that, so this is the best case of the element.
     private func measuredContrast(of element: XCUIElement) -> Double? {
-        // Taken now, as a list may have moved since the screen was opened.
-        guard let image = app.screenshot().image.cgImage, app.frame.width > 0 else { return nil }
-        let scale = CGFloat(image.width) / app.frame.width
+        // Taken now, as a list may have moved since the screen was opened. The frame is on the screen; the screenshot
+        // shows the app's window, which an iPad may place elsewhere, or on the Mac the whole main screen.
+        #if os(macOS)
+            // The main screen spans its menu bar, and the frames start at its top left corner.
+            let image = XCUIScreen.main.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+            let window = app.menuBars.firstMatch.frame
+        #else
+            let image = app.screenshot().image.cgImage
+            let window = app.frame
+        #endif
+        guard let image, window.width > 0 else { return nil }
+        let scale = CGFloat(image.width) / window.width
         let bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
-        // The frame is on the screen, the screenshot shows the app's window, which an iPad may place elsewhere.
-        let window = app.frame
         let rect = element.frame.offsetBy(dx: -window.minX, dy: -window.minY)
             .applying(CGAffineTransform(scaleX: scale, y: scale)).integral.intersection(bounds)
         guard !rect.isEmpty, let crop = image.cropping(to: rect),
@@ -296,9 +472,14 @@ final class AccessibilityAuditTests: XCTestCase {
         case .elementDetection: "element detection"
         case .hitRegion: "hit region"
         case .sufficientElementDescription: "description"
-        case .dynamicType: "Dynamic Type"
-        case .textClipped: "text clipped"
-        case .trait: "trait"
+        #if os(macOS)
+            case .action: "action"
+            case .parentChild: "parent and child"
+        #else
+            case .dynamicType: "Dynamic Type"
+            case .textClipped: "text clipped"
+            case .trait: "trait"
+        #endif
         default: "type \(type.rawValue)"
         }
     }
@@ -312,8 +493,25 @@ final class AccessibilityAuditTests: XCTestCase {
         case .switch: "switch"
         case .slider: "slider"
         case .cell: "cell"
+        case .group: "group"
+        case .popUpButton: "pop-up button"
+        case .menuButton: "menu button"
+        case .radioButton: "radio button"
+        case .outline: "outline"
+        case .valueIndicator: "value indicator"
         case .other: "other"
         default: "element \(type.rawValue)"
         }
+    }
+}
+
+extension XCUIElement {
+    /// A tap, or a click on the Mac, where a tap does not press a button.
+    fileprivate func press() {
+        #if os(macOS)
+            click()
+        #else
+            tap()
+        #endif
     }
 }
