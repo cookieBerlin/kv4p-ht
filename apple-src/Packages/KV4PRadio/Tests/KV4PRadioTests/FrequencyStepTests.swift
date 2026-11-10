@@ -138,6 +138,15 @@ struct NumberInputTests {
     func whole() {
         #expect(NumberInput.filtered("6.00,5", allowsSeparator: false) == "6005")
     }
+
+    @Test(
+        "a signed number takes a minus at its start only",
+        arguments: [("-12,5", "-12,5"), ("1-2", "12"), ("--5", "-5"), (" -5", "-5"), ("-", "-"), ("5", "5")]
+    )
+    func signed(text: String, expected: String) {
+        #expect(NumberInput.filtered(text, allowsSeparator: true, allowsSign: true) == expected)
+        #expect(NumberInput.filtered("-5", allowsSeparator: true) == "5")
+    }
 }
 
 @Suite("Scroll steps")

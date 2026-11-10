@@ -115,10 +115,43 @@ struct RadioViewModelMemoryEditorTests {
             (ChannelMemory(name: "A", frequency: 146.52, offset: .up, offsetKHz: -1), "Enter the offset in kHz."),
             (ChannelMemory(name: "A", frequency: 146.52, offset: .none, offsetKHz: -1), nil),
             (ChannelMemory(name: "A", frequency: 146.52), nil),
+            (ChannelMemory(name: "A", frequency: 146.52, latitude: 90, longitude: -180), nil),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 90.5, longitude: 0),
+                "Enter a latitude from -90 to 90."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: .nan, longitude: 0),
+                "Enter a latitude from -90 to 90."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 0, longitude: 181),
+                "Enter a longitude from -180 to 180."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 0, longitude: .nan),
+                "Enter a longitude from -180 to 180."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 0),
+                "Enter both latitude and longitude, or neither."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, longitude: 0),
+                "Enter both latitude and longitude, or neither."
+            ),
         ] as [(ChannelMemory, String?)]
     )
     func problems(memory: ChannelMemory, expected: String?) {
         #expect(RadioViewModelTests.model().memoryProblem(memory) == expected)
+    }
+
+    @Test("the form shows a position in decimal degrees with the separator of the user's language")
+    func shownDegrees() {
+        let model = RadioViewModelTests.model()
+        model.decimalSeparator = ","
+        #expect(model.shownDegrees(-12.5) == "-12,5")
+        #expect(model.shownDegrees(nil) == "")
     }
 
     @Test("with a radio, the frequency must lie in its range")
