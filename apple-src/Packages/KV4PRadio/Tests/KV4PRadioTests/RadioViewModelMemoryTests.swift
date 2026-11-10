@@ -143,12 +143,38 @@ struct RadioViewModelMemoryTests {
         #expect(model.message == "This file is not a RepeaterBook CSV export.")
     }
 
-    @Test("importing needs the radio's frequency range")
-    func importNeedsRadio() async throws {
+    @Test("importing needs no radio")
+    func importWithoutRadio() async throws {
         let model = Self.model(try SwiftDataMemoryRepository.inMemory())
+        await model.loadMemories()
         await model.importRepeaters(Self.csv, of: .repeaterBook, group: "")
-        #expect(model.message == "Connect the radio first, so that only repeaters it can receive are imported.")
-        #expect(model.memories.isEmpty)
+        #expect(model.message == "Imported 1 repeater.")
+        #expect(model.memories.count == 1)
+    }
+
+    @Test("a radio shows only the memories it receives, says what it hides and tunes to no other")
+    func receivable() async throws {
+        let repository = try SwiftDataMemoryRepository.inMemory()
+        let uhf = ChannelMemory(name: "UHF", frequency: 439.1, group: "Local")
+        let other = ChannelMemory(name: "Other", frequency: 438.5)
+        _ = try await repository.insert([Self.local, uhf, other])
+        let model = Self.model(repository)
+        await model.loadMemories()
+        #expect(model.visibleMemories.map(\.name) == [Self.local.name, "UHF", "Other"])  // no radio yet
+        #expect(model.hiddenMemoriesText == nil)
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isReady && $0.snapshot.isInSync })
+        #expect(model.visibleMemories.map(\.name) == [Self.local.name])
+        #expect(model.hiddenMemoriesText == "2 memories for 70 cm are hidden: this radio receives 2 m.")
+        model.selectedGroup = "Local"
+        #expect(model.hiddenMemoriesText == "1 memory for 70 cm is hidden: this radio receives 2 m.")
+        let before = model.snapshot.desired.freqRx
+        await model.tune(to: try #require(model.memories.first { $0.name == "UHF" }))
+        #expect(model.snapshot.desired.freqRx == before)
+        model.selectedGroup = nil
+        await model.delete(try #require(model.memories.first { $0.name == "UHF" }))
+        await model.delete(try #require(model.memories.first { $0.name == "Other" }))
+        #expect(model.hiddenMemoriesText == nil)
     }
 
     @Test("without a repository there are no memories")

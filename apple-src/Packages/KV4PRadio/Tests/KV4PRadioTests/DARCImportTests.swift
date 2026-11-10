@@ -43,21 +43,55 @@ struct DARCImportTests {
         #expect(memories.allSatisfy { $0.group == "Local" && $0.rxTone == "None" && $0.id == 0 })
     }
 
-    @Test("the preview leaves out other modes, what the radio cannot receive and what the group has")
+    @Test("the preview leaves out other modes, other bands and what the group has")
     func preview() throws {
         let existing = [ChannelMemory(name: "N3CALL", frequency: 145.5, group: "Local")]
-        let preview = try #require(
-            DARCImport.preview(fromCSV: Self.list, group: "Local", range: Self.vhf, existing: existing)
-        )
-        #expect(preview.memories.map(\.name) == ["N0CALL", "N2CALL", "N5CALL", "N10CALL"])
+        let preview = try #require(DARCImport.preview(fromCSV: Self.list, group: "Local", existing: existing))
+        #expect(preview.memories.map(\.name) == ["N0CALL", "N1CALL", "N2CALL", "N5CALL", "N10CALL"])
+        #expect(preview.completed.isEmpty)
         #expect(preview.otherModes == 2)
-        #expect(preview.outOfRange == 2)
+        #expect(preview.outOfRange == 1)
         #expect(preview.duplicates == 1)
         #expect(
             preview.summary
-                == "3 repeaters and 1 beacon to import. "
-                + "Left out: 2 of another mode, 2 outside the radio's range, 1 already in this group."
+                == "4 repeaters and 1 beacon to import. "
+                + "Left out: 2 of another mode, 1 outside 2 m and 70 cm, 1 already in this group."
         )
+    }
+
+    @Test("a memory the group has gets what it lacks: a comment and a position, nothing else")
+    func completes() throws {
+        var partial = ChannelMemory(id: 7, name: "N0CALL", frequency: 145.6, group: "Local", comment: "Mine")
+        partial.latitude = 12.5
+        let bare = ChannelMemory(id: 8, name: "N2CALL", frequency: 144.48, txTone: "100", group: "Local")
+        let preview = try #require(
+            DARCImport.preview(fromCSV: Self.list, group: "Local", existing: [partial, bare])
+        )
+        #expect(preview.memories.map(\.name) == ["N1CALL", "N3CALL", "N5CALL", "N10CALL"])
+        var completedPartial = partial
+        completedPartial.longitude = -45.25
+        var completedBare = bare
+        completedBare.comment = "Example beacon"
+        completedBare.latitude = 1 + 6 / 60.0
+        completedBare.longitude = 2 + 12 / 60.0
+        #expect(preview.completed == [completedPartial, completedBare])
+        #expect(preview.duplicates == 0)
+        #expect(preview.summary.hasPrefix("4 repeaters to import, 2 to complete. Left out:"))
+    }
+
+    @Test("new repeaters may get an access tone, beacons and completed memories not")
+    func accessTone() throws {
+        // A memory twice in the group, as two devices may have added it before they synced.
+        let existing = Array(repeating: ChannelMemory(name: "N3CALL", frequency: 145.5, group: "Local"), count: 2)
+        let tone = ImportAccessTone(hz: 1750, lengthMs: 3000)
+        #expect(ImportAccessTone.standard == tone)
+        let preview = try #require(
+            DARCImport.preview(fromCSV: Self.list, group: "Local", existing: existing, accessTone: tone)
+        )
+        let repeaters = preview.memories.filter { $0.kind == .repeater }
+        #expect(repeaters.count == 4)
+        #expect(repeaters.allSatisfy { $0.accessToneHz == 1750 && $0.accessToneLengthMs == 3000 })
+        #expect(preview.memories.filter { $0.kind == .beacon }.allSatisfy { $0.accessToneHz == nil })
     }
 
     @Test("a file that is not a DARC list is refused, an empty one has nothing")
@@ -67,12 +101,13 @@ struct DARCImportTests {
         // A list with only the first columns: no mode is FM.
         let short = DARCImport.memories(fromCSV: "Call;QRG;Input\nN0CALL;145,600;145,000", group: "")
         #expect(short?.memories.map(\.offset) == [.down])
-        #expect(DARCImport.preview(fromCSV: "Name;QRG", group: "", range: Self.vhf, existing: []) == nil)
+        #expect(DARCImport.preview(fromCSV: "Name;QRG", group: "", existing: []) == nil)
     }
 
     @Test("the columns are found by their place, as the export may spell a name wrongly")
     func brokenHeader() throws {
-        let list = "Call;QRG;Input;Locator;Info;Breite;L\u{0444}nge;CTCSS;Mode/Node;Entfernung zu AA00AA\n"
+        let list =
+            "Call;QRG;Input;Locator;Info;Breite;L\u{0444}nge;CTCSS;Mode/Node;Entfernung zu AA00AA\n"
             + "N0CALL;145,600;145,000;AA00AA;;12°30'N;45°15'W;;;\n"
         let memory = try #require(DARCImport.memories(fromCSV: list, group: "")?.memories.first)
         #expect(memory.latitude == 12.5)
@@ -125,5 +160,13 @@ struct RepeaterImportTests {
         #expect(preview([beacon, beacon]).summary == "2 beacons to import. Left out: 1 of another mode.")
         #expect(preview([repeater, repeater]).imported == "2 repeaters")
         #expect(preview([repeater, beacon]).imported == "1 repeater and 1 beacon")
+        let completing = RepeaterImportPreview(
+            memories: [],
+            completed: [repeater],
+            outOfRange: 2,
+            duplicates: 0,
+            otherModes: 0
+        )
+        #expect(completing.summary == "0 repeaters to import, 1 to complete. Left out: 2 outside 2 m and 70 cm.")
     }
 }
