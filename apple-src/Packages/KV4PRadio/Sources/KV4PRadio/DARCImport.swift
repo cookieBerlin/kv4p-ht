@@ -7,6 +7,11 @@ public enum DARCImport {
     private static let header = "Call;QRG;Input"
     private static let separator: Character = ";"
 
+    /// The columns by their place; the export misspells a name now and then, as "Länge" with a Cyrillic letter.
+    private enum Column: Int {
+        case call, qrg, input, locator, info, latitude, longitude, ctcss, mode
+    }
+
     /// The new memories of `group` from a list; `nil` if the file is not one.
     public static func preview(
         fromCSV text: String,
@@ -31,31 +36,28 @@ public enum DARCImport {
         let records = RepeaterImport.records(text)
         guard let header = records.first else { return ([], 0) }
         guard header.hasPrefix(Self.header) else { return nil }
-        let names = RepeaterImport.columns(header, separator: separator)
         var otherModes = 0
         let memories = records.dropFirst().compactMap { record -> ChannelMemory? in
             let values = RepeaterImport.columns(record, separator: separator)
-            let column = { (name: String) in
-                names.firstIndex(of: name).flatMap { values.indices.contains($0) ? values[$0] : nil } ?? ""
-            }
-            guard values.count >= 3, let frequency = number(column("QRG")) else { return nil }
-            guard isFM(column("Mode/Node")) else {
+            let column = { (column: Column) in values.indices.contains(column.rawValue) ? values[column.rawValue] : "" }
+            guard values.count >= 3, let frequency = number(column(.qrg)) else { return nil }
+            guard isFM(column(.mode)) else {
                 otherModes += 1
                 return nil
             }
             var memory = ChannelMemory(
-                name: column("Call"),
+                name: column(.call),
                 frequency: Float(frequency),
                 offset: .none,
                 offsetKHz: 0,
-                txTone: CTCSS.normalize(number(column("CTCSS")).map { String($0) } ?? ""),
+                txTone: CTCSS.normalize(number(column(.ctcss)).map { String($0) } ?? ""),
                 group: group,
                 kind: .repeater,
-                comment: column("Info"),
-                latitude: degrees(column("Breite")),
-                longitude: degrees(column("Länge"))
+                comment: column(.info),
+                latitude: degrees(column(.latitude)),
+                longitude: degrees(column(.longitude))
             )
-            let input = column("Input")
+            let input = column(.input)
             if input.caseInsensitiveCompare("Beacon") == .orderedSame {
                 memory.kind = .beacon
             } else if let input = number(input) {
