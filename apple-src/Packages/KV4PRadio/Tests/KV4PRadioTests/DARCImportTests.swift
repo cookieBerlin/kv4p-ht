@@ -70,6 +70,15 @@ struct DARCImportTests {
         #expect(DARCImport.preview(fromCSV: "Name;QRG", group: "", range: Self.vhf, existing: []) == nil)
     }
 
+    @Test("the columns are found by their place, as the export may spell a name wrongly")
+    func brokenHeader() throws {
+        let list = "Call;QRG;Input;Locator;Info;Breite;L\u{0444}nge;CTCSS;Mode/Node;Entfernung zu AA00AA\n"
+            + "N0CALL;145,600;145,000;AA00AA;;12°30'N;45°15'W;;;\n"
+        let memory = try #require(DARCImport.memories(fromCSV: list, group: "")?.memories.first)
+        #expect(memory.latitude == 12.5)
+        #expect(memory.longitude == -45.25)
+    }
+
     @Test("degrees and minutes, with seconds or as a decimal, become decimal degrees")
     func degrees() {
         #expect(DARCImport.degrees("52°31'N") == 52 + 31 / 60.0)
