@@ -8,23 +8,13 @@ public enum RepeaterBookImport {
     private static let usHeader = "Freq,Input,Offset,Tone,Location"
     private static let internationalHeader = "Output Freq,Input Freq,Offset,Uplink Tone"
 
-    /// The new memories of `group` from an export; `nil` if the file is not one.
-    public static func preview(
-        fromCSV text: String,
-        group: String,
-        range: ClosedRange<Float>,
-        existing: [ChannelMemory]
-    ) -> RepeaterImportPreview? {
-        guard let inRange = memories(fromCSV: text, group: group, range: range),
-            let all = memories(fromCSV: text, group: group, range: -Float.infinity...Float.infinity)
-        else { return nil }
-        return RepeaterImport.preview(
-            inRange,
-            outOfRange: all.count - inRange.count,
-            otherModes: 0,
-            group: group,
-            existing: existing
-        )
+    /// The new memories of `group` from an export, and those it completes; `nil` if the file is not one.
+    public static func preview(fromCSV text: String, group: String, existing: [ChannelMemory]) -> RepeaterImportPreview?
+    {
+        guard let all = memories(fromCSV: text, group: group, range: -Float.infinity...Float.infinity) else {
+            return nil
+        }
+        return RepeaterImport.preview(all, otherModes: 0, group: group, existing: existing)
     }
 
     /// The repeaters within `range` as memories of `group`; `nil` if the file is not a RepeaterBook export.

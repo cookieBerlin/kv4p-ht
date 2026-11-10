@@ -12,21 +12,21 @@ public enum DARCImport {
         case call, qrg, input, locator, info, latitude, longitude, ctcss, mode
     }
 
-    /// The new memories of `group` from a list; `nil` if the file is not one.
+    /// The new memories of `group` from a list, and those it completes; `nil` if the file is not one. New repeaters
+    /// get `accessTone`.
     public static func preview(
         fromCSV text: String,
         group: String,
-        range: ClosedRange<Float>,
-        existing: [ChannelMemory]
+        existing: [ChannelMemory],
+        accessTone: ImportAccessTone? = nil
     ) -> RepeaterImportPreview? {
         guard let (all, otherModes) = memories(fromCSV: text, group: group) else { return nil }
-        let inRange = all.filter { range.contains($0.frequency) }
         return RepeaterImport.preview(
-            inRange,
-            outOfRange: all.count - inRange.count,
+            all,
             otherModes: otherModes,
             group: group,
-            existing: existing
+            existing: existing,
+            accessTone: accessTone
         )
     }
 
