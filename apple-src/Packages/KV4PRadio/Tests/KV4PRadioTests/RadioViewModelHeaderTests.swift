@@ -9,15 +9,6 @@ import Testing
 @MainActor
 @Suite("Radio view model: header")
 struct RadioViewModelHeaderTests {
-    @Test("the band follows the radio module", arguments: [(Scenario.ble, "VHF"), (Scenario.uhf, "UHF")])
-    func band(scenario: Scenario, band: String) async {
-        let model = RadioViewModelTests.model(scenario)
-        #expect(model.bandText == nil)
-        await model.connect()
-        #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
-        #expect(model.bandText == band)
-    }
-
     @Test("the name of the active memory is shown while tuned to it")
     func memoryName() async throws {
         let repository = try SwiftDataMemoryRepository.inMemory()

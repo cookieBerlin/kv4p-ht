@@ -120,6 +120,8 @@ public final class RadioViewModel {
     public private(set) var snapshot = RadioViewModel.disconnected
     /// The frequency field, in MHz.
     public var frequencyText = ""
+    /// The decimal separator of the user's language, in the frequencies the user sees (ADR-0064).
+    public var decimalSeparator = "."
     /// The last problem, in words for the user.
     public private(set) var message: String? {
         didSet {
@@ -603,6 +605,10 @@ public final class RadioViewModel {
     private var observer: Task<Void, Never>?
     /// The frequency shown when the field is reset.
     private var frequency: Float?
+    /// A step that waits until the radio has the frequency of the one before; a newer step replaces it.
+    private var waitingStep: Float?
+    /// The frequency the controller was asked for, until a snapshot shows it: older ones would show the one before.
+    private var askedFrequency: Float?
 
     /// `makeController` connects the RX audio of the radio to the given sink; `simulateSignal` starts or ends a
     /// carrier on the simulator.
@@ -1092,9 +1098,6 @@ public final class RadioViewModel {
         }
     }
 
-    /// `VHF` or `UHF`, once the radio has reported its module.
-    public var bandText: String? { snapshot.firmware.map(Self.band) }
-
     private static func band(of firmware: FirmwareVersion) -> String {
         firmware.moduleType == .sa818UHF ? "UHF" : "VHF"
     }
@@ -1128,10 +1131,10 @@ public final class RadioViewModel {
         guard isReady, !canTransmit, let firmware = snapshot.firmware else { return nil }
         let bandwidth = snapshot.desired.bandwidth
         let allowed = txLimits.band(for: firmware.moduleType).allowedRange(bandwidth: bandwidth)
-        let lower = HamFrequency.formatLimit(allowed.lowerBound)
-        let upper = HamFrequency.formatLimit(allowed.upperBound)
-        return
-            "Can't transmit here: with \(bandwidth == 1 ? "25" : "12.5") kHz, the allowed range is \(lower)–\(upper) MHz."
+        let lower = HamFrequency.formatLimit(allowed.lowerBound, separator: decimalSeparator)
+        let upper = HamFrequency.formatLimit(allowed.upperBound, separator: decimalSeparator)
+        let raster = bandwidth == 1 ? "25" : "12\(decimalSeparator)5"
+        return "Can't transmit here: with \(raster) kHz, the allowed range is \(lower)–\(upper) MHz."
     }
 
     public var canSimulateSignal: Bool { isReady && connection == .simulator && simulator != nil }
@@ -1310,6 +1313,8 @@ public final class RadioViewModel {
         connection = selectedConnection
         message = nil
         frequency = nil
+        waitingStep = nil
+        askedFrequency = nil
         await startAudio()
         let snapshots = controller.snapshots
         observer = Task { [weak self] in
@@ -1424,9 +1429,20 @@ public final class RadioViewModel {
             if !hadFailed { report(text) }
             refreshPermissions()
         }
-        if snapshot.status == .ready, let reported = snapshot.deviceState?.radio.freqRx, reported != frequency {
+        if askedFrequency == snapshot.desired.freqRx {
+            askedFrequency = nil
+        }
+        // A report from before the radio had the frequency that was asked for keeps the shown one.
+        if snapshot.status == .ready, waitingStep == nil, askedFrequency == nil,
+            let reported = snapshot.deviceState?.radio.freqRx, reported != frequency,
+            reported == snapshot.desired.freqRx || snapshot.isInSync
+        {
             frequency = reported
-            frequencyText = HamFrequency.format(reported)
+            frequencyText = shown(reported)
+        }
+        if snapshot.status == .ready, snapshot.isInSync, askedFrequency == nil, let step = waitingStep {
+            waitingStep = nil
+            Task { await tune(to: step) }
         }
         // The access tone keeps the microphone closed, so nothing of other apps goes on air.
         let isUsingMicrophone = isTransmitting && !snapshot.isSendingAccessTone
@@ -2536,8 +2552,8 @@ public final class RadioViewModel {
         }
         if let firmware = snapshot.firmware, !(firmware.minRadioFreq...firmware.maxRadioFreq).contains(memory.frequency)
         {
-            let lowest = HamFrequency.format(firmware.minRadioFreq)
-            let highest = HamFrequency.format(firmware.maxRadioFreq)
+            let lowest = shown(firmware.minRadioFreq)
+            let highest = shown(firmware.maxRadioFreq)
             return "This radio receives from \(lowest) to \(highest) MHz."
         }
         return memory.offset != .none && memory.offsetKHz < 0 ? "Enter the offset in kHz." : nil
@@ -2547,11 +2563,13 @@ public final class RadioViewModel {
     public func transmitText(for memory: ChannelMemory) -> String? {
         guard memory.offset != .none else { return nil }
         let frequency = memory.txFrequency(in: 0...Self.highestFrequency)
-        return "Transmits on \(HamFrequency.format(frequency)) MHz"
+        return "Transmits on \(shown(frequency)) MHz"
     }
 
     public func tune(to memory: ChannelMemory) async {
         guard let controller else { return }
+        waitingStep = nil
+        askedFrequency = nil
         do {
             try await controller.tune(to: memory)
         } catch {
@@ -2621,19 +2639,58 @@ public final class RadioViewModel {
 
     /// Tunes RX and TX to the entered frequency, normalised and clamped like the Android app.
     public func applyFrequency() async {
-        guard isReady, let controller, let firmware = snapshot.firmware, let current = frequency else { return }
+        guard isReady, let firmware = snapshot.firmware, let current = frequency else { return }
         guard let entered = HamFrequency.safe(frequencyText, in: firmware.minRadioFreq...firmware.maxRadioFreq) else {
             isMessageFromUser = true
             message = "\"\(frequencyText)\" is not a frequency."
             isMessageFromUser = false
             diagnostics?.log(.info, .connection, "An entered frequency was not valid")
-            frequencyText = HamFrequency.format(current)
+            frequencyText = shown(current)
             return
         }
         message = nil
+        waitingStep = nil
         frequency = entered
-        frequencyText = HamFrequency.format(entered)
-        try? await controller.tune(rx: entered, tx: entered, memoryId: -1)
+        frequencyText = shown(entered)
+        await tune(to: entered)
+    }
+
+    /// A frequency as the user sees it, with the decimal separator of their language.
+    public func shown(_ frequency: Float) -> String {
+        HamFrequency.format(frequency, separator: decimalSeparator)
+    }
+
+    /// Steps are blocked while transmitting.
+    public var canStepFrequency: Bool { isReady && !isTransmitting }
+
+    /// Steps the frequency `count` times at `digit` (Hz) in the raster of the bandwidth, or `exact`ly by the digit, and
+    /// tunes at once. While the radio has not answered the step before, only the latest step waits (ADR-0064).
+    public func stepFrequency(digit: Int, by count: Int, exact: Bool = false) async {
+        guard canStepFrequency, let firmware = snapshot.firmware, let current = frequency else { return }
+        let raster = FrequencyStep.raster(isWide: isWideBandwidth)
+        let range = firmware.minRadioFreq...firmware.maxRadioFreq
+        let stepped = FrequencyStep.stepped(current, digit: digit, by: count, raster: raster, exact: exact, in: range)
+        guard stepped != current else { return }
+        message = nil
+        frequency = stepped
+        frequencyText = shown(stepped)
+        if snapshot.isInSync {
+            await tune(to: stepped)
+        } else {
+            waitingStep = stepped
+        }
+    }
+
+    private func tune(to frequency: Float) async {
+        guard let controller else { return }
+        askedFrequency = frequency
+        do {
+            try await controller.tune(rx: frequency, tx: frequency, memoryId: -1)
+        } catch {
+            askedFrequency = nil
+            diagnostics?.log(.info, .connection, "Tuning refused: \(error)")
+        }
+        show(await controller.snapshot)
     }
 
     /// 25 kHz instead of 12.5 kHz.

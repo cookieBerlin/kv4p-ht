@@ -67,3 +67,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0061](0061-aprs-chats.md) | APRS chats | Proposed |
 | [0062](0062-accessibility-audit.md) | Accessibility audit | Proposed |
 | [0063](0063-sstv.md) | SSTV receive and transmit | Proposed |
+| [0064](0064-frequency-input.md) | Frequency input | Proposed |

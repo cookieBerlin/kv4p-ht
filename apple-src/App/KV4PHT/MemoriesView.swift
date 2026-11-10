@@ -80,7 +80,7 @@ struct MemoriesView: View {
                 HStack {
                     VStack(alignment: .leading) {
                         Text(memory.name)
-                        Text(HamFrequency.format(memory.frequency) + " MHz").font(.caption)
+                        Text(model.shown(memory.frequency) + " MHz").font(.caption)
                             .foregroundStyle(Color.strongSecondary)
                     }
                     // One element to tap and to read, with the active one marked.

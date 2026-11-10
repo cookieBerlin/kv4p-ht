@@ -7,7 +7,7 @@ import SwiftUI
 extension RadioViewModel {
     /// A new memory on the current frequency.
     func draftMemory(group: String) -> ChannelMemory {
-        ChannelMemory(name: "", frequency: Float(frequencyText) ?? 146.52, group: group)
+        ChannelMemory(name: "", frequency: HamFrequency.parse(frequencyText) ?? 146.52, group: group)
     }
 }
 
@@ -25,7 +25,7 @@ struct MemoryForm: View {
         self.model = model
         self.save = save
         _memory = State(initialValue: memory)
-        _frequency = State(initialValue: HamFrequency.format(memory.frequency))
+        _frequency = State(initialValue: model.shown(memory.frequency))
         _offset = State(initialValue: "\(memory.offsetKHz)")
     }
 
@@ -34,7 +34,7 @@ struct MemoryForm: View {
         var entered = memory
         entered.name = memory.name.trimmingCharacters(in: .whitespaces)
         entered.group = memory.group.trimmingCharacters(in: .whitespaces)
-        entered.frequency = Float(frequency.replacing(",", with: ".")) ?? .nan
+        entered.frequency = HamFrequency.parse(frequency) ?? .nan
         entered.offsetKHz = Int(offset) ?? -1
         return entered
     }
@@ -46,14 +46,14 @@ struct MemoryForm: View {
                 GroupField(groups: model.groups, group: $memory.group)
             }
             Section {
-                LabeledField("Frequency (MHz)", text: $frequency, isNumber: true)
+                LabeledField("Frequency (MHz)", text: $frequency, kind: .decimal)
                 Picker("Offset", selection: $memory.offset) {
                     Text("None").tag(MemoryOffset.none)
                     Text("Down").tag(MemoryOffset.down)
                     Text("Up").tag(MemoryOffset.up)
                 }
                 if memory.offset != .none {
-                    LabeledField("Offset (kHz)", text: $offset, isNumber: true)
+                    LabeledField("Offset (kHz)", text: $offset, kind: .whole)
                 }
                 if entered.frequency.isFinite, let text = model.transmitText(for: entered) {
                     Text(text).font(.footnote).foregroundStyle(.secondary)
@@ -106,26 +106,50 @@ struct MemoryForm: View {
     }
 }
 
-/// A text field that shows its label also on iOS, where a field alone shows it only while empty.
+/// A text field that shows its label also on iOS, where a field alone shows it only while empty. A field for numbers
+/// takes digits and, for a decimal number, one separator; on iPhone and iPad it brings a number keyboard with Done.
 struct LabeledField: View {
+    enum Kind {
+        case text, decimal, whole
+    }
+
     let label: String
     @Binding var text: String
-    var isNumber = false
+    let kind: Kind
+    @FocusState private var isFocused: Bool
 
-    init(_ label: String, text: Binding<String>, isNumber: Bool = false) {
+    init(_ label: String, text: Binding<String>, kind: Kind = .text) {
         self.label = label
         _text = text
-        self.isNumber = isNumber
+        self.kind = kind
     }
 
     var body: some View {
         LabeledContent(label) {
-            TextField(label, text: $text)
+            TextField(label, text: filtered)
                 .labelsHidden()
                 .multilineTextAlignment(.trailing)
+                .focused($isFocused)
                 #if os(iOS)
-                    .keyboardType(isNumber ? .decimalPad : .default)
+                    .keyboardType(kind == .decimal ? .decimalPad : kind == .whole ? .numberPad : .default)
+                    .toolbar {
+                        if isFocused, kind != .text {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") { isFocused = false }
+                            }
+                        }
+                    }
                 #endif
+        }
+    }
+
+    private var filtered: Binding<String> {
+        guard kind != .text else { return $text }
+        return Binding {
+            text
+        } set: {
+            text = NumberInput.filtered($0, allowsSeparator: kind == .decimal)
         }
     }
 }

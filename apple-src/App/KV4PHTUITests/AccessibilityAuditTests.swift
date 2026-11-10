@@ -40,8 +40,7 @@ final class AccessibilityAuditTests: XCTestCase {
         let size = textSize == nil ? "default" : "largest"
         XCTAssertTrue(waitForStart(), "The app did not start")
         #if os(macOS)
-            // The Mac opens the windows of the last run again, such as the About window.
-            closeAbout()
+            app.closeAbout()
         #endif
         try audit("\(size) memories")
         tapPage("Packets")
@@ -106,12 +105,7 @@ final class AccessibilityAuditTests: XCTestCase {
             app.menuItems["About kv4p HT"].firstMatch.click()
             XCTAssertTrue(app.windows["About kv4p HT"].waitForExistence(timeout: 5), "The About window did not open")
             try audit("default about")
-            closeAbout()
-        }
-
-        private func closeAbout() {
-            let close = app.windows["About kv4p HT"].buttons[XCUIIdentifierCloseWindow]
-            if close.exists { close.click() }
+            app.closeAbout()
         }
     #else
         /// A page of the settings, opened from their list and closed again.

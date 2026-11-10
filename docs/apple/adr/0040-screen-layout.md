@@ -13,7 +13,7 @@ Several controls do not say what they do.
 ## Decision
 
 - **One structure, as in the Android app:** a header with the connection, frequency,
-  band, squelch state and S-meter; the memories and APRS below; PTT always in reach;
+  squelch state and S-meter (without the band since [ADR-0064](0064-frequency-input.md)); the memories and APRS below; PTT always in reach;
   the settings on their own screen.
 - **Apple controls:** the app takes over the structure, not the colours, the font or
   the animated receive circle. A reworked layout changes no behaviour: the user still

@@ -69,7 +69,7 @@ struct RadioViewModelSimulatorTests {
         let setup = Setup()
         setup.model.simulatorSettings.band = .uhf
         await setup.connect()
-        #expect(setup.model.bandText == "UHF")
+        #expect(setup.model.firmwareText?.contains("UHF") == true)
     }
 
     @Test("the signal opens the squelch and ends with the connection")

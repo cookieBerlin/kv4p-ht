@@ -143,7 +143,7 @@ struct GroupMemoriesView: View {
         let content = HStack {
             VStack(alignment: .leading) {
                 Text(memory.name)
-                Text(HamFrequency.format(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
+                Text(model.shown(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }
