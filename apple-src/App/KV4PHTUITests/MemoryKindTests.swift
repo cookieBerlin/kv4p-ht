@@ -27,4 +27,16 @@ final class MemoryKindTests: XCTestCase {
         XCTAssertTrue(row("Example repeater").exists, "No comment shown")
         XCTAssertTrue(row("Beacon, Local beacon").exists, "No beacon marked")
     }
+
+    func testListHidesWhatTheRadioCannotReceive() {
+        #if os(macOS)
+            app.closeAbout()
+        #endif
+        let hint = app.staticTexts["1 memory for 70 cm is hidden: this radio receives 2 m."].firstMatch
+        XCTAssertTrue(hint.waitForExistence(timeout: 60), "No hint for the hidden memory")
+        let hidden = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label CONTAINS 'Far repeater' OR value CONTAINS 'Far repeater'")
+        )
+        XCTAssertEqual(hidden.count, 0, "A memory for 70 cm is listed")
+    }
 }
