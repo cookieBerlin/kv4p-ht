@@ -2596,26 +2596,29 @@ public final class RadioViewModel {
     /// The app knows the radio's frequency range, which an import needs.
     public var canImportRepeaters: Bool { snapshot.firmware != nil }
 
-    /// What importing a RepeaterBook CSV export into `group` would do; `nil` if the file is not one or no radio is known.
-    public func importPreview(_ csv: String, group: String) -> RepeaterBookPreview? {
+    /// What importing `list` into `group` would do; `nil` if the file is not one or no radio is known.
+    public func importPreview(_ csv: String, of list: RepeaterList, group: String) -> RepeaterImportPreview? {
         guard let firmware = snapshot.firmware else { return nil }
         let range = firmware.minRadioFreq...firmware.maxRadioFreq
-        return RepeaterBookImport.preview(fromCSV: csv, group: group, range: range, existing: memories)
+        return switch list {
+        case .repeaterBook: RepeaterBookImport.preview(fromCSV: csv, group: group, range: range, existing: memories)
+        case .darc: DARCImport.preview(fromCSV: csv, group: group, range: range, existing: memories)
+        }
     }
 
-    /// Adds the repeaters of a RepeaterBook CSV export that the radio can receive and `group` does not have yet.
-    public func importRepeaterBook(_ csv: String, group: String) async {
+    /// Adds the entries of `list` that the radio can receive and `group` does not have yet.
+    public func importRepeaters(_ csv: String, of list: RepeaterList, group: String) async {
         guard canImportRepeaters else {
             message = "Connect the radio first, so that only repeaters it can receive are imported."
             return
         }
-        guard let imported = importPreview(csv, group: group)?.memories else {
-            message = "This file is not a RepeaterBook CSV export."
+        guard let preview = importPreview(csv, of: list, group: group) else {
+            message = list.notThisList
             return
         }
         await store { repository in
-            _ = try await repository.insert(imported)
-            message = "Imported \(imported.count) repeater\(imported.count == 1 ? "" : "s")."
+            _ = try await repository.insert(preview.memories)
+            message = "Imported \(preview.imported)."
             isNoticeSuccess = true
         }
     }

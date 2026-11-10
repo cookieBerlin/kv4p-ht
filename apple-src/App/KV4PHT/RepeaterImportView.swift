@@ -15,7 +15,9 @@ struct RepeaterImportView: View {
     @Environment(\.dismiss) private var dismiss
 
     private var targetGroup: String { group.trimmingCharacters(in: .whitespaces) }
-    private var preview: RepeaterBookPreview? { csv.flatMap { model.importPreview($0, group: targetGroup) } }
+    private var preview: RepeaterImportPreview? {
+        csv.flatMap { model.importPreview($0, of: .repeaterBook, group: targetGroup) }
+    }
 
     var body: some View {
         Form {
@@ -59,7 +61,7 @@ struct RepeaterImportView: View {
                 Button("Import") {
                     let csv = csv ?? ""
                     let group = targetGroup
-                    Task { await model.importRepeaterBook(csv, group: group) }
+                    Task { await model.importRepeaters(csv, of: .repeaterBook, group: group) }
                     dismiss()
                 }
                 .disabled(preview?.memories.isEmpty != false)
