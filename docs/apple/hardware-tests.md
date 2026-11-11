@@ -392,4 +392,7 @@ stays there while you walk, and the arrow button of the map centres it. The laye
 and beacons. With 2 m and 70 cm memories, *Radio's band* shows only the band of the connected radio, both while
 none is connected; *2 m*, *70 cm* and *All* show what they say, and the markers read *2m* or *70*. Tap a repeater nearby and **Tune**: the radio tunes to it and a known repeater is heard; one for the
 other band has no **Tune**. **List** shows the nearest first, with plausible distances and directions. Without the
-internet, the parts seen before still show. Switch the map off in **Settings → Pages**: the page goes.
+internet, the parts seen before still show. With the APRS-IS feed on, or packets heard on the air, the stations of the
+last hour show with their symbols, each at its last position; *15 min* and *All* change that, also with the app
+restarted. Tap one: **Packets** shows its packets, **Chat** its chat. Switch APRS off: the stations go. Switch the map
+off in **Settings → Pages**: the page goes.

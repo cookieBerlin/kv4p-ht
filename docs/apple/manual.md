@@ -413,14 +413,17 @@ digipeater is useful.
 
 ## Map
 
-**Map** shows your memories that have a position, such as the repeaters imported from the DARC lists, with
-Apple's maps.
+**Map** shows your memories that have a position, such as the repeaters imported from the DARC lists, and the APRS
+stations heard, with Apple's maps.
 
 - **Layers** (the stacked squares) switch the **Repeaters** (blue), **Frequencies** (green) and **Beacons**
   (orange) on and off, from all groups. Frequencies are off at first, as most of them have no fixed place.
 - **Band**, also under *Layers*, chooses what the map shows: **Radio's band**, at first, shows only the band of
   the connected radio, and 2 m and 70 cm while none is connected. **2 m** or **70 cm** shows that band, and
   **All** also memories of other bands, such as 6 m. A marker reads *2m* or *70*, or a dot for another band.
+- **APRS stations**, also under *Layers*, shows each station and object heard at its last position, with its APRS
+  symbol: those heard within **Heard within**, 1 hour at first, from the packets kept as well. Only packets with a
+  position count, so a station that only sent messages is not there. Without APRS, the stations go.
 - **Your position** is the blue dot. The map does not follow it: the arrow button of the map centres it. While
   the app has not asked for your location yet, the arrow at the top asks. The position stays on your device and
   is read only while the map is on screen.
@@ -428,11 +431,13 @@ Apple's maps.
   it, it stays where you moved it.
 - **Tap a marker** to see the memory's frequency, comment and distance. **Tune** tunes the radio to it, while the
   radio is connected and receives it.
-- **List** shows the same memories as a list, the nearest first, with their distance and direction; it is easier
-  with VoiceOver. Tap a row to tune to it.
+- **Tap a station** to see when it was heard, how far it is and its comment. **Packets** shows its packets, and
+  **Chat** opens a chat with it.
+- **List** shows the same memories and stations as a list, the nearest first, with their distance and direction;
+  it is easier with VoiceOver. Tap a memory to tune to it, or a station to see its packets.
 
-The map needs the internet; without it, only the parts seen before show. Map and list, the layers and the band stay
-on this device. You can switch the map off in ⚙ **Settings → Pages**.
+The map needs the internet; without it, only the parts seen before show. Map and list, the layers, the band and the time
+window stay on this device. You can switch the map off in ⚙ **Settings → Pages**.
 
 ## FreeDV digital voice
 

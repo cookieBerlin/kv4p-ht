@@ -165,6 +165,12 @@ imported from the DARC lists bring their position; for others, enter latitude an
 map comes from Apple and needs the internet; without it, only the parts seen before show
 ([ADR-0068](adr/0068-map.md)).
 
+## Why is a station I chat with not on the map?
+
+The map shows only APRS packets with a position: positions, objects and weather. A message has none, so a station
+that only sends messages is not on the map. Under *Layers*, **Heard within** chooses how far back the map looks,
+1 hour at first ([ADR-0068](adr/0068-map.md)).
+
 ## Does the app keep the APRS packets?
 
 Yes, on this device only, for 30 days by default, and not synced. Packets only from the internet stay only if you
