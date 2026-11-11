@@ -96,17 +96,75 @@ struct RootView: View {
         #endif
     }
 
-    /// Without APRS, the memories take the whole width.
+    /// Without APRS and the map, the memories take the whole width.
     private var sideBySide: some View {
         HStack(spacing: 0) {
-            if model.isAPRSEnabled {
+            if model.isAPRSEnabled || model.isMapEnabled {
                 MemoriesView(model: model).frame(minWidth: 280, maxWidth: 400)
                 Divider()
-                APRSView(model: model).frame(minWidth: 320)
+                SidePane(model: model).frame(minWidth: 320)
             } else {
                 MemoriesView(model: model).frame(minWidth: 280)
             }
         }
+    }
+}
+
+/// Beside the memories of a wide window: the packets, the chats or the map, of those that are on.
+private struct SidePane: View {
+    @Bindable var model: RadioViewModel
+    /// The map is shown rather than APRS, also after a restart.
+    @AppStorage("sideShowsMap") private var showsMap = false
+
+    private enum Part: Hashable {
+        case aprs(APRSPage), map
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Without APRS, the map has the side to itself.
+            if model.isAPRSEnabled {
+                Picker("Show", selection: part) {
+                    Text("Packets").tag(Part.aprs(.packets))
+                    Text(model.newAPRSMessages > 0 ? "Chats (\(model.newAPRSMessages))" : "Chats")
+                        .tag(Part.aprs(.chats))
+                    if model.isMapEnabled {
+                        Text("Map").tag(Part.map)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .padding(.horizontal)
+                .padding(.top, 6)
+            }
+            if isMapShown {
+                MapPage(model: model)
+            } else {
+                APRSView(model: model)
+            }
+        }
+        // A reply or a chat asked for elsewhere brings APRS back.
+        .onChange(of: model.aprsReplyCount) { showsMap = false }
+        .onChange(of: model.chatRequestCount) { showsMap = false }
+        .onChange(of: model.aprsPage) { showsMap = false }
+    }
+
+    private var isMapShown: Bool {
+        model.isMapEnabled && (showsMap || !model.isAPRSEnabled)
+    }
+
+    private var part: Binding<Part> {
+        Binding(
+            get: { isMapShown ? .map : .aprs(model.aprsPage) },
+            set: { part in
+                switch part {
+                case .map: showsMap = true
+                case .aprs(let page):
+                    showsMap = false
+                    model.aprsPage = page
+                }
+            }
+        )
     }
 }
 
@@ -116,7 +174,7 @@ struct RootView: View {
     /// the pages, so that a moving finger on PTT does not change the page and end the transmission.
     private struct CompactScreen: View {
         private enum Page: String, CaseIterable, Identifiable {
-            case memories, packets, chats, settings
+            case memories, packets, chats, map, settings
 
             var id: Self { self }
 
@@ -125,6 +183,7 @@ struct RootView: View {
                 case .memories: "Memories"
                 case .packets: "Packets"
                 case .chats: "Chats"
+                case .map: "Map"
                 case .settings: "Settings"
                 }
             }
@@ -134,6 +193,7 @@ struct RootView: View {
                 case .memories: "list.bullet"
                 case .packets: "point.3.connected.trianglepath.dotted"
                 case .chats: "bubble.left.and.bubble.right"
+                case .map: "map"
                 case .settings: "gearshape"
                 }
             }
@@ -143,7 +203,7 @@ struct RootView: View {
                 switch self {
                 case .packets: .packets
                 case .chats: .chats
-                case .memories, .settings: nil
+                case .memories, .map, .settings: nil
                 }
             }
         }
@@ -210,6 +270,9 @@ struct RootView: View {
                             pageView(.packets) { APRSView(model: model, page: .packets) }
                             pageView(.chats) { APRSView(model: model, page: .chats) }
                         }
+                        if model.isMapEnabled {
+                            pageView(.map) { MapPage(model: model) }
+                        }
                         pageView(.settings) {
                             NavigationStack(path: $settingsPath) {
                                 SettingsView(model: model).settingsDestinations(model)
@@ -228,7 +291,7 @@ struct RootView: View {
                     showMemoriesIfHidden()
                     shownSlot = .page(page)
                 }
-                .onChange(of: model.isAPRSEnabled) {
+                .onChange(of: pages) {
                     showMemoriesIfHidden()
                     // The pages before it come or go, and the scroll view stays where it was, on another page. Once
                     // they are laid out, it goes back to the page; unset first, as the same value moves nothing.
@@ -280,9 +343,15 @@ struct RootView: View {
             .observesKeyboard($isKeyboardShown)
         }
 
-        /// The pages there are: without APRS, its two go.
+        /// The pages there are: without APRS, its two go, and the map without the map.
         private var pages: [Page] {
-            Page.allCases.filter { $0.aprsPage == nil || model.isAPRSEnabled }
+            Page.allCases.filter {
+                switch $0 {
+                case .packets, .chats: model.isAPRSEnabled
+                case .map: model.isMapEnabled
+                case .memories, .settings: true
+                }
+            }
         }
 
         /// The page shown last may be one that went since; the app then starts with the memories.

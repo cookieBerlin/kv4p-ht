@@ -50,6 +50,9 @@ struct PagesSettings: View {
                 Toggle("APRS", isOn: $model.isAPRSEnabled)
                     .explained(ControlHelp.aprsPages)
                     .accessibilityIdentifier("toggle-APRS")
+                Toggle("Map", isOn: $model.isMapEnabled)
+                    .explained(ControlHelp.mapPage)
+                    .accessibilityIdentifier("toggle-Map")
             }
         }
     }
