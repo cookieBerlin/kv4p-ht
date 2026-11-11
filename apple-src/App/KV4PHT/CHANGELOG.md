@@ -5,6 +5,8 @@ own, with its version, build and date.
 
 ## Unreleased
 
+## 0.2.0 (20261111.2136) – 2026-11-11
+
 ### Added
 
 - A map with your position, the repeaters and frequencies of your memories, and the APRS beacons that have a position,
