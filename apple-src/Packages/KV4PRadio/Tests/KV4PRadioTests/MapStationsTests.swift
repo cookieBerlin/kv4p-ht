@@ -201,6 +201,14 @@ struct MapStationsTests {
         #expect(setup.model.packetsRequestCount == 1)
     }
 
+    @Test("the frame of the map holds the stations as well")
+    func frame() async throws {
+        let setup = try Setup()
+        await setup.receive(Self.first)
+        let station = try #require(setup.model.mapStations.first)
+        #expect(setup.model.mapFrame == MapFrame(around: [station.point]))
+    }
+
     @Test("the demo has stations on the map")
     func demo() async throws {
         let setup = try Setup()
