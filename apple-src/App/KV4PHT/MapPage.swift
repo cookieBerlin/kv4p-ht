@@ -1,15 +1,16 @@
+import KV4PAPRS
 import KV4PPersistence
 import KV4PProtocol
 import KV4PRadio
 import MapKit
 import SwiftUI
 
-/// The memories with a position on a map, or as a list by distance (ADR-0068). The map does not follow our position;
-/// the button of the system centres it.
+/// The memories with a position and the APRS stations heard on a map, or as a list by distance (ADR-0068). The map
+/// does not follow our position; the button of the system centres it.
 struct MapPage: View {
     @Bindable var model: RadioViewModel
     @State private var camera = MapCameraPosition.automatic
-    @State private var selected: Int32?
+    @State private var selected: MapSelection?
     @State private var isOnScreen = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isPageOnScreen) private var isPageOnScreen
@@ -17,11 +18,11 @@ struct MapPage: View {
     var body: some View {
         VStack(spacing: 0) {
             controls
-            if model.isMapShownAsList, model.mapPoints.isEmpty {
+            if model.isMapShownAsList, model.mapPoints.isEmpty, model.mapStations.isEmpty {
                 ContentUnavailableView(
                     "Nothing on the map",
                     systemImage: "map",
-                    description: Text("Memories with a position show here; the layers choose which.")
+                    description: Text("Memories with a position and APRS stations show here; the layers choose which.")
                 )
             } else if model.isMapShownAsList {
                 list
@@ -43,6 +44,7 @@ struct MapPage: View {
         // The points come and go with the memories, the layers and the band, and our position arrives once; the map
         // frames them anew until it is moved by hand, and does not follow our position.
         .onChange(of: model.mapPoints.map(\.id)) { frame() }
+        .onChange(of: Set(model.mapStations.map(\.id))) { frame() }
         .onChange(of: model.ownPosition == nil) { frame() }
     }
 
@@ -79,8 +81,8 @@ struct MapPage: View {
             Menu("Layers", systemImage: "square.3.layers.3d") {
                 // A menu shows no colours of its own, so their names stand there.
                 Section("Kind, by colour") {
-                    ForEach(MapLayer.allCases, id: \.self) { layer in
-                        Toggle("\(layer.title) (\(layer.colorName))", isOn: shows(layer))
+                    ForEach(MemoryKind.allCases, id: \.self) { kind in
+                        Toggle("\(MapLayer(kind).title) (\(kind.mapColorName))", isOn: shows(MapLayer(kind)))
                     }
                 }
                 Section("Band, marked 2m or 70") {
@@ -91,6 +93,16 @@ struct MapPage: View {
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
+                }
+                if model.isAPRSEnabled {
+                    Section("APRS, by symbol") {
+                        Toggle(MapLayer.stations.title, isOn: shows(.stations))
+                        Picker("Heard within", selection: $model.mapStationWindow) {
+                            ForEach(MapStationWindow.allCases, id: \.self) { window in
+                                Text(window.title).tag(window)
+                            }
+                        }
+                    }
                 }
             }
             .menuIndicator(.hidden)
@@ -117,8 +129,19 @@ struct MapPage: View {
             }
             ForEach(model.mapPoints) { point in
                 Marker(point.memory.name, monogram: Text(point.mark), coordinate: point.point.coordinate)
-                    .tint(MapLayer(point.memory.kind).color)
-                    .tag(point.id)
+                    .tint(point.memory.kind.mapColor)
+                    .tag(MapSelection.memory(point.id))
+            }
+            ForEach(model.mapStations) { station in
+                Annotation(station.name, coordinate: station.point.coordinate) {
+                    Button {
+                        selected = .station(station.id)
+                    } label: {
+                        StationMark(station: station)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(station.name)
+                }
             }
         }
         .mapControls {
@@ -129,21 +152,137 @@ struct MapPage: View {
             MapScaleView()
         }
         .safeAreaInset(edge: .bottom) {
-            if let point = model.mapPoints.first(where: { $0.id == selected }) {
-                MapPointCard(model: model, point: point) { selected = nil }
-                    .padding()
+            switch selected {
+            case .memory(let id):
+                if let point = model.mapPoints.first(where: { $0.id == id }) {
+                    MapPointCard(model: model, point: point) { selected = nil }.padding()
+                }
+            case .station(let id):
+                if let station = model.mapStations.first(where: { $0.id == id }) {
+                    MapStationCard(model: model, station: station) { selected = nil }.padding()
+                }
+            case nil: EmptyView()
             }
         }
-        .accessibilityLabel("Map of the memories")
+        .accessibilityLabel("Map of the memories and stations")
         .accessibilityIdentifier("map")
     }
 
     private var list: some View {
-        List(model.mapPoints) { point in
-            MapPointRow(model: model, point: point)
+        List {
+            if !model.mapPoints.isEmpty {
+                Section("Memories") {
+                    ForEach(model.mapPoints) { point in
+                        MapPointRow(model: model, point: point)
+                    }
+                }
+            }
+            if !model.mapStations.isEmpty {
+                Section("APRS stations") {
+                    ForEach(model.mapStations) { station in
+                        MapStationRow(model: model, station: station)
+                    }
+                }
+            }
         }
-        .accessibilityLabel("Memories by distance")
+        .accessibilityLabel("Memories and stations by distance")
         .accessibilityIdentifier("map-list")
+    }
+}
+
+/// What is chosen on the map: a memory by its id, or a station by its callsign or object name.
+private enum MapSelection: Hashable {
+    case memory(Int32)
+    case station(String)
+}
+
+/// The symbol of a station on the map, on a disc that stands out from the map.
+private struct StationMark: View {
+    let station: MapStation
+
+    var body: some View {
+        Group {
+            if let symbol = station.event.symbol {
+                APRSSymbolView(symbol: symbol)
+            } else {
+                Image(systemName: "mappin")
+            }
+        }
+        .padding(5)
+        .background(.background, in: .circle)
+        .overlay(Circle().stroke(.secondary))
+    }
+}
+
+/// A station on the map, chosen with a tap: what it is, when it was heard, how far, and its packets or a chat.
+private struct MapStationCard: View {
+    let model: RadioViewModel
+    let station: MapStation
+    let close: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(station.name).font(.headline)
+                Spacer()
+                Button("Close", systemImage: "xmark", action: close).labelStyle(.iconOnly)
+            }
+            MapStationDetails(model: model, station: station)
+            HStack {
+                Button("Packets") { Task { await model.showPackets(of: station) } }
+                if model.offersChat(with: station) {
+                    Button("Chat") { model.openChat(with: station.event.fromCallsign) }
+                }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .background(.regularMaterial, in: .rect(cornerRadius: 12))
+    }
+}
+
+/// A station of the list by distance; a tap shows its packets.
+private struct MapStationRow: View {
+    let model: RadioViewModel
+    let station: MapStation
+
+    var body: some View {
+        Button {
+            Task { await model.showPackets(of: station) }
+        } label: {
+            HStack {
+                StationMark(station: station).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(station.name)
+                    MapStationDetails(model: model, station: station)
+                }
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        // One text for the whole row, which stays a button.
+        .accessibilityLabel(model.spokenStation(station))
+        .accessibilityHint("Shows its packets")
+    }
+}
+
+/// The kind, the time heard, the distance and the comment of a station on the map.
+private struct MapStationDetails: View {
+    let model: RadioViewModel
+    let station: MapStation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(
+                ([station.event.typeName, station.heard.formatted(.relative(presentation: .named))]
+                    + model.distanceText(station.distanceMeters, station.direction)).joined(separator: " · ")
+            )
+            .font(.subheadline.monospacedDigit())
+            if let comment = station.event.comment, !comment.isEmpty {
+                Text(comment).font(.footnote)
+            }
+        }
+        .foregroundStyle(Color.strongSecondary)
     }
 }
 
@@ -205,7 +344,8 @@ private struct MapPointDetails: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(
-                ([model.shown(point.memory.frequency) + " MHz"] + point.bandText + model.distanceText(point))
+                ([model.shown(point.memory.frequency) + " MHz"] + point.bandText
+                    + model.distanceText(point.distanceMeters, point.direction))
                     .joined(separator: " · ")
             )
             .font(.subheadline.monospacedDigit())
@@ -218,19 +358,33 @@ private struct MapPointDetails: View {
 }
 
 extension RadioViewModel {
-    /// The distance and direction of a point, where our position is known.
-    fileprivate func distanceText(_ point: MapPoint) -> [String] {
-        guard let distance = point.distanceMeters else { return [] }
+    /// The distance and direction of a place, where our position is known.
+    fileprivate func distanceText(_ distance: Double?, _ direction: CompassPoint?) -> [String] {
+        guard let distance else { return [] }
         return [
-            [units.distance(meters: distance, locale: .current), point.direction?.label].compactMap(\.self)
-                .joined(separator: " ")
+            [units.distance(meters: distance, locale: .current), direction?.label].compactMap(\.self).joined(
+                separator: " "
+            )
         ]
     }
 
     /// What VoiceOver reads for a point: the memory as in its list, and how far it is.
     fileprivate func spokenPoint(_ point: MapPoint) -> String {
-        ([spokenRow(point.memory, withComment: false)] + point.bandText + distanceText(point)
+        ([spokenRow(point.memory, withComment: false)] + point.bandText
+            + distanceText(point.distanceMeters, point.direction)
             + (point.memory.comment.isEmpty ? [] : [point.memory.comment])).joined(separator: ", ")
+    }
+
+    /// What VoiceOver reads for a station: its name and kind, when it was heard, how far, and its comment.
+    fileprivate func spokenStation(_ station: MapStation) -> String {
+        ([station.name, station.event.typeName, "heard " + station.heard.formatted(.relative(presentation: .named))]
+            + distanceText(station.distanceMeters, station.direction) + [station.event.comment ?? ""])
+            .filter { !$0.isEmpty }.joined(separator: ", ")
+    }
+
+    /// A station can chat, but not an object, and not our own station.
+    fileprivate func offersChat(with station: MapStation) -> Bool {
+        station.event.kind != .object && station.event.fromCallsign.uppercased() != callsign.uppercased()
     }
 }
 
@@ -248,21 +402,26 @@ extension MapPoint {
     fileprivate var bandText: [String] { module.map { [$0.band] } ?? [] }
 }
 
-extension MapLayer {
+extension MapStation {
+    /// When it was last heard.
+    fileprivate var heard: Date { Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000) }
+}
+
+extension MemoryKind {
     /// The colour of its markers, and its name for the menu.
-    fileprivate var color: Color {
+    fileprivate var mapColor: Color {
         switch self {
-        case .repeaters: .blue
-        case .frequencies: .green
-        case .beacons: .orange
+        case .repeater: .blue
+        case .frequency: .green
+        case .beacon: .orange
         }
     }
 
-    fileprivate var colorName: String {
+    fileprivate var mapColorName: String {
         switch self {
-        case .repeaters: "blue"
-        case .frequencies: "green"
-        case .beacons: "orange"
+        case .repeater: "blue"
+        case .frequency: "green"
+        case .beacon: "orange"
         }
     }
 }
