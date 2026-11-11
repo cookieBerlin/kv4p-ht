@@ -135,8 +135,8 @@ extension RadioViewModel {
             .map(\.point)
     }
 
-    /// What the map shows first: its points and our own position.
+    /// What the map shows first: its memories, its stations and our own position.
     public var mapFrame: MapFrame? {
-        MapFrame(around: mapPoints.map(\.point) + [ownPosition].compactMap(\.self))
+        MapFrame(around: mapPoints.map(\.point) + mapStations.map(\.point) + [ownPosition].compactMap(\.self))
     }
 }
