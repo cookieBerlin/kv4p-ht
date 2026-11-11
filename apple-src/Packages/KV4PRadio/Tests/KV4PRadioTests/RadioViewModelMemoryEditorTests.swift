@@ -115,20 +115,64 @@ struct RadioViewModelMemoryEditorTests {
             (ChannelMemory(name: "A", frequency: 146.52, offset: .up, offsetKHz: -1), "Enter the offset in kHz."),
             (ChannelMemory(name: "A", frequency: 146.52, offset: .none, offsetKHz: -1), nil),
             (ChannelMemory(name: "A", frequency: 146.52), nil),
+            (ChannelMemory(name: "A", frequency: 146.52, latitude: 90, longitude: -180), nil),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 90.5, longitude: 0),
+                "Enter a latitude from -90 to 90."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: .nan, longitude: 0),
+                "Enter a latitude from -90 to 90."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 0, longitude: 181),
+                "Enter a longitude from -180 to 180."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 0, longitude: .nan),
+                "Enter a longitude from -180 to 180."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, latitude: 0),
+                "Enter both latitude and longitude, or neither."
+            ),
+            (
+                ChannelMemory(name: "A", frequency: 146.52, longitude: 0),
+                "Enter both latitude and longitude, or neither."
+            ),
         ] as [(ChannelMemory, String?)]
     )
     func problems(memory: ChannelMemory, expected: String?) {
         #expect(RadioViewModelTests.model().memoryProblem(memory) == expected)
     }
 
-    @Test("with a radio, the frequency must lie in its range")
-    func problemInRange() async {
+    @Test("the form shows a position in decimal degrees with the separator of the user's language")
+    func shownDegrees() {
         let model = RadioViewModelTests.model()
+        model.decimalSeparator = ","
+        #expect(model.shownDegrees(-12.5) == "-12,5")
+        #expect(model.shownDegrees(nil) == "")
+    }
+
+    @Test("a frequency lies in 2 m or 70 cm, with or without a radio; the form notes what this radio cannot receive")
+    func problemInBand() async {
+        let model = RadioViewModelTests.model()
+        let uhf = ChannelMemory(name: "A", frequency: 435)
+        let between = ChannelMemory(name: "A", frequency: 300)
+        let message = "Enter a frequency from 134.0000 to 174.0000 or from 400.0000 to 480.0000 MHz."
+        #expect(model.memoryProblem(uhf) == nil)
+        #expect(model.memoryProblem(between) == message)
+        #expect(model.receptionNote(uhf) == nil)  // no radio yet
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
-        let far = ChannelMemory(name: "A", frequency: 435)
-        #expect(model.memoryProblem(far) == "This radio receives from 134.0000 to 174.0000 MHz.")
-        #expect(model.memoryProblem(ChannelMemory(name: "A", frequency: 146.52)) == nil)
+        #expect(model.memoryProblem(uhf) == nil)
+        #expect(model.memoryProblem(between) == message)
+        #expect(
+            model.receptionNote(uhf)
+                == "This radio receives 2 m. The memory shows in the list when a radio for 70 cm is connected."
+        )
+        #expect(model.receptionNote(ChannelMemory(name: "A", frequency: 146.52)) == nil)
+        #expect(model.receptionNote(between) == nil)
     }
 
     @Test("the form shows where a repeater memory transmits")
@@ -149,42 +193,38 @@ struct RadioViewModelMemoryEditorTests {
         147.12000,147.72000,+0.6,100.0,Sample Town,XX,Sample,N1CALL,OPEN,5.0,E,90
         146.94000,146.34000,-0.6,100.0,Other Town,XX,Sample,N2CALL,OPEN,5.0,E,90
         440.10000,445.10000,+5,100.0,Far Town,XX,Sample,N3CALL,OPEN,5.0,E,90
+        1296.00000,1290.00000,-6,,Very Far,XX,Sample,N4CALL,OPEN,5.0,E,90
         """
 
-    @Test("the preview counts what is imported and what is left out for the chosen group")
+    @Test("the preview counts what is imported and what is left out for the chosen group, also without a radio")
     func preview() async throws {
         let repository = try SwiftDataMemoryRepository.inMemory()
         _ = try await repository.insert([ChannelMemory(name: "N2CALL • Other Town", frequency: 146.94, group: "Trip")])
         let model = RadioViewModelMemoryTests.model(repository)
         await model.loadMemories()
-        #expect(model.importPreview(Self.csv, group: "Trip") == nil)  // no radio yet
-        #expect(!model.canImportRepeaters)
-        await model.connect()
-        #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
-        #expect(model.canImportRepeaters)
 
-        let inTrip = try #require(model.importPreview(Self.csv, group: "Trip"))
-        #expect(inTrip.memories.map(\.name) == ["N1CALL • Sample Town"])
+        let inTrip = try #require(model.importPreview(Self.csv, of: .repeaterBook, group: "Trip"))
+        #expect(inTrip.memories.map(\.name) == ["N1CALL • Sample Town", "N3CALL • Far Town"])
         #expect(inTrip.outOfRange == 1)
         #expect(inTrip.duplicates == 2)
         #expect(
-            inTrip.summary == "1 repeater to import. Left out: 1 outside the radio's range, 2 already in this group."
+            inTrip.summary == "2 repeaters to import. Left out: 1 outside 2 m and 70 cm, 2 already in this group."
         )
 
-        let elsewhere = try #require(model.importPreview(Self.csv, group: "Other"))
-        #expect(elsewhere.memories.count == 2)
+        let elsewhere = try #require(model.importPreview(Self.csv, of: .repeaterBook, group: "Other"))
+        #expect(elsewhere.memories.count == 3)
         #expect(elsewhere.duplicates == 1)
         #expect(
             elsewhere.summary
-                == "2 repeaters to import. Left out: 1 outside the radio's range, 1 already in this group."
+                == "3 repeaters to import. Left out: 1 outside 2 m and 70 cm, 1 already in this group."
         )
 
-        #expect(model.importPreview("Name\nA", group: "") == nil)
+        #expect(model.importPreview("Name\nA", of: .repeaterBook, group: "") == nil)
     }
 
     @Test("a plain file has nothing left out")
     func previewPlain() {
-        let preview = RepeaterBookPreview(memories: [], outOfRange: 0, duplicates: 0)
+        let preview = RepeaterImportPreview(memories: [], outOfRange: 0, duplicates: 0, otherModes: 0)
         #expect(preview.summary == "0 repeaters to import.")
     }
 
@@ -195,11 +235,40 @@ struct RadioViewModelMemoryEditorTests {
         await model.loadMemories()
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
-        await model.importRepeaterBook(Self.csv, group: "Trip")
-        #expect(model.memories.count == 2)
-        #expect(model.message == "Imported 2 repeaters.")
-        await model.importRepeaterBook(Self.csv, group: "Trip")
-        #expect(model.memories.count == 2)
+        await model.importRepeaters(Self.csv, of: .repeaterBook, group: "Trip")
+        #expect(model.memories.count == 3)
+        #expect(model.message == "Imported 3 repeaters.")
+        await model.importRepeaters(Self.csv, of: .repeaterBook, group: "Trip")
+        #expect(model.memories.count == 3)
         #expect(model.message == "Imported 0 repeaters.")
+    }
+
+    @Test("a DARC list is imported as repeaters and beacons, with the access tone, and completes what the group has")
+    func importDARC() async throws {
+        let repository = try SwiftDataMemoryRepository.inMemory()
+        _ = try await repository.insert([ChannelMemory(name: "N3CALL", frequency: 145.5, group: "Trip")])
+        let model = RadioViewModelMemoryTests.model(repository)
+        await model.loadMemories()
+        let tone = ImportAccessTone.standard
+        let preview = try #require(model.importPreview(DARCImportTests.list, of: .darc, group: "Trip"))
+        #expect(preview.memories.count == 5)
+        #expect(model.importPreview(Self.csv, of: .darc, group: "Trip") == nil)
+        #expect(model.importPreview(DARCImportTests.list, of: .repeaterBook, group: "Trip") == nil)
+        await model.importRepeaters(DARCImportTests.list, of: .darc, group: "Trip", accessTone: tone)
+        #expect(model.message == "Imported 4 repeaters and 1 beacon.")
+        #expect(model.memories.map(\.kind) == [.frequency, .repeater, .repeater, .beacon, .repeater, .repeater])
+        #expect(model.memories.dropFirst().filter { $0.kind == .repeater }.allSatisfy { $0.accessToneHz == 1750 })
+
+        // The list again, after the user cleared a comment: only that is completed.
+        var cleared = try #require(model.memories.first { $0.name == "N0CALL" })
+        cleared.comment = ""
+        await model.save(cleared)
+        await model.importRepeaters(DARCImportTests.list, of: .darc, group: "Trip")
+        #expect(model.message == "Imported 0 repeaters, completed 1.")
+        #expect(model.memories.first { $0.name == "N0CALL" }?.comment == "Example repeater")
+        #expect(model.memories.count == 6)
+
+        await model.importRepeaters(Self.csv, of: .darc, group: "Trip")
+        #expect(model.message == "This file is not a DARC repeater list.")
     }
 }

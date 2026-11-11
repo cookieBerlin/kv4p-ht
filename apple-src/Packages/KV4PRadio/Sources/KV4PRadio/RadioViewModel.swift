@@ -2452,9 +2452,30 @@ public final class RadioViewModel {
 
     public var groups: [String] { ChannelMemory.groups(in: memories) }
 
+    /// The memories of the chosen group that the connected radio receives; all of them before a radio is known.
     public var visibleMemories: [ChannelMemory] {
+        groupMemories.filter(isReceivable)
+    }
+
+    /// Why the list shows fewer memories than the group has.
+    public var hiddenMemoriesText: String? {
+        guard let firmware = snapshot.firmware else { return nil }
+        let hidden = groupMemories.count { !isReceivable($0) }
+        guard hidden > 0 else { return nil }
+        let others = RFModuleType.allCases.filter { $0 != firmware.moduleType }.map(\.band).joined(separator: " and ")
+        let count = hidden == 1 ? "1 memory for \(others) is" : "\(hidden) memories for \(others) are"
+        return "\(count) hidden: this radio receives \(firmware.moduleType.band)."
+    }
+
+    private var groupMemories: [ChannelMemory] {
         guard let selectedGroup else { return memories }
         return memories.filter { $0.group == selectedGroup }
+    }
+
+    /// Whether the connected radio receives `memory`; any memory before a radio is known.
+    private func isReceivable(_ memory: ChannelMemory) -> Bool {
+        guard let firmware = snapshot.firmware else { return true }
+        return (firmware.minRadioFreq...firmware.maxRadioFreq).contains(memory.frequency)
     }
 
     /// The memory the radio is tuned to.
@@ -2550,13 +2571,40 @@ public final class RadioViewModel {
         guard memory.frequency.isFinite, memory.frequency > 0, memory.frequency <= Self.highestFrequency else {
             return "Enter a frequency in MHz."
         }
-        if let firmware = snapshot.firmware, !(firmware.minRadioFreq...firmware.maxRadioFreq).contains(memory.frequency)
-        {
-            let lowest = shown(firmware.minRadioFreq)
-            let highest = shown(firmware.maxRadioFreq)
-            return "This radio receives from \(lowest) to \(highest) MHz."
+        if RFModuleType.receiving(memory.frequency) == nil {
+            let ranges = RFModuleType.allCases.map {
+                "from \(shown($0.frequencyRange.lowerBound)) to \(shown($0.frequencyRange.upperBound))"
+            }
+            return "Enter a frequency " + ranges.joined(separator: " or ") + " MHz."
         }
-        return memory.offset != .none && memory.offsetKHz < 0 ? "Enter the offset in kHz." : nil
+        if memory.offset != .none, memory.offsetKHz < 0 {
+            return "Enter the offset in kHz."
+        }
+        return positionProblem(memory)
+    }
+
+    private func positionProblem(_ memory: ChannelMemory) -> String? {
+        switch (memory.latitude, memory.longitude) {
+        case (nil, nil): return nil
+        case (let latitude?, let longitude?):
+            if !(-90...90).contains(latitude) { return "Enter a latitude from -90 to 90." }
+            return (-180...180).contains(longitude) ? nil : "Enter a longitude from -180 to 180."
+        default: return "Enter both latitude and longitude, or neither."
+        }
+    }
+
+    /// Why the list will not show a memory while this radio is connected; `nil` if it will, or if no radio is known.
+    public func receptionNote(_ memory: ChannelMemory) -> String? {
+        guard let firmware = snapshot.firmware, !isReceivable(memory),
+            let module = RFModuleType.receiving(memory.frequency)
+        else { return nil }
+        return "This radio receives \(firmware.moduleType.band). "
+            + "The memory shows in the list when a radio for \(module.band) is connected."
+    }
+
+    /// A latitude or a longitude as the form shows it.
+    public func shownDegrees(_ degrees: Double?) -> String {
+        Coordinate.format(degrees, separator: decimalSeparator)
     }
 
     /// Where a memory with an offset transmits; the radio may still limit it when tuning.
@@ -2567,7 +2615,7 @@ public final class RadioViewModel {
     }
 
     public func tune(to memory: ChannelMemory) async {
-        guard let controller else { return }
+        guard let controller, isReceivable(memory) else { return }
         waitingStep = nil
         askedFrequency = nil
         do {
@@ -2593,29 +2641,38 @@ public final class RadioViewModel {
         show(await controller.snapshot)
     }
 
-    /// The app knows the radio's frequency range, which an import needs.
-    public var canImportRepeaters: Bool { snapshot.firmware != nil }
-
-    /// What importing a RepeaterBook CSV export into `group` would do; `nil` if the file is not one or no radio is known.
-    public func importPreview(_ csv: String, group: String) -> RepeaterBookPreview? {
-        guard let firmware = snapshot.firmware else { return nil }
-        let range = firmware.minRadioFreq...firmware.maxRadioFreq
-        return RepeaterBookImport.preview(fromCSV: csv, group: group, range: range, existing: memories)
+    /// What importing `list` into `group` would do; `nil` if the file is not one. New repeaters of a DARC list get
+    /// `accessTone`.
+    public func importPreview(
+        _ csv: String,
+        of list: RepeaterList,
+        group: String,
+        accessTone: ImportAccessTone? = nil
+    ) -> RepeaterImportPreview? {
+        switch list {
+        case .repeaterBook: RepeaterBookImport.preview(fromCSV: csv, group: group, existing: memories)
+        case .darc: DARCImport.preview(fromCSV: csv, group: group, existing: memories, accessTone: accessTone)
+        }
     }
 
-    /// Adds the repeaters of a RepeaterBook CSV export that the radio can receive and `group` does not have yet.
-    public func importRepeaterBook(_ csv: String, group: String) async {
-        guard canImportRepeaters else {
-            message = "Connect the radio first, so that only repeaters it can receive are imported."
-            return
-        }
-        guard let imported = importPreview(csv, group: group)?.memories else {
-            message = "This file is not a RepeaterBook CSV export."
+    /// Adds the entries of `list` within 2 m and 70 cm that `group` does not have yet, and completes those it has.
+    public func importRepeaters(
+        _ csv: String,
+        of list: RepeaterList,
+        group: String,
+        accessTone: ImportAccessTone? = nil
+    ) async {
+        guard let preview = importPreview(csv, of: list, group: group, accessTone: accessTone) else {
+            message = list.notThisList
             return
         }
         await store { repository in
-            _ = try await repository.insert(imported)
-            message = "Imported \(imported.count) repeater\(imported.count == 1 ? "" : "s")."
+            _ = try await repository.insert(preview.memories)
+            for memory in preview.completed {
+                try await repository.update(memory)
+            }
+            let completed = preview.completed.isEmpty ? "" : ", completed \(preview.completed.count)"
+            message = "Imported \(preview.imported)\(completed)."
             isNoticeSuccess = true
         }
     }

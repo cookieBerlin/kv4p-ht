@@ -66,17 +66,21 @@ public enum FrequencyStep {
 
 /// What a field for numbers takes.
 public enum NumberInput {
-    /// Digits and, if allowed, the first separator, a comma or a point.
-    public static func filtered(_ text: String, allowsSeparator: Bool) -> String {
+    /// Digits, if allowed the first separator, a comma or a point, and if allowed a minus at the start.
+    public static func filtered(_ text: String, allowsSeparator: Bool, allowsSign: Bool = false) -> String {
         var hasSeparator = !allowsSeparator
-        return String(
-            text.filter { character in
-                if character.isASCII, character.isNumber { return true }
-                guard character == "." || character == ",", !hasSeparator else { return false }
+        var result = ""
+        for character in text {
+            if character.isASCII, character.isNumber {
+                result.append(character)
+            } else if character == "-", allowsSign, result.isEmpty {
+                result.append(character)
+            } else if character == "." || character == ",", !hasSeparator {
                 hasSeparator = true
-                return true
+                result.append(character)
             }
-        )
+        }
+        return result
     }
 }
 

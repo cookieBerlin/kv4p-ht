@@ -46,7 +46,7 @@ struct RadioViewModelNoticeTests {
     func notice() async {
         let model = RadioViewModelTests.model()
         #expect(model.notice == nil)
-        await model.importRepeaterBook("not a csv", group: "Group")
+        await model.importRepeaters("not a csv", of: .repeaterBook, group: "Group")
         let notice = model.notice
         #expect(notice != nil)
         #expect(notice == model.message)
@@ -61,10 +61,10 @@ struct RadioViewModelNoticeTests {
         let model = RadioViewModelMemoryTests.model(try SwiftDataMemoryRepository.inMemory())
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady })
-        await model.importRepeaterBook(RadioViewModelMemoryTests.csv, group: "Group")
+        await model.importRepeaters(RadioViewModelMemoryTests.csv, of: .repeaterBook, group: "Group")
         #expect(model.notice == "Imported 1 repeater.")
         #expect(model.isNoticeSuccess)
-        await model.importRepeaterBook("not a csv", group: "Group")
+        await model.importRepeaters("not a csv", of: .repeaterBook, group: "Group")
         #expect(model.notice == "This file is not a RepeaterBook CSV export.")
         #expect(!model.isNoticeSuccess)
     }
