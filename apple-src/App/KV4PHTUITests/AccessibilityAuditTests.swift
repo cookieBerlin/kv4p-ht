@@ -462,12 +462,15 @@ final class AccessibilityAuditTests: XCTestCase {
             let isDescription = issue.auditType == .sufficientElementDescription
             // 8. SwiftUI's pop-up buttons, which VoiceOver opens by showing their menu rather than by pressing them.
             if issue.auditType == .action, element.elementType == .popUpButton { return 8 }
-            // 9. The groups that SwiftUI puts around the content of a window and its columns, as high as the window.
-            if isDescription, isUnnamedGroup, isAsHighAsAWindow(element) { return 9 }
+            // 9. The groups that SwiftUI puts around the content of a window and its columns, as high as the window, and
+            // around the content of a sheet, as large as the sheet.
+            if isDescription, isUnnamedGroup, isAsHighAsAWindow(element) || isTheSheet(element) { return 9 }
             // 10. The knob of a slider, a part of AppKit's own; the slider has the name.
             if isDescription, element.elementType == .valueIndicator { return 10 }
-            // 11. Text in a window behind the front one, which macOS dims, or cut off at the front one's edge.
+            // 11. Text in a window behind the front one, which macOS dims, or cut off at the front one's edge; also text
+            // of a window behind a sheet open on it, such as About behind What's New.
             if issue.auditType == .contrast, !app.windows.firstMatch.frame.contains(element.frame) { return 11 }
+            if issue.auditType == .contrast, isBehindASheet(element) { return 11 }
             // 15. The markers MapKit draws on the Mac, without names; VoiceOver has the list of the map instead.
             if screen.hasSuffix(" map"), isInMap(element) { return 15 }
             // 12. The header of a section of a SwiftUI list, the one of the groups of memories.
@@ -481,6 +484,17 @@ final class AccessibilityAuditTests: XCTestCase {
         private func isInMap(_ element: XCUIElement) -> Bool {
             let map = app.descendants(matching: .any)["map"].firstMatch
             return map.exists && map.frame.contains(element.frame)
+        }
+
+        /// An element outside the sheet that is open, which macOS dims with the rest of its window.
+        private func isBehindASheet(_ element: XCUIElement) -> Bool {
+            let sheet = app.sheets.firstMatch
+            return sheet.exists && !sheet.frame.contains(element.frame)
+        }
+
+        private func isTheSheet(_ element: XCUIElement) -> Bool {
+            let sheet = app.sheets.firstMatch
+            return sheet.exists && sheet.frame.contains(element.frame) && sheet.frame.width == element.frame.width
         }
 
         private func isAsHighAsAWindow(_ element: XCUIElement) -> Bool {

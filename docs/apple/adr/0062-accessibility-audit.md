@@ -76,9 +76,10 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
    all the same. Menus of the app's own keep both: in a bordered style SwiftUI drops "show menu", so a menu in the look of
    a capsule is drawn around a plain one on the Mac.
 9. **Mac: groups without a name as high as a window:** the containers SwiftUI puts around a window's content and its
-   sidebar column.
+   sidebar column, and around the content of a sheet, such as *What's New*.
 10. **Mac: the knob of a slider:** a part of AppKit's own, without a name; the slider has it.
-11. **Mac: contrast in a window behind the front one, or cut off at its edge:** macOS dims a window that is not in front.
+11. **Mac: contrast in a window behind the front one, or cut off at its edge:** macOS dims a window that is not in front,
+    and the rest of a window behind a sheet open on it, such as About behind *What's New*.
 12. **Mac: the header of a section in the list of groups of memories:** SwiftUI shows it as a group without a name and
     not as a child of its parent.
 13. **The link *Legal* of the map:** MapKit puts its legal notice on every map, with a link smaller than a finger. It
