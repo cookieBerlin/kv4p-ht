@@ -77,6 +77,8 @@ final class AccessibilityAuditTests: XCTestCase {
         }
         #if os(macOS)
             try auditAbout()
+        #else
+            try auditWhatsNew(size: size)
         #endif
         let report = findings.isEmpty ? "A11Y \(size): no findings" : findings.joined(separator: "\n")
         XCTAssertTrue(findings.isEmpty, "\(findings.count) findings with \(size) text")
@@ -114,6 +116,7 @@ final class AccessibilityAuditTests: XCTestCase {
             app.menuItems["About kv4p HT"].firstMatch.click()
             XCTAssertTrue(app.windows["About kv4p HT"].waitForExistence(timeout: 5), "The About window did not open")
             try audit("default about")
+            try auditWhatsNew(size: "default")
             app.closeAbout()
         }
     #else
@@ -135,6 +138,37 @@ final class AccessibilityAuditTests: XCTestCase {
             if back.waitForExistence(timeout: 2) { back.tap() }
         }
     #endif
+
+    /// What's new, opened from About: the whole changelog (ADR-0069). On iPhone and iPad, About is the last link of the
+    /// settings.
+    private func auditWhatsNew(size: String) throws {
+        #if os(iOS)
+            let about = app.buttons["About kv4p HT"].firstMatch
+            guard reveal(about) == .onScreen else {
+                let finding = "A11Y \(size) about: not reached"
+                print(finding)
+                findings.append(finding)
+                return
+            }
+            about.tap()
+        #endif
+        let whatsNew = app.buttons["about-whats-new"].firstMatch
+        guard whatsNew.waitForExistence(timeout: 5) else {
+            let finding = "A11Y \(size) whats new: not reached"
+            print(finding)
+            findings.append(finding)
+            return
+        }
+        whatsNew.press()
+        let done = app.buttons["whats-new-done"].firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout: 5), "What's new did not open")
+        try audit("\(size) whats new")
+        done.press()
+        #if os(iOS)
+            let back = app.navigationBars.buttons["Settings"].firstMatch
+            if back.waitForExistence(timeout: 2) { back.tap() }
+        #endif
+    }
 
     /// The page bar of a phone; elsewhere the memories stand beside a switch between the packets, the chats and the
     /// map, and the settings open from the toolbar.

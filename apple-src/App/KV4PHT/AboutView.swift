@@ -5,6 +5,7 @@ import SwiftUI
 struct AboutView: View {
     private let about = AboutInfo(info: Bundle.main.infoDictionary ?? [:])
     @State private var shown: LicenceFile?
+    @State private var isShowingWhatsNew = false
 
     var body: some View {
         Form {
@@ -19,6 +20,9 @@ struct AboutView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                Button("What's New") { isShowingWhatsNew = true }
+                    .accessibilityIdentifier("about-whats-new")
+                    .frame(maxWidth: .infinity)
             }
             Section("Data") {
                 ForEach(AboutInfo.dataSources) { source in
@@ -48,6 +52,7 @@ struct AboutView: View {
             .navigationTitle("About")
         #endif
         .sheet(item: $shown) { LicenceText(file: $0) }
+        .sheet(isPresented: $isShowingWhatsNew) { WhatsNewView() }
     }
 }
 
