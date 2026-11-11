@@ -228,6 +228,24 @@ struct MapTests {
         #expect(await eventually { shown.count == 1 })
     }
 
+    @Test("the map shows our position only with access granted, so that it never asks itself")
+    func showsOwnPosition() async throws {
+        let granted = try await Self.model(location: CountingLocation())
+        granted.refreshPermissions()
+        #expect(granted.showsOwnPosition)
+        for state in [PermissionState.notDetermined, .denied] {
+            let model = try await Self.model(
+                location: CountingLocation(),
+                permissions: FakePermissions([.location: state])
+            )
+            model.refreshPermissions()
+            #expect(!model.showsOwnPosition)
+        }
+        let noProvider = try await Self.model()
+        noProvider.refreshPermissions()
+        #expect(!noProvider.showsOwnPosition)
+    }
+
     @Test("a memory tunes from the map once the radio is ready and receives it")
     func tunable() async throws {
         let model = try await Self.model([Self.near, Self.uhf])
