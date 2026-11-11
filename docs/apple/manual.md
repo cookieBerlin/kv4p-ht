@@ -428,7 +428,8 @@ stations heard, with Apple's maps.
   the app has not asked for your location yet, the arrow at the top asks. The position stays on your device and
   is read only while the map is on screen.
 - The map shows all its points and your position, also after a change of the layers or the band. Once you move
-  it, it stays where you moved it.
+  it, it stays where you moved it; **Show all** (the arrows pointing outwards) brings all of them back into
+  view.
 - **Tap a marker** to see the memory's frequency, comment and distance. **Tune** tunes the radio to it, while the
   radio is connected and receives it.
 - **Tap a station** to see when it was heard, how far it is and its comment. **Packets** shows its packets, and

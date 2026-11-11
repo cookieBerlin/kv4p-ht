@@ -388,7 +388,8 @@ memory and import the same file again: only that memory is completed, nothing is
 Receive only; do not transmit. With memories that have a position, such as repeaters imported from the DARC lists,
 open **Map**. If the app has not asked for the location yet, the map does not ask by itself; the arrow at the top
 asks. With access granted, the blue dot shows your real position, and the map shows it and the memories. Move the map: it
-stays there while you walk, and the arrow button of the map centres it. The layers switch repeaters, frequencies
+stays there while you walk, and the arrow button of the map centres it; **Show all** brings every point and your
+position back into view. The layers switch repeaters, frequencies
 and beacons. With 2 m and 70 cm memories, *Radio's band* shows only the band of the connected radio, both while
 none is connected; *2 m*, *70 cm* and *All* show what they say, and the markers read *2m* or *70*. Tap a repeater nearby and **Tune**: the radio tunes to it and a known repeater is heard; one for the
 other band has no **Tune**. **List** shows the nearest first, with plausible distances and directions. Without the
