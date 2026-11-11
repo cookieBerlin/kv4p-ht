@@ -49,7 +49,7 @@ box. Hardware test results are in [hardware-tests.md](hardware-tests.md).
 
 |   | # | Milestone | Acceptance criteria |
 |---|---|---|---|
-| ✅ | 3.1 | **Version and build ID** | The build reads the Android `versionName` and uses its first three numbers as the app version, because App Store Connect accepts no more (2.0.0.1 becomes 2.0.0). The build ID stays the upload time. The commit hash is stored in the bundle, and About shows version, build ID and hash. ADR. |
+| ✅ | 3.1 | **Version and build ID** | The build reads the Android `versionName` and uses its first three numbers as the app version, because App Store Connect accepts no more (2.0.0.1 becomes 2.0.0); since [ADR-0070](adr/0070-own-app-version.md), the app has a version of its own instead, below 1.0 on TestFlight. The build ID stays the upload time. The commit hash is stored in the bundle, and About shows version, build ID and hash. ADR. |
 | ✅ | 3.2 | **BLE device selection** | The app lists the radios it finds, the user chooses one, and the app remembers it for the next connection. |
 | ✅ | 3.3 | **Error alerts** | When an error needs the user's attention, above all a lost connection to the radio, whatever the cause, the app reports it. On iPhone and iPad, a local notification does so while the app is not in the foreground; the app asks for permission the first time it needs it and works without it. On the Mac, a dialog opens, and the Dock icon bounces while the app is in the background. In the foreground, iPhone and iPad also show the error in the app. A disconnect the user chose causes none, and one failure causes one report. Tested through an adapter behind a protocol. ADR. |
 | ✅ | 3.4 | **Screen layout** | The app is structured like the Android app: frequency and S-meter on top, memories or APRS below, PTT always in reach, settings on their own screen. iPhone, iPad and Mac share this structure and use the extra room on large screens. ADR. |
@@ -118,7 +118,7 @@ TestFlight only ([ADR-0036](adr/0036-no-distribution-outside-app-store.md)).
 
 |   | # | Milestone | Acceptance criteria |
 |---|---|---|---|
-| ⬜ | 99.1 | **App Store release** | Store listing, screenshots, privacy policy, App Review for iOS, iPadOS and macOS. |
+| ⬜ | 99.1 | **App Store release** | Version 1.0.0 ([ADR-0070](adr/0070-own-app-version.md)). Store listing, screenshots, privacy policy, App Review for iOS, iPadOS and macOS. |
 
 ## Hardware tests
 

@@ -55,3 +55,8 @@ for platform in ${PLATFORMS:-iOS macOS}; do
   echo "testflight: if the memory model changed, deploy the CloudKit schema to production (ADR-0052)"
   echo "testflight: paste $out/WhatToTest-$platform.txt into What to Test of that build"
 done
+if [[ -z "$dry_run" ]]; then
+  version=$(sed -nE 's/^MARKETING_VERSION *= *([0-9.]+).*/\1/p' Config/Version.xcconfig)
+  echo "testflight: tag the build and publish it as a GitHub pre-release (ADR-0070):"
+  echo "  git tag -a apple-v$version-$build $commit -m \"kv4p HT for Apple $version ($build)\" && git push origin apple-v$version-$build"
+fi

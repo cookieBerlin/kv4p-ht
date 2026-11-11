@@ -3,7 +3,7 @@
 # - iOS: background modes audio and bluetooth-central (ADR-0031);
 # - an app icon, a privacy manifest and the export compliance answer (ADR-0033);
 # - no nested resource bundles, because the App Store export does not sign them again (ADR-0033);
-# - a version of three numbers and, for a release, its commit (ADR-0037).
+# - a version of three numbers and, for a release, its commit (ADR-0037, ADR-0070).
 # Usage: app-plist-check.sh <path to KV4PHT.app> [<commit>]
 set -euo pipefail
 
