@@ -5,6 +5,7 @@ import KV4PTestSupport
 import Synchronization
 import Testing
 
+@testable import KV4PProtocol
 @testable import KV4PRadio
 
 /// The map: its switch, its layers, the memories on it and what it shows first (ADR-0068).
@@ -43,6 +44,13 @@ struct MapTests {
     static let beacon = ChannelMemory(name: "Beacon", frequency: 144.49, kind: .beacon, latitude: 49, longitude: -71)
     static let meeting = ChannelMemory(name: "Meeting", frequency: 145.5, latitude: 48.5, longitude: -72)
     static let nowhere = ChannelMemory(name: "Nowhere", frequency: 145.55, kind: .repeater)
+    static let sixMetres = ChannelMemory(
+        name: "6 m repeater",
+        frequency: 50.5,
+        kind: .repeater,
+        latitude: 49.3,
+        longitude: -72
+    )
     static let uhf = ChannelMemory(
         name: "UHF repeater",
         frequency: 439.1,
@@ -81,20 +89,26 @@ struct MapTests {
         #expect(defaults.isMapEnabled)
         #expect(defaults.mapLayers == [.repeaters, .beacons])
         #expect(!defaults.isMapShownAsList)
+        #expect(defaults.mapBand == .radio)
         var settings = AppSettings()
         settings.isMapEnabled = false
         settings.mapLayers = [.frequencies]
         settings.isMapShownAsList = true
+        settings.mapBand = .seventyCentimetres
         let decoded = AppSettings(data: try settings.encoded())
         #expect(!decoded.isMapEnabled)
         #expect(decoded.mapLayers == [.frequencies])
         #expect(decoded.isMapShownAsList)
+        #expect(decoded.mapBand == .seventyCentimetres)
         #expect(SettingsSync.values(of: settings) == SettingsSync.values(of: AppSettings()))
         let store = MemorySettingsStore(settings)
         let model = RadioViewModelSettingsTests.model(store)
         #expect(!model.isMapEnabled)
         #expect(model.mapLayers == [.frequencies])
         #expect(model.isMapShownAsList)
+        #expect(model.mapBand == .seventyCentimetres)
+        model.mapBand = .all
+        #expect(store.settings.mapBand == .all)
         model.isMapEnabled = true
         model.mapLayers = [.beacons]
         model.isMapShownAsList = false
@@ -114,6 +128,45 @@ struct MapTests {
     func layers(kind: MemoryKind, layer: MapLayer, title: String) {
         #expect(MapLayer(kind) == layer)
         #expect(layer.title == title)
+    }
+
+    @Test(
+        "the bands have short names",
+        arguments: [
+            (MapBand.radio, "Radio's band"), (.twoMetres, "2 m"), (.seventyCentimetres, "70 cm"), (.all, "All"),
+        ]
+    )
+    func bandTitles(band: MapBand, title: String) {
+        #expect(band.title == title)
+    }
+
+    @Test("each point knows the module that receives it, if any")
+    func pointBand() async throws {
+        let model = try await Self.model([Self.near, Self.uhf, Self.sixMetres])
+        model.mapBand = .all
+        #expect(model.mapPoints.map(\.module) == [.sa818VHF, .sa818UHF, nil])
+    }
+
+    @Test("without a radio, the radio's band is 2 m and 70 cm, and all brings the other bands too")
+    func bandsWithoutRadio() async throws {
+        let model = try await Self.model([Self.near, Self.uhf, Self.sixMetres])
+        #expect(model.mapPoints.map(\.memory.name) == ["Near repeater", "UHF repeater"])
+        model.mapBand = .twoMetres
+        #expect(model.mapPoints.map(\.memory.name) == ["Near repeater"])
+        model.mapBand = .seventyCentimetres
+        #expect(model.mapPoints.map(\.memory.name) == ["UHF repeater"])
+        model.mapBand = .all
+        #expect(model.mapPoints.map(\.memory.name) == ["Near repeater", "UHF repeater", "6 m repeater"])
+    }
+
+    @Test("with a radio, the radio's band is the one it receives")
+    func bandOfRadio() async throws {
+        let model = try await Self.model([Self.near, Self.uhf, Self.sixMetres])
+        await model.connect()
+        #expect(await RadioViewModelTests.eventually(model) { $0.isReady && $0.snapshot.isInSync })
+        #expect(model.mapPoints.map(\.memory.name) == ["Near repeater"])
+        model.mapBand = .seventyCentimetres
+        #expect(model.mapPoints.map(\.memory.name) == ["UHF repeater"])
     }
 
     @Test("the map shows the memories with a position on the layers that are on")
@@ -178,6 +231,7 @@ struct MapTests {
     @Test("a memory tunes from the map once the radio is ready and receives it")
     func tunable() async throws {
         let model = try await Self.model([Self.near, Self.uhf])
+        model.mapBand = .all
         #expect(model.mapPoints.allSatisfy { !$0.isTunable })
         await model.connect()
         #expect(await RadioViewModelTests.eventually(model) { $0.isReady && $0.snapshot.isInSync })
