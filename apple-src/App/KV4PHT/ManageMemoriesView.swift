@@ -219,7 +219,7 @@ struct GroupMemoriesView: View {
             .disabled(selected.isEmpty)
         }
         .padding()
-        .background(.bar)
+        .background(Color.opaqueBar)
     }
 
     /// The groups `memories` can move to.

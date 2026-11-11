@@ -58,6 +58,6 @@ struct StationSetupView: View {
         .controlSize(.large)
         .frame(maxWidth: .infinity, alignment: .trailing)
         .padding()
-        .background(.bar)
+        .background(Color.opaqueBar)
     }
 }

@@ -23,11 +23,16 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
   screen, and a page it does not reach counts as a finding.
 - **`make a11y` runs it on an iPhone and an iPad simulator** and writes the findings, each with its device, to
   `.build/a11y/findings.txt`, and a screenshot of each screen next to them. It is not part of `make ci`, as it needs the
-  simulator; CI runs it as a job of its own and keeps the findings.
+  simulator; CI runs it as a job of its own, which is not required for a merge, and keeps the findings, the log of each
+  simulator and the screenshots.
 - **The audit is strict since 3.7b:** every finding fails the test, except those below. The test names the number of the
   exception for each finding it lets pass, so that the list here and the code stay in step. A busy simulator lets an
   audit run out of time now and then; it then runs one kind of check at a time, each up to three times. The check of
   Dynamic Type always runs on its own: together with the others it flags text that grows, such as all of a chat.
+- **The bars above and below the lists are opaque, and the lists end at them,** on every platform. Behind a
+  translucent bar, a row that a list scrolled out of sight still showed through, too faint to read, and the audit
+  flagged it; on the iPad with the largest text that happened on every run. The button to connect and disconnect uses
+  the app's darker blue on iPhone and iPad, as the system's blue on the grey of the header fails the contrast check.
 - **The Mac since 3.7c, with `make a11y-mac`:** the same test, run by hand only, as it takes over the mouse and the
   keyboard. Its own kinds of check stand in for Dynamic Type, clipped text and traits, which the Mac does not have: the
   actions of an element and the match of parent and child. It goes through the main window, the chats and a chat, each

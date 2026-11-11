@@ -36,8 +36,17 @@ final class FlasherVectors {
         SILENT
     }
 
-    /** Attempts to get two equal transcripts in a row. */
-    private static final int ATTEMPTS = 5;
+    /** Attempts to get two equal transcripts in a row, from flashes that read each reply in time. */
+    private static final int ATTEMPTS = 10;
+
+    /**
+     * Half the library's reply timeout of 100 ms. A reply read later than this means the runner stalled while the
+     * library waited, and it may have given up on the reply although the fake device sent it at once.
+     */
+    private static final long LATE_NANOS = 50_000_000L;
+
+    /** A transcript, and whether a reply was read late in it. */
+    private record Run(Object vector, boolean late) {}
 
     static List<Object> all() throws Exception {
         // The first flash loads the library's classes, which can take longer than its 100 ms reply timeout.
@@ -49,19 +58,26 @@ final class FlasherVectors {
     }
 
     /**
-     * The library waits for replies in real time, so a stalled runner can make it miss one and retry. Only a transcript
-     * that two flashes in a row produce is kept.
+     * The library waits for replies in real time: it checks its deadline before each byte it reads, so a stalled
+     * runner can make it miss a reply that is already there, and two stalled flashes can even agree. A flash in which a
+     * reply was read late is dropped, and only a transcript that two timely flashes in a row produce is kept.
      */
     private static Object stable(String name, Device device) throws Exception {
-        String previous = Json.write(vector(name, device));
-        for (int attempt = 1; attempt < ATTEMPTS; attempt++) {
-            Object next = vector(name, device);
-            if (Json.write(next).equals(previous)) {
-                return next;
+        String previous = null;
+        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
+            Run run = vector(name, device);
+            if (run.late()) {
+                System.err.println("flasher vector '" + name + "': a reply was read late, flashing again");
+                previous = null;
+                continue;
             }
-            previous = Json.write(next);
+            String next = Json.write(run.vector());
+            if (next.equals(previous)) {
+                return run.vector();
+            }
+            previous = next;
         }
-        throw new IllegalStateException("flasher vector '" + name + "' differs between runs");
+        throw new IllegalStateException("flasher vector '" + name + "' differs between runs or was read late");
     }
 
     static List<Object> packaged() {
@@ -71,7 +87,7 @@ final class FlasherVectors {
             .put("expected", Json.obj().put("version", FirmwareUtils.PACKAGED_FIRMWARE_VER)));
     }
 
-    private static Object vector(String name, Device device) throws Exception {
+    private static Run vector(String name, Device device) throws Exception {
         byte[] bootloader = pseudoRandom(0x600, 1);
         byte[] partitions = partitions();
         byte[] bootApp0 = filled(0x2000, (byte) 0xFF);
@@ -98,7 +114,7 @@ final class FlasherVectors {
                 esp32.transcript.add(Json.obj().put("event", "done").put("success", success));
             }
         });
-        return Json.obj()
+        Object vector = Json.obj()
             .put("name", name)
             .put("input", Json.obj()
                 .put("bootloader", Json.hex(bootloader))
@@ -106,6 +122,7 @@ final class FlasherVectors {
                 .put("bootApp0", Json.hex(bootApp0))
                 .put("app", Json.hex(app)))
             .put("expected", Json.obj().put("transcript", esp32.transcript));
+        return new Run(vector, esp32.late);
     }
 
     /** Bytes of a 32-bit linear congruential generator; they include SLIP's 0xC0 and 0xDB. */
@@ -153,6 +170,10 @@ final class FlasherVectors {
         private final ByteArrayOutputStream frame = new ByteArrayOutputStream();
         private final ByteArrayOutputStream replies = new ByteArrayOutputStream();
         private byte[] unread = new byte[0];
+        /** When the oldest reply still unread was sent. */
+        private long unreadSince;
+        /** Whether a reply waited longer than {@link #LATE_NANOS} to be read. */
+        boolean late;
         private boolean inFrame;
         private boolean escaped;
         private boolean stub;
@@ -173,12 +194,19 @@ final class FlasherVectors {
             int count = Math.min(length, unread.length);
             System.arraycopy(unread, 0, dest, 0, count);
             unread = Arrays.copyOfRange(unread, count, unread.length);
+            if (unread.length == 0) {
+                checkInTime();
+            }
             return count;
         }
 
         @Override
         public void write(byte[] src, int length, int timeout) {
             byte[] bytes = Arrays.copyOf(src, length);
+            if (unread.length > 0) {
+                // A reply not read up to the next command: the library may have given up on it.
+                checkInTime();
+            }
             transcript.add(Json.obj().put("event", "write").put("bytes", Json.hex(bytes)));
             for (byte b : bytes) {
                 receive(b);
@@ -187,9 +215,18 @@ final class FlasherVectors {
                 byte[] reply = replies.toByteArray();
                 replies.reset();
                 transcript.add(Json.obj().put("event", "reply").put("bytes", Json.hex(reply)));
+                if (unread.length == 0) {
+                    unreadSince = System.nanoTime();
+                }
                 byte[] all = Arrays.copyOf(unread, unread.length + reply.length);
                 System.arraycopy(reply, 0, all, unread.length, reply.length);
                 unread = all;
+            }
+        }
+
+        private void checkInTime() {
+            if (System.nanoTime() - unreadSince > LATE_NANOS) {
+                late = true;
             }
         }
 
