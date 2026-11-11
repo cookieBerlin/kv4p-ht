@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>$if(hero)$$name$ – ham radio for iPhone, iPad and Mac$else$$pagetitle$ · $name$$endif$</title>
+  <meta name="description" content="$description$">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/png" href="img/app-icon.png">
+  <link rel="apple-touch-icon" href="img/app-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="bar">
+    <a class="brand" href="index.html"><img src="img/app-icon.png" alt="" width="28" height="28"> $name$</a>
+    <nav>
+      <a href="index.html#features">Features</a>
+      <a href="faq.html">FAQ</a>
+      <a href="manual.html">Manual</a>
+      <a class="button small" href="$testflight$">TestFlight</a>
+    </nav>
+  </header>
+$if(hero)$
+  <section class="hero">
+    <img class="hero-icon" src="img/app-icon.png" alt="App icon of $name$" width="128" height="128">
+    <h1>$name$</h1>
+    <p class="tagline">Turn your iPhone, iPad or Mac into a modern ham radio transceiver,
+      with the open source kv4p HT radio.</p>
+    <div class="actions">
+      <a class="button" href="$testflight$">Join the TestFlight beta</a>
+      <a class="button secondary" href="manual.html">Read the manual</a>
+    </div>
+    <p class="note">Free and open source · No account · No tracking</p>
+  </section>
+  <main class="home">
+$body$
+  </main>
+$else$
+  <main class="doc">
+$body$
+  </main>
+$endif$
+  <footer>
+    <p>$name$ is free software under the
+      <a href="$repo$/blob/main/LICENSE">GNU GPL 3.0</a> ·
+      <a href="$repo$">Source code</a> ·
+      <a href="privacy.html">Privacy</a> ·
+      <a href="support.html">Support</a></p>
+    <p>An unofficial port, not affiliated with or endorsed by the
+      <a href="https://www.kv4p.com">kv4p HT project</a> or Apple. A valid amateur radio licence is required to
+      transmit. Apple, iPhone, iPad, Mac and TestFlight are trademarks of Apple Inc.</p>
+  </footer>
+</body>
+</html>

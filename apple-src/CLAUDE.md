@@ -57,6 +57,8 @@ make ios-build  # compile all modules for iOS (no simulator)
 make app        # build the app for macOS and iOS, check the iOS bundle, release dry runs
 make testflight # signed iOS and macOS builds, uploaded to App Store Connect; needs TEAM_ID (PLATFORMS=macOS for one platform, DRY_RUN=1 for a dry run); writes the What to Test texts
 make icon       # render the app icon from ../artwork/app-icon.svg (commit the result)
+make site       # build the website into .build/site (ADR-0067); needs pandoc
+make site-check # make site, then check its links offline; needs lychee
 make ci         # everything CI runs, in the same order
 make vectors    # regenerate golden test vectors (Android code, vendored Codec2) and the app version
 make vectors-check # make vectors, then fail if the committed vectors or Codec2 sources differ
@@ -66,7 +68,7 @@ swift run kv4p-probe --flash <directory> [<device>]  # flash bootloader/partitio
 swift run kv4p-sim-peripheral [--uhf] [--no-radio-module] [--signal] [--verbose]  # simulated radio over BLE
 ```
 
-Requires Xcode (with `swift format`) and `jq`; `make vectors` also needs JDK 17
+Requires Xcode (with `swift format`) and `jq`; the website needs `brew install pandoc lychee`; `make vectors` also needs JDK 17
 (`brew install openjdk@17`, or set `JAVA17_HOME`). Gradle 9 does not run on newer JDKs.
 
 CI calls `make ci`; never duplicate command lines in workflow files.
