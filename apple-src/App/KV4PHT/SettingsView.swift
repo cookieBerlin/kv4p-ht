@@ -79,6 +79,7 @@ struct SettingsView: View {
             switch page {
             case .simulator: model.canConfigureSimulator
             case .audio: hasAudioSettings
+            case .aprs: model.isAPRSEnabled
             default: true
             }
         }
@@ -96,6 +97,7 @@ struct SettingsView: View {
         Group {
             switch page {
             case .station: StationSettings(model: model)
+            case .pages: PagesSettings(model: model)
             case .radio: RadioSettings(model: model)
             case .transmit: TransmitSettings(model: model)
             case .audio: AudioSettings(model: model)

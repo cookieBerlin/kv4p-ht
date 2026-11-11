@@ -1881,6 +1881,7 @@ public final class RadioViewModel {
 
     /// From a notification: the chat on the chats page, wherever the user was.
     public func openChat(with peer: String) {
+        guard isAPRSEnabled else { return }
         aprsPage = .chats
         aprsRecipient = peer
         openChat = peer

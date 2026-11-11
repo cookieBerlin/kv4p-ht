@@ -89,11 +89,16 @@ struct RootView: View {
         #endif
     }
 
+    /// Without APRS, the memories take the whole width.
     private var sideBySide: some View {
         HStack(spacing: 0) {
-            MemoriesView(model: model).frame(minWidth: 280, maxWidth: 400)
-            Divider()
-            APRSView(model: model).frame(minWidth: 320)
+            if model.isAPRSEnabled {
+                MemoriesView(model: model).frame(minWidth: 280, maxWidth: 400)
+                Divider()
+                APRSView(model: model).frame(minWidth: 320)
+            } else {
+                MemoriesView(model: model).frame(minWidth: 280)
+            }
         }
     }
 }
@@ -194,8 +199,10 @@ struct RootView: View {
                     HStack(spacing: 0) {
                         copyView(.copyBefore) { NavigationStack { SettingsView(model: model) } }
                         pageView(.memories) { MemoriesView(model: model) }
-                        pageView(.packets) { APRSView(model: model, page: .packets) }
-                        pageView(.chats) { APRSView(model: model, page: .chats) }
+                        if model.isAPRSEnabled {
+                            pageView(.packets) { APRSView(model: model, page: .packets) }
+                            pageView(.chats) { APRSView(model: model, page: .chats) }
+                        }
                         pageView(.settings) {
                             NavigationStack(path: $settingsPath) { SettingsView(model: model) }
                         }
@@ -208,7 +215,21 @@ struct RootView: View {
                 // On a page of the settings, a swipe goes back to their list.
                 .scrollDisabled(page == .settings && !settingsPath.isEmpty)
                 .scrollPosition(id: $shownSlot)
-                .onAppear { shownSlot = .page(page) }
+                .onAppear {
+                    showMemoriesIfHidden()
+                    shownSlot = .page(page)
+                }
+                .onChange(of: model.isAPRSEnabled) {
+                    showMemoriesIfHidden()
+                    // The pages before it come or go, and the scroll view stays where it was, on another page. Once
+                    // they are laid out, it goes back to the page; unset first, as the same value moves nothing.
+                    shownSlot = nil
+                    Task {
+                        var jump = Transaction()
+                        jump.disablesAnimations = true
+                        withTransaction(jump) { shownSlot = .page(page) }
+                    }
+                }
                 .onChange(of: shownSlot) {
                     if let shownSlot, shownSlot.page != page { page = shownSlot.page }
                 }
@@ -250,6 +271,16 @@ struct RootView: View {
             .observesKeyboard($isKeyboardShown)
         }
 
+        /// The pages there are: without APRS, its two go.
+        private var pages: [Page] {
+            Page.allCases.filter { $0.aprsPage == nil || model.isAPRSEnabled }
+        }
+
+        /// The page shown last may be one that went since; the app then starts with the memories.
+        private func showMemoriesIfHidden() {
+            if !pages.contains(page) { page = .memories }
+        }
+
         /// For the chats to count as read and the list to show distances while one of them is on screen.
         private func updateAPRSVisibility() {
             model.isAPRSVisible = page.aprsPage != nil && scenePhase == .active
@@ -264,7 +295,7 @@ struct RootView: View {
 
         private var pageBar: some View {
             HStack {
-                ForEach(Page.allCases) { item in
+                ForEach(pages) { item in
                     Button {
                         withAnimation { page = item }
                     } label: {

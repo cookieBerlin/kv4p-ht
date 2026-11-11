@@ -9,6 +9,9 @@ enum ControlHelp {
     static let frequency =
         "Scroll over a digit, or press ↑ or ↓ at the cursor, to step it in the channel raster; with ⌥ by the digit "
         + "exactly. Enter a frequency and press Return to tune to it."
+    static let aprsPages =
+        "The packets, the chats and the APRS settings. Off, the app also receives and sends no APRS: no beacons, "
+        + "messages, acknowledgements, digipeating or APRS-IS. The other APRS settings stay for when it is on again."
     static let connectAtStart = "Connects to the radio chosen last when the app starts."
     static let scan = "Steps through the memories shown and stops on a signal."
     static let manageMemories = "Sort the memories and groups, change several at once and import repeaters."
