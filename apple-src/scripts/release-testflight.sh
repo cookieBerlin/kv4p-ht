@@ -23,6 +23,15 @@ build="${BUILD_NUMBER:-$(date -u +%Y%m%d.%H%M)}"
 commit=$(git rev-parse --short=7 HEAD)
 [[ -z "$(git status --porcelain)" ]] || commit="$commit-dirty"
 
+# Unreleased becomes the section of this build, which the app bundles (ADR-0069). A dry run puts the file back.
+changelog=App/KV4PHT/CHANGELOG.md
+version=$(sed -nE 's/^MARKETING_VERSION *= *([0-9.]+).*/\1/p' Config/Version.xcconfig)
+if [[ -n "$dry_run" ]]; then
+  cp "$changelog" "$out/CHANGELOG.md.saved"
+  trap 'mv "$out/CHANGELOG.md.saved" "$changelog"' EXIT
+fi
+scripts/changelog-release.sh "$changelog" "$version" "$build" "$(date -u +%Y-%m-%d)"
+
 # Generated here, because the team ID must not be committed.
 options="$out/ExportOptions.plist"
 if [[ -z "$dry_run" ]]; then
@@ -56,7 +65,7 @@ for platform in ${PLATFORMS:-iOS macOS}; do
   echo "testflight: paste $out/WhatToTest-$platform.txt into What to Test of that build"
 done
 if [[ -z "$dry_run" ]]; then
-  version=$(sed -nE 's/^MARKETING_VERSION *= *([0-9.]+).*/\1/p' Config/Version.xcconfig)
+  echo "testflight: commit $changelog, with the section of build $build, in a pull request"
   echo "testflight: tag the build and publish it as a GitHub pre-release (ADR-0070):"
   echo "  git tag -a apple-v$version-$build $commit -m \"kv4p HT for Apple $version ($build)\" && git push origin apple-v$version-$build"
 fi
