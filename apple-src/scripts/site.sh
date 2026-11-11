@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the website of the Apple app (ADR-0067) with pandoc: the pages of docs/apple/site and, as they are,
-# the FAQ and the manual of docs/apple. Links to other files of the repository point to GitHub.
+# the FAQ and the manual of docs/apple, and the changelog the app bundles (ADR-0069). Links to other files of the repository point to GitHub.
 # Usage: site.sh <output folder> (run by `make site`)
 set -euo pipefail
 
@@ -31,6 +31,8 @@ page docs/apple/faq.md gfm faq.html --metadata pagetitle=FAQ \
   --metadata description="Questions and answers about the kv4p HT app for iPhone, iPad and Mac."
 page docs/apple/manual.md gfm manual.html --metadata pagetitle=Manual \
   --metadata description="User manual of the kv4p HT app for iPhone, iPad and Mac."
+page apple-src/App/KV4PHT/CHANGELOG.md gfm changelog.html --metadata pagetitle=Changelog \
+  --metadata description="What changed in each TestFlight build of the kv4p HT app for iPhone, iPad and Mac."
 for source in "$site"/*.md; do
   name="$(basename "$source" .md)"
   page "docs/apple/site/$name.md" markdown "$name.html"

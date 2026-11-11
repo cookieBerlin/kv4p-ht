@@ -46,7 +46,10 @@ These rules apply to all work on the Apple port (`apple-src/`, `docs/apple/`,
    are immutable; supersede them with a new ADR.
 8. **Keep user docs current.** Every user-visible change updates
    [`docs/apple/manual.md`](docs/apple/manual.md) and/or
-   [`docs/apple/faq.md`](docs/apple/faq.md) in the same pull request.
+   [`docs/apple/faq.md`](docs/apple/faq.md) in the same pull request, and adds a line
+   under *Unreleased* in [`apple-src/App/KV4PHT/CHANGELOG.md`](apple-src/App/KV4PHT/CHANGELOG.md),
+   as *Added*, *Changed* or *Fixed*, with what users notice only
+   ([ADR-0069](docs/apple/adr/0069-changelog.md)).
 
 ## Commits and branches
 

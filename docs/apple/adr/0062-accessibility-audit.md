@@ -68,7 +68,8 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
    it.
 5. **A disabled choice without the trait "not enabled":** SwiftUI's own; VoiceOver reads it as dimmed all the same.
 6. **Dynamic Type and clipped text in SwiftUI's lists and forms:** their rows wrap on the screenshots rather than being
-   cut.
+   cut. The same for clipped text in *What's New*: the audit flags entries of three lines and more, whose frames hold
+   all their lines (ADR-0069).
 7. **Findings without an element:** the audit names no element, so none can be matched or fixed; the screenshot of the
    screen is checked instead.
 8. **Mac: the action "show menu" of a pop-up button:** SwiftUI's pickers offer "press" only, which opens their menu

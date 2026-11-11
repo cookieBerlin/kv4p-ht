@@ -72,4 +72,5 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0066](0066-hideable-pages.md) | Pages that can be switched off | Proposed |
 | [0067](0067-website.md) | Website on GitHub Pages | Proposed |
 | [0068](0068-map.md) | Map | Proposed |
+| [0069](0069-changelog.md) | Changelog | Proposed |
 | [0070](0070-own-app-version.md) | The app's own version | Proposed |

@@ -14,6 +14,12 @@ Through Apple's TestFlight app, with the [public invitation](https://testflight.
 is not in the App Store yet. See the [manual](manual.md#installation) and the
 [website](https://cookieberlin.github.io/kv4p-ht/).
 
+## What changed in a build?
+
+The [changelog](../../apple-src/App/KV4PHT/CHANGELOG.md) lists what changed in each TestFlight build, newest first; it
+is also on the [website](https://cookieberlin.github.io/kv4p-ht/changelog.html). In the app, **What's New** in About
+shows it, and after an update the app shows once what is new in that build.
+
 ## Why Bluetooth instead of USB on iPhone and iPad?
 
 iOS and iPadOS only allow USB accessories that are certified in Apple's MFi

@@ -7,6 +7,9 @@ import SwiftUI
 struct RootView: View {
     let model: RadioViewModel
     @State private var isReporting = false
+    /// The section of this build, offered once after an update (ADR-0069).
+    @State private var whatsNew: Changelog.Release?
+    @State private var hasCheckedWhatsNew = false
     #if os(iOS)
         /// The settings opened on a wide iPad, and the pages within them.
         @State private var settingsPath: [SettingsDestination] = []
@@ -79,6 +82,21 @@ struct RootView: View {
                 await model.connectAtStart()
             }
             .sheet(isPresented: .constant(model.isStationSetupPending)) { StationSetupView(model: model) }
+            .sheet(
+                isPresented: Binding(
+                    get: { whatsNew != nil && !model.isStationSetupPending },
+                    set: { if !$0 { whatsNew = nil } }
+                )
+            ) {
+                if let whatsNew { WhatsNewView(release: whatsNew) }
+            }
+            .onAppear {
+                // At the first start of a new build only; the station setup comes first.
+                if !hasCheckedWhatsNew {
+                    hasCheckedWhatsNew = true
+                    whatsNew = BundledChangelog.offerAtStart(defaults: Composition.viewDefaults)
+                }
+            }
     }
 
     @ViewBuilder private var content: some View {
