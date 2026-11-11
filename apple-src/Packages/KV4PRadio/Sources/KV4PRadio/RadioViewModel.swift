@@ -402,6 +402,15 @@ public final class RadioViewModel {
             saveSettings()
         }
     }
+    /// APRS is there at all; off, nothing of it is received or sent, and its other settings wait (ADR-0066).
+    public var isAPRSEnabled = true {
+        didSet {
+            guard isAPRSEnabled != oldValue else { return }
+            saveSettings()
+            updateInternet()
+            updateBeaconSession()
+        }
+    }
     /// Show APRS-IS packets near our position in the feed.
     public var isInternetFeedEnabled = false {
         didSet {
@@ -728,6 +737,7 @@ public final class RadioViewModel {
         settings.callsign = callsign
         settings.isListenOnly = isListenOnly
         settings.isSettingsSyncEnabled = isSettingsSyncEnabled
+        settings.isAPRSEnabled = isAPRSEnabled
         settings.lastSettingsSync = lastSettingsSync
         settings.lastMemorySync = lastMemorySync
         settings.micGain = micGain
@@ -778,6 +788,7 @@ public final class RadioViewModel {
         defer { isRestoring = false }
         applySynced(settings)
         isSettingsSyncEnabled = settings.isSettingsSyncEnabled
+        isAPRSEnabled = settings.isAPRSEnabled
         lastSettingsSync = settings.lastSettingsSync
         isBackgroundBeaconEnabled = settings.isBackgroundBeaconEnabled
         lastMemorySync = settings.lastMemorySync
@@ -1530,7 +1541,7 @@ public final class RadioViewModel {
 
     /// Frames that are not APRS are ignored, as on Android.
     private func receive(_ frame: [UInt8]) {
-        guard let packet = try? APRSParser.parse(ax25: frame) else { return }
+        guard isAPRSEnabled, let packet = try? APRSParser.parse(ax25: frame) else { return }
         aprs.receive(
             packet,
             frame: frame,
@@ -1565,6 +1576,7 @@ public final class RadioViewModel {
     /// Whether the message went out, or at least waits for its acknowledgement.
     @discardableResult
     private func post(to recipient: String, text: String) -> Bool {
+        guard isAPRSEnabled else { return false }
         guard !callsign.isEmpty else {
             message = "Set your callsign to send APRS messages."
             return false
@@ -1646,9 +1658,11 @@ public final class RadioViewModel {
         let time = now()
         watchSync(atMs: time)
         logRXAudio(atMs: time)
-        aprs.tick(atMs: time, transmit: transmitAPRS)
+        if isAPRSEnabled {
+            aprs.tick(atMs: time, transmit: transmitAPRS)
+        }
         updateBeaconSession()
-        if isBeaconEnabled, canSendOnAir, canReadLocationNow, time >= nextBeaconAtMs, let location {
+        if isAPRSEnabled, isBeaconEnabled, canSendOnAir, canReadLocationNow, time >= nextBeaconAtMs, let location {
             nextBeaconAtMs = time + beaconIntervalMs
             Task { await beacon(from: location) }
         }
@@ -1731,7 +1745,8 @@ public final class RadioViewModel {
     /// Starts or ends the session as the beacon needs it (ADR-0056). It can only start in the foreground.
     private func updateBeaconSession() {
         let isWanted =
-            isBackgroundBeaconEnabled && isBeaconEnabled && canSendOnAir && isReady && !isDenied(.location)
+            isAPRSEnabled && isBackgroundBeaconEnabled && isBeaconEnabled && canSendOnAir && isReady
+            && !isDenied(.location)
         if isWanted, !isBeaconSessionRunning, isAppActive, let backgroundLocation {
             backgroundLocation.start()
             isBeaconSessionRunning = true
@@ -2243,7 +2258,7 @@ public final class RadioViewModel {
         let active = isIGateEnabled || isInternetFeedEnabled
         internet?.update(
             APRSISSettings(
-                isEnabled: active && !callsign.isEmpty,
+                isEnabled: isAPRSEnabled && active && !callsign.isEmpty,
                 isReceiveEnabled: isInternetFeedEnabled,
                 isTransmitEnabled: isIGateEnabled,
                 callsign: callsign,
@@ -2316,6 +2331,7 @@ public final class RadioViewModel {
     }
 
     private func receiveInternet(_ line: String) {
+        guard isAPRSEnabled else { return }
         aprs.receive(internetLine: line, atMs: now())
         showAPRS()
     }

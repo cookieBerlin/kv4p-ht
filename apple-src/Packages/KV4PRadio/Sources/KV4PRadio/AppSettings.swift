@@ -39,6 +39,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isListenOnly = false
     /// The settings for all devices follow the user through iCloud (ADR-0051).
     public var isSettingsSyncEnabled = true
+    /// APRS is there at all: its pages, and all it receives and sends; local to the device (ADR-0066).
+    public var isAPRSEnabled = true
     /// When this device last exchanged settings with iCloud.
     public var lastSettingsSync: Date?
     /// When a sync of the memories with iCloud last finished.
@@ -142,6 +144,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         callsign = values.value(.callsign, or: defaults.callsign)
         isListenOnly = values.value(.isListenOnly, or: defaults.isListenOnly)
         isSettingsSyncEnabled = values.value(.isSettingsSyncEnabled, or: defaults.isSettingsSyncEnabled)
+        isAPRSEnabled = values.value(.isAPRSEnabled, or: defaults.isAPRSEnabled)
         lastSettingsSync = values.value(.lastSettingsSync, or: defaults.lastSettingsSync)
         lastMemorySync = values.value(.lastMemorySync, or: defaults.lastMemorySync)
         micGain = values.value(.micGain, or: defaults.micGain)
