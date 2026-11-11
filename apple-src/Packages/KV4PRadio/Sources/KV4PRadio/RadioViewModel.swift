@@ -411,6 +411,18 @@ public final class RadioViewModel {
             updateBeaconSession()
         }
     }
+    /// The map is there at all (ADR-0068).
+    public var isMapEnabled = true {
+        didSet { saveSettings() }
+    }
+    /// What the map shows.
+    public var mapLayers: Set<MapLayer> = [.repeaters, .beacons] {
+        didSet { saveSettings() }
+    }
+    /// The points of the map as a list, sorted by distance, as VoiceOver reads it more easily.
+    public var isMapShownAsList = false {
+        didSet { saveSettings() }
+    }
     /// Show APRS-IS packets near our position in the feed.
     public var isInternetFeedEnabled = false {
         didSet {
@@ -520,7 +532,11 @@ public final class RadioViewModel {
     public var isPacketsPageVisible = false {
         didSet { listVisibilityChanged() }
     }
-    /// Our position, for the distances of the APRS list; it stays on this device.
+    /// The same for the map (ADR-0068).
+    public var isMapVisible = false {
+        didSet { listVisibilityChanged() }
+    }
+    /// Our position, for the distances of the APRS list and the map; it stays on this device.
     public private(set) var ownPosition: GeoPoint?
     /// The question for location access is open, so the list can offer to ask it.
     public private(set) var offersDistances = false
@@ -738,6 +754,9 @@ public final class RadioViewModel {
         settings.isListenOnly = isListenOnly
         settings.isSettingsSyncEnabled = isSettingsSyncEnabled
         settings.isAPRSEnabled = isAPRSEnabled
+        settings.isMapEnabled = isMapEnabled
+        settings.mapLayers = mapLayers
+        settings.isMapShownAsList = isMapShownAsList
         settings.lastSettingsSync = lastSettingsSync
         settings.lastMemorySync = lastMemorySync
         settings.micGain = micGain
@@ -789,6 +808,9 @@ public final class RadioViewModel {
         applySynced(settings)
         isSettingsSyncEnabled = settings.isSettingsSyncEnabled
         isAPRSEnabled = settings.isAPRSEnabled
+        isMapEnabled = settings.isMapEnabled
+        mapLayers = settings.mapLayers
+        isMapShownAsList = settings.isMapShownAsList
         lastSettingsSync = settings.lastSettingsSync
         isBackgroundBeaconEnabled = settings.isBackgroundBeaconEnabled
         lastMemorySync = settings.lastMemorySync
@@ -1057,7 +1079,7 @@ public final class RadioViewModel {
 
     /// Reads our position for the list: while it is shown, with access granted, and at most once a minute.
     private func refreshOwnPosition() {
-        guard isAPRSVisible || isPacketsPageVisible, let location, permissions?.state(of: .location) == .granted,
+        guard isAPRSVisible || isPacketsPageVisible || isMapVisible, let location, permissions?.state(of: .location) == .granted,
             now() >= nextOwnPositionAtMs
         else { return }
         nextOwnPositionAtMs = now() + Self.ownPositionIntervalMs
@@ -2490,7 +2512,7 @@ public final class RadioViewModel {
     }
 
     /// Whether the connected radio receives `memory`; any memory before a radio is known.
-    private func isReceivable(_ memory: ChannelMemory) -> Bool {
+    func isReceivable(_ memory: ChannelMemory) -> Bool {
         guard let firmware = snapshot.firmware else { return true }
         return (firmware.minRadioFreq...firmware.maxRadioFreq).contains(memory.frequency)
     }

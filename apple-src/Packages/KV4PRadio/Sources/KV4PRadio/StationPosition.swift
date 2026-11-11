@@ -49,13 +49,20 @@ extension GeoPoint {
     private func radians(_ degrees: Double) -> Double {
         degrees * .pi / 180
     }
+
+    /// Below this, the errors of both positions outweigh the direction.
+    private static let shortestDistanceWithDirection = 100.0
+
+    /// How far this is from `own`, and in which direction where that says something; nothing without `own`.
+    func seen(from own: GeoPoint?) -> (distanceMeters: Double?, direction: CompassPoint?) {
+        guard let own else { return (nil, nil) }
+        let distance = own.distance(to: self)
+        return (distance, distance >= Self.shortestDistanceWithDirection ? own.direction(to: self) : nil)
+    }
 }
 
 /// Where a station of the APRS list is, and how far from here (ADR-0053).
 public struct StationPosition: Equatable, Sendable {
-    /// Below this, the errors of both positions outweigh the direction.
-    private static let shortestDistanceWithDirection = 100.0
-
     public let point: GeoPoint
     /// Apple Maps with a pin named after the station.
     public let mapURL: URL?
@@ -77,8 +84,6 @@ public struct StationPosition: Equatable, Sendable {
             URLQueryItem(name: "q", value: event.mapLabel),
         ]
         mapURL = map.url
-        let distance = own?.distance(to: point)
-        distanceMeters = distance
-        direction = (distance ?? 0) >= Self.shortestDistanceWithDirection ? own?.direction(to: point) : nil
+        (distanceMeters, direction) = point.seen(from: own)
     }
 }

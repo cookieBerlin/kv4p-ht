@@ -41,6 +41,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var isSettingsSyncEnabled = true
     /// APRS is there at all: its pages, and all it receives and sends; local to the device (ADR-0066).
     public var isAPRSEnabled = true
+    /// The map is there at all; local to the device (ADR-0068).
+    public var isMapEnabled = true
+    /// What the map shows; local to the device.
+    public var mapLayers: Set<MapLayer> = [.repeaters, .beacons]
+    /// The points of the map as a list; local to the device.
+    public var isMapShownAsList = false
     /// When this device last exchanged settings with iCloud.
     public var lastSettingsSync: Date?
     /// When a sync of the memories with iCloud last finished.
@@ -145,6 +151,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isListenOnly = values.value(.isListenOnly, or: defaults.isListenOnly)
         isSettingsSyncEnabled = values.value(.isSettingsSyncEnabled, or: defaults.isSettingsSyncEnabled)
         isAPRSEnabled = values.value(.isAPRSEnabled, or: defaults.isAPRSEnabled)
+        isMapEnabled = values.value(.isMapEnabled, or: defaults.isMapEnabled)
+        mapLayers = values.value(.mapLayers, or: defaults.mapLayers)
+        isMapShownAsList = values.value(.isMapShownAsList, or: defaults.isMapShownAsList)
         lastSettingsSync = values.value(.lastSettingsSync, or: defaults.lastSettingsSync)
         lastMemorySync = values.value(.lastMemorySync, or: defaults.lastMemorySync)
         micGain = values.value(.micGain, or: defaults.micGain)
