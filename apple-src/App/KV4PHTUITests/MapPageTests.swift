@@ -30,6 +30,28 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
 
+    func testAStationLeadsToItsPackets() {
+        openMap()
+        choose("List")
+        let station = app.descendants(matching: .any)["map-list"].descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH 'N1CALL, '")).firstMatch
+        XCTAssertTrue(station.waitForExistence(timeout: 30), "No station in the list")
+        station.tapOrClick()
+        // The page bar of a phone, or the switch beside the memories elsewhere, whose chosen part the Mac marks by its
+        // value.
+        #if os(macOS)
+            let packets = app.radioButtons.matching(NSPredicate(format: "label BEGINSWITH 'Packets' AND value == 1"))
+                .firstMatch
+        #else
+            let packets = app.descendants(matching: .any).matching(
+                NSPredicate(
+                    format: "(identifier == 'page-Packets' OR label BEGINSWITH 'Packets') AND isSelected == true"
+                )
+            ).firstMatch
+        #endif
+        XCTAssertTrue(packets.waitForExistence(timeout: 5), "The packets are not shown")
+    }
+
     func testSwitchingTheMapOffHidesIt() {
         XCTAssertTrue(mapPage.waitForExistence(timeout: 30), "No map to begin with")
         app.openSettings()
