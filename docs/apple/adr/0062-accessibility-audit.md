@@ -27,8 +27,14 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
   simulator and the screenshots.
 - **The audit is strict since 3.7b:** every finding fails the test, except those below. The test names the number of the
   exception for each finding it lets pass, so that the list here and the code stay in step. A busy simulator lets an
-  audit run out of time now and then; it then runs one kind of check at a time, each up to three times. The check of
-  Dynamic Type always runs on its own: together with the others it flags text that grows, such as all of a chat.
+  audit run out of time now and then; it then runs one kind of check at a time, each up to five times, with a pause
+  that grows from one attempt to the next. The check of Dynamic Type always runs on its own: together with the others
+  it flags text that grows, such as all of a chat.
+- **A screen with findings is checked twice:** after a pause of three seconds, the test runs every check on it once
+  more, and only what both looks find counts. On a slow machine, such as CI's, the audit catches a screen before its
+  text has grown, and flags it, but seldom twice the same text; a real finding is there both times. The log keeps the
+  first look's findings as `A11Y-FIRST-LOOK` and those of the second look alone as `A11Y-ONCE`, which `make a11y` does
+  not count.
 - **The bars above and below the lists are opaque, and the lists end at them,** on every platform. Behind a
   translucent bar, a row that a list scrolled out of sight still showed through, too faint to read, and the audit
   flagged it; on the iPad with the largest text that happened on every run. The button to connect and disconnect uses
@@ -77,7 +83,8 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
 ## Consequences
 
 - A run takes about ten minutes for each simulator, and about seven on the Mac. The simulators run one after the other and nothing else should
-  run beside them: on a fully loaded machine the audit can catch a screen before its text has grown, and flag it.
+  run beside them: on a fully loaded machine the audit can catch a screen before its text has grown, and flag it. On
+  CI's hosted runners a run of both takes 30 to 50 minutes.
 - The audit only finds what a machine can see; a screen it does not reach is not checked.
 - The exceptions are kept narrow, by kind of check, element and screen. A new screen or control that the audit flags
   fails the test, and needs a fix or a new exception here.
