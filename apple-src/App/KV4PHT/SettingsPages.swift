@@ -7,13 +7,14 @@ import SwiftUI
 
 /// The pages of the settings (ADR-0048), in the order the overview shows them.
 enum SettingsPage: CaseIterable, Identifiable {
-    case station, radio, transmit, audio, aprs, memories, simulator, logging
+    case station, pages, radio, transmit, audio, aprs, memories, simulator, logging
 
     var id: Self { self }
 
     var title: String {
         switch self {
         case .station: "Station"
+        case .pages: "Pages"
         case .radio: "Radio"
         case .transmit: "Transmit"
         case .audio: "Audio"
@@ -27,6 +28,7 @@ enum SettingsPage: CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .station: "person.crop.circle"
+        case .pages: "rectangle.stack"
         case .radio: "antenna.radiowaves.left.and.right"
         case .transmit: "mic"
         case .audio: "speaker.wave.2"
@@ -34,6 +36,21 @@ enum SettingsPage: CaseIterable, Identifiable {
         case .memories: "list.bullet"
         case .simulator: "testtube.2"
         case .logging: "doc.text.magnifyingglass"
+        }
+    }
+}
+
+/// The parts of the app that can go, for a simpler app (ADR-0066).
+struct PagesSettings: View {
+    @Bindable var model: RadioViewModel
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("APRS", isOn: $model.isAPRSEnabled)
+                    .explained(ControlHelp.aprsPages)
+                    .accessibilityIdentifier("toggle-APRS")
+            }
         }
     }
 }

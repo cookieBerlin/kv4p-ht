@@ -69,4 +69,5 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0063](0063-sstv.md) | SSTV receive and transmit | Proposed |
 | [0064](0064-frequency-input.md) | Frequency input | Proposed |
 | [0065](0065-darc-import-and-memory-kinds.md) | DARC repeater list import and memory kinds | Proposed |
+| [0066](0066-hideable-pages.md) | Pages that can be switched off | Proposed |
 | [0067](0067-website.md) | Website on GitHub Pages | Proposed |

@@ -63,7 +63,7 @@ final class AccessibilityAuditTests: XCTestCase {
         tapPage("Settings")
         try audit("\(size) settings")
         // In the list of the settings, as "Memories" and "APRS" also name pages of the bar below.
-        for page in ["Station", "Radio", "Transmit", "Audio", "APRS", "Memories", "Simulator", "Logging"] {
+        for page in ["Station", "Pages", "Radio", "Transmit", "Audio", "APRS", "Memories", "Simulator", "Logging"] {
             try auditSettings(page, size: size)
         }
         #if os(macOS)

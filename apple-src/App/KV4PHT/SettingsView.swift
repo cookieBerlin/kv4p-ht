@@ -55,12 +55,6 @@ struct SettingsView: View {
                 Section { NavigationLink("About kv4p HT", value: SettingsDestination.about) }
             }
             .settingsPage("Settings", model: model)
-            .navigationDestination(for: SettingsDestination.self) { destination in
-                switch destination {
-                case .page(let page): content(of: page)
-                case .about: AboutView()
-                }
-            }
         #endif
     }
 
@@ -79,6 +73,7 @@ struct SettingsView: View {
             switch page {
             case .simulator: model.canConfigureSimulator
             case .audio: hasAudioSettings
+            case .aprs: model.isAPRSEnabled
             default: true
             }
         }
@@ -92,10 +87,21 @@ struct SettingsView: View {
         #endif
     }
 
-    @ViewBuilder private func content(of page: SettingsPage) -> some View {
+    private func content(of page: SettingsPage) -> some View {
+        SettingsPageView(model: model, page: page)
+    }
+}
+
+/// One page of the settings.
+struct SettingsPageView: View {
+    let model: RadioViewModel
+    let page: SettingsPage
+
+    var body: some View {
         Group {
             switch page {
             case .station: StationSettings(model: model)
+            case .pages: PagesSettings(model: model)
             case .radio: RadioSettings(model: model)
             case .transmit: TransmitSettings(model: model)
             case .audio: AudioSettings(model: model)
@@ -109,11 +115,29 @@ struct SettingsView: View {
     }
 }
 
-/// A page of the settings, or the About page; a phone keeps the open ones, to go back to the list with a swipe.
+/// The settings, a page of them, or the About page; iPhone and iPad keep the open ones in a path, to go back to the list
+/// with a swipe, and to leave the settings for a reply.
 enum SettingsDestination: Hashable {
+    case overview
     case page(SettingsPage)
     case about
 }
+
+#if os(iOS)
+    extension View {
+        /// Where the settings lead, declared once at the root of the stack that holds them: a destination declared within
+        /// a page that is shown by a flag instead puts the settings back on top of the page opened.
+        func settingsDestinations(_ model: RadioViewModel) -> some View {
+            navigationDestination(for: SettingsDestination.self) { destination in
+                switch destination {
+                case .overview: SettingsView(model: model)
+                case .page(let page): SettingsPageView(model: model, page: page)
+                case .about: AboutView()
+                }
+            }
+        }
+    }
+#endif
 
 /// Whether the app connects by itself at the start, to the radio chosen last.
 struct ConnectAtStartToggle: View {
