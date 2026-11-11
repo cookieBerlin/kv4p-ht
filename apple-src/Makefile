@@ -19,7 +19,7 @@ APP_PROJECT := App/KV4PHT.xcodeproj
 APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci a11y a11y-mac
+.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci a11y a11y-mac site site-tools site-check
 
 test:
 	$(SWIFT) test
@@ -93,5 +93,17 @@ testflight:
 # Renders the app icon from ../artwork/app-icon.svg (ADR-0033); commit the result.
 icon:
 	scripts/app-icon.sh
+
+# The website (ADR-0067), built into SITE_DIR; site-check also checks its links, without the internet.
+SITE_DIR ?= .build/site
+
+site:
+	scripts/site.sh $(SITE_DIR)
+
+site-tools:
+	scripts/site-tools.sh
+
+site-check: site
+	lychee --offline --include-fragments --no-progress '$(SITE_DIR)/**/*.html'
 
 ci: lint privacy coverage ios-build app

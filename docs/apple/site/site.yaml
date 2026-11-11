@@ -1,0 +1,4 @@
+# Values every page of the website uses (ADR-0067).
+name: kv4p HT (CookieBerlin)
+repo: https://github.com/cookieBerlin/kv4p-ht
+testflight: https://testflight.apple.com/join/YyNEfBpK

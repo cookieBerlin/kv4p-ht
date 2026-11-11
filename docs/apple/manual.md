@@ -31,8 +31,9 @@
 ## Installation
 
 📱🖥 **TestFlight:** test builds for iPhone, iPad and Mac come through Apple's
-TestFlight app. Install TestFlight from the App Store and open the invitation you
-received. A build expires after 90 days; TestFlight then offers the current one.
+TestFlight app. Install TestFlight from the App Store and open the
+[public invitation](https://testflight.apple.com/join/YyNEfBpK) on your device. A build expires after 90 days;
+TestFlight then offers the current one.
 
 🖥 To build from source, open `apple-src/App/KV4PHT.xcodeproj` in Xcode and run
 the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
