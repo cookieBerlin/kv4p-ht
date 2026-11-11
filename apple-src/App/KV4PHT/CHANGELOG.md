@@ -9,6 +9,9 @@ own, with its version, build and date.
 
 - A map with your position, the repeaters and frequencies of your memories, and the APRS beacons that have a position,
   each as a layer to switch on and off, by band.
+- The APRS stations and objects heard on the map, each at its last position with its symbol, within a time window
+  from 15 minutes to all, also from the stored packets; a tap leads to their packets or a chat.
+- *Show all* on the map brings every point and your position back into view.
 - Import of the DARC repeater lists. A memory is a repeater or a frequency and can have a comment and a position.
 - A settings page *Pages*, which switches APRS and its pages off.
 - APRS chats: the messages to and from a station in one conversation, a new chat with **+**, *Send again* for a

@@ -80,8 +80,8 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
 10. **Mac: the knob of a slider:** a part of AppKit's own, without a name; the slider has it.
 11. **Mac: contrast in a window behind the front one, or cut off at its edge:** macOS dims a window that is not in front,
     and the rest of a window behind a sheet open on it, such as About behind *What's New*.
-12. **Mac: the header of a section in the list of groups of memories:** SwiftUI shows it as a group without a name and
-    not as a child of its parent.
+12. **Mac: the header of a section in the list of groups of memories, or in the list of the map:** SwiftUI shows it
+    as a group without a name and not as a child of its parent.
 13. **The link *Legal* of the map:** MapKit puts its legal notice on every map, with a link smaller than a finger. It
     is Apple's and cannot be changed by the app ([ADR-0068](0068-map.md)).
 14. **The mark of the band in a marker of the map:** MapKit draws the *2m*, *70* or dot of a marker in a size of its

@@ -473,11 +473,19 @@ final class AccessibilityAuditTests: XCTestCase {
             if issue.auditType == .contrast, isBehindASheet(element) { return 11 }
             // 15. The markers MapKit draws on the Mac, without names; VoiceOver has the list of the map instead.
             if screen.hasSuffix(" map"), isInMap(element) { return 15 }
-            // 12. The header of a section of a SwiftUI list, the one of the groups of memories.
-            if isDescription || issue.auditType == .parentChild, isUnnamedGroup, screen.hasSuffix("settings Memories") {
+            // 12. The header of a section of a SwiftUI list: the groups of memories, and the memories and stations of the
+            // map, whose list stays in the main window behind the other screens.
+            if isDescription || issue.auditType == .parentChild, isUnnamedGroup,
+                screen.hasSuffix("settings Memories") || isInMapList(element)
+            {
                 return 12
             }
             return nil
+        }
+
+        private func isInMapList(_ element: XCUIElement) -> Bool {
+            let list = app.descendants(matching: .any)["map-list"].firstMatch
+            return list.exists && list.frame.contains(element.frame)
         }
 
         /// The map itself, or a part MapKit draws on it.

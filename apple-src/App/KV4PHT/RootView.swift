@@ -164,6 +164,7 @@ private struct SidePane: View {
         // A reply or a chat asked for elsewhere brings APRS back.
         .onChange(of: model.aprsReplyCount) { showsMap = false }
         .onChange(of: model.chatRequestCount) { showsMap = false }
+        .onChange(of: model.packetsRequestCount) { showsMap = false }
         .onChange(of: model.aprsPage) { showsMap = false }
     }
 
@@ -335,6 +336,7 @@ private struct SidePane: View {
                 }
                 .onChange(of: model.aprsReplyCount) { withAnimation { page = .packets } }
                 .onChange(of: model.chatRequestCount) { withAnimation { page = .chats } }
+                .onChange(of: model.packetsRequestCount) { withAnimation { page = .packets } }
                 // A message of a chat in the packets opens the chat.
                 .onChange(of: model.aprsPage) {
                     if page.aprsPage != nil, model.aprsPage == .chats { withAnimation { page = .chats } }

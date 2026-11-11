@@ -30,6 +30,69 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
 
+    func testShowAllBringsBackEveryMarker() {
+        openMap()
+        let repeater = element("Local repeater")
+        XCTAssertTrue(repeater.waitForExistence(timeout: 30), "No repeater on the map")
+        let map = app.descendants(matching: .any)["map"].firstMatch
+        // Far away, so that no marker is left on screen; a swipe flings the map further than a drag.
+        for _ in 0..<6 where onMap(repeater) {
+            #if os(macOS)
+                drag(map, from: CGVector(dx: 0.1, dy: 0.5), to: CGVector(dx: 0.9, dy: 0.5))
+            #else
+                map.swipeRight(velocity: .fast)
+            #endif
+        }
+        XCTAssertFalse(onMap(repeater), "The map did not move")
+        let showAll = app.descendants(matching: .any)["map-show-all"].firstMatch
+        XCTAssertTrue(showAll.waitForExistence(timeout: 5), "No button to show all")
+        showAll.tapOrClick()
+        let deadline = Date.now.addingTimeInterval(5)
+        while !onMap(repeater), Date.now < deadline {
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        XCTAssertTrue(onMap(repeater), "The repeater did not come back")
+        XCTAssertTrue(onMap(element("Local beacon")), "The beacon did not come back")
+    }
+
+    /// A marker within the part of the map on screen.
+    private func onMap(_ marker: XCUIElement) -> Bool {
+        let map = app.descendants(matching: .any)["map"].firstMatch
+        return marker.exists && map.frame.contains(CGPoint(x: marker.frame.midX, y: marker.frame.midY))
+    }
+
+    private func drag(_ element: XCUIElement, from start: CGVector, to end: CGVector) {
+        let from = element.coordinate(withNormalizedOffset: start)
+        let to = element.coordinate(withNormalizedOffset: end)
+        #if os(macOS)
+            from.click(forDuration: 0.1, thenDragTo: to)
+        #else
+            from.press(forDuration: 0.1, thenDragTo: to)
+        #endif
+    }
+
+    func testAStationLeadsToItsPackets() {
+        openMap()
+        choose("List")
+        let station = app.descendants(matching: .any)["map-list"].descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH 'N1CALL, '")).firstMatch
+        XCTAssertTrue(station.waitForExistence(timeout: 30), "No station in the list")
+        station.tapOrClick()
+        // The page bar of a phone, or the switch beside the memories elsewhere, whose chosen part the Mac marks by its
+        // value.
+        #if os(macOS)
+            let packets = app.radioButtons.matching(NSPredicate(format: "label BEGINSWITH 'Packets' AND value == 1"))
+                .firstMatch
+        #else
+            let packets = app.descendants(matching: .any).matching(
+                NSPredicate(
+                    format: "(identifier == 'page-Packets' OR label BEGINSWITH 'Packets') AND isSelected == true"
+                )
+            ).firstMatch
+        #endif
+        XCTAssertTrue(packets.waitForExistence(timeout: 5), "The packets are not shown")
+    }
+
     func testSwitchingTheMapOffHidesIt() {
         XCTAssertTrue(mapPage.waitForExistence(timeout: 30), "No map to begin with")
         app.openSettings()
