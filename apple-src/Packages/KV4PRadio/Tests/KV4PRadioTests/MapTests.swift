@@ -83,11 +83,11 @@ struct MapTests {
         return model
     }
 
-    @Test("the map is on, shows repeaters and beacons as a map, and all of it stays on this device")
+    @Test("the map is on, shows repeaters, beacons and stations as a map, and all of it stays on this device")
     func settings() throws {
         let defaults = AppSettings()
         #expect(defaults.isMapEnabled)
-        #expect(defaults.mapLayers == [.repeaters, .beacons])
+        #expect(defaults.mapLayers == [.repeaters, .beacons, .stations])
         #expect(!defaults.isMapShownAsList)
         #expect(defaults.mapBand == .radio)
         var settings = AppSettings()

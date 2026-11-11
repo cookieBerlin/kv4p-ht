@@ -409,6 +409,7 @@ public final class RadioViewModel {
             saveSettings()
             updateInternet()
             updateBeaconSession()
+            refreshMapStations()
         }
     }
     /// The map is there at all (ADR-0068).
@@ -416,9 +417,23 @@ public final class RadioViewModel {
         didSet { saveSettings() }
     }
     /// What the map shows.
-    public var mapLayers: Set<MapLayer> = [.repeaters, .beacons] {
-        didSet { saveSettings() }
+    public var mapLayers: Set<MapLayer> = [.repeaters, .beacons, .stations] {
+        didSet {
+            saveSettings()
+            refreshMapStations()
+        }
     }
+    /// How far back the map shows the APRS stations.
+    public var mapStationWindow = MapStationWindow.hour {
+        didSet {
+            saveSettings()
+            refreshMapStations()
+        }
+    }
+    /// The last position of each station in the store, as memory holds only the newest packets.
+    var storedMapStations: [String: APRSEvent] = [:]
+    /// Goes up with each request to show packets from elsewhere, for the views to bring the packets to the front.
+    public internal(set) var packetsRequestCount = 0
     /// The band the map shows.
     public var mapBand = MapBand.radio {
         didSet { saveSettings() }
@@ -538,7 +553,10 @@ public final class RadioViewModel {
     }
     /// The same for the map (ADR-0068).
     public var isMapVisible = false {
-        didSet { listVisibilityChanged() }
+        didSet {
+            listVisibilityChanged()
+            refreshMapStations()
+        }
     }
     /// Our position, for the distances of the APRS list and the map; it stays on this device.
     public private(set) var ownPosition: GeoPoint?
@@ -565,11 +583,11 @@ public final class RadioViewModel {
     private let internet: (any APRSInternetLink)?
     private var internetLocation: GeoPoint?
     private var internetObservers: [Task<Void, Never>] = []
-    private var aprs: APRSController
+    private(set) var aprs: APRSController
     private var packetObserver: Task<Void, Never>?
     private var aprsTicker: Task<Void, Never>?
     private let aprsTickInterval: Duration
-    private let now: () -> Int64
+    let now: () -> Int64
     private let makeController: (Connection, any RXAudioSink) -> any RadioControlling
     private let serialDevices: () -> [String]
     private let bluetoothScanner: (any BLEScanning)?
@@ -598,9 +616,9 @@ public final class RadioViewModel {
     private let firmware: (any FirmwareFlashing)?
     /// What the flasher can write, the one for this app first (ADR-0049).
     public let firmwareChoices: [FirmwareChoice]
-    private let aprsHistory: (any APRSHistoryStoring)?
+    let aprsHistory: (any APRSHistoryStoring)?
     /// How many packets memory holds, and how many a step of the list brings.
-    private let aprsListLimit: Int
+    let aprsListLimit: Int
     /// What each list shows: both use the packets in memory, and each brings back its own older ones.
     private var mainAPRSList = APRSListState()
     private var pageAPRSList = APRSListState()
@@ -765,6 +783,7 @@ public final class RadioViewModel {
         settings.mapLayers = mapLayers
         settings.isMapShownAsList = isMapShownAsList
         settings.mapBand = mapBand
+        settings.mapStationWindow = mapStationWindow
         settings.lastSettingsSync = lastSettingsSync
         settings.lastMemorySync = lastMemorySync
         settings.micGain = micGain
@@ -820,6 +839,7 @@ public final class RadioViewModel {
         mapLayers = settings.mapLayers
         isMapShownAsList = settings.isMapShownAsList
         mapBand = settings.mapBand
+        mapStationWindow = settings.mapStationWindow
         lastSettingsSync = settings.lastSettingsSync
         isBackgroundBeaconEnabled = settings.isBackgroundBeaconEnabled
         lastMemorySync = settings.lastMemorySync
@@ -2066,7 +2086,7 @@ public final class RadioViewModel {
         }
     }
 
-    private static func event(_ entry: APRSHistoryEntry) -> APRSEvent? {
+    static func event(_ entry: APRSHistoryEntry) -> APRSEvent? {
         try? JSONDecoder().decode(APRSEvent.self, from: entry.payload)
     }
 
