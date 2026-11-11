@@ -14,6 +14,7 @@ final class AccessibilityAuditTests: XCTestCase {
     private var findings: [String] = []
 
     override func setUp() async throws {
+        connectToWindowServer()
         continueAfterFailure = true
         findings = []
     }
@@ -60,6 +61,14 @@ final class AccessibilityAuditTests: XCTestCase {
                 findings.append(finding)
             }
         }
+        tapPage("Map")
+        // The tiles come from the network; they are Apple's, so the audit waits for the controls only.
+        Thread.sleep(forTimeInterval: 2)
+        try audit("\(size) map")
+        let list = app.descendants(matching: .any).matching(NSPredicate(format: "label == 'List'"))
+            .allElementsBoundByIndex.first(where: \.isHittable)
+        list?.tapOrClick()
+        try audit("\(size) map list")
         tapPage("Settings")
         try audit("\(size) settings")
         // In the list of the settings, as "Memories" and "APRS" also name pages of the bar below.
@@ -127,11 +136,11 @@ final class AccessibilityAuditTests: XCTestCase {
         }
     #endif
 
-    /// The page bar of a phone; elsewhere the memories and APRS stand side by side, APRS switches between the packets
-    /// and the chats, and the settings open from the toolbar.
+    /// The page bar of a phone; elsewhere the memories stand beside a switch between the packets, the chats and the
+    /// map, and the settings open from the toolbar.
     private func tapPage(_ title: String) {
         let pageButton = app.buttons["page-\(title)"].firstMatch
-        if !pageButton.exists, title == "Packets" || title == "Chats" {
+        if !pageButton.exists, ["Packets", "Chats", "Map"].contains(title) {
             // With unread messages, the switch says how many, as "Chats (2)". The Mac shows its parts as radio buttons.
             let part = NSPredicate(format: "label BEGINSWITH %@", title)
             #if os(macOS)
@@ -303,6 +312,12 @@ final class AccessibilityAuditTests: XCTestCase {
 
     private func runAudit(_ screen: String, _ type: XCUIAccessibilityAuditType) throws {
         try app.performAccessibilityAudit(for: type) { issue in
+            // An element that went since, such as a part of the map that MapKit draws anew, cannot be read any more;
+            // the second look finds it again if it stays (ADR-0062).
+            if let element = issue.element, !element.exists {
+                print("A11Y-GONE \(screen): \(Self.name(of: issue.auditType))")
+                return true
+            }
             if let exception = self.exception(for: issue, on: screen) {
                 print("A11Y-EXCEPTION \(exception): \(screen): \(Self.describe(issue))")
                 return true
@@ -386,6 +401,10 @@ final class AccessibilityAuditTests: XCTestCase {
         }
         // 7. Findings without an element, which no screen element can be matched to.
         if issue.element == nil { return 7 }
+        // 13. The legal notice MapKit puts on the map, with its own small link (ADR-0068).
+        if issue.auditType == .hitRegion, label == "Legal", screen.hasSuffix(" map") { return 13 }
+        // 14. The mark of the band in a marker of the map, which MapKit draws in a size of its own.
+        if isDynamicType || isTextClipped, ["2m", "70", "•"].contains(label), screen.hasSuffix(" map") { return 14 }
         #if os(macOS)
             if let element = issue.element, let exception = macException(for: issue, element, on: screen) {
                 return exception
@@ -409,11 +428,19 @@ final class AccessibilityAuditTests: XCTestCase {
             if isDescription, element.elementType == .valueIndicator { return 10 }
             // 11. Text in a window behind the front one, which macOS dims, or cut off at the front one's edge.
             if issue.auditType == .contrast, !app.windows.firstMatch.frame.contains(element.frame) { return 11 }
+            // 15. The markers MapKit draws on the Mac, without names; VoiceOver has the list of the map instead.
+            if screen.hasSuffix(" map"), isInMap(element) { return 15 }
             // 12. The header of a section of a SwiftUI list, the one of the groups of memories.
             if isDescription || issue.auditType == .parentChild, isUnnamedGroup, screen.hasSuffix("settings Memories") {
                 return 12
             }
             return nil
+        }
+
+        /// The map itself, or a part MapKit draws on it.
+        private func isInMap(_ element: XCUIElement) -> Bool {
+            let map = app.descendants(matching: .any)["map"].firstMatch
+            return map.exists && map.frame.contains(element.frame)
         }
 
         private func isAsHighAsAWindow(_ element: XCUIElement) -> Bool {

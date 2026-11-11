@@ -12,6 +12,8 @@ enum ControlHelp {
     static let aprsPages =
         "The packets, the chats and the APRS settings. Off, the app also receives and sends no APRS: no beacons, "
         + "messages, acknowledgements, digipeating or APRS-IS. The other APRS settings stay for when it is on again."
+    static let mapPage =
+        "The memories with a position on a map, or as a list by distance. Off, the app reads no position for it."
     static let connectAtStart = "Connects to the radio chosen last when the app starts."
     static let scan = "Steps through the memories shown and stops on a signal."
     static let manageMemories = "Sort the memories and groups, change several at once and import repeaters."

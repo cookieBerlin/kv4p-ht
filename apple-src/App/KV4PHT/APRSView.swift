@@ -6,7 +6,7 @@ import SwiftUI
 struct APRSView: View {
     @Bindable var model: RadioViewModel
     /// On a phone, the packets and the chats are pages of their own, which say whether they are on screen; elsewhere
-    /// the view switches between them.
+    /// the view shows the one chosen beside the memories.
     var page: APRSPage?
     @State private var text = ""
     @State private var isOnScreen = false
@@ -28,17 +28,6 @@ struct APRSView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
-            }
-            if page == nil {
-                Picker("Show", selection: $model.aprsPage) {
-                    Text("Packets").tag(APRSPage.packets)
-                    Text(model.newAPRSMessages > 0 ? "Chats (\(model.newAPRSMessages))" : "Chats")
-                        .tag(APRSPage.chats)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .padding(.horizontal)
-                .padding(.top, 6)
             }
             switch shownPage {
             case .packets: APRSPacketList(model: model, list: .main)

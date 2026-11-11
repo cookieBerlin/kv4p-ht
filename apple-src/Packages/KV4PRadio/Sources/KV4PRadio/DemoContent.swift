@@ -5,7 +5,8 @@ import KV4PPersistence
 /// Placeholders only.
 public enum DemoContent {
     public static let memories = [
-        ChannelMemory(name: "Calling channel", frequency: 145.5),
+        // A meeting point, for the frequencies on the map.
+        ChannelMemory(name: "Calling channel", frequency: 145.5, latitude: 49.02, longitude: -72.08),
         ChannelMemory(
             name: "Local repeater",
             frequency: 145.6,
@@ -18,7 +19,14 @@ public enum DemoContent {
             latitude: 49.058_33,
             longitude: -72.029_17
         ),
-        ChannelMemory(name: "Local beacon", frequency: 144.49, group: "Repeaters", kind: .beacon),
+        ChannelMemory(
+            name: "Local beacon",
+            frequency: 144.49,
+            group: "Repeaters",
+            kind: .beacon,
+            latitude: 49.1,
+            longitude: -71.98
+        ),
         // For 70 cm: the demo radio is one for 2 m, so the list hides it and says so.
         ChannelMemory(name: "Far repeater", frequency: 439.1, offset: .down, offsetKHz: 7600, kind: .repeater),
         ChannelMemory(name: "APRS", frequency: 144.8, group: "Digital"),
