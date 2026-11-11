@@ -6,6 +6,7 @@ final class PagesSettingTests: XCTestCase {
     private var app: XCUIApplication!
 
     override func setUp() async throws {
+        connectToWindowServer()
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["-uitest-demo"]

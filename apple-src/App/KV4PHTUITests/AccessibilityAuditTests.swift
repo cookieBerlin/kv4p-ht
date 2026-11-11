@@ -14,6 +14,7 @@ final class AccessibilityAuditTests: XCTestCase {
     private var findings: [String] = []
 
     override func setUp() async throws {
+        connectToWindowServer()
         continueAfterFailure = true
         findings = []
     }
