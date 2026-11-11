@@ -86,4 +86,13 @@ struct APRSOffTests {
         setup.model.isAPRSEnabled = true
         #expect(setup.link.settings.last?.isEnabled == true)
     }
+
+    @Test("off, a notification tapped from before does not open its chat")
+    func opensNoChat() {
+        let model = RadioViewModelTests.model()
+        model.isAPRSEnabled = false
+        model.openChat(with: "N1CALL")
+        #expect(model.chatRequestCount == 0)
+        #expect(model.openChat == nil)
+    }
 }
