@@ -34,7 +34,8 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
   more, and only what both looks find counts. On a slow machine, such as CI's, the audit catches a screen before its
   text has grown, and flags it, but seldom twice the same text; a real finding is there both times. The log keeps the
   first look's findings as `A11Y-FIRST-LOOK` and those of the second look alone as `A11Y-ONCE`, which `make a11y` does
-  not count.
+  not count. A finding whose element has gone since, such as a part of a map drawn anew, is passed over, as nothing
+  is left to read; if it stays, the second look finds it.
 - **The bars above and below the lists are opaque, and the lists end at them,** on every platform. Behind a
   translucent bar, a row that a list scrolled out of sight still showed through, too faint to read, and the audit
   flagged it; on the iPad with the largest text that happened on every run. The button to connect and disconnect uses

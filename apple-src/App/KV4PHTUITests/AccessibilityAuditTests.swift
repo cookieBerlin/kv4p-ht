@@ -312,6 +312,12 @@ final class AccessibilityAuditTests: XCTestCase {
 
     private func runAudit(_ screen: String, _ type: XCUIAccessibilityAuditType) throws {
         try app.performAccessibilityAudit(for: type) { issue in
+            // An element that went since, such as a part of the map that MapKit draws anew, cannot be read any more;
+            // the second look finds it again if it stays (ADR-0062).
+            if let element = issue.element, !element.exists {
+                print("A11Y-GONE \(screen): \(Self.name(of: issue.auditType))")
+                return true
+            }
             if let exception = self.exception(for: issue, on: screen) {
                 print("A11Y-EXCEPTION \(exception): \(screen): \(Self.describe(issue))")
                 return true
