@@ -2,9 +2,10 @@ import Foundation
 import KV4PPersistence
 import KV4PProtocol
 
-/// A layer of the map, one for each kind of memory, switched on and off on its own (ADR-0068).
+/// A layer of the map, one for each kind of memory and one for the APRS stations, switched on and off on its own
+/// (ADR-0068).
 public enum MapLayer: String, CaseIterable, Codable, Sendable {
-    case repeaters, frequencies, beacons
+    case repeaters, frequencies, beacons, stations
 
     public init(_ kind: MemoryKind) {
         switch kind {
@@ -19,6 +20,7 @@ public enum MapLayer: String, CaseIterable, Codable, Sendable {
         case .repeaters: "Repeaters"
         case .frequencies: "Frequencies"
         case .beacons: "Beacons"
+        case .stations: "APRS stations"
         }
     }
 }

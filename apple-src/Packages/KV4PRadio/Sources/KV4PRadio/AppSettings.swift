@@ -44,7 +44,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     /// The map is there at all; local to the device (ADR-0068).
     public var isMapEnabled = true
     /// What the map shows; local to the device.
-    public var mapLayers: Set<MapLayer> = [.repeaters, .beacons]
+    public var mapLayers: Set<MapLayer> = [.repeaters, .beacons, .stations]
+    /// How far back the map shows the APRS stations; local to the device.
+    public var mapStationWindow = MapStationWindow.hour
     /// The points of the map as a list; local to the device.
     public var isMapShownAsList = false
     /// The band the map shows; local to the device.
@@ -157,6 +159,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         mapLayers = values.value(.mapLayers, or: defaults.mapLayers)
         isMapShownAsList = values.value(.isMapShownAsList, or: defaults.isMapShownAsList)
         mapBand = values.value(.mapBand, or: defaults.mapBand)
+        mapStationWindow = values.value(.mapStationWindow, or: defaults.mapStationWindow)
         lastSettingsSync = values.value(.lastSettingsSync, or: defaults.lastSettingsSync)
         lastMemorySync = values.value(.lastMemorySync, or: defaults.lastMemorySync)
         micGain = values.value(.micGain, or: defaults.micGain)
