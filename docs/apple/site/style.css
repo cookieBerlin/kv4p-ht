@@ -179,15 +179,16 @@ h1, h2, h3 { line-height: 1.25; }
 .screenshots {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
   gap: 1.5rem;
+  margin: 2.5rem 0 1rem;
 }
 
 .screenshots figure { margin: 0; text-align: center; color: var(--muted); font-size: 0.9rem; }
-.screenshots img { border-radius: 12px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18); }
-.screenshots .mac img { width: 36rem; }
-.screenshots .iphone img { width: 15rem; }
+.screenshots img { display: block; border-radius: 18px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18); }
+.screenshots .iphone { width: 14rem; }
+.screenshots .ipad { width: 22rem; }
 
 .steps li { margin-bottom: 0.5rem; }
 
