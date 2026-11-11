@@ -9,6 +9,7 @@ on:
       - docs/apple/site/**
       - docs/apple/faq.md
       - docs/apple/manual.md
+      - apple-src/App/KV4PHT/CHANGELOG.md
       - apple-src/App/KV4PHT/Assets.xcassets/AppIcon.appiconset/AppIcon.png
       - apple-src/scripts/site.sh
       - apple-src/scripts/site-tools.sh

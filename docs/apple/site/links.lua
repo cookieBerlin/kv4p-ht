@@ -1,9 +1,13 @@
 -- Rewrites the links of a page for the website (ADR-0067).
--- A link to a document that is a page of the site (faq.md, manual.md, ...) points to its .html page. Any other
+-- A link to a document that is a page of the site (faq.md, manual.md, CHANGELOG.md, ...) points to its .html page. Any other
 -- relative link points to the file on GitHub, so that the Markdown files keep working there unchanged.
 -- Metadata: `srcdir`, the repository-relative folder of the source file, and `repo`, the repository's GitHub URL.
 
-local pages = { ["docs/apple/faq.md"] = "faq.html", ["docs/apple/manual.md"] = "manual.html" }
+local pages = {
+  ["docs/apple/faq.md"] = "faq.html",
+  ["docs/apple/manual.md"] = "manual.html",
+  ["apple-src/App/KV4PHT/CHANGELOG.md"] = "changelog.html",
+}
 local srcdir, repo
 local values = {}
 
