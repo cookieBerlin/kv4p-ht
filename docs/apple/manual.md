@@ -46,7 +46,8 @@ The structure is the same on all devices, and similar to the Android app:
 - **On top:** the choice of radio, **Connect** (📱 on an iPhone, both are in ⚙ **Settings**), the name of the
   active memory, the frequency, the squelch state and the S-meter. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
-- **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side.
+- **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side. With APRS switched off
+  (⚙ **Settings → Pages**), the memories take the whole width.
 - **At the bottom:** a large **Push to talk** button, the connection status above it
   (🖥 in a status bar at the bottom of the window) and any messages. 📱 On an iPhone the button shows only a
   microphone, and only while the radio is connected; otherwise the status stands in its place, with
@@ -61,7 +62,7 @@ The structure is the same on all devices, and similar to the Android app:
 ⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. The pages form a ring: a swipe
 to the right on the memories goes straight to the settings, and a swipe to the left there back to the memories. The
 symbols keep their size with larger text; hold one to see it large with its name. The app opens the page you used
-last. **Push to talk** is on the memories page, and the header on all pages but the settings. On a page within the
+last. Without APRS, *Packets* and *Chats* go from the bar and the ring. **Push to talk** is on the memories page, and the header on all pages but the settings. On a page within the
 settings, a swipe to the right goes back to their list. With the largest text sizes, the header grows less than the
 rest, and rows that no longer fit side by side, such as the line to write a message, stand one below the other.
 
@@ -433,6 +434,7 @@ the simulator is the chosen radio, its page follows in a group of its own.
 | Page | What it holds |
 |---|---|
 | **Station** | Your callsign, listen only |
+| **Pages** | Which parts of the app there are: APRS |
 | **Radio** | Bandwidth, squelch, tones, high power, voice mode, audio filters, frequency limits, firmware |
 | **Transmit** | Sticky PTT, mic gain boost, repeater access tone |
 | **Audio** | 📱 The volume on an iPhone, and what other apps do while the radio is busy |
@@ -441,11 +443,17 @@ the simulator is the chosen radio, its page follows in a group of its own.
 | **Simulator** | The simulated radio; only while it is the chosen radio |
 | **About kv4p HT** | 📱 Version and licences; on the Mac in the **kv4p HT** menu |
 
+**Pages** keeps the app simple for those who do not need all of it. **APRS**, on by default,
+switches APRS off as a whole: the packets, the chats and the APRS page of the settings go, and the app
+receives and sends no APRS at all: no position beacons, also not in the background, no messages or their
+retries, no acknowledgements, no digipeating and no APRS-IS. Your other APRS settings and the packets kept
+stay, and apply again when you switch APRS on. The switch stays on this device.
+
 **iCloud sync**, in its own group under *Station* and on by default, takes your memories and groups, your callsign, sticky PTT, the access
 tone, the APRS symbol, position accuracy, beacon frequency and interval, the units and the
 frequency limits to your other iPhones, iPads and Macs with the same Apple ID. A change can take a
 while to arrive. The radio, the memory group, other audio, mic gain, listen only and the
-switches for the beacon and the background, digipeating, the iGate and the APRS-IS feed stay on each device.
+switches for APRS, the beacon and the background, digipeating, the iGate and the APRS-IS feed stay on each device.
 For memories, a change of the switch takes effect at the next start. If two devices change the
 same field at once, the later change counts. The same memory on two devices becomes one once it
 is alike in everything; memories that differ stay apart. Without iCloud the app works as before

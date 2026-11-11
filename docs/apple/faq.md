@@ -146,6 +146,12 @@ shows such marks as the name of the radio. A mark it does not know stays in the 
 from the [APRS device identification database](https://github.com/aprsorg/aprs-deviceid), and the
 meanings of the symbols from the [aprs.fi APRS symbols index](https://github.com/hessu/aprs-symbol-index).
 
+## Can I hide APRS?
+
+Yes: switch off **APRS** in ⚙ **Settings → Pages**. The packets, the chats and the APRS settings go, and the
+app no longer receives or sends APRS, so no beacon goes out unseen. Your APRS settings stay for when you
+switch it on again ([ADR-0066](adr/0066-hideable-pages.md)).
+
 ## Does the app keep the APRS packets?
 
 Yes, on this device only, for 30 days by default, and not synced. Packets only from the internet stay only if you
