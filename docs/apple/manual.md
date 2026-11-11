@@ -467,7 +467,7 @@ the simulator is the chosen radio, its page follows in a group of its own.
 | **APRS** | Packets, position beacon, units, history, digipeating, iGate, APRS-IS feed |
 | **Memories** | Groups and memories: sort, edit, import |
 | **Simulator** | The simulated radio; only while it is the chosen radio |
-| **About kv4p HT** | 📱 Version and licences; on the Mac in the **kv4p HT** menu |
+| **About kv4p HT** | 📱 Version, licences and what's new; on the Mac in the **kv4p HT** menu |
 
 **Pages** keeps the app simple for those who do not need all of it. **APRS**, on by default,
 switches APRS off as a whole: the packets, the chats and the APRS page of the settings go, and the app
@@ -506,7 +506,9 @@ its settings between launches:
 
 **kv4p HT → About kv4p HT** (📱 at the end of ⚙ **Settings**) shows the version, build and commit of the app, the
 firmwares it contains for USB updates, and the licences of everything it contains
-or is ported from, with the licence texts.
+or is ported from, with the licence texts. **What's New** there shows the
+[changelog](../../apple-src/App/KV4PHT/CHANGELOG.md): what changed in each TestFlight build, newest first. After an
+update, the app shows once what is new in that build; after the first installation it does not.
 
 For reduced motion and live captions use the system settings (System Settings →
 Accessibility); the Android app's own switches for them are not needed on the
