@@ -422,11 +422,19 @@ final class AccessibilityAuditTests: XCTestCase {
             if isDescription, element.elementType == .valueIndicator { return 10 }
             // 11. Text in a window behind the front one, which macOS dims, or cut off at the front one's edge.
             if issue.auditType == .contrast, !app.windows.firstMatch.frame.contains(element.frame) { return 11 }
+            // 15. The markers MapKit draws on the Mac, without names; VoiceOver has the list of the map instead.
+            if screen.hasSuffix(" map"), isInMap(element) { return 15 }
             // 12. The header of a section of a SwiftUI list, the one of the groups of memories.
             if isDescription || issue.auditType == .parentChild, isUnnamedGroup, screen.hasSuffix("settings Memories") {
                 return 12
             }
             return nil
+        }
+
+        /// The map itself, or a part MapKit draws on it.
+        private func isInMap(_ element: XCUIElement) -> Bool {
+            let map = app.descendants(matching: .any)["map"].firstMatch
+            return map.exists && map.frame.contains(element.frame)
         }
 
         private func isAsHighAsAWindow(_ element: XCUIElement) -> Bool {

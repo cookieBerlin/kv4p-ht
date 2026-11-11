@@ -79,6 +79,13 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
 11. **Mac: contrast in a window behind the front one, or cut off at its edge:** macOS dims a window that is not in front.
 12. **Mac: the header of a section in the list of groups of memories:** SwiftUI shows it as a group without a name and
     not as a child of its parent.
+13. **The link *Legal* of the map:** MapKit puts its legal notice on every map, with a link smaller than a finger. It
+    is Apple's and cannot be changed by the app ([ADR-0068](0068-map.md)).
+14. **The mark of the band in a marker of the map:** MapKit draws the *2m*, *70* or dot of a marker in a size of its
+    own, which does not grow with the text, and the audit counts it as clipped; the screenshot shows it whole. The
+    marker's name, which VoiceOver reads, and the list grow with the text.
+15. **Mac: the markers of the map:** MapKit draws them on the Mac as images and text without names, and the audit
+    cannot read their contrast on the map. The list of the map has every marker with its name for VoiceOver.
 
 ## Consequences
 

@@ -14,10 +14,11 @@
 6. [Transmitting](#transmitting)
 7. [Memories and scanning](#memories-and-scanning)
 8. [APRS](#aprs)
-9. [FreeDV digital voice](#freedv-digital-voice)
-10. [Settings](#settings)
-11. [Firmware updates](#firmware-updates)
-12. [Troubleshooting](#troubleshooting)
+9. [Map](#map)
+10. [FreeDV digital voice](#freedv-digital-voice)
+11. [Settings](#settings)
+12. [Firmware updates](#firmware-updates)
+13. [Troubleshooting](#troubleshooting)
 
 ## Requirements
 
@@ -46,8 +47,9 @@ The structure is the same on all devices, and similar to the Android app:
 - **On top:** the choice of radio, **Connect** (📱 on an iPhone, both are in ⚙ **Settings**), the name of the
   active memory, the frequency, the squelch state and the S-meter. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
-- **Below:** the memories and APRS. 🖥 and on a wide 📱 iPad they stand side by side. With APRS switched off
-  (⚙ **Settings → Pages**), the memories take the whole width.
+- **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the memories stand beside a switch between
+  **Packets**, **Chats** and **Map**. With APRS switched off (⚙ **Settings → Pages**), the map has that side to
+  itself; with both switched off, the memories take the whole width.
 - **At the bottom:** a large **Push to talk** button, the connection status above it
   (🖥 in a status bar at the bottom of the window) and any messages. 📱 On an iPhone the button shows only a
   microphone, and only while the radio is connected; otherwise the status stands in its place, with
@@ -58,11 +60,12 @@ The structure is the same on all devices, and similar to the Android app:
   the pages, otherwise above **Push to talk** and in the 🖥 settings window.
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
 
-📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **Packets**, **Chats** (two speech bubbles) and
-⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. The pages form a ring: a swipe
+📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **Packets**, **Chats** (two speech bubbles), **Map**
+and ⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. The pages form a ring: a swipe
 to the right on the memories goes straight to the settings, and a swipe to the left there back to the memories. The
 symbols keep their size with larger text; hold one to see it large with its name. The app opens the page you used
-last. Without APRS, *Packets* and *Chats* go from the bar and the ring. **Push to talk** is on the memories page, and the header on all pages but the settings. On a page within the
+last. Without APRS, *Packets* and *Chats* go from the bar and the ring, and without the map, *Map*. On the map, a
+swipe moves the map; the bar changes the page. **Push to talk** is on the memories page, and the header on all pages but the settings. On a page within the
 settings, a swipe to the right goes back to their list. With the largest text sizes, the header grows less than the
 rest, and rows that no longer fit side by side, such as the line to write a message, stand one below the other.
 
@@ -408,6 +411,29 @@ digipeater is useful.
 - Both use `rotate.aprs2.net` and reconnect by themselves; the label next to the
   switches shows whether the app is connected. The feed works without a radio.
 
+## Map
+
+**Map** shows your memories that have a position, such as the repeaters imported from the DARC lists, with
+Apple's maps.
+
+- **Layers** (the stacked squares) switch the **Repeaters** (blue), **Frequencies** (green) and **Beacons**
+  (orange) on and off, from all groups. Frequencies are off at first, as most of them have no fixed place.
+- **Band**, also under *Layers*, chooses what the map shows: **Radio's band**, at first, shows only the band of
+  the connected radio, and 2 m and 70 cm while none is connected. **2 m** or **70 cm** shows that band, and
+  **All** also memories of other bands, such as 6 m. A marker reads *2m* or *70*, or a dot for another band.
+- **Your position** is the blue dot. The map does not follow it: the arrow button of the map centres it. While
+  the app has not asked for your location yet, the arrow at the top asks. The position stays on your device and
+  is read only while the map is on screen.
+- The map shows all its points and your position, also after a change of the layers or the band. Once you move
+  it, it stays where you moved it.
+- **Tap a marker** to see the memory's frequency, comment and distance. **Tune** tunes the radio to it, while the
+  radio is connected and receives it.
+- **List** shows the same memories as a list, the nearest first, with their distance and direction; it is easier
+  with VoiceOver. Tap a row to tune to it.
+
+The map needs the internet; without it, only the parts seen before show. Map and list, the layers and the band stay
+on this device. You can switch the map off in ⚙ **Settings → Pages**.
+
 ## FreeDV digital voice
 
 FreeDV 2400B is digital voice on FM radios: the radio's firmware runs the
@@ -434,7 +460,7 @@ the simulator is the chosen radio, its page follows in a group of its own.
 | Page | What it holds |
 |---|---|
 | **Station** | Your callsign, listen only |
-| **Pages** | Which parts of the app there are: APRS |
+| **Pages** | Which parts of the app there are: APRS and the map |
 | **Radio** | Bandwidth, squelch, tones, high power, voice mode, audio filters, frequency limits, firmware |
 | **Transmit** | Sticky PTT, mic gain boost, repeater access tone |
 | **Audio** | 📱 The volume on an iPhone, and what other apps do while the radio is busy |
@@ -447,13 +473,14 @@ the simulator is the chosen radio, its page follows in a group of its own.
 switches APRS off as a whole: the packets, the chats and the APRS page of the settings go, and the app
 receives and sends no APRS at all: no position beacons, also not in the background, no messages or their
 retries, no acknowledgements, no digipeating and no APRS-IS. Your other APRS settings and the packets kept
-stay, and apply again when you switch APRS on. The switch stays on this device.
+stay, and apply again when you switch APRS on. **Map**, on by default, removes the map page; the app then reads
+no position for it. Both switches stay on this device.
 
 **iCloud sync**, in its own group under *Station* and on by default, takes your memories and groups, your callsign, sticky PTT, the access
 tone, the APRS symbol, position accuracy, beacon frequency and interval, the units and the
 frequency limits to your other iPhones, iPads and Macs with the same Apple ID. A change can take a
 while to arrive. The radio, the memory group, other audio, mic gain, listen only and the
-switches for APRS, the beacon and the background, digipeating, the iGate and the APRS-IS feed stay on each device.
+switches for APRS, the map, the beacon and the background, digipeating, the iGate and the APRS-IS feed stay on each device.
 For memories, a change of the switch takes effect at the next start. If two devices change the
 same field at once, the later change counts. The same memory on two devices becomes one once it
 is alike in everything; memories that differ stay apart. Without iCloud the app works as before

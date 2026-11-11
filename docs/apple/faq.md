@@ -148,9 +148,16 @@ meanings of the symbols from the [aprs.fi APRS symbols index](https://github.com
 
 ## Can I hide APRS?
 
-Yes: switch off **APRS** in ⚙ **Settings → Pages**. The packets, the chats and the APRS settings go, and the
+Yes: switch off **APRS** in ⚙ **Settings → Pages**; the map can go there as well. The packets, the chats and the APRS settings go, and the
 app no longer receives or sends APRS, so no beacon goes out unseen. Your APRS settings stay for when you
 switch it on again ([ADR-0066](adr/0066-hideable-pages.md)).
+
+## Why is the map empty or blurred?
+
+The map shows only memories with a position, on the layers switched on: frequencies are off at first. Repeaters
+imported from the DARC lists bring their position; for others, enter latitude and longitude in the memory. The
+map comes from Apple and needs the internet; without it, only the parts seen before show
+([ADR-0068](adr/0068-map.md)).
 
 ## Does the app keep the APRS packets?
 
@@ -164,7 +171,8 @@ No data is sent anywhere except what you configure: APRS packets you transmit or
 send to APRS-IS contain your callsign and, if enabled, your position. The
 microphone is only on while PTT is pressed, and its audio goes only to the radio.
 Your location is only read while position beacons or the APRS-IS feed are on, or while the APRS
-list is on screen, to show how far away stations are; for that it stays on your device. For beacons it
+list or the map is on screen, to show how far away stations and memories are; for that it stays on your device.
+The map loads its tiles from Apple, which sees the part of the map you look at, but not your memories. For beacons it
 is sent over RF in beacons; for the feed, it goes to the APRS-IS server as the
 centre of the 50 km filter. With the iGate on, received packets and your own APRS packets go
 to APRS-IS, which is public. With *iCloud sync* on, your memories, your callsign and a few settings are

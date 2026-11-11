@@ -49,6 +49,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-40](#hw-40) | APRS chats | ⬜ | ⬜ |
 | [HW-41](#hw-41) | Frequency steps | ⬜ | ⬜ |
 | [HW-42](#hw-42) | Memory kinds and DARC import | ⬜ | ⬜ |
+| [HW-43](#hw-43) | Map | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -381,3 +382,14 @@ out. Both bands are imported, with the position (latitude and longitude) and, if
 2 m radio: the 70 cm memories are hidden and the list says so; with a 70 cm radio, the other way round. The
 imported repeaters tune with the right offset and tone, and a known repeater is heard. Clear the comment of one
 memory and import the same file again: only that memory is completed, nothing is added.
+
+### HW-43
+
+Receive only; do not transmit. With memories that have a position, such as repeaters imported from the DARC lists,
+open **Map**. If the app has not asked for the location yet, the map does not ask by itself; the arrow at the top
+asks. With access granted, the blue dot shows your real position, and the map shows it and the memories. Move the map: it
+stays there while you walk, and the arrow button of the map centres it. The layers switch repeaters, frequencies
+and beacons. With 2 m and 70 cm memories, *Radio's band* shows only the band of the connected radio, both while
+none is connected; *2 m*, *70 cm* and *All* show what they say, and the markers read *2m* or *70*. Tap a repeater nearby and **Tune**: the radio tunes to it and a known repeater is heard; one for the
+other band has no **Tune**. **List** shows the nearest first, with plausible distances and directions. Without the
+internet, the parts seen before still show. Switch the map off in **Settings → Pages**: the page goes.
