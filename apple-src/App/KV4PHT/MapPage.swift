@@ -52,8 +52,9 @@ struct MapPage: View {
         model.isMapVisible = isOnScreen && isPageOnScreen && scenePhase == .active
     }
 
-    private func frame() {
-        guard !camera.positionedByUser, let frame = model.mapFrame else { return }
+    /// All points and our position, until the map is moved by hand, or `always`, as *Show all* asks.
+    private func frame(always: Bool = false) {
+        guard always || !camera.positionedByUser, let frame = model.mapFrame else { return }
         camera = .region(
             MKCoordinateRegion(
                 center: frame.center.coordinate,
@@ -77,6 +78,16 @@ struct MapPage: View {
                 Button("Show my position", systemImage: "location") { model.askForDistances() }
                     .labelStyle(.iconOnly)
                     .help("Show my position")
+            }
+            if !model.isMapShownAsList {
+                Button("Show all", systemImage: "arrow.up.left.and.arrow.down.right") {
+                    withAnimation { frame(always: true) }
+                }
+                .labelStyle(.iconOnly)
+                .capsuleButton()
+                .disabled(model.mapFrame == nil)
+                .help("Show all")
+                .accessibilityIdentifier("map-show-all")
             }
             Menu("Layers", systemImage: "square.3.layers.3d") {
                 // A menu shows no colours of its own, so their names stand there.
