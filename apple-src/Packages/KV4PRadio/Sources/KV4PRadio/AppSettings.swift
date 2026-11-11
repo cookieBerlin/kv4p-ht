@@ -47,6 +47,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var mapLayers: Set<MapLayer> = [.repeaters, .beacons]
     /// The points of the map as a list; local to the device.
     public var isMapShownAsList = false
+    /// The band the map shows; local to the device.
+    public var mapBand = MapBand.radio
     /// When this device last exchanged settings with iCloud.
     public var lastSettingsSync: Date?
     /// When a sync of the memories with iCloud last finished.
@@ -154,6 +156,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         isMapEnabled = values.value(.isMapEnabled, or: defaults.isMapEnabled)
         mapLayers = values.value(.mapLayers, or: defaults.mapLayers)
         isMapShownAsList = values.value(.isMapShownAsList, or: defaults.isMapShownAsList)
+        mapBand = values.value(.mapBand, or: defaults.mapBand)
         lastSettingsSync = values.value(.lastSettingsSync, or: defaults.lastSettingsSync)
         lastMemorySync = values.value(.lastMemorySync, or: defaults.lastMemorySync)
         micGain = values.value(.micGain, or: defaults.micGain)

@@ -1,5 +1,6 @@
 import Foundation
 import KV4PPersistence
+import KV4PProtocol
 
 /// A layer of the map, one for each kind of memory, switched on and off on its own (ADR-0068).
 public enum MapLayer: String, CaseIterable, Codable, Sendable {
@@ -22,10 +23,40 @@ public enum MapLayer: String, CaseIterable, Codable, Sendable {
     }
 }
 
+/// The band the map shows (ADR-0068).
+public enum MapBand: String, CaseIterable, Codable, Sendable {
+    /// The band of the connected radio; before a radio is known, 2 m and 70 cm.
+    case radio
+    case twoMetres, seventyCentimetres
+    /// Also the memories that neither module receives.
+    case all
+
+    public var title: String {
+        switch self {
+        case .radio: "Radio's band"
+        case .twoMetres: RFModuleType.sa818VHF.band
+        case .seventyCentimetres: RFModuleType.sa818UHF.band
+        case .all: "All"
+        }
+    }
+
+    /// Whether a memory for `module` is shown, with the radio's module, if known.
+    func shows(_ module: RFModuleType?, radio: RFModuleType?) -> Bool {
+        switch self {
+        case .radio: module != nil && (radio == nil || module == radio)
+        case .twoMetres: module == .sa818VHF
+        case .seventyCentimetres: module == .sa818UHF
+        case .all: true
+        }
+    }
+}
+
 /// A memory on the map, and how far from here it is.
 public struct MapPoint: Identifiable, Equatable, Sendable {
     public let memory: ChannelMemory
     public let point: GeoPoint
+    /// The module that receives it; `nil` for another band.
+    public let module: RFModuleType?
     /// `nil` while our own position is unknown.
     public let distanceMeters: Double?
     public let direction: CompassPoint?
@@ -75,15 +106,20 @@ extension ChannelMemory {
 }
 
 extension RadioViewModel {
-    /// The memories with a position on the layers that are on, from all groups; the nearest first once our own
-    /// position is known, otherwise in the order of the list.
+    /// The memories with a position on the layers and the band that are on, from all groups; the nearest first once
+    /// our own position is known, otherwise in the order of the list.
     public var mapPoints: [MapPoint] {
+        let radio = snapshot.firmware?.moduleType
         let points = memories.compactMap { memory -> MapPoint? in
-            guard mapLayers.contains(MapLayer(memory.kind)), let point = memory.position else { return nil }
+            let module = RFModuleType.receiving(memory.frequency)
+            guard mapLayers.contains(MapLayer(memory.kind)), mapBand.shows(module, radio: radio),
+                let point = memory.position
+            else { return nil }
             let (distance, direction) = point.seen(from: ownPosition)
             return MapPoint(
                 memory: memory,
                 point: point,
+                module: module,
                 distanceMeters: distance,
                 direction: direction,
                 isTunable: isReady && isReceivable(memory)

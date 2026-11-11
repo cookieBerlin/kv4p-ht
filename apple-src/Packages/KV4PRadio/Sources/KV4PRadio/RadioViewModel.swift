@@ -419,6 +419,10 @@ public final class RadioViewModel {
     public var mapLayers: Set<MapLayer> = [.repeaters, .beacons] {
         didSet { saveSettings() }
     }
+    /// The band the map shows.
+    public var mapBand = MapBand.radio {
+        didSet { saveSettings() }
+    }
     /// The points of the map as a list, sorted by distance, as VoiceOver reads it more easily.
     public var isMapShownAsList = false {
         didSet { saveSettings() }
@@ -757,6 +761,7 @@ public final class RadioViewModel {
         settings.isMapEnabled = isMapEnabled
         settings.mapLayers = mapLayers
         settings.isMapShownAsList = isMapShownAsList
+        settings.mapBand = mapBand
         settings.lastSettingsSync = lastSettingsSync
         settings.lastMemorySync = lastMemorySync
         settings.micGain = micGain
@@ -811,6 +816,7 @@ public final class RadioViewModel {
         isMapEnabled = settings.isMapEnabled
         mapLayers = settings.mapLayers
         isMapShownAsList = settings.isMapShownAsList
+        mapBand = settings.mapBand
         lastSettingsSync = settings.lastSettingsSync
         isBackgroundBeaconEnabled = settings.isBackgroundBeaconEnabled
         lastMemorySync = settings.lastMemorySync
@@ -1079,7 +1085,8 @@ public final class RadioViewModel {
 
     /// Reads our position for the list: while it is shown, with access granted, and at most once a minute.
     private func refreshOwnPosition() {
-        guard isAPRSVisible || isPacketsPageVisible || isMapVisible, let location, permissions?.state(of: .location) == .granted,
+        guard isAPRSVisible || isPacketsPageVisible || isMapVisible, let location,
+            permissions?.state(of: .location) == .granted,
             now() >= nextOwnPositionAtMs
         else { return }
         nextOwnPositionAtMs = now() + Self.ownPositionIntervalMs
