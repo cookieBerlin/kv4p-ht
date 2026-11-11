@@ -1,0 +1,52 @@
+# Publishes the website of the Apple app on GitHub Pages (docs/apple/adr/0067-website.md).
+# Every step only calls a target of apple-src/Makefile; `make site-check` also runs for pull requests in Apple CI.
+name: Apple website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/apple/site/**
+      - docs/apple/faq.md
+      - docs/apple/manual.md
+      - apple-src/App/KV4PHT/Assets.xcassets/AppIcon.appiconset/AppIcon.png
+      - apple-src/scripts/site.sh
+      - apple-src/scripts/site-tools.sh
+      - apple-src/Makefile
+      - .github/workflows/apple-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apple-pages
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: apple-src
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make site-tools
+      - run: make site-check
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: apple-src/.build/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

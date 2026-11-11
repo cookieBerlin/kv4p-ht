@@ -108,6 +108,16 @@ jobs:
       - uses: actions/checkout@v4
       - run: make app
 
+  # The website builds and its links lead somewhere (ADR-0067); apple-pages.yml publishes it from main.
+  site:
+    needs: changes
+    if: needs.changes.outputs.apple == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make site-tools
+      - run: make site-check
+
   # Apple's accessibility audit in the simulator (ADR-0062); its findings are kept, and only a run that cannot go
   # through the screens fails.
   a11y:

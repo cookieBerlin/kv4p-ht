@@ -6,3 +6,4 @@ docs/apple
 tools/test-vectors
 tools/codec2-vectors
 .github/workflows/apple-ci.yml
+.github/workflows/apple-pages.yml
