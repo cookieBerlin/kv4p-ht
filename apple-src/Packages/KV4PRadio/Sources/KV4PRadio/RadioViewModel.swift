@@ -548,6 +548,9 @@ public final class RadioViewModel {
     /// How often the list reads the position at most.
     private static let ownPositionIntervalMs: Int64 = 60_000
 
+    /// The map may show our position: the system's map asks for access itself otherwise (ADR-0068).
+    public var showsOwnPosition: Bool { location != nil && allowedPermissions.contains(.location) }
+
     /// A location is available for beacons.
     public var canBeacon: Bool { location != nil && !isDenied(.location) }
 
