@@ -7,6 +7,10 @@ import SwiftUI
 struct RootView: View {
     let model: RadioViewModel
     @State private var isReporting = false
+    #if os(iOS)
+        /// The settings opened on a wide iPad, and the pages within them.
+        @State private var settingsPath: [SettingsDestination] = []
+    #endif
     @Environment(\.scenePhase) private var scenePhase
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var sizeClass
@@ -82,7 +86,10 @@ struct RootView: View {
             if sizeClass == .compact {
                 CompactScreen(model: model)
             } else {
-                NavigationStack { sideBySide.mainChrome(model, title: "kv4p HT") }
+                NavigationStack(path: $settingsPath) {
+                    sideBySide.mainChrome(model, title: "kv4p HT", settingsPath: $settingsPath)
+                        .settingsDestinations(model)
+                }
             }
         #else
             sideBySide.mainChrome(model, title: "kv4p HT").frame(minWidth: 700, minHeight: 600)
@@ -204,7 +211,9 @@ struct RootView: View {
                             pageView(.chats) { APRSView(model: model, page: .chats) }
                         }
                         pageView(.settings) {
-                            NavigationStack(path: $settingsPath) { SettingsView(model: model) }
+                            NavigationStack(path: $settingsPath) {
+                                SettingsView(model: model).settingsDestinations(model)
+                            }
                         }
                         copyView(.copyAfter) { MemoriesView(model: model) }
                     }

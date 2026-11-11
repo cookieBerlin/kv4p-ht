@@ -10,7 +10,12 @@ extension View {
     /// With room for it, the parts around the memories and APRS: the header, the PTT bar and the settings button. The
     /// bars stand above and below the lists rather than over them, so that nothing scrolls out of sight behind them, as
     /// on a phone (ADR-0062).
-    func mainChrome(_ model: RadioViewModel, title: String) -> some View {
+    /// - Parameter settingsPath: iPhone and iPad: the stack the settings open in.
+    func mainChrome(
+        _ model: RadioViewModel,
+        title: String,
+        settingsPath: Binding<[SettingsDestination]> = .constant([])
+    ) -> some View {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
                 RadioHeader(model: model)
@@ -24,14 +29,14 @@ extension View {
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
-        .modifier(SettingsEntry(model: model))
+        .modifier(SettingsEntry(model: model, path: settingsPath))
     }
 }
 
 /// The way to the settings. On iPhone and iPad, a reply from their packets page comes back from them, to write it.
 private struct SettingsEntry: ViewModifier {
     let model: RadioViewModel
-    @State private var isShowingSettings = false
+    @Binding var path: [SettingsDestination]
 
     func body(content: Content) -> some View {
         content
@@ -39,13 +44,12 @@ private struct SettingsEntry: ViewModifier {
                 #if os(macOS)
                     SettingsLink { Label("Settings", systemImage: "gearshape") }
                 #else
-                    Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
+                    Button("Settings", systemImage: "gearshape") { path = [.overview] }
                 #endif
             }
             #if os(iOS)
-                .navigationDestination(isPresented: $isShowingSettings) { SettingsView(model: model) }
-                .onChange(of: model.aprsReplyCount) { isShowingSettings = false }
-                .onChange(of: model.chatRequestCount) { isShowingSettings = false }
+                .onChange(of: model.aprsReplyCount) { path = [] }
+                .onChange(of: model.chatRequestCount) { path = [] }
             #endif
     }
 }
