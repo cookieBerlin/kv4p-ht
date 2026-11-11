@@ -6,6 +6,8 @@ No changes to the firmware or the Android app are required.
 
 **Status:** the [roadmap](04-roadmap.md) shows which milestones are done.
 
+**Website:** <https://cookieberlin.github.io/kv4p-ht/>, built from [site/](site/) ([ADR-0067](adr/0067-website.md)).
+
 ## Documents
 
 | Document | Purpose |

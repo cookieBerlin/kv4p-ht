@@ -10,8 +10,9 @@ current status.
 
 ## How do I get the test builds?
 
-Through Apple's TestFlight app, with an invitation from the maintainer. The app
-is not in the App Store. See the [manual](manual.md#installation).
+Through Apple's TestFlight app, with the [public invitation](https://testflight.apple.com/join/YyNEfBpK). The app
+is not in the App Store yet. See the [manual](manual.md#installation) and the
+[website](https://cookieberlin.github.io/kv4p-ht/).
 
 ## Why Bluetooth instead of USB on iPhone and iPad?
 
