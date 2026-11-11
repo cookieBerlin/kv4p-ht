@@ -1,6 +1,6 @@
 # ADR-0037: App version, build ID and commit
 
-- **Status:** Proposed
+- **Status:** Proposed; the version part is superseded by [ADR-0070](0070-own-app-version.md)
 - **Date:** 2026-11-02
 
 ## Context
