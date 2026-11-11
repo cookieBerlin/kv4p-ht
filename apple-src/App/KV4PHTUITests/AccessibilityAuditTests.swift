@@ -153,6 +153,10 @@ final class AccessibilityAuditTests: XCTestCase {
             about.tap()
         #endif
         let whatsNew = app.buttons["about-whats-new"].firstMatch
+        #if os(iOS)
+            // With the largest text, About's form makes the row only once it comes near.
+            _ = whatsNew.waitForExistence(timeout: 5) || reveal(whatsNew) == .onScreen
+        #endif
         guard whatsNew.waitForExistence(timeout: 5) else {
             let finding = "A11Y \(size) whats new: not reached"
             print(finding)
@@ -433,6 +437,8 @@ final class AccessibilityAuditTests: XCTestCase {
         if isDynamicType || isTextClipped, screen.contains("settings") || label == "New chat" {
             return 6
         }
+        // 6. The long entries of the changelog, which wrap on the screenshots rather than being cut.
+        if isTextClipped, screen.hasSuffix("whats new") { return 6 }
         // 7. Findings without an element, which no screen element can be matched to.
         if issue.element == nil { return 7 }
         // 13. The legal notice MapKit puts on the map, with its own small link (ADR-0068).

@@ -41,9 +41,10 @@ struct WhatsNewView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    Text("What's New").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
                     if blocks.isEmpty {
                         Text("The changelog is missing.")
                     }
@@ -54,15 +55,17 @@ struct WhatsNewView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
             }
-            .navigationTitle("What's New")
-            #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }.accessibilityIdentifier("whats-new-done")
-                }
-            }
+            Divider()
+            // A button of its own rather than one of the toolbar, which keeps its size with Dynamic Type.
+            Button("Done") { dismiss() }
+                .buttonStyle(.borderedProminent)
+                #if os(iOS)
+                    .tint(Color.strongAccent)
+                #endif
+                .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("whats-new-done")
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding()
         }
         #if os(macOS)
             .frame(minWidth: 520, minHeight: 560)
@@ -80,14 +83,13 @@ private struct ChangelogBlockView: View {
                 .font(level <= 2 ? .title2.bold() : .headline)
                 .padding(.top, level <= 2 ? 14 : 4)
                 .accessibilityAddTraits(.isHeader)
-                .fixedSize(horizontal: false, vertical: true)
         case .item(let text):
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(verbatim: "•").accessibilityHidden(true)
-                Text(Self.inline(text)).fixedSize(horizontal: false, vertical: true)
+                Text(Self.inline(text))
             }
         case .paragraph(let text):
-            Text(Self.inline(text)).fixedSize(horizontal: false, vertical: true)
+            Text(Self.inline(text))
         }
     }
 
