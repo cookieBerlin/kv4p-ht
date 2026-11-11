@@ -189,9 +189,9 @@ final class AccessibilityAuditTests: XCTestCase {
         return false
     }
 
-    /// All kinds of check but Dynamic Type at once, which is quick; if that runs out of the time XCTest gives an audit on
-    /// a busy simulator, one kind at a time, each up to three times. Dynamic Type runs on its own. A screen without
-    /// findings says so, to show that it was checked.
+    /// Every kind of check on a screen. A screen with findings is checked once more after a pause, and only what both
+    /// looks find counts: a slow machine lets the audit catch a screen before its text has grown, but seldom twice in the
+    /// same place. A screen without findings says so, to show that it was checked.
     private func audit(_ screen: String) throws {
         // To judge a finding by looking at the screen; `make a11y` exports them.
         #if os(macOS)
@@ -202,6 +202,36 @@ final class AccessibilityAuditTests: XCTestCase {
         screenshot.name = screen
         screenshot.lifetime = .keepAlways
         add(screenshot)
+        let before = findings.count
+        firstLook = []
+        look = .first
+        defer { look = .only }
+        try auditEveryKind(screen)
+        if findings.count > before {
+            findings.removeSubrange(before...)
+            look = .second
+            Thread.sleep(forTimeInterval: Self.pauseBeforeLookingAgain)
+            try auditEveryKind(screen)
+        }
+        if findings.count == before {
+            print("A11Y \(screen): no findings")
+        }
+    }
+
+    /// The look at a screen that a finding comes from. Those of the first look are printed as `A11Y-FIRST-LOOK`, and
+    /// those that only the second look finds as `A11Y-ONCE`; `make a11y` counts neither.
+    private enum Look {
+        case only, first, second
+    }
+
+    private var look = Look.only
+    /// What the first look at the screen found, each without the contrast measured on the screenshot.
+    private var firstLook: Set<String> = []
+    private static let pauseBeforeLookingAgain: TimeInterval = 3
+
+    /// All kinds of check but Dynamic Type at once, which is quick; if that runs out of the time XCTest gives an audit on
+    /// a busy simulator, one kind at a time, each with a few attempts. Dynamic Type runs on its own.
+    private func auditEveryKind(_ screen: String) throws {
         let before = findings.count
         do {
             try runAudit(screen, Self.auditTypes)
@@ -215,9 +245,6 @@ final class AccessibilityAuditTests: XCTestCase {
             // On its own: together with the other kinds, it flags text that grows, such as all of a chat.
             try runAuditRetrying(screen, .dynamicType)
         #endif
-        if findings.count == before {
-            print("A11Y \(screen): no findings")
-        }
     }
 
     #if os(macOS)
@@ -258,19 +285,21 @@ final class AccessibilityAuditTests: XCTestCase {
     /// The error of an audit that ran out of time.
     private static let timedOut = -56
 
-    /// A busy simulator lets an audit of one kind run out of time now and then; the third time it counts.
+    /// A busy simulator lets an audit of one kind run out of time now and then; after a pause, which grows with each
+    /// attempt, it runs again, and the last time it counts.
     private func runAuditRetrying(_ screen: String, _ type: XCUIAccessibilityAuditType) throws {
-        for _ in 1..<Self.attempts {
+        for attempt in 1..<Self.attempts {
             do {
                 return try runAudit(screen, type)
             } catch let error as NSError where error.code == Self.timedOut {
-                continue
+                print("A11Y-TIMED-OUT \(screen): \(Self.name(of: type)), attempt \(attempt)")
+                Thread.sleep(forTimeInterval: TimeInterval(2 * attempt))
             }
         }
         try runAudit(screen, type)
     }
 
-    private static let attempts = 3
+    private static let attempts = 5
 
     private func runAudit(_ screen: String, _ type: XCUIAccessibilityAuditType) throws {
         try app.performAccessibilityAudit(for: type) { issue in
@@ -278,13 +307,23 @@ final class AccessibilityAuditTests: XCTestCase {
                 print("A11Y-EXCEPTION \(exception): \(screen): \(Self.describe(issue))")
                 return true
             }
-            var finding = "A11Y \(screen): \(Self.describe(issue))"
+            let place = "\(screen): \(Self.describe(issue))"
+            var finding = "A11Y \(place)"
             if issue.auditType == .contrast, let element = issue.element {
                 let measured = self.measuredContrast(of: element).map { String(format: "%.1f:1", $0) } ?? "none"
                 finding += " — measured \(measured) in \(element.frame)"
             }
-            // At once, so that a run that stops early keeps what it found.
-            print(finding)
+            switch self.look {
+            case .first:
+                print("A11Y-FIRST-LOOK" + finding.dropFirst("A11Y".count))
+                self.firstLook.insert(place)
+            case .second where !self.firstLook.contains(place):
+                print("A11Y-ONCE" + finding.dropFirst("A11Y".count))
+                return true
+            case .only, .second:
+                // At once, so that a run that stops early keeps what it found.
+                print(finding)
+            }
             self.findings.append(finding)
             // Handled here, as the test fails on its findings at the end: an issue of XCTest would attach a screenshot of
             // the whole screen, which on the Mac shows whatever else is open.
