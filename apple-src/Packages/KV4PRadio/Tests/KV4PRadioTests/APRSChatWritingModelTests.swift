@@ -149,4 +149,57 @@ struct APRSChatWritingModelTests {
         setup.model.deleteChat(with: "N1CALL")
         #expect(setup.model.openChat == "N2CALL")
     }
+
+    // MARK: Drafts, which outlive the views that show them: a foldable iPhone swaps the layout while one is written
+
+    @Test("each chat keeps its own draft, cut at what a message to its station holds")
+    func keepsChatDrafts() throws {
+        let setup = try Setup()
+        #expect(setup.model.chatDraft(with: "N1CALL").isEmpty)
+        setup.model.writeChatDraft("Hello", to: "N1CALL")
+        setup.model.writeChatDraft(String(repeating: "x", count: 70), to: "N2CALL")
+        #expect(setup.model.chatDraft(with: "N1CALL") == "Hello")
+        #expect(setup.model.chatDraft(with: "N2CALL") == String(repeating: "x", count: 61))
+    }
+
+    @Test("sending a chat draft sends it and leaves the drafts of other chats")
+    func sendsChatDraft() async throws {
+        let setup = try Setup()
+        await setup.ready()
+        setup.model.writeChatDraft("Hello", to: "N1CALL")
+        setup.model.writeChatDraft("Later", to: "N2CALL")
+        setup.model.sendChatDraft(to: "N1CALL")
+        #expect(setup.model.messages(with: "N1CALL").last?.body == "Hello")
+        #expect(setup.model.chatDraft(with: "N1CALL").isEmpty)
+        #expect(setup.model.chatDraft(with: "N2CALL") == "Later")
+    }
+
+    @Test("an empty chat draft sends nothing")
+    func sendsNoEmptyChatDraft() async throws {
+        let setup = try Setup()
+        await setup.ready()
+        setup.model.sendChatDraft(to: "N1CALL")
+        #expect(setup.model.messages(with: "N1CALL").isEmpty)
+    }
+
+    @Test("a deleted chat takes its draft along")
+    func deletesChatDraft() throws {
+        let setup = try Setup()
+        setup.model.writeChatDraft("Hello", to: "N1CALL")
+        setup.model.deleteChat(with: "N1CALL")
+        #expect(setup.model.chatDraft(with: "N1CALL").isEmpty)
+    }
+
+    @Test("the line of the packets keeps its draft, and sending it goes to the recipient there")
+    func sendsAPRSDraft() async throws {
+        let setup = try Setup()
+        await setup.ready()
+        setup.model.sendAPRSDraft()
+        #expect(setup.model.messages(with: "N1CALL").isEmpty)
+        setup.model.aprsRecipient = "N1CALL"
+        setup.model.aprsDraft = "Hi"
+        setup.model.sendAPRSDraft()
+        #expect(setup.model.messages(with: "N1CALL").last?.body == "Hi")
+        #expect(setup.model.aprsDraft.isEmpty)
+    }
 }

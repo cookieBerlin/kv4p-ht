@@ -8,7 +8,6 @@ struct APRSView: View {
     /// On a phone, the packets and the chats are pages of their own, which say whether they are on screen; elsewhere
     /// the view shows the one chosen beside the memories.
     var page: APRSPage?
-    @State private var text = ""
     @State private var isOnScreen = false
     @FocusState private var isWriting: Bool
     @Environment(\.scenePhase) private var scenePhase
@@ -90,7 +89,7 @@ struct APRSView: View {
     }
 
     private var messageField: some View {
-        TextField("Message", text: $text)
+        TextField("Message", text: $model.aprsDraft)
             .macName("Message")
             .focused($isWriting)
             .onSubmit(send)
@@ -98,12 +97,10 @@ struct APRSView: View {
 
     private var sendButton: some View {
         Button("Send", systemImage: "paperplane", action: send)
-            .disabled(!model.isReady || text.isEmpty)
+            .disabled(!model.isReady || model.aprsDraft.isEmpty)
     }
 
     private func send() {
-        guard !text.isEmpty else { return }
-        model.sendAPRSMessage(to: model.aprsRecipient, text: text)
-        text = ""
+        model.sendAPRSDraft()
     }
 }
