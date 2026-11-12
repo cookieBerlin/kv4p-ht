@@ -11,8 +11,11 @@ struct RootView: View {
     @State private var whatsNew: Changelog.Release?
     @State private var hasCheckedWhatsNew = false
     #if os(iOS)
-        /// The settings opened on a wide iPad, and the pages within them.
+        /// The settings opened and the pages within them, of both layouts: a foldable iPhone changes between them while
+        /// the app runs, and the one that follows shows what the other showed (`handOver`).
         @State private var settingsPath: [SettingsDestination] = []
+        @AppStorage(CompactPage.storageKey) private var compactPage = CompactPage.memories
+        @AppStorage(SidePane.showsMapKey) private var sideShowsMap = false
     #endif
     @Environment(\.scenePhase) private var scenePhase
     #if os(iOS)
@@ -23,6 +26,9 @@ struct RootView: View {
 
     var body: some View {
         content
+            #if os(iOS)
+                .onChange(of: sizeClass) { old, new in handOver(from: old, to: new) }
+            #endif
             .alert(
                 "Radio problem",
                 isPresented: Binding(
@@ -102,7 +108,7 @@ struct RootView: View {
     @ViewBuilder private var content: some View {
         #if os(iOS)
             if sizeClass == .compact {
-                CompactScreen(model: model)
+                CompactScreen(model: model, settingsPath: $settingsPath)
             } else {
                 NavigationStack(path: $settingsPath) {
                     sideBySide.mainChrome(model, title: "kv4p HT", settingsPath: $settingsPath)
@@ -113,6 +119,29 @@ struct RootView: View {
             sideBySide.mainChrome(model, title: "kv4p HT").frame(minWidth: 700, minHeight: 600)
         #endif
     }
+
+    #if os(iOS)
+        /// The layout that follows shows what the other showed: the settings that were open, and the page beside the
+        /// memories. The wide layout puts the settings on top of the main screen, the compact one makes them a page.
+        private func handOver(from old: UserInterfaceSizeClass?, to new: UserInterfaceSizeClass?) {
+            if new == .compact, old != .compact {
+                guard !settingsPath.isEmpty else {
+                    // The settings were closed in the wide layout.
+                    if compactPage == .settings { compactPage = .memories }
+                    return
+                }
+                compactPage = .settings
+                if settingsPath.first == .overview { settingsPath.removeFirst() }
+            } else if new != .compact, old == .compact {
+                switch compactPage {
+                case .settings: settingsPath.insert(.overview, at: 0)
+                case .map: sideShowsMap = true
+                case .packets, .chats: sideShowsMap = false
+                case .memories: break
+                }
+            }
+        }
+    #endif
 
     /// Without APRS and the map, the memories take the whole width.
     private var sideBySide: some View {
@@ -129,10 +158,11 @@ struct RootView: View {
 }
 
 /// Beside the memories of a wide window: the packets, the chats or the map, of those that are on.
-private struct SidePane: View {
+struct SidePane: View {
     @Bindable var model: RadioViewModel
+    static let showsMapKey = "sideShowsMap"
     /// The map is shown rather than APRS, also after a restart.
-    @AppStorage("sideShowsMap") private var showsMap = false
+    @AppStorage(showsMapKey) private var showsMap = false
 
     private enum Part: Hashable {
         case aprs(APRSPage), map
@@ -188,45 +218,49 @@ private struct SidePane: View {
 }
 
 #if os(iOS)
+    /// The pages of the compact layout, in their order.
+    enum CompactPage: String, CaseIterable, Identifiable {
+        case memories, packets, chats, map, settings
+
+        /// Where the page shown last is kept.
+        static let storageKey = "mainPage"
+
+        var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .memories: "Memories"
+            case .packets: "Packets"
+            case .chats: "Chats"
+            case .map: "Map"
+            case .settings: "Settings"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .memories: "list.bullet"
+            case .packets: "point.3.connected.trianglepath.dotted"
+            case .chats: "bubble.left.and.bubble.right"
+            case .map: "map"
+            case .settings: "gearshape"
+            }
+        }
+
+        /// What the APRS page of a wider screen would show.
+        var aprsPage: APRSPage? {
+            switch self {
+            case .packets: .packets
+            case .chats: .chats
+            case .memories, .map, .settings: nil
+            }
+        }
+    }
+
     /// iPhone and narrow iPad windows: one page each for the memories, the APRS packets, the chats and the settings, in a
     /// ring, so that a swipe goes from the memories straight to the settings and back. The header and PTT stay outside
     /// the pages, so that a moving finger on PTT does not change the page and end the transmission.
     private struct CompactScreen: View {
-        private enum Page: String, CaseIterable, Identifiable {
-            case memories, packets, chats, map, settings
-
-            var id: Self { self }
-
-            var title: String {
-                switch self {
-                case .memories: "Memories"
-                case .packets: "Packets"
-                case .chats: "Chats"
-                case .map: "Map"
-                case .settings: "Settings"
-                }
-            }
-
-            var symbol: String {
-                switch self {
-                case .memories: "list.bullet"
-                case .packets: "point.3.connected.trianglepath.dotted"
-                case .chats: "bubble.left.and.bubble.right"
-                case .map: "map"
-                case .settings: "gearshape"
-                }
-            }
-
-            /// What the APRS page of a wider screen would show.
-            var aprsPage: APRSPage? {
-                switch self {
-                case .packets: .packets
-                case .chats: .chats
-                case .memories, .map, .settings: nil
-                }
-            }
-        }
-
         /// A place in the row of pages: a scroll view does not close into a ring, so a copy of the last page stands
         /// before the first and a copy of the first after the last; a swipe that ends on a copy jumps to the page.
         private enum Slot: Hashable {
@@ -242,15 +276,18 @@ private struct SidePane: View {
             }
         }
 
+        private typealias Page = CompactPage
+
         let model: RadioViewModel
         /// The page shown last, also after a restart.
-        @AppStorage("mainPage") private var page = Page.memories
+        @AppStorage(CompactPage.storageKey) private var page = Page.memories
         /// Where the scroll view stands, which follows `page` and leads it when swiped.
         @State private var shownSlot: Slot?
         /// The bars below the pages make way for the keyboard, so that the line to write stays above it.
         @State private var isKeyboardShown = false
-        /// The pages opened in the settings. While one is open, a swipe goes back to the list rather than to another page.
-        @State private var settingsPath: [SettingsDestination] = []
+        /// The pages opened in the settings, below their list. While one is open, a swipe goes back to the list rather
+        /// than to another page. `RootView` keeps them, for the wide layout to take them over.
+        @Binding var settingsPath: [SettingsDestination]
         @Environment(\.scenePhase) private var scenePhase
 
         /// One page over the full width; all are there at once, so each is told whether it is the one shown.
