@@ -69,6 +69,11 @@ swipe moves the map; the bar changes the page. **Push to talk** is on the memori
 settings, a swipe to the right goes back to their list. With the largest text sizes, the header grows less than the
 rest, and rows that no longer fit side by side, such as the line to write a message, stand one below the other.
 
+📱 The layout can change while you use the app: when an iPad window gets wider or narrower, a large iPhone turns, or a
+foldable iPhone is folded or opened. What you were doing stays: open settings stay open, an unsent message stays, and
+the packets, chats or map you were looking at stay in view. A held **Push to talk** or access tone stops, so the radio
+does not keep transmitting; sticky PTT stays on.
+
 Controls that are not self-explanatory explain themselves: 🖥 point at them for a
 tooltip; 📱 a short text is below each setting, and ⓘ explains the
 recipient of a message.

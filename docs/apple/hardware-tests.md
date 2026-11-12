@@ -50,6 +50,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-41](#hw-41) | Frequency steps | ⬜ | ⬜ |
 | [HW-42](#hw-42) | Memory kinds and DARC import | ⬜ | ⬜ |
 | [HW-43](#hw-43) | Map | ⬜ | ⬜ |
+| [HW-44](#hw-44) | Layout change while in use | – | ⬜ |
 
 ## TestFlight
 
@@ -397,3 +398,12 @@ internet, the parts seen before still show. With the APRS-IS feed on, or packets
 last hour show with their symbols, each at its last position; *15 min* and *All* change that, also with the app
 restarted. Tap one: **Packets** shows its packets, **Chat** its chat. Switch APRS off: the stations go. Switch the map
 off in **Settings → Pages**: the page goes.
+
+### HW-44
+
+Into a dummy load. Use a device whose layout changes while the app runs: an iPhone Duo folded or opened, an iPad
+window resized from narrow to wide, or a large iPhone turned. Hold PTT and change the layout: the radio stops
+transmitting. With sticky PTT on, press PTT once and change the layout: it keeps transmitting until PTT is pressed
+again. Hold the access tone and change the layout: the tone ends. Write a message in the packets and in a chat without
+sending it, and change the layout: both texts are still there. Open a page of the settings and change the layout:
+it stays open, also when changed back. Show the map, change to the wide layout: the map is beside the memories.

@@ -5,6 +5,11 @@ own, with its version, build and date.
 
 ## Unreleased
 
+### Fixed
+
+- When an iPad window changes from narrow to wide or back, or a large iPhone turns, PTT and the access tone stop if
+  they were held, and an unsent APRS message, the open settings and the page shown stay.
+
 ## 0.2.0 (20261111.2136) – 2026-11-11
 
 ### Added
