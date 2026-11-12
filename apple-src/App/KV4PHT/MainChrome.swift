@@ -723,9 +723,12 @@ private struct AccessToneButton: View {
 #endif
 
 extension View {
-    /// Reports when a press starts and when it ends.
+    /// Reports when a press starts and when it ends. A press also ends when the view goes while it is held: the layout
+    /// can change under the finger, as when a foldable iPhone is folded, and the touch then never reports its end, so
+    /// the radio would stay on air. `onUp` has to ignore an end without a start.
     fileprivate func holdable(onDown: @escaping () -> Void, onUp: @escaping () -> Void) -> some View {
-        contentShape(.rect)
+        onDisappear(perform: onUp)
+            .contentShape(.rect)
             #if os(iOS)
                 // SwiftUI reports a held touch late, only UIKit reports it when the finger lands.
                 .overlay {
