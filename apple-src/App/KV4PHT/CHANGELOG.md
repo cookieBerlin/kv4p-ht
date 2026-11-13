@@ -16,6 +16,7 @@ own, with its version, build and date.
 
 - iPhone Duo, folded: the symbols of the pages stand at the side below the status bar, which leaves the pages more
   room.
+- iPhone and iPad: a launch screen in the colours of the app icon, with its radio, instead of a black screen.
 
 ### Fixed
 
@@ -23,6 +24,7 @@ own, with its version, build and date.
   PTT and the access tone stop if they were held, and an unsent APRS message, the open settings and the page shown
   stay.
 - iPhone Duo, folded: the next page no longer shows beside the status bar.
+- iPhone: the app starts much sooner when it was not running before, as the map is set up only when it is needed.
 
 ## 0.2.0 (20261111.2136) – 2026-11-11
 

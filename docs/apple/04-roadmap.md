@@ -72,6 +72,7 @@ box. Hardware test results are in [hardware-tests.md](hardware-tests.md).
 | ✅ | 3.12a | **iPhone Duo: layout changes** | Folding, unfolding, resizing an iPad window or turning a large iPhone keeps what the user was doing: a held PTT or access tone ends, drafts, open settings and the page shown stay ([ADR-0071](adr/0071-iphone-duo.md)). |
 | ✅ | 3.12b | **iPhone Duo: folded** | The pager stays clear of the status bar at the side; the page bar stands as a column below it, where the system puts vertical bars (iOS 27.1). |
 | ✅ | 3.12c | **iPhone Duo: unfolded** | iPhone and iPad choose and connect the radio in the settings, as the phone does; the header keeps the frequency, the S-meter and the volume. Beside a toolbar at the side, the title row goes. Checked with screenshots on the iPhone Duo simulator. |
+| ✅ | 3.13 | **App start** | The start is measured, as signposts for Instruments and as one line of the log once the first frame shows. The map is built only once it is near, which made a cold start in the simulator take about 1 s instead of 3.8 s. The launch screen shows the colours of the app icon with its radio instead of a black screen ([ADR-0073](adr/0073-app-start.md)). |
 
 ## Phase 4 — Firmware selection and APRS
 
