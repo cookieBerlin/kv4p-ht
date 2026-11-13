@@ -78,6 +78,9 @@ For problem 4:
   turning a large iPhone, which swaps the layouts as folding does: the iPhone Duo
   simulator cannot be folded from a script, only in Xcode's Device Hub. The page tests
   also run on the iPhone Duo simulator, folded, where the page bar is a column.
+- **Known:** on the open iPhone Duo, `MapPageTests.testAStationLeadsToItsPackets` does not
+  find the station in the list; it did the same before these changes, and passes folded,
+  as CI runs it. It needs a look on the open simulator.
 - **Hardware test:** [HW-44](../hardware-tests.md#hw-44) checks PTT during a layout
   change on a real radio.
 - **Open:** a third column on the inner display and iPhone Duo screenshots for the
