@@ -295,6 +295,9 @@ struct SidePane: View {
         /// The sides of the screen that are not free, such as the strip below the status bar at the side of a foldable
         /// iPhone; the page bar stands there.
         @State private var sideInsets = EdgeInsets()
+        /// The map is built once it is near: MapKit took seconds of a cold start, before any page showed, also where
+        /// the map stays out of sight.
+        @State private var isMapBuilt = false
         /// The side where the system puts vertical bars, if it does: the page bar then stands there (ADR-0071).
         @Environment(\.verticalBarEdge) private var barEdge
         @Environment(\.scenePhase) private var scenePhase
@@ -336,7 +339,13 @@ struct SidePane: View {
                             pageView(.chats) { APRSView(model: model, page: .chats) }
                         }
                         if model.isMapEnabled {
-                            pageView(.map) { MapPage(model: model) }
+                            pageView(.map) {
+                                if isMapBuilt {
+                                    MapPage(model: model)
+                                } else {
+                                    Color.clear
+                                }
+                            }
                         }
                         pageView(.settings) {
                             NavigationStack(path: $settingsPath) {
@@ -390,6 +399,8 @@ struct SidePane: View {
                 .onChange(of: model.aprsPage) {
                     if page.aprsPage != nil, model.aprsPage == .chats { withAnimation { page = .chats } }
                 }
+                .onChange(of: page, initial: true) { buildMapIfNear() }
+                .onChange(of: pages) { buildMapIfNear() }
                 .onChange(of: page, initial: true) {
                     if let aprsPage = page.aprsPage { model.aprsPage = aprsPage }
                     updateAPRSVisibility()
@@ -430,6 +441,18 @@ struct SidePane: View {
         }
 
         /// The pages there are: without APRS, its two go, and the map without the map.
+        /// The map is built when it shows or a swipe away; then it stays.
+        private func buildMapIfNear() {
+            guard !isMapBuilt, let map = pages.firstIndex(of: .map), let shown = pages.firstIndex(of: page) else {
+                return
+            }
+            let distance = abs(map - shown)
+            // The pages form a ring, so the first and the last are neighbours.
+            if min(distance, pages.count - distance) <= 1 {
+                isMapBuilt = true
+            }
+        }
+
         private var pages: [Page] {
             Page.allCases.filter {
                 switch $0 {
