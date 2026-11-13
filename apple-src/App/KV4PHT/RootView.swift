@@ -448,10 +448,11 @@ struct SidePane: View {
         }
 
         /// The number of new messages in the chats (ADR-0058).
-        private var newMessages: some View {
+        /// In a column at the side, the symbol stands near the edge of the screen, so the count stays closer to it.
+        private func newMessages(_ axis: Axis) -> some View {
             CountBadge(count: model.newAPRSMessages, color: .red)
                 .fixedSize()
-                .offset(x: 10, y: -6)
+                .offset(x: axis == .horizontal ? 10 : 2, y: -6)
         }
 
         /// A row below the pages, or a column at the side where the system puts vertical bars.
@@ -467,7 +468,7 @@ struct SidePane: View {
                             .imageScale(.large)
                             .overlay(alignment: .topTrailing) {
                                 if item == .chats, model.newAPRSMessages > 0 {
-                                    newMessages
+                                    newMessages(axis)
                                 }
                             }
                             .frame(maxWidth: .infinity, minHeight: 44)
