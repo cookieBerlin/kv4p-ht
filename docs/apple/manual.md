@@ -422,7 +422,8 @@ digipeater is useful.
 stations heard, with Apple's maps.
 
 - **Layers** (the stacked squares) switch the **Repeaters** (blue), **Frequencies** (green) and **Beacons**
-  (orange) on and off, from all groups. Frequencies are off at first, as most of them have no fixed place.
+  (orange) on and off, from all groups. Frequencies are off at first, as most of them have no fixed place. The menu
+  closes after each choice.
 - **Band**, also under *Layers*, chooses what the map shows: **Radio's band**, at first, shows only the band of
   the connected radio, and 2 m and 70 cm while none is connected. **2 m** or **70 cm** shows that band, and
   **All** also memories of other bands, such as 6 m. A marker reads *2m* or *70*, or a dot for another band.

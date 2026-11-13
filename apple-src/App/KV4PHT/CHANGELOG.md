@@ -10,6 +10,7 @@ own, with its version, build and date.
 - iPad: the radio is chosen and connected in the settings, as on the iPhone, which leaves the main screen more room
   for the memories and APRS. Without a connection, **Connect in Settings** stands in place of **Push to talk**.
 - iPhone Duo, open: the title row goes, as the settings button stands at the side.
+- The **Layers** menu of the map closes after each choice.
 
 ### Added
 
