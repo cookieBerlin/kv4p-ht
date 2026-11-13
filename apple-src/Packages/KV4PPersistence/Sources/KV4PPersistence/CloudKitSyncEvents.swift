@@ -17,13 +17,14 @@ public enum CloudKitSyncEvents {
                     event.endDate != nil, !event.succeeded
                 {
                     let reason = event.error.map(DiagnosticLog.describe) ?? "no reason given"
-                    diagnostics.log(.error, .sync, "Memory sync failed, event \(event.type.rawValue): \(reason)")
+                    let kind = direction(of: event.type)?.rawValue ?? "setup"
+                    diagnostics.log(.error, .sync, "Memory sync failed, \(kind): \(reason)")
                 }
             }
         }
     }
 
-    static var finishedSyncs: AsyncStream<Date> {
+    static var finishedSyncs: AsyncStream<MemorySync> {
         AsyncStream { continuation in
             let task = Task {
                 let events = NotificationCenter.default.notifications(
@@ -32,13 +33,22 @@ public enum CloudKitSyncEvents {
                 for await notification in events {
                     let key = NSPersistentCloudKitContainer.eventNotificationUserInfoKey
                     if let event = notification.userInfo?[key] as? NSPersistentCloudKitContainer.Event,
-                        event.type != .setup, event.succeeded, let end = event.endDate
+                        event.succeeded, let end = event.endDate, let direction = direction(of: event.type)
                     {
-                        continuation.yield(end)
+                        continuation.yield(MemorySync(direction: direction, started: event.startDate, finished: end))
                     }
                 }
             }
             continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    /// An import brings the changes of other devices, an export takes this one's up; the setup moves no memories.
+    private static func direction(of type: NSPersistentCloudKitContainer.EventType) -> MemorySync.Direction? {
+        switch type {
+        case .import: .download
+        case .export: .upload
+        default: nil
         }
     }
 }

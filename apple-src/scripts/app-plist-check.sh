@@ -28,6 +28,13 @@ else
 fi
 [[ "$(plutil -extract "$icon_key" raw -o - "$plist" 2>/dev/null)" == AppIcon ]] || fail "$plist has no app icon"
 [[ -f "$resources/Assets.car" ]] || fail "$app has no compiled asset catalog"
+# iOS 27 refuses an upload without a launch screen (ITMS-90870); the app's shows the colours and the radio of its icon.
+if [[ "$plist" == "$app/Info.plist" ]]; then
+  [[ "$(plutil -extract UILaunchScreen.UIImageName raw -o - "$plist" 2>/dev/null)" == LaunchLogo ]] ||
+    fail "$plist has no launch screen with the logo"
+  [[ "$(plutil -extract UILaunchScreen.UIColorName raw -o - "$plist" 2>/dev/null)" == LaunchBackground ]] ||
+    fail "$plist has no launch screen with its colour"
+fi
 [[ "$(plutil -extract ITSAppUsesNonExemptEncryption raw -o - "$plist" 2>/dev/null)" == false ]] ||
   fail "$plist does not declare ITSAppUsesNonExemptEncryption = NO"
 [[ -f "$resources/PrivacyInfo.xcprivacy" ]] || fail "$app has no privacy manifest"

@@ -37,8 +37,6 @@
 
 /* Begin PBXFileReference section */
 		A30000000000000000000001 /* KV4PHT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KV4PHT.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A3000000000000000000F010 /* KV4PHTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KV4PHTUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A3000000000000000000F011 /* UITests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = UITests.xcconfig; path = ../Config/UITests.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000002 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Base.xcconfig; path = ../Config/Base.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000003 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../Config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A30000000000000000000004 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../Config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -51,6 +49,8 @@
 		A3000000000000000000000B /* COPYING-codec2 */ = {isa = PBXFileReference; lastKnownFileType = text; name = "COPYING-codec2"; path = "../Packages/KV4PDigital/COPYING-codec2"; sourceTree = SOURCE_ROOT; };
 		A3000000000000000000F001 /* firmware-nightly.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = "firmware-nightly.bin"; path = "Firmware/firmware-nightly.bin"; sourceTree = SOURCE_ROOT; };
 		A3000000000000000000F002 /* firmware-nightly.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "firmware-nightly.json"; path = "Firmware/firmware-nightly.json"; sourceTree = SOURCE_ROOT; };
+		A3000000000000000000F010 /* KV4PHTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KV4PHTUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A3000000000000000000F011 /* UITests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = UITests.xcconfig; path = ../Config/UITests.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
