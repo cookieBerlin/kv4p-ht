@@ -21,10 +21,10 @@ final class FrequencyInputTests: XCTestCase {
             app.closeAbout()
         #endif
         // On a memory, its name stands above the frequency, and a step leaves the memory.
-        let memory = app.descendants(matching: .any).matching(
-            NSPredicate(format: "label BEGINSWITH 'Calling channel' OR value BEGINSWITH 'Calling channel'")
-        )
-        .firstMatch
+        // Its row begins with its kind; the Mac's list holds the row's text in an element around it.
+        let row = "Frequency, Calling channel"
+        let memory = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", row, row)).firstMatch
         XCTAssertTrue(memory.waitForExistence(timeout: 5), "No memory to tune to")
         #if os(macOS)
             memory.click()
