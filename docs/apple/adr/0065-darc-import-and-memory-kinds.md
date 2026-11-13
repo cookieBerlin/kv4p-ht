@@ -65,9 +65,11 @@ Facts that bound the choice:
   is not tuned to. Before a radio is known, the list shows everything. The memory editor in the settings always
   shows all memories. The form takes a frequency of either band, and notes when the connected radio cannot receive
   it.
-- **List:** a repeater and a beacon show a symbol (`antenna.radiowaves.left.and.right`,
-  `dot.radiowaves.up.forward`), and VoiceOver reads the kind with the row. A frequency keeps the room, so that the
-  names line up. The comment shows in one line below the frequency, except with the accessibility text sizes.
+- **List:** each kind shows a symbol of its own: a dial for a frequency (`dial.medium`), an antenna for a repeater
+  (`antenna.radiowaves.left.and.right`) and a rotating light for a beacon (`light.beacon.max`). VoiceOver reads the
+  kind with every row. The form's choice of kind shows the same symbols. At first a frequency had no symbol and a
+  beacon one that looked like the sign of a news feed; neither was seen as a mark of its kind. The comment shows in
+  one line below the frequency, except with the accessibility text sizes.
 - **Form:** it edits the kind, the comment and the position. The position is in decimal degrees to five decimals,
   with the user's decimal separator. A coordinate field takes a minus at its start, and on iPhone and iPad it
   brings a keyboard that has one.

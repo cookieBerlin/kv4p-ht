@@ -280,8 +280,9 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
   RX tone, an optional group, a comment, a position and *Skip during scan*. With an offset, the form shows
   where the memory transmits.
 - **Kinds:** a memory is a *frequency*, a *repeater* or a *beacon*, an automatic station that only sends a beacon.
-  New memories are frequencies; changing the offset does not change the kind. The list marks a repeater with an
-  antenna sending both ways and a beacon with one sending to one side, and shows the comment below the frequency (not with the
+  New memories are frequencies; changing the offset does not change the kind. The list and the choice of kind
+  mark a frequency with a dial, a repeater with an antenna and a beacon with a rotating light, and the list shows the
+  comment below the frequency (not with the
   largest text sizes). Memories from an earlier version became repeaters if they had an offset, otherwise frequencies.
 - **Position:** latitude and longitude in decimal degrees, such as `52.51667`, with the decimal separator of your
   language: north and east positive, south and west negative. Enter both or neither.
