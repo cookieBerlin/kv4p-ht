@@ -38,7 +38,7 @@ for device in "${devices[@]}"; do
       -retry-tests-on-failure -test-iterations 2 -resultBundlePath "$bundle" > "$log" 2>&1; then
       break
     fi
-    if [ "$attempt" = 1 ] && grep -q "never finished bootstrapping" "$log"; then
+    if [ "$attempt" = 1 ] && grep -qE "never finished bootstrapping|failed to initialize for UI testing" "$log"; then
       echo "a11y: the test runner did not start on $device, once more" >&2
       continue
     fi
