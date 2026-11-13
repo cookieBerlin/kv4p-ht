@@ -118,21 +118,31 @@ jobs:
       - run: make site-tools
       - run: make site-check
 
-  # Apple's accessibility audit in the simulator (ADR-0062); its findings are kept, and only a run that cannot go
-  # through the screens fails.
-  a11y:
+  # The UI tests in the simulator, one device and one selection per job, side by side (ADR-0072): the functional tests,
+  # and Apple's accessibility audit (ADR-0062), whose findings are kept; only a run that cannot go through the screens
+  # fails. One simulator per machine, as several at once made the test runner time out and crash.
+  ui-tests:
     needs: changes
     if: needs.changes.outputs.apple == 'true'
+    name: ui-tests (${{ matrix.device }}, ${{ matrix.tests }})
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [iPhone 18 Pro, iPad Pro 11-inch (M5), iPhone Duo]
+        tests: [functional, audit]
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
-      - run: make a11y
+      - run: make a11y A11Y_DEVICES="$DEVICE" UI_TESTS="$TESTS"
         working-directory: apple-src
-      # The findings, the log of each simulator and a screenshot of each screen, to see why a run failed.
+        env:
+          DEVICE: ${{ matrix.device }}
+          TESTS: ${{ matrix.tests }}
+      # The findings, the log of the simulator and a screenshot of each screen, to see why a run failed.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: accessibility-findings
+          name: ui-tests ${{ matrix.device }} ${{ matrix.tests }}
           path: |
             apple-src/.build/a11y/findings.txt
             apple-src/.build/a11y/*.log

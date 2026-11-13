@@ -73,11 +73,13 @@ app:
 	scripts/app-plist-check.sh $(APP_DERIVED_DATA)/Build/Products/Debug-iphoneos/KV4PHT.app
 	DRY_RUN=1 scripts/release-testflight.sh
 
-# Apple's accessibility audit on every screen, in the app's demo mode, on an iPhone and an iPad simulator (ADR-0062). The
-# findings go to .build/a11y/findings.txt. Not part of `ci`, as it needs the simulator; CI runs it as a job of its own.
-A11Y_DEVICES ?= iPhone 18 Pro,iPad Pro 11-inch (M5)
+# The UI tests in the app's demo mode, with Apple's accessibility audit on every screen, on an iPhone, an iPad and an
+# iPhone Duo simulator (ADR-0062). The findings go to .build/a11y/findings.txt. Not part of `ci`, as it needs the
+# simulator; CI runs it in jobs of their own, one per device and selection (ADR-0072). UI_TESTS: all, audit or functional.
+A11Y_DEVICES ?= iPhone 18 Pro,iPad Pro 11-inch (M5),iPhone Duo
+UI_TESTS ?= all
 a11y:
-	scripts/a11y.sh '$(APP_PROJECT)' '$(A11Y_DEVICES)'
+	scripts/a11y.sh '$(APP_PROJECT)' '$(A11Y_DEVICES)' '$(UI_TESTS)'
 
 # The same audit on this Mac. It takes over the mouse and the keyboard while it runs, so it is started by hand only.
 a11y-mac:

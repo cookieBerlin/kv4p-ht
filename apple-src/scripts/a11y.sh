@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-# Runs the accessibility audit of the UI tests on each simulator, or on this Mac, and collects the findings (ADR-0062).
-# Usage: scripts/a11y.sh <project> "<device>,<device>", where the device "Mac" stands for this Mac
+# Runs the UI tests on each simulator, or on this Mac, and collects the findings of the accessibility audit (ADR-0062).
+# Usage: scripts/a11y.sh <project> "<device>,<device>" [all|audit|functional], where the device "Mac" stands for this
+# Mac; `audit` runs only the accessibility audit, `functional` all other UI tests (ADR-0072).
 set -euo pipefail
 
 project="$1"
 IFS=',' read -r -a devices <<< "$2"
+case "${3:-all}" in
+  all) tests=(-only-testing:KV4PHTUITests) ;;
+  audit) tests=(-only-testing:KV4PHTUITests/AccessibilityAuditTests) ;;
+  functional) tests=(-only-testing:KV4PHTUITests -skip-testing:KV4PHTUITests/AccessibilityAuditTests) ;;
+  *) echo "a11y: unknown selection $3, use all, audit or functional" >&2; exit 2 ;;
+esac
 results=.build/a11y
 mkdir -p "$results"
 status=0
@@ -23,11 +30,22 @@ for device in "${devices[@]}"; do
   else
     target=(-destination "platform=iOS Simulator,name=$device" CODE_SIGNING_ALLOWED=NO -derivedDataPath "$results/derived")
   fi
-  if ! xcodebuild test -project "$project" -scheme KV4PHT "${target[@]}" -only-testing:KV4PHTUITests \
-    -resultBundlePath "$bundle" > "$log" 2>&1; then
+  # A test that fails is run once more. A test runner that crashes before the tests start, as it does at times on a
+  # busy machine, gets a second start of its own; its result bundle is replaced.
+  for attempt in 1 2; do
+    rm -rf "$bundle"
+    if xcodebuild test -project "$project" -scheme KV4PHT "${target[@]}" "${tests[@]}" \
+      -retry-tests-on-failure -test-iterations 2 -resultBundlePath "$bundle" > "$log" 2>&1; then
+      break
+    fi
+    if [ "$attempt" = 1 ] && grep -q "never finished bootstrapping" "$log"; then
+      echo "a11y: the test runner did not start on $device, once more" >&2
+      continue
+    fi
     echo "a11y: the UI tests failed on $device, see $log" >&2
     status=1
-  fi
+    break
+  done
   # The screenshots of each screen, to judge the findings.
   xcrun xcresulttool export attachments --path "$bundle" \
     --output-path "$results/runs/$run/$device screenshots" > /dev/null 2>&1 || true
