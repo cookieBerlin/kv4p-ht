@@ -121,6 +121,7 @@ struct RootView: View {
             }
         #else
             sideBySide.mainChrome(model, title: "kv4p HT").frame(minWidth: 720, minHeight: 600)
+                .transmitKeys(model)
         #endif
     }
 

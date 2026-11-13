@@ -117,13 +117,26 @@ struct RadioHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // The line stays without a memory, so that the frequency does not move under a finger that steps it.
-            ZStack(alignment: .leading) {
-                Text(verbatim: " ").hidden()
-                if let name = model.activeMemoryName {
-                    Text(name).lineLimit(1)
+            HStack(alignment: .firstTextBaseline) {
+                ZStack(alignment: .leading) {
+                    Text(verbatim: " ").hidden()
+                    if let name = model.activeMemoryName {
+                        Text(name).lineLimit(1)
+                    }
                 }
+                .font(.headline)
+                #if os(macOS)
+                    // The connection ends here or in the settings; without one, it is made where PTT stands
+                    // (ADR-0075).
+                    if model.isReady {
+                        Spacer()
+                        Button("Disconnect", systemImage: "eject") { Task { await model.disconnect() } }
+                            .buttonStyle(.borderless)
+                            .font(.callout)
+                            .help(ControlHelp.disconnect)
+                    }
+                #endif
             }
-            .font(.headline)
             frequency
             HStack {
                 SMeterBars(
@@ -596,6 +609,9 @@ private struct PTTButton: View {
         .sensoryFeedback(.impact, trigger: model.isTransmitting)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
+        #if os(macOS)
+            .help(ControlHelp.ptt)
+        #endif
     }
 
     private func pressed() {

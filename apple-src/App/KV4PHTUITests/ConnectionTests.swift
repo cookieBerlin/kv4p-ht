@@ -21,9 +21,6 @@ final class ConnectionTests: XCTestCase {
         // The demo connects to the simulated radio by itself.
         XCTAssertTrue(pushToTalk.waitForExistence(timeout: 60), "No PTT while connected")
         XCTAssertFalse(connectHere.exists, "A connection to make while connected")
-        #if os(macOS)
-            XCTAssertFalse(app.buttons["Disconnect"].exists, "The main window ends the connection")
-        #endif
         disconnectInSettings()
         XCTAssertTrue(connectHere.waitForExistence(timeout: 10), "No connection where PTT stands")
         XCTAssertFalse(pushToTalk.exists, "PTT without a connection")
@@ -41,6 +38,21 @@ final class ConnectionTests: XCTestCase {
         XCTAssertTrue(pushToTalk.waitForExistence(timeout: 10), "Did not connect")
         XCTAssertFalse(connectHere.exists, "The connection stays after connecting")
     }
+
+    #if os(macOS)
+        /// The Mac also ends the connection in its header, and the menu connects and disconnects with ⌘K.
+        func testTheMacDisconnectsInTheHeaderAndConnectsWithCommandK() {
+            XCTAssertTrue(pushToTalk.waitForExistence(timeout: 60), "No PTT while connected")
+            let disconnect = app.buttons["Disconnect"].firstMatch
+            XCTAssertTrue(disconnect.waitForExistence(timeout: 5), "No way to disconnect in the header")
+            disconnect.click()
+            XCTAssertTrue(connectHere.waitForExistence(timeout: 10), "Did not disconnect")
+            app.typeKey("k", modifierFlags: .command)
+            XCTAssertTrue(pushToTalk.waitForExistence(timeout: 10), "⌘K did not connect")
+            app.typeKey("k", modifierFlags: .command)
+            XCTAssertTrue(connectHere.waitForExistence(timeout: 10), "⌘K did not disconnect")
+        }
+    #endif
 
     /// The button of the connection where PTT stands, beside the one in the settings.
     private var connectHere: XCUIElement {

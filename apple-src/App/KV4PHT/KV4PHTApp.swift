@@ -14,6 +14,7 @@ struct KV4PHTApp: App {
             .defaultSize(width: 900, height: 720)
             .commands {
                 CommandGroup(replacing: .appInfo) { AboutCommand() }
+                CommandMenu("Radio") { RadioCommands(model: model) }
             }
         #endif
         #if os(macOS)
@@ -25,6 +26,21 @@ struct KV4PHTApp: App {
 }
 
 #if os(macOS)
+    /// The connection, and the keys that transmit, which the menu names so that they can be found (ADR-0075).
+    private struct RadioCommands: View {
+        let model: RadioViewModel
+
+        var body: some View {
+            Button(model.connectionAction.title) { Task { await model.runConnectionAction() } }
+                .keyboardShortcut("k")
+                .disabled(model.connectionAction == .connect && !model.canStartConnection)
+            Divider()
+            // A menu cannot tell when a key is let go; the window takes these keys itself.
+            Button("Push to Talk: Hold Space") {}.disabled(true)
+            Button("Access Tone: Hold ⌥ Space") {}.disabled(true)
+        }
+    }
+
     /// "About kv4p HT" in the app menu opens the About window instead of the standard panel.
     private struct AboutCommand: View {
         static let window = "about"
