@@ -5,10 +5,17 @@ own, with its version, build and date.
 
 ## Unreleased
 
+### Added
+
+- iPhone Duo, folded: the symbols of the pages stand at the side below the status bar, which leaves the pages more
+  room.
+
 ### Fixed
 
-- When an iPad window changes from narrow to wide or back, or a large iPhone turns, PTT and the access tone stop if
-  they were held, and an unsent APRS message, the open settings and the page shown stay.
+- When an iPhone Duo folds or unfolds, an iPad window changes from narrow to wide or back, or a large iPhone turns,
+  PTT and the access tone stop if they were held, and an unsent APRS message, the open settings and the page shown
+  stay.
+- iPhone Duo, folded: the next page no longer shows beside the status bar.
 
 ## 0.2.0 (20261111.2136) – 2026-11-11
 
