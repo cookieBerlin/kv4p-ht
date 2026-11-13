@@ -23,15 +23,37 @@ extension View {
             }
             .background(Color.opaqueBar)
             frame(maxHeight: .infinity)
-            BottomBar(model: model, showsPTT: true)
+            #if os(iOS)
+                // As on a phone, the radio is chosen and connected in the settings (ADR-0071).
+                BottomBar(model: model, showsPTT: true) { settingsPath.wrappedValue = [.overview] }
+            #else
+                BottomBar(model: model, showsPTT: true)
+            #endif
         }
         .navigationTitle(title)
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            .modifier(TitleBesideVerticalBars())
         #endif
         .modifier(SettingsEntry(model: model, path: settingsPath))
     }
 }
+
+#if os(iOS)
+    /// Where the system puts the toolbar at the side, as an open iPhone Duo does, the title alone would keep a row at
+    /// the top; it goes, and the row with it (ADR-0071).
+    private struct TitleBesideVerticalBars: ViewModifier {
+        @Environment(\.verticalBarEdge) private var barEdge
+
+        func body(content: Content) -> some View {
+            if barEdge == nil {
+                content
+            } else {
+                content.toolbar(removing: .title)
+            }
+        }
+    }
+#endif
 
 /// The way to the settings. On iPhone and iPad, a reply from their packets page comes back from them, to write it.
 private struct SettingsEntry: ViewModifier {
@@ -87,10 +109,11 @@ struct RadioHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // A phone chooses and connects the radio in the settings, which leaves the room here to the frequency.
-            if !isCompact {
+            // iPhone and iPad choose and connect the radio in the settings, which leaves the room here to the frequency
+            // and the lists below (ADR-0071).
+            #if os(macOS)
                 connection
-            }
+            #endif
             // The line stays without a memory, so that the frequency does not move under a finger that steps it.
             ZStack(alignment: .leading) {
                 Text(verbatim: " ").hidden()
@@ -134,13 +157,15 @@ struct RadioHeader: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 
-    private var connection: some View {
-        HStack {
-            RadioPicker(model: model).fixedSize()
-            Spacer()
-            ConnectButton(model: model).keyboardShortcut(.defaultAction)
+    #if os(macOS)
+        private var connection: some View {
+            HStack {
+                RadioPicker(model: model).fixedSize()
+                Spacer()
+                ConnectButton(model: model).keyboardShortcut(.defaultAction)
+            }
         }
-    }
+    #endif
 
     private var frequency: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -317,20 +342,16 @@ private struct SquelchArrow: Shape {
 struct BottomBar: View {
     let model: RadioViewModel
     let showsPTT: Bool
-    /// On a phone, the way to the settings, where it connects. There, PTT stands in for the status while connected,
-    /// and the status for PTT otherwise.
+    /// iPhone and iPad: the way to the settings, where they connect. PTT stands in for the status while connected, and
+    /// the status for PTT otherwise. The Mac has none, and shows the status at the bottom of its window.
     var openSettings: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
             Divider()
             #if os(iOS)
-                if let openSettings {
-                    if !model.isReady {
-                        ConnectionStatus(model: model, openSettings: openSettings).padding(.vertical, 8)
-                    }
-                } else {
-                    StatusLine(model: model).padding(.top, 6)
+                if let openSettings, !model.isReady {
+                    ConnectionStatus(model: model, openSettings: openSettings).padding(.vertical, 8)
                 }
             #endif
             firmware

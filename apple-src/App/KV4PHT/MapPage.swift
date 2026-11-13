@@ -117,6 +117,9 @@ struct MapPage: View {
                 }
             }
             .menuIndicator(.hidden)
+            // Closes after each choice: an open menu keeps the app from going idle, which held up the UI tests until
+            // they gave up, and a choice did not always take while it stayed open.
+            .menuActionDismissBehavior(.enabled)
             .capsuleMenu()
             .accessibilityIdentifier("map-layers")
         }

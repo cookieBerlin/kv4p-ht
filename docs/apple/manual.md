@@ -44,16 +44,15 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 The structure is the same on all devices, and similar to the Android app:
 
-- **On top:** the choice of radio, **Connect** (📱 on an iPhone, both are in ⚙ **Settings**), the name of the
+- **On top:** 🖥 the choice of radio and **Connect** (📱 both are in ⚙ **Settings**), the name of the
   active memory, the frequency, the squelch state and the S-meter. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
 - **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the memories stand beside a switch between
   **Packets**, **Chats** and **Map**. With APRS switched off (⚙ **Settings → Pages**), the map has that side to
   itself; with both switched off, the memories take the whole width.
-- **At the bottom:** a large **Push to talk** button, the connection status above it
-  (🖥 in a status bar at the bottom of the window) and any messages. 📱 On an iPhone the button shows only a
-  microphone, and only while the radio is connected; otherwise the status stands in its place, with
-  **Connect in Settings** to get there.
+- **At the bottom:** a large **Push to talk** button and any messages. 🖥 The connection status stands in a
+  status bar at the bottom of the window. 📱 The button shows only while the radio is connected, on an iPhone as a
+  microphone; otherwise the status stands in its place, with **Connect in Settings** to get there.
 - A message, red for a problem such as a missing location and green for a finished
   import, shows at the
   bottom of the screen until you dismiss it with ✕: 📱 on an iPhone above the bar with
@@ -85,8 +84,8 @@ them denied: the functions that need one say so and offer **Open Settings**.
 
 ## Connecting the radio
 
-Choose the connection under **Radio** at the top and click **Connect**. 📱 On an iPhone or in a narrow iPad window,
-both are in ⚙ **Settings** under *Connection*, together with the state of the connection:
+🖥 Choose the connection under **Radio** at the top and click **Connect**. 📱 On iPhone and iPad, both are in
+⚙ **Settings** under *Connection*, together with the state of the connection:
 
 - **Bluetooth:** power on the radio. Once Bluetooth access is settled, at your first
   connection, the app looks for radios while nothing is connected and lists them under **Radio**, each with its name and the end of its ID.
@@ -423,7 +422,8 @@ digipeater is useful.
 stations heard, with Apple's maps.
 
 - **Layers** (the stacked squares) switch the **Repeaters** (blue), **Frequencies** (green) and **Beacons**
-  (orange) on and off, from all groups. Frequencies are off at first, as most of them have no fixed place.
+  (orange) on and off, from all groups. Frequencies are off at first, as most of them have no fixed place. The menu
+  closes after each choice.
 - **Band**, also under *Layers*, chooses what the map shows: **Radio's band**, at first, shows only the band of
   the connected radio, and 2 m and 70 cm while none is connected. **2 m** or **70 cm** shows that band, and
   **All** also memories of other bands, such as 6 m. A marker reads *2m* or *70*, or a dot for another band.
@@ -465,7 +465,7 @@ modem, the app encodes and decodes the speech with Codec2.
 ## Settings
 
 ⚙ **Settings** opens an overview of pages: a sidebar on the Mac, a list on iPhone and iPad.
-A short text below a setting explains it. 📱 On an iPhone or in a narrow iPad window, the list starts with
+A short text below a setting explains it. 📱 On iPhone and iPad, the list starts with
 *Connection*: the radio, the state of the connection, **Connect** or **Disconnect** and *Connect at start*. While
 the simulator is the chosen radio, its page follows in a group of its own.
 

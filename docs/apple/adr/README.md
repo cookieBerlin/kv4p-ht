@@ -75,3 +75,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0069](0069-changelog.md) | Changelog | Proposed |
 | [0070](0070-own-app-version.md) | The app's own version | Proposed |
 | [0071](0071-iphone-duo.md) | iPhone Duo and layouts that change while the app runs | Proposed |
+| [0072](0072-ui-tests-in-parallel.md) | UI tests in parallel jobs, one simulator each | Proposed |

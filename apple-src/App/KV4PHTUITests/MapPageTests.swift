@@ -25,7 +25,7 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local beacon").exists, "No beacon in the list")
         XCTAssertFalse(row("Calling channel").exists, "The frequencies are on by default")
         chooseLayer("Frequencies")
-        XCTAssertTrue(row("Calling channel").waitForExistence(timeout: 5), "The frequencies did not come")
+        XCTAssertTrue(scrolledTo(row("Calling channel")), "The frequencies did not come")
         chooseLayer("70 cm")
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
@@ -76,7 +76,7 @@ final class MapPageTests: XCTestCase {
         choose("List")
         let station = app.descendants(matching: .any)["map-list"].descendants(matching: .any)
             .matching(NSPredicate(format: "label BEGINSWITH 'N1CALL, '")).firstMatch
-        XCTAssertTrue(station.waitForExistence(timeout: 30), "No station in the list")
+        XCTAssertTrue(scrolledTo(station), "No station in the list")
         station.tapOrClick()
         // The page bar of a phone, or the switch beside the memories elsewhere, whose chosen part the Mac marks by its
         // value.
@@ -126,15 +126,36 @@ final class MapPageTests: XCTestCase {
     private func chooseLayer(_ name: String) {
         let layers = app.descendants(matching: .any)["map-layers"].firstMatch
         XCTAssertTrue(layers.waitForExistence(timeout: 5), "No layers")
-        layers.tapOrClick()
         #if os(macOS)
+            layers.tapOrClick()
             Thread.sleep(forTimeInterval: 1)
             app.typeText(name)
             app.typeKey(.return, modifierFlags: [])
         #else
             let entry = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+            layers.tap()
             XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in the layers")
-            entry.tap()
+            // The entries of the open menu report no point to tap at times, also once they are on screen, so the middle
+            // of the frame is tapped, once the menu has stopped moving.
+            var frame = entry.frame
+            let deadline = Date.now.addingTimeInterval(3)
+            repeat {
+                Thread.sleep(forTimeInterval: 0.3)
+                let next = entry.frame
+                if next == frame { break }
+                frame = next
+            } while Date.now < deadline
+            // The menu closes after a choice, so while it stays open, the tap did not take and is made again; a tap that
+            // took cannot be repeated by this. Until it has closed, the list below takes no queries.
+            // While the menu comes or goes, the frame of an entry can be infinite, which a tap does not take.
+            for _ in 0..<3 where entry.exists {
+                let frame = entry.frame
+                if !frame.isInfinite, !frame.isEmpty {
+                    entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                }
+                _ = entry.waitForNonExistence(timeout: 5)
+            }
+            XCTAssertFalse(entry.exists, "The layers stay open")
         #endif
     }
 
@@ -151,8 +172,27 @@ final class MapPageTests: XCTestCase {
         part.tapOrClick()
     }
 
+    /// A marker of the map. Within the map only: a query of the whole app, with the map in it, takes so long on a busy
+    /// machine that XCTest gives it up.
     private func element(_ label: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", label)).firstMatch
+        app.descendants(matching: .any)["map"].firstMatch.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", label)).firstMatch
+    }
+
+    /// A row of the list, scrolled to: the list makes its rows as they come on screen, and on a low screen the
+    /// stations stand below the memories.
+    private func scrolledTo(_ row: XCUIElement) -> Bool {
+        let list = app.descendants(matching: .any)["map-list"].firstMatch
+        guard list.waitForExistence(timeout: 30) else { return false }
+        for _ in 0..<6 {
+            if row.waitForExistence(timeout: 2), row.isHittable { return true }
+            #if os(macOS)
+                list.scroll(byDeltaX: 0, deltaY: -200)
+            #else
+                list.swipeUp()
+            #endif
+        }
+        return row.exists && row.isHittable
     }
 
     /// A row of the list reads the kind first, where it has one, then the name.

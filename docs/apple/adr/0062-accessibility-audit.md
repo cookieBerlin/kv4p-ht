@@ -21,9 +21,10 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
 - **One test goes through every screen,** with the default and the largest text size (AX5), and runs the audit on each:
   memories, packets, chats, a chat, the settings and each of their pages. It scrolls the settings until each link is on
   screen, and a page it does not reach counts as a finding.
-- **`make a11y` runs it on an iPhone and an iPad simulator** and writes the findings, each with its device, to
-  `.build/a11y/findings.txt`, and a screenshot of each screen next to them. It is not part of `make ci`, as it needs the
-  simulator; CI runs it as a job of its own, which is not required for a merge, and keeps the findings, the log of each
+- **`make a11y` runs it on an iPhone, an iPad and an iPhone Duo simulator** and writes the findings, each with its
+  device, to `.build/a11y/findings.txt`, and a screenshot of each screen next to them. It is not part of `make ci`, as it
+  needs the simulator; CI runs it in jobs of their own, one per device
+  ([ADR-0072](0072-ui-tests-in-parallel.md)), which are not required for a merge, and keeps the findings, the log of each
   simulator and the screenshots.
 - **The audit is strict since 3.7b:** every finding fails the test, except those below. The test names the number of the
   exception for each finding it lets pass, so that the list here and the code stay in step. A busy simulator lets an

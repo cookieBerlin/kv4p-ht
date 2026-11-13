@@ -26,6 +26,10 @@ the iPhone Duo simulator, these problems showed up:
    in portrait. The pager reached under it, so the next page showed there.
 4. The page bar below the pages took height from the small outer display, while the
    strip below the status bar stayed empty. A system tab bar would stand there.
+5. Unfolded, in landscape (951 × 669 pt), the header took almost half the height: a
+   title row that held only the title, as the settings button stood at the side; the
+   choice of radio and **Connect**; the frequency, the S-meter and the volume. One
+   memory was left in sight.
 
 ## Considered options
 
@@ -54,6 +58,13 @@ For problem 4:
   changes. The settings that were open stay open. The map, packets or chats shown on
   the phone layout are what the side pane shows in the wide layout.
 - **The pager is clipped** to its frame.
+- **iPhone and iPad connect in the settings.** The wide layout on iOS works as the
+  phone does: the choice of radio and **Connect** are in the settings, not in the
+  header. Without a connection, **Connect in Settings** stands in place of PTT; while
+  connected, the status line goes. The Mac keeps both in its window. This holds on
+  every iPad as well, where the header also took room from the lists.
+- **The title goes beside vertical bars:** where the system puts the toolbar at the
+  side, the main screen shows no title, so its row goes.
 - **The page bar follows `toolbarVerticalEdge`** (iOS 27.1). Where the system puts
   vertical bars, the page bar becomes a column in the strip below the status bar, on
   that side. The strip gets the bar colour. Everywhere else, also before iOS 27.1, it
@@ -67,8 +78,11 @@ For problem 4:
   turning a large iPhone, which swaps the layouts as folding does: the iPhone Duo
   simulator cannot be folded from a script, only in Xcode's Device Hub. The page tests
   also run on the iPhone Duo simulator, folded, where the page bar is a column.
+- **Known:** on the open iPhone Duo, `MapPageTests.testAStationLeadsToItsPackets` does not
+  find the station in the list; it did the same before these changes, and passes folded,
+  as CI runs it. It needs a look on the open simulator.
 - **Hardware test:** [HW-44](../hardware-tests.md#hw-44) checks PTT during a layout
   change on a real radio.
-- **Open:** the unfolded layout (a third column, PTT in book pose) and iPhone Duo
-  screenshots for the App Store (milestone 99.1) come later. Apple names device poses
+- **Open:** a third column on the inner display and iPhone Duo screenshots for the
+  App Store (milestone 99.1) come later. Apple names device poses
   but documents no API for them; the app follows the size only.
