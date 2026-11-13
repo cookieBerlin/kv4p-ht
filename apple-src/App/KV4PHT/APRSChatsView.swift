@@ -94,13 +94,23 @@ struct APRSChatsView: View {
 private struct APRSConversationView: View {
     let model: RadioViewModel
     let peer: String
-    @State private var text = ""
     @State private var isConfirmingDelete = false
     @FocusState private var isWriting: Bool
 
     @Environment(\.dynamicTypeSize) private var textSize
 
     private var limit: Int { model.chatTextLimit(for: peer) }
+
+    /// Kept by the model, so that it outlives a change of the layout; the model also stops it at the limit.
+    private var text: String { model.chatDraft(with: peer) }
+
+    private var draft: Binding<String> {
+        Binding {
+            model.chatDraft(with: peer)
+        } set: {
+            model.writeChatDraft($0, to: peer)
+        }
+    }
 
     /// With the accessibility text sizes, the arrow alone, which leaves the callsign room.
     @ViewBuilder private var backButton: some View {
@@ -161,16 +171,12 @@ private struct APRSConversationView: View {
     @ViewBuilder private var input: some View {
         if model.canSendOnAir {
             AdaptiveStack {
-                TextField("Message", text: $text, axis: .vertical)
+                TextField("Message", text: draft, axis: .vertical)
                     .macName("Message")
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...4)
                     .focused($isWriting)
                     .onSubmit(send)
-                    .onChange(of: text) {
-                        // A stop rather than a cut when it is sent, so that nothing goes missing.
-                        if text.count > limit { text = String(text.prefix(limit)) }
-                    }
                 HStack {
                     KeyboardDismissButton()
                     Text("\(text.count)/\(limit)")
@@ -194,9 +200,8 @@ private struct APRSConversationView: View {
     }
 
     private func send() {
-        guard !text.isEmpty, model.isReady else { return }
-        model.sendChatMessage(text, to: peer)
-        text = ""
+        guard model.isReady else { return }
+        model.sendChatDraft(to: peer)
     }
 
     private func bubble(_ event: APRSEvent) -> some View {

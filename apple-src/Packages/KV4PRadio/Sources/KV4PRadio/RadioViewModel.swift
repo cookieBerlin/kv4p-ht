@@ -318,6 +318,11 @@ public final class RadioViewModel {
     private var chatEvents: [Int64: APRSEvent] = [:]
     /// The recipient in the line to send messages.
     public var aprsRecipient = ""
+    /// The text in the line to send messages. It lives here rather than in a view, as the layout can change while it is
+    /// written: a foldable iPhone shows other views folded than open.
+    public var aprsDraft = ""
+    /// What is written in each chat and not sent yet, by station; for the same reason.
+    private var chatDrafts: [String: String] = [:]
     /// Goes up with each reply, for the views to bring the line to send messages to the front.
     public private(set) var aprsReplyCount = 0
     /// New messages have an id above this one.
@@ -1666,6 +1671,30 @@ public final class RadioViewModel {
         post(to: peer, text: String(text.prefix(chatTextLimit(for: peer))))
     }
 
+    public func chatDraft(with peer: String) -> String {
+        chatDrafts[peer] ?? ""
+    }
+
+    /// Keeps what is written to `peer`, cut at what one message holds.
+    public func writeChatDraft(_ text: String, to peer: String) {
+        chatDrafts[peer] = String(text.prefix(chatTextLimit(for: peer)))
+    }
+
+    /// Sends what is written to `peer`, and starts the next message empty.
+    public func sendChatDraft(to peer: String) {
+        let text = chatDraft(with: peer)
+        guard !text.isEmpty else { return }
+        sendChatMessage(text, to: peer)
+        chatDrafts[peer] = nil
+    }
+
+    /// Sends the line of the packets to its recipient, and starts the next message empty.
+    public func sendAPRSDraft() {
+        guard !aprsDraft.isEmpty else { return }
+        sendAPRSMessage(to: aprsRecipient, text: aprsDraft)
+        aprsDraft = ""
+    }
+
     /// An own message that was not delivered, which is never sent again by itself.
     public func canResend(_ event: APRSEvent) -> Bool {
         canSendOnAir && event.kind == .message && !event.isResent
@@ -1702,6 +1731,7 @@ public final class RadioViewModel {
         if openChat == peer {
             openChat = nil
         }
+        chatDrafts[peer] = nil
         showAPRS()
     }
 
