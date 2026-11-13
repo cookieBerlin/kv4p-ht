@@ -23,7 +23,8 @@ sed -e 's|<rect width="512" height="512" fill="#FFFCEA"/>||' \
   -e 's|fill="#FFFCEA"|fill="none"|g' \
   -e 's|fill="#21201F"|fill="#8C8A80" fill-opacity="0.25"|g' "$source" > "$work/launch.svg"
 for scale in 1 2 3; do
-  suffix=$([ "$scale" = 1 ] && echo "" || echo "@${scale}x")
+  # No "@" in the name, which the personal data check would take for an e-mail address; the catalogue names the scale.
+  suffix=$([ "$scale" = 1 ] && echo "" || echo "-${scale}x")
   sips -s format png -z $((210 * scale)) $((210 * scale)) "$work/launch.svg" --out "$launch/LaunchLogo$suffix.png" >/dev/null
 done
 echo "app-icon: $launch"
