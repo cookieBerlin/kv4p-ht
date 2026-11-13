@@ -7,6 +7,14 @@
 	<string>$(KV4P_COMMIT)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- The launch screen: the colours of the app icon with its radio, faint (ADR-0073). -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+		<key>UIImageName</key>
+		<string>LaunchLogo</string>
+	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
