@@ -145,9 +145,17 @@ final class MapPageTests: XCTestCase {
                 if next == frame { break }
                 frame = next
             } while Date.now < deadline
-            entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-            // The menu closes after a choice; until it has, the list below takes no queries.
-            XCTAssertTrue(entry.waitForNonExistence(timeout: 5), "The layers stay open")
+            // The menu closes after a choice, so while it stays open, the tap did not take and is made again; a tap that
+            // took cannot be repeated by this. Until it has closed, the list below takes no queries.
+            // While the menu comes or goes, the frame of an entry can be infinite, which a tap does not take.
+            for _ in 0..<3 where entry.exists {
+                let frame = entry.frame
+                if !frame.isInfinite, !frame.isEmpty {
+                    entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                }
+                _ = entry.waitForNonExistence(timeout: 5)
+            }
+            XCTAssertFalse(entry.exists, "The layers stay open")
         #endif
     }
 
