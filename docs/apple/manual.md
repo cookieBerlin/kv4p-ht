@@ -47,9 +47,10 @@ The structure is the same on all devices, and similar to the Android app:
 - **On top:** 🖥 the choice of radio and **Connect** (📱 both are in ⚙ **Settings**), the name of the
   active memory, the frequency, the squelch state and the S-meter. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
-- **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the memories stand beside a switch between
-  **Packets**, **Chats** and **Map**. With APRS switched off (⚙ **Settings → Pages**), the map has that side to
-  itself; with both switched off, the memories take the whole width.
+- **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the header, the memories and **Push to talk**
+  form a column on the left, and beside it a switch between **Packets**, **Chats** and **Map** reaches from the top to
+  the bottom of the window. With APRS switched off (⚙ **Settings → Pages**), the map has that side to itself; with both
+  switched off, the memories take the whole width.
 - **At the bottom:** a large **Push to talk** button and any messages. 🖥 The connection status stands in a
   status bar at the bottom of the window. 📱 The button shows only while the radio is connected, on an iPhone as a
   microphone; otherwise the status stands in its place, with **Connect in Settings** to get there.
@@ -64,7 +65,7 @@ and ⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swi
 to the right on the memories goes straight to the settings, and a swipe to the left there back to the memories. The
 symbols keep their size with larger text; hold one to see it large with its name. The app opens the page you used
 last. Without APRS, *Packets* and *Chats* go from the bar and the ring, and without the map, *Map*. On the map, a
-swipe moves the map; the bar changes the page. **Push to talk** is on the memories page, and the header on all pages but the settings. On a page within the
+swipe moves the map; the bar changes the page. **Push to talk** and the header are on the memories page only; the other pages reach to the top. On a page within the
 settings, a swipe to the right goes back to their list. With the largest text sizes, the header grows less than the
 rest, and rows that no longer fit side by side, such as the line to write a message, stand one below the other. On a
 folded iPhone Duo, the symbols of the pages stand at the side below the status bar instead of at the bottom.

@@ -7,22 +7,41 @@ import SwiftUI
 #endif
 
 extension View {
-    /// With room for it, the parts around the memories and APRS: the header, the PTT bar and the settings button. The
-    /// bars stand above and below the lists rather than over them, so that nothing scrolls out of sight behind them, as
-    /// on a phone (ADR-0062).
+    /// With room for it, the title and the settings button around the memories and APRS (ADR-0040).
     /// - Parameter settingsPath: iPhone and iPad: the stack the settings open in.
     func mainChrome(
         _ model: RadioViewModel,
         title: String,
         settingsPath: Binding<[SettingsDestination]> = .constant([])
     ) -> some View {
+        navigationTitle(title)
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                .modifier(TitleBesideVerticalBars())
+            #endif
+            .modifier(SettingsEntry(model: model, path: settingsPath))
+    }
+}
+
+/// With room for it, the memories with what belongs to them: the header above, PTT and the status below. The bars stand
+/// above and below the list rather than over it, so that nothing scrolls out of sight behind them, as on a phone
+/// (ADR-0062). Beside APRS or the map, the column has a fixed width, and they reach to the top beside it (ADR-0074).
+struct MainColumn: View {
+    /// Room for the frequency with its unit and the volume, and for the names of the memories.
+    static let width: CGFloat = 400
+
+    let model: RadioViewModel
+    /// iPhone and iPad: the stack the settings open in.
+    var settingsPath: Binding<[SettingsDestination]> = .constant([])
+
+    var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
                 RadioHeader(model: model)
                 Divider()
             }
             .background(Color.opaqueBar)
-            frame(maxHeight: .infinity)
+            MemoriesView(model: model).frame(maxHeight: .infinity)
             #if os(iOS)
                 // As on a phone, the radio is chosen and connected in the settings (ADR-0071).
                 BottomBar(model: model, showsPTT: true) { settingsPath.wrappedValue = [.overview] }
@@ -30,12 +49,6 @@ extension View {
                 BottomBar(model: model, showsPTT: true)
             #endif
         }
-        .navigationTitle(title)
-        #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .modifier(TitleBesideVerticalBars())
-        #endif
-        .modifier(SettingsEntry(model: model, path: settingsPath))
     }
 }
 
