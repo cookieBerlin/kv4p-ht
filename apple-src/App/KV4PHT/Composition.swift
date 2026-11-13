@@ -51,47 +51,73 @@ enum Composition {
         if isDemo {
             return makeDemoViewModel()
         }
+        LaunchTrace.appCodeStarts()
+        defer { LaunchTrace.appCodeEnds() }
         diagnostics.log(.info, .app, "Started: \(appVersion) on \(ProblemReport.Environment.current.system)")
         cloudKitFailures = CloudKitSyncEvents.logFailures(to: diagnostics)
-        let model = RadioViewModel(
-            makeController: {
-                RadioController(
-                    transport: transport(for: $0),
-                    rxAudio: $1,
-                    microphone: AVAudioEngineInput(diagnostics: diagnostics),
-                    diagnostics: diagnostics
-                )
-            },
-            serialDevices: serialDevices,
-            audioOutput: AVAudioEngineOutput(diagnostics: diagnostics),
-            audioSession: audioSession(),
-            otherAppsMute: otherAppsMute(),
-            memories: memoryRepository(),
-            location: CoreLocationProvider(diagnostics: diagnostics),
-            backgroundLocation: backgroundLocation(),
-            internet: APRSISClient(
+        // Each part on its own, to see in the log which one holds up the first frame (LaunchTrace).
+        let audioOutput = LaunchTrace.measure("audio output") { AVAudioEngineOutput(diagnostics: diagnostics) }
+        let audioSession = LaunchTrace.measure("audio session") { Self.audioSession() }
+        let otherAppsMute = LaunchTrace.measure("other apps") { Self.otherAppsMute() }
+        let memories = LaunchTrace.measure("memories") { memoryRepository() }
+        let location = LaunchTrace.measure("location") { CoreLocationProvider(diagnostics: diagnostics) }
+        let backgroundLocation = LaunchTrace.measure("background location") { Self.backgroundLocation() }
+        let internet = LaunchTrace.measure("APRS-IS") {
+            APRSISClient(
                 software: "kv4p-ht",
                 version: appVersion,
                 connector: NetworkLineConnector(),
                 diagnostics: diagnostics
-            ),
-            firmware: firmwareFlasher(),
-            firmwareChoices: firmwareChoices,
-            aprsHistory: aprsHistory(),
-            settings: settingsStore(),
-            syncedSettings: UbiquitousSettingsStore(),
-            bluetoothScanner: BLEScanner { CoreBluetoothCentral() },
-            failureAlerts: PlatformFailureAlerts(diagnostics: diagnostics),
-            messageNotifier: SystemMessageNotifier(diagnostics: diagnostics),
-            permissions: SystemPermissions(),
-            diagnostics: diagnostics,
-            crashReports: CrashReportStore(folder: diagnosticsFolder.appending(path: "Crashes")),
-            simulator: simulator
-        )
+            )
+        }
+        let firmware = LaunchTrace.measure("firmware") { firmwareFlasher() }
+        let aprsHistory = LaunchTrace.measure("APRS history") { Self.aprsHistory() }
+        let settings = LaunchTrace.measure("settings") { settingsStore() }
+        let syncedSettings = LaunchTrace.measure("synced settings") { UbiquitousSettingsStore() }
+        let bluetoothScanner = LaunchTrace.measure("Bluetooth") { BLEScanner { CoreBluetoothCentral() } }
+        let model = LaunchTrace.measure("view model") {
+            RadioViewModel(
+                makeController: {
+                    RadioController(
+                        transport: transport(for: $0),
+                        rxAudio: $1,
+                        microphone: AVAudioEngineInput(diagnostics: diagnostics),
+                        diagnostics: diagnostics
+                    )
+                },
+                serialDevices: serialDevices,
+                audioOutput: audioOutput,
+                audioSession: audioSession,
+                otherAppsMute: otherAppsMute,
+                memories: memories,
+                location: location,
+                backgroundLocation: backgroundLocation,
+                internet: internet,
+                firmware: firmware,
+                firmwareChoices: firmwareChoices,
+                aprsHistory: aprsHistory,
+                settings: settings,
+                syncedSettings: syncedSettings,
+                bluetoothScanner: bluetoothScanner,
+                failureAlerts: PlatformFailureAlerts(diagnostics: diagnostics),
+                messageNotifier: SystemMessageNotifier(diagnostics: diagnostics),
+                permissions: SystemPermissions(),
+                diagnostics: diagnostics,
+                crashReports: CrashReportStore(folder: diagnosticsFolder.appending(path: "Crashes")),
+                simulator: simulator
+            )
+        }
         model.decimalSeparator = decimalSeparator
-        crashReports = MetricKitCrashReports(model: model)
+        crashReports = LaunchTrace.measure("crash reports") { MetricKitCrashReports(model: model) }
         notificationOpener = NotificationOpener(model: model)
         return model
+    }
+
+    /// The first frame is about to show: the log gets how long the start took (LaunchTrace). Not in the demo mode,
+    /// which keeps no log.
+    static func firstFrameShown() {
+        guard !isDemo else { return }
+        LaunchTrace.firstFrame { diagnostics.log(.info, .app, $0) }
     }
 
     /// iOS shares the audio hardware between apps through a session; macOS has none.

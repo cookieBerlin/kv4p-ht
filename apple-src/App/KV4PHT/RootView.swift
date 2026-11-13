@@ -62,7 +62,10 @@ struct RootView: View {
                 Text("A report helps to find the cause. You see it first, and nothing is sent without you.")
             }
             .sheet(isPresented: $isReporting) { ProblemReportSheet(model: model) }
-            .onAppear { model.refreshConnections() }
+            .onAppear {
+                Composition.firstFrameShown()
+                model.refreshConnections()
+            }
             .onChange(of: scenePhase, initial: true) {
                 #if os(iOS)
                     model.isAppActive = scenePhase == .active
