@@ -134,14 +134,10 @@ final class MapPageTests: XCTestCase {
         #else
             let entry = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
             XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in the layers")
-            // While the menu opens, an entry has no point to tap yet, and some report none while it is open; then the
-            // middle of its frame is tapped.
-            let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: entry)
-            if XCTWaiter.wait(for: [hittable], timeout: 3) == .completed {
-                entry.tap()
-            } else {
-                entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-            }
+            // The entries of the open menu report no point to tap at times, also once they are on screen, so the middle
+            // of the frame is tapped, after the menu has opened.
+            Thread.sleep(forTimeInterval: 1)
+            entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         #endif
     }
 
