@@ -541,10 +541,9 @@ struct PTTBar: View {
             }
             if model.canSendOnAir {
                 HStack(spacing: 8) {
-                    PTTButton(model: model).disabled(!model.isReady || model.isSendingAccessTone)
+                    PTTButton(model: model).disabled(!model.canPress(.ptt))
                     if model.canSendAccessTone {
-                        AccessToneButton(model: model)
-                            .disabled(!model.canTransmit || (model.isTransmitting && !model.isSendingAccessTone))
+                        AccessToneButton(model: model).disabled(!model.canPress(.accessTone))
                     }
                 }
             }
