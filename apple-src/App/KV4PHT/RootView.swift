@@ -26,6 +26,7 @@ struct RootView: View {
 
     var body: some View {
         content
+            .readsVerticalBarEdge()
             #if os(iOS)
                 .onChange(of: sizeClass) { old, new in handOver(from: old, to: new) }
             #endif
@@ -288,6 +289,11 @@ struct SidePane: View {
         /// The pages opened in the settings, below their list. While one is open, a swipe goes back to the list rather
         /// than to another page. `RootView` keeps them, for the wide layout to take them over.
         @Binding var settingsPath: [SettingsDestination]
+        /// The sides of the screen that are not free, such as the strip below the status bar at the side of a foldable
+        /// iPhone; the page bar stands there.
+        @State private var sideInsets = EdgeInsets()
+        /// The side where the system puts vertical bars, if it does: the page bar then stands there (ADR-0071).
+        @Environment(\.verticalBarEdge) private var barEdge
         @Environment(\.scenePhase) private var scenePhase
 
         /// One page over the full width; all are there at once, so each is told whether it is the one shown.
@@ -397,10 +403,27 @@ struct SidePane: View {
                             withAnimation { page = .settings }
                         }
                     }
-                    pageBar
+                    if barEdge == nil {
+                        pageBar(.horizontal)
+                            .padding(.top, 4)
+                            .background(Color.opaqueBar)
+                    }
                 }
             }
             .observesKeyboard($isKeyboardShown)
+            .onGeometryChange(for: EdgeInsets.self, of: \.safeAreaInsets) { sideInsets = $0 }
+            // The strip of the page bar at the side is a bar, and so is the edge below the pages.
+            .background {
+                if barEdge != nil { Color.opaqueBar.ignoresSafeArea() }
+            }
+            // Below the status bar at the side, where a system tab bar would stand; it takes no height from the pages.
+            .overlay(alignment: barEdge == .leading ? .bottomLeading : .bottomTrailing) {
+                if let barEdge {
+                    pageBar(.vertical)
+                        .frame(width: barEdge == .leading ? sideInsets.leading : sideInsets.trailing)
+                        .ignoresSafeArea(.container, edges: barEdge == .leading ? .leading : .trailing)
+                }
+            }
         }
 
         /// The pages there are: without APRS, its two go, and the map without the map.
@@ -431,8 +454,10 @@ struct SidePane: View {
                 .offset(x: 10, y: -6)
         }
 
-        private var pageBar: some View {
-            HStack {
+        /// A row below the pages, or a column at the side where the system puts vertical bars.
+        private func pageBar(_ axis: Axis) -> some View {
+            let layout = axis == .horizontal ? AnyLayout(HStackLayout()) : AnyLayout(VStackLayout(spacing: 12))
+            return layout {
                 ForEach(pages) { item in
                     Button {
                         withAnimation { page = item }
@@ -461,8 +486,6 @@ struct SidePane: View {
                     .accessibilityIdentifier("page-\(item.title)")
                 }
             }
-            .padding(.top, 4)
-            .background(Color.opaqueBar)
         }
     }
 #endif
@@ -470,4 +493,39 @@ struct SidePane: View {
 extension EnvironmentValues {
     /// Whether the page that holds a view is the one shown, where pages sit side by side; elsewhere always.
     @Entry var isPageOnScreen = true
+    /// The side where the system puts vertical bars, as a foldable iPhone does below its status bar; `nil` where it
+    /// puts none, also before iOS 27.1. Set by `readsVerticalBarEdge()`.
+    @Entry var verticalBarEdge: HorizontalEdge?
+}
+
+extension View {
+    /// Passes on where the system puts vertical bars, which only iOS 27.1 and later tell.
+    func readsVerticalBarEdge() -> some View {
+        modifier(VerticalBarEdgeReader())
+    }
+}
+
+private struct VerticalBarEdgeReader: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(iOS)
+            if #available(iOS 27.1, *) {
+                content.modifier(Reader())
+            } else {
+                content
+            }
+        #else
+            content
+        #endif
+    }
+
+    #if os(iOS)
+        @available(iOS 27.1, *)
+        private struct Reader: ViewModifier {
+            @Environment(\.toolbarVerticalEdge) private var edge
+
+            func body(content: Content) -> some View {
+                content.environment(\.verticalBarEdge, edge)
+            }
+        }
+    #endif
 }
