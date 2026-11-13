@@ -116,7 +116,7 @@ public actor SwiftDataMemoryRepository: MemoryRepository {
         }
     }
 
-    public nonisolated var finishedSyncs: AsyncStream<Date> { CloudKitSyncEvents.finishedSyncs }
+    public nonisolated var finishedSyncs: AsyncStream<MemorySync> { CloudKitSyncEvents.finishedSyncs }
 
     public func all() throws -> [ChannelMemory] {
         ChannelMemory.arranged(try ordered(in: newContext()).map(identified))

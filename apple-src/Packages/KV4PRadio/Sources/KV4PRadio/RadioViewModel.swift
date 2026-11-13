@@ -2372,17 +2372,18 @@ public final class RadioViewModel {
                 }
             },
             Task { [weak self] in
-                for await date in finishedSyncs {
-                    self?.noteMemorySync(date)
+                for await sync in finishedSyncs {
+                    self?.noteMemorySync(sync)
                 }
             },
         ]
     }
 
-    private func noteMemorySync(_ date: Date) {
-        // Many come at once; a failed one is always logged (ADR-0059).
-        diagnostics?.log(.detail, .sync, "Memory sync finished")
-        lastMemorySync = max(lastMemorySync ?? date, date)
+    private func noteMemorySync(_ sync: MemorySync) {
+        // Several come at once, each with its direction, which tells what set it off; a failed one is always logged
+        // (ADR-0059).
+        diagnostics?.log(.detail, .sync, "Memory sync finished: \(sync.summary)")
+        lastMemorySync = max(lastMemorySync ?? sync.finished, sync.finished)
         saveSettings()
     }
 

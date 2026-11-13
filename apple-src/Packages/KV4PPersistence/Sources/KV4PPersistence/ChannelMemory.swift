@@ -145,11 +145,11 @@ public protocol MemoryRepository: Sendable {
     func renameGroup(_ group: String, to newName: String) async throws
     /// Reports that the memories have changed from outside, through iCloud.
     var changes: AsyncStream<Void> { get }
-    /// Reports when a sync with iCloud has finished.
-    var finishedSyncs: AsyncStream<Date> { get }
+    /// Reports each sync with iCloud that has finished, with its direction and time.
+    var finishedSyncs: AsyncStream<MemorySync> { get }
 }
 
 extension MemoryRepository {
     public var changes: AsyncStream<Void> { AsyncStream { $0.finish() } }
-    public var finishedSyncs: AsyncStream<Date> { AsyncStream { $0.finish() } }
+    public var finishedSyncs: AsyncStream<MemorySync> { AsyncStream { $0.finish() } }
 }

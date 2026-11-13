@@ -373,19 +373,52 @@ struct SettingsSyncTests {
         #expect(Self.model(MemorySyncedSettings(), local: local).lastSettingsSync == Date(timeIntervalSince1970: 11))
     }
 
+    /// A store of memories whose syncs finish when the test says so.
+    private struct Syncing: MemoryRepository {
+        let times: AsyncStream<MemorySync>
+        var finishedSyncs: AsyncStream<MemorySync> { times }
+        func all() async throws -> [ChannelMemory] { [] }
+        func insert(_ memories: [ChannelMemory]) async throws -> [ChannelMemory] { memories }
+        func update(_ memory: ChannelMemory) async throws {}
+        func delete(id: Int32) async throws {}
+        func reorder(_ ids: [Int32]) async throws {}
+        func renameGroup(_ group: String, to newName: String) async throws {}
+    }
+
+    @Test("each finished sync of the memories makes a line of the log, with its direction and length")
+    func memorySyncLog() async {
+        let (times, continuation) = AsyncStream.makeStream(of: MemorySync.self)
+        let store = MemoryLogStore()
+        // Detail lines are logged only while detailed logging is on.
+        var detailed = AppSettings()
+        detailed.detailedLoggingUntilMs = 1
+        let settings = MemorySettingsStore()
+        settings.save((try? detailed.encoded()) ?? Data())
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            memories: Syncing(times: times),
+            settings: settings,
+            diagnostics: DiagnosticLog(store: store, now: { 0 })
+        )
+        continuation.yield(Self.sync(.download, from: 100, to: 100.4))
+        continuation.yield(Self.sync(.upload, from: 101, to: 103))
+        #expect(await RadioViewModelTests.eventually(model) { $0.lastMemorySync == Date(timeIntervalSince1970: 103) })
+        #expect(store.read().contains("Memory sync finished: download, 0.4 s"))
+        #expect(store.read().contains("Memory sync finished: upload, 2.0 s"))
+    }
+
+    private static func sync(_ direction: MemorySync.Direction, from start: Double, to end: Double) -> MemorySync {
+        MemorySync(
+            direction: direction,
+            started: Date(timeIntervalSince1970: start),
+            finished: Date(timeIntervalSince1970: end)
+        )
+    }
+
     @Test("the time of the last memory sync is shown and kept, and does not go back")
     func lastMemorySync() async {
-        struct Syncing: MemoryRepository {
-            let times: AsyncStream<Date>
-            var finishedSyncs: AsyncStream<Date> { times }
-            func all() async throws -> [ChannelMemory] { [] }
-            func insert(_ memories: [ChannelMemory]) async throws -> [ChannelMemory] { memories }
-            func update(_ memory: ChannelMemory) async throws {}
-            func delete(id: Int32) async throws {}
-            func reorder(_ ids: [Int32]) async throws {}
-            func renameGroup(_ group: String, to newName: String) async throws {}
-        }
-        let (times, continuation) = AsyncStream.makeStream(of: Date.self)
+        let (times, continuation) = AsyncStream.makeStream(of: MemorySync.self)
         let store = MemorySettingsStore()
         var local = AppSettings()
         local.lastMemorySync = Date(timeIntervalSince1970: 10)
@@ -397,15 +430,15 @@ struct SettingsSyncTests {
             settings: store
         )
         #expect(model.lastMemorySync == Date(timeIntervalSince1970: 10))
-        continuation.yield(Date(timeIntervalSince1970: 20))
+        continuation.yield(Self.sync(.download, from: 20, to: 20))
         #expect(await RadioViewModelTests.eventually(model) { $0.lastMemorySync == Date(timeIntervalSince1970: 20) })
         #expect(store.settings.lastMemorySync == Date(timeIntervalSince1970: 20))
-        continuation.yield(Date(timeIntervalSince1970: 15))
-        continuation.yield(Date(timeIntervalSince1970: 30))
+        continuation.yield(Self.sync(.download, from: 15, to: 15))
+        continuation.yield(Self.sync(.download, from: 30, to: 30))
         #expect(await RadioViewModelTests.eventually(model) { $0.lastMemorySync == Date(timeIntervalSince1970: 30) })
         #expect(!SettingsSync.values(of: AppSettings()).keys.contains("lastMemorySync"))
 
-        let (firstTimes, first) = AsyncStream.makeStream(of: Date.self)
+        let (firstTimes, first) = AsyncStream.makeStream(of: MemorySync.self)
         let new = RadioViewModel(
             makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
             serialDevices: { [] },
@@ -413,7 +446,7 @@ struct SettingsSyncTests {
             settings: MemorySettingsStore()
         )
         #expect(new.lastMemorySync == nil)
-        first.yield(Date(timeIntervalSince1970: 5))
+        first.yield(Self.sync(.download, from: 5, to: 5))
         #expect(await RadioViewModelTests.eventually(new) { $0.lastMemorySync == Date(timeIntervalSince1970: 5) })
     }
 
