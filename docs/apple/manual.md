@@ -67,10 +67,11 @@ symbols keep their size with larger text; hold one to see it large with its name
 last. Without APRS, *Packets* and *Chats* go from the bar and the ring, and without the map, *Map*. On the map, a
 swipe moves the map; the bar changes the page. **Push to talk** is on the memories page, and the header on all pages but the settings. On a page within the
 settings, a swipe to the right goes back to their list. With the largest text sizes, the header grows less than the
-rest, and rows that no longer fit side by side, such as the line to write a message, stand one below the other.
+rest, and rows that no longer fit side by side, such as the line to write a message, stand one below the other. On a
+folded iPhone Duo, the symbols of the pages stand at the side below the status bar instead of at the bottom.
 
-📱 The layout can change while you use the app: when an iPad window gets wider or narrower, a large iPhone turns, or a
-foldable iPhone is folded or opened. What you were doing stays: open settings stay open, an unsent message stays, and
+📱 The layout can change while you use the app: when an iPad window gets wider or narrower, a large iPhone turns, or an
+iPhone Duo is folded or opened. What you were doing stays: open settings stay open, an unsent message stays, and
 the packets, chats or map you were looking at stay in view. A held **Push to talk** or access tone stops, so the radio
 does not keep transmitting; sticky PTT stays on.
 
