@@ -31,8 +31,9 @@ extension XCUIApplication {
     /// iPhone and iPad: one page back; the Mac shows the settings in a window of their own.
     func goBack() {
         #if os(iOS)
-            // A phone has its other pages beside the one on screen, with their own bars.
-            let backs = navigationBars.buttons.matching(identifier: "BackButton").allElementsBoundByIndex
+            // A phone has its other pages beside the one on screen, with their own bars. Where the system puts the
+            // toolbar at the side, as an open iPhone Duo does, the button is not within the navigation bar.
+            let backs = buttons.matching(identifier: "BackButton").allElementsBoundByIndex
             if let back = backs.first(where: \.isHittable) {
                 back.tap()
                 Thread.sleep(forTimeInterval: 1)
