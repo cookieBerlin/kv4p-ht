@@ -42,6 +42,7 @@ enum ControlHelp {
         static let ptt = "Hold to transmit, or hold the space bar."
         static let disconnect = "Ends the connection to the radio (⌘K)."
     #else
+        static let disconnect = "Ends the connection to the radio."
         static let accessTone =
             "Hold to send the tone that opens a repeater. It ends by itself; releasing it earlier stops it."
     #endif

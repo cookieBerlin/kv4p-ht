@@ -125,17 +125,19 @@ struct RadioHeader: View {
                     }
                 }
                 .font(.headline)
-                #if os(macOS)
-                    // The connection ends here or in the settings; without one, it is made where PTT stands
-                    // (ADR-0075).
-                    if model.isReady {
-                        Spacer()
-                        Button("Disconnect", systemImage: "eject") { Task { await model.disconnect() } }
-                            .buttonStyle(.borderless)
-                            .font(.callout)
-                            .help(ControlHelp.disconnect)
-                    }
-                #endif
+                // With room for it, the connection ends here or in the settings; without one, it is made where PTT
+                // stands (ADR-0075).
+                if model.isReady, !isCompact {
+                    Spacer()
+                    Button("Disconnect", systemImage: "eject") { Task { await model.disconnect() } }
+                        .buttonStyle(.borderless)
+                        .font(.callout)
+                        #if os(iOS)
+                            // The system's blue is too faint for this small text on the grey of the header (ADR-0062).
+                            .tint(Color.strongAccent)
+                        #endif
+                        .help(ControlHelp.disconnect)
+                }
             }
             frequency
             HStack {
