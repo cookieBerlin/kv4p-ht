@@ -413,8 +413,8 @@ it stays open, also when changed back. Show the map, change to the wide layout: 
 
 Into a dummy load. With the radio off, open the memories: in place of **Push to talk**, the status, **Radio** and
 **Connect** show. Choose the radio and connect: while it connects, **Cancel** ends the attempt. Once connected, PTT
-stands there alone. Disconnect in ⚙ **Settings**: the connection comes back in place of PTT. On a Mac, also
-disconnect with the small **Disconnect** at the top right and with ⌘K, and connect with ⌘K. On a Mac, hold the space
+stands there alone. Disconnect in ⚙ **Settings**: the connection comes back in place of PTT. On a Mac and a wide
+iPad, also disconnect with the small **Disconnect** at the top right; on a Mac also with ⌘K, and connect with ⌘K. On a Mac, hold the space
 bar: the radio transmits until you let go; with ⌥, the access tone goes out. Hold the space bar and switch to
 another app with ⌘Tab: the transmission ends. Click into the frequency field and press the space bar: nothing is
 sent.

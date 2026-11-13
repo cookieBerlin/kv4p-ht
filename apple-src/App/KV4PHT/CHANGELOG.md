@@ -10,7 +10,7 @@ own, with its version, build and date.
 - iPad: the radio is no longer chosen and connected at the top of the main screen, which leaves more room for the
   memories and APRS.
 - Without a connection, the memories offer it in place of **Push to talk**: the status, the choice of radio and
-  **Connect**, or **Cancel** while connecting. **Disconnect** is in the settings, and on the Mac also at the top right.
+  **Connect**, or **Cancel** while connecting. **Disconnect** is in the settings, and on the Mac and a wide iPad also at the top right.
 - iPhone Duo, open: the title row goes, as the settings button stands at the side.
 - The **Layers** menu of the map closes after each choice.
 - iPhone: the frequency and the S-meter are on the memories page only, which leaves the packets, the chats and the

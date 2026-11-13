@@ -19,9 +19,9 @@ and ending the connection is rare. The Mac had no keys for the connection or for
   - The action follows the state, in `ConnectionAction` in KV4PRadio: *Connect* while disconnected or failed,
     *Cancel* while connecting or waiting for `HELLO`, *Disconnect* while ready. The settings use the same button.
   - The other pages of a phone show the status only, as the memories page is a swipe away.
-- **Disconnect:** in the settings, under *Connection*; on the Mac under *Radio*. The Mac also shows a small
-  *Disconnect* at the top right of the header while connected, where the line of the memory's name has room. A phone
-  has no room there, and an iPad keeps to the phone.
+- **Disconnect:** in the settings, under *Connection*; on the Mac under *Radio*. The Mac and a wide iPad window also
+  show a small *Disconnect* at the top right of the header while connected, where the line of the memory's name has
+  room. A phone, and a narrow iPad window, keep it in the settings.
 - **The Mac's header** loses its row with the radio and *Connect*.
 - **The Mac's keys:**
   - A *Radio* menu with *Connect*, *Cancel* or *Disconnect* on ⌘K. Return still presses *Connect*, the default

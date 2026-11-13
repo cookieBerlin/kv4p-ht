@@ -44,8 +44,8 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 The structure is the same on all devices, and similar to the Android app:
 
-- **On top:** the name of the active memory, the frequency, the squelch state and the S-meter; 🖥 while connected,
-  a small **Disconnect** at the top right. Type a frequency and press Return to
+- **On top:** the name of the active memory, the frequency, the squelch state and the S-meter; 🖥 and on a wide
+  📱 iPad, while connected, a small **Disconnect** at the top right. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
 - **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the header, the memories and **Push to talk**
   form a column on the left, and beside it a switch between **Packets**, **Chats** and **Map** reaches from the top to
@@ -122,8 +122,8 @@ under *Connection*, otherwise under *Radio*. It does so only for a radio you cho
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
 confirmed the latest change. **Disconnect** ends the session; the radio keeps its
-settings. It is in ⚙ **Settings** under *Connection* (🖥 under *Radio*), and 🖥 at the top right of the main window
-and in the *Radio* menu (⌘K).
+settings. It is in ⚙ **Settings** under *Connection* (🖥 under *Radio*), 🖥 and on a wide 📱 iPad at the top right of
+the header, and 🖥 in the *Radio* menu (⌘K).
 
 If the connection fails or is lost, the app tells you once, and not when you
 disconnect yourself:
