@@ -162,11 +162,7 @@ struct RootView: View {
     }
 
     private var memoriesColumn: some View {
-        #if os(iOS)
-            MainColumn(model: model, settingsPath: $settingsPath)
-        #else
-            MainColumn(model: model)
-        #endif
+        MainColumn(model: model)
     }
 }
 
@@ -424,9 +420,8 @@ struct SidePane: View {
                         // The settings show the state of the connection themselves.
                         NoticeBanner(model: model)
                     } else {
-                        BottomBar(model: model, showsPTT: page == .memories) {
-                            withAnimation { page = .settings }
-                        }
+                        // The memories offer the connection where PTT stands; the other pages show its status (ADR-0075).
+                        BottomBar(model: model, showsPTT: page == .memories)
                     }
                     if barEdge == nil {
                         pageBar(.horizontal)

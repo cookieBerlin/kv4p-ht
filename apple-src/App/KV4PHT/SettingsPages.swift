@@ -148,7 +148,13 @@ struct RadioSettings: View {
     var body: some View {
         Form {
             if hasConnectAtStart {
-                Section("Connection") { ConnectAtStartToggle(model: model) }
+                Section("Connection") {
+                    #if os(macOS)
+                        // The main window connects where PTT stands; here the connection ends (ADR-0075).
+                        ConnectButton(model: model)
+                    #endif
+                    ConnectAtStartToggle(model: model)
+                }
             }
             RadioSection(title: "Channel", model: model) {
                 Picker("Bandwidth", selection: $model.isWideBandwidth) {
