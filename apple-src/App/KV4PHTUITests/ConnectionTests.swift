@@ -79,7 +79,10 @@ final class ConnectionTests: XCTestCase {
         disconnect.tapOrClick()
         XCTAssertTrue(app.buttons["Connect"].firstMatch.waitForExistence(timeout: 10), "Did not disconnect")
         #if os(macOS)
-            app.typeKey("w", modifierFlags: .command)
+            // The window of the settings by its sidebar; ⌘W may reach the main window instead.
+            let settings = app.windows.containing(.any, identifier: "settings-Radio").firstMatch
+            settings.buttons[XCUIIdentifierCloseWindow].click()
+            XCTAssertTrue(settings.waitForNonExistence(timeout: 5), "The settings stay open")
         #else
             let memories = app.buttons["page-Memories"]
             if memories.exists {
