@@ -120,7 +120,7 @@ struct RootView: View {
                 }
             }
         #else
-            sideBySide.mainChrome(model, title: "kv4p HT").frame(minWidth: 700, minHeight: 600)
+            sideBySide.mainChrome(model, title: "kv4p HT").frame(minWidth: 720, minHeight: 600)
         #endif
     }
 
@@ -147,17 +147,26 @@ struct RootView: View {
         }
     #endif
 
-    /// Without APRS and the map, the memories take the whole width.
+    /// The memories with the header and PTT in a column of a fixed width, and beside it, from the top to the bottom, the
+    /// packets, the chats or the map (ADR-0074). Without APRS and the map, the column takes the whole width.
     private var sideBySide: some View {
         HStack(spacing: 0) {
             if model.isAPRSEnabled || model.isMapEnabled {
-                MemoriesView(model: model).frame(minWidth: 280, maxWidth: 400)
+                memoriesColumn.frame(width: MainColumn.width)
                 Divider()
                 SidePane(model: model).frame(minWidth: 320)
             } else {
-                MemoriesView(model: model).frame(minWidth: 280)
+                memoriesColumn
             }
         }
+    }
+
+    private var memoriesColumn: some View {
+        #if os(iOS)
+            MainColumn(model: model, settingsPath: $settingsPath)
+        #else
+            MainColumn(model: model)
+        #endif
     }
 }
 
@@ -324,7 +333,9 @@ struct SidePane: View {
 
         var body: some View {
             VStack(spacing: 0) {
-                if page != .settings {
+                // The header belongs to the memories; the other pages reach to the top (ADR-0074). It stands outside the
+                // pages, so that it stays in place while they move.
+                if page == .memories {
                     RadioHeader(model: model)
                     Divider()
                 }
