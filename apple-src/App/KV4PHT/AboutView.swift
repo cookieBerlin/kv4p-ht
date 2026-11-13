@@ -13,6 +13,7 @@ struct AboutView: View {
                 VStack(spacing: 6) {
                     Image(systemName: "dot.radiowaves.left.and.right").font(.system(size: 40))
                     Text("kv4p HT").font(.title)
+                    Text(AboutInfo.byline).foregroundStyle(.secondary)
                     Text(about.version)
                     Text(about.firmware).foregroundStyle(.secondary)
                     if let url = URL(string: AboutInfo.sourceAddress) {

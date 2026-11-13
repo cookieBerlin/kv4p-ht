@@ -39,8 +39,8 @@ Facts that bound the choice:
   system font, no web fonts.
 - **Privacy:** no cookies, no analytics, nothing loaded from other servers. The privacy page states what the
   developer collects, which is nothing, and links to the FAQ for what the app sends where. No custom domain.
-- **Naming:** the site uses the App Store name *kv4p HT (CookieBerlin)*, says that the app is an unofficial port,
-  and links to the original project for the radio.
+- **Naming:** the site uses the App Store name *kv4p HT (by DB3AC)*, names DB3AC as the developer, says that the
+  app is an unofficial port, and links to the original project for the radio.
 
 ## Consequences
 

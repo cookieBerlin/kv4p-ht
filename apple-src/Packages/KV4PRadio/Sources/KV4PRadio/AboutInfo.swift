@@ -52,12 +52,22 @@ public struct AboutInfo: Sendable {
         ),
     ]
 
+    /// The amateur radio call sign of the developer of the Apple app.
+    public static let developer = "DB3AC"
+
+    /// Who makes the Apple app, under the app name in the About window.
+    public static let byline = "Apple app by \(developer)"
+
     /// The project, where the source code of every version is published.
     public static let sourceAddress = "https://github.com/cookieBerlin/kv4p-ht"
 
     /// The app first; then what it contains, then what it ports.
     public static let components = [
-        Component(name: "kv4p HT for Apple platforms", licence: .gpl3, note: "Source code: \(sourceAddress)"),
+        Component(
+            name: "kv4p HT for Apple platforms",
+            licence: .gpl3,
+            note: "© 2026 \(developer) · Source code: \(sourceAddress)"
+        ),
         Component(name: "Codec2 1.2.0", licence: .lgpl21, note: "FreeDV voice codec, included unmodified"),
         Component(
             name: "esptool flasher stub 1.4.0",

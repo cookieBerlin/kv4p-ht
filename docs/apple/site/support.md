@@ -1,6 +1,6 @@
 ---
 pagetitle: Support
-description: Help with the kv4p HT (CookieBerlin) app.
+description: Help with the kv4p HT (by DB3AC) app.
 ---
 
 # Support

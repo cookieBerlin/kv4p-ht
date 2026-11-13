@@ -18,6 +18,7 @@ own, with its version, build and date.
 
 ### Added
 
+- **About** names who makes the Apple app: DB3AC.
 - iPhone Duo, folded: the symbols of the pages stand at the side below the status bar, which leaves the pages more
   room.
 - iPhone and iPad: a launch screen in the colours of the app icon, with its radio, instead of a black screen.

@@ -2,6 +2,7 @@
 
 Native SwiftUI app for **macOS (Apple Silicon)** first, then **iOS and iPadOS**,
 talking to the kv4p HT over Bluetooth LE (all platforms) and USB (macOS).
+Developed by DB3AC; App Store name *kv4p HT (by DB3AC)*.
 No changes to the firmware or the Android app are required.
 
 **Status:** the [roadmap](04-roadmap.md) shows which milestones are done.

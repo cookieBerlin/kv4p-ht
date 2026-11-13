@@ -40,6 +40,13 @@ struct AboutInfoTests {
         #expect(Set(sources.map(\.id)).count == sources.count)
     }
 
+    @Test("the About window names the developer of the Apple app")
+    func developer() {
+        #expect(AboutInfo.developer == "DB3AC")
+        #expect(AboutInfo.byline == "Apple app by DB3AC")
+        #expect(AboutInfo.components.first?.note == "© 2026 DB3AC · Source code: \(AboutInfo.sourceAddress)")
+    }
+
     @Test("the components name their licences; bundled licence texts are named once")
     func components() {
         let components = AboutInfo.components

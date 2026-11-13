@@ -1,11 +1,11 @@
 ---
 pagetitle: Privacy
-description: Privacy policy of the kv4p HT (CookieBerlin) app and this website.
+description: Privacy policy of the kv4p HT (by DB3AC) app and this website.
 ---
 
 # Privacy
 
-**The developer of kv4p HT (CookieBerlin) collects no data.** The app has no account, no ads, no analytics and no tracking,
+**DB3AC, the developer of kv4p HT (by DB3AC), collects no data.** The app has no account, no ads, no analytics and no tracking,
 and it sends nothing to the developer.
 
 ## The app
