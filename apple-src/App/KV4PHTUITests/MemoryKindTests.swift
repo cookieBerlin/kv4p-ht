@@ -1,6 +1,6 @@
 import XCTest
 
-/// The list of memories marks repeaters and beacons and shows their comment (ADR-0065).
+/// The list of memories marks the kind of each memory and shows its comment (ADR-0065).
 @MainActor
 final class MemoryKindTests: XCTestCase {
     private var app: XCUIApplication!
@@ -13,7 +13,7 @@ final class MemoryKindTests: XCTestCase {
         app.launch()
     }
 
-    func testListMarksRepeatersAndBeacons() {
+    func testListMarksTheKindOfEachMemory() {
         #if os(macOS)
             app.closeAbout()
         #endif
@@ -27,6 +27,7 @@ final class MemoryKindTests: XCTestCase {
         XCTAssertTrue(row("Repeater, Local repeater").waitForExistence(timeout: 60), "No repeater marked")
         XCTAssertTrue(row("Example repeater").exists, "No comment shown")
         XCTAssertTrue(row("Beacon, Local beacon").exists, "No beacon marked")
+        XCTAssertTrue(row("Frequency, Calling channel").exists, "No frequency marked")
     }
 
     func testListHidesWhatTheRadioCannotReceive() {
