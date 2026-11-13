@@ -340,6 +340,9 @@ struct SidePane: View {
                 }
                 .scrollTargetBehavior(.paging)
                 .scrollIndicators(.hidden)
+                // The scroll view draws into the sides of the screen that are not free, such as the status bar that a
+                // foldable iPhone shows at the side, where the next page would show.
+                .clipped()
                 // On a page of the settings, a swipe goes back to their list.
                 .scrollDisabled(page == .settings && !settingsPath.isEmpty)
                 .scrollPosition(id: $shownSlot)
