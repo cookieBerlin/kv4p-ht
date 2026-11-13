@@ -41,10 +41,9 @@ struct SettingsView: View {
             .frame(minWidth: 680, minHeight: 560)
         #else
             Form {
-                // A phone chooses and connects the radio here, as its header has no room for it.
-                if sizeClass == .compact {
-                    ConnectionSection(model: model)
-                }
+                // iPhone and iPad choose and connect the radio here, which leaves the main screen to the radio and the
+                // lists (ADR-0071).
+                ConnectionSection(model: model)
                 // Below the choice of radio, as it belongs to the simulator chosen there.
                 if pages.contains(.simulator) {
                     Section { link(to: .simulator) }
