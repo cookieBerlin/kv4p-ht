@@ -129,14 +129,24 @@ struct RadioHeader: View {
                 // stands (ADR-0075).
                 if model.isReady, !isCompact {
                     Spacer()
-                    Button("Disconnect", systemImage: "eject") { Task { await model.disconnect() } }
-                        .buttonStyle(.borderless)
-                        .font(.callout)
-                        #if os(iOS)
-                            // The system's blue is too faint for this small text on the grey of the header (ADR-0062).
-                            .tint(Color.strongAccent)
-                        #endif
-                        .help(ControlHelp.disconnect)
+                    Button {
+                        Task { await model.disconnect() }
+                    } label: {
+                        Label("Disconnect", systemImage: "eject")
+                            #if os(iOS)
+                                // A finger needs 44 pt; the line keeps its height, so the frequency stays put.
+                                .frame(minHeight: 44)
+                                .contentShape(.rect)
+                            #endif
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.callout)
+                    #if os(iOS)
+                        .padding(.vertical, -12)
+                        // The system's blue is too faint for this small text on the grey of the header (ADR-0062).
+                        .tint(Color.strongAccent)
+                    #endif
+                    .help(ControlHelp.disconnect)
                 }
             }
             frequency
