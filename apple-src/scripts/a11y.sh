@@ -30,15 +30,16 @@ for device in "${devices[@]}"; do
   else
     target=(-destination "platform=iOS Simulator,name=$device" CODE_SIGNING_ALLOWED=NO -derivedDataPath "$results/derived")
   fi
-  # A test that fails is run once more. A test runner that crashes before the tests start, as it does at times on a
-  # busy machine, gets a second start of its own; its result bundle is replaced.
+  # A test that fails is run once more, in a new test runner. A test runner that crashes before the tests start, as it
+  # does at times on a busy machine, gets a second start of its own; its result bundle is replaced.
   for attempt in 1 2; do
     rm -rf "$bundle"
     if xcodebuild test -project "$project" -scheme KV4PHT "${target[@]}" "${tests[@]}" \
-      -retry-tests-on-failure -test-iterations 2 -resultBundlePath "$bundle" > "$log" 2>&1; then
+      -retry-tests-on-failure -test-iterations 2 -test-repetition-relaunch-enabled YES \
+      -resultBundlePath "$bundle" > "$log" 2>&1; then
       break
     fi
-    if [ "$attempt" = 1 ] && grep -qE "never finished bootstrapping|failed to initialize for UI testing" "$log"; then
+    if [ "$attempt" = 1 ] && grep -qE "never finished bootstrapping|failed to initialize for UI testing|crashed while preparing to run tests" "$log"; then
       echo "a11y: the test runner did not start on $device, once more" >&2
       continue
     fi
