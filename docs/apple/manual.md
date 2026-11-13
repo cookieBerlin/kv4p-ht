@@ -44,16 +44,17 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 The structure is the same on all devices, and similar to the Android app:
 
-- **On top:** 🖥 the choice of radio and **Connect** (📱 both are in ⚙ **Settings**), the name of the
-  active memory, the frequency, the squelch state and the S-meter. Type a frequency and press Return to
+- **On top:** the name of the active memory, the frequency, the squelch state and the S-meter; 🖥 while connected,
+  a small **Disconnect** at the top right. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
 - **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the header, the memories and **Push to talk**
   form a column on the left, and beside it a switch between **Packets**, **Chats** and **Map** reaches from the top to
   the bottom of the window. With APRS switched off (⚙ **Settings → Pages**), the map has that side to itself; with both
   switched off, the memories take the whole width.
-- **At the bottom:** a large **Push to talk** button and any messages. 🖥 The connection status stands in a
-  status bar at the bottom of the window. 📱 The button shows only while the radio is connected, on an iPhone as a
-  microphone; otherwise the status stands in its place, with **Connect in Settings** to get there.
+- **At the bottom:** a large **Push to talk** button and any messages. The button shows only while the radio is
+  connected, 📱 on an iPhone as a microphone. Otherwise the connection stands in its place: the status or why the
+  last connection failed, the choice of **Radio** and **Connect**, or **Cancel** while connecting. 📱 The other pages
+  of an iPhone show the status only. 🖥 While connected, the status stands in a bar at the bottom of the window.
 - A message, red for a problem such as a missing location and green for a finished
   import, shows at the
   bottom of the screen until you dismiss it with ✕: 📱 on an iPhone above the bar with
@@ -85,8 +86,9 @@ them denied: the functions that need one say so and offer **Open Settings**.
 
 ## Connecting the radio
 
-🖥 Choose the connection under **Radio** at the top and click **Connect**. 📱 On iPhone and iPad, both are in
-⚙ **Settings** under *Connection*, together with the state of the connection:
+Without a connection, the memories show it where **Push to talk** stands: choose the radio under **Radio** and
+click **Connect** (🖥 or press Return, or ⌘K in the *Radio* menu). 📱 On iPhone and iPad, ⚙ **Settings** has the same
+under *Connection*, together with the state of the connection:
 
 - **Bluetooth:** power on the radio. Once Bluetooth access is settled, at your first
   connection, the app looks for radios while nothing is connected and lists them under **Radio**, each with its name and the end of its ID.
@@ -120,15 +122,16 @@ under *Connection*, otherwise under *Radio*. It does so only for a radio you cho
 After connecting, the app shows the firmware version, RF module (VHF/UHF) and
 frequency range. The status *Connected, applying settings…* means the radio has not yet
 confirmed the latest change. **Disconnect** ends the session; the radio keeps its
-settings.
+settings. It is in ⚙ **Settings** under *Connection* (🖥 under *Radio*), and 🖥 at the top right of the main window
+and in the *Radio* menu (⌘K).
 
 If the connection fails or is lost, the app tells you once, and not when you
 disconnect yourself:
 
 - 🖥 A dialog opens, and the status bar at the bottom of the window shows the reason.
   While the app is in the background, its Dock icon also bounces.
-- 📱 The reason shows in red at the bottom of the screen (on an iPhone in place of **Push to talk**, and in
-  ⚙ **Settings** under *Connection*). In the background, you also get a notification if you allowed it.
+- 📱 The reason shows in red at the bottom of the screen, where **Connect** offers to try again, and in
+  ⚙ **Settings** under *Connection*. In the background, you also get a notification if you allowed it.
 
 ## Receiving
 
@@ -209,8 +212,11 @@ Transmitting requires a license and an antenna or dummy load.
   transmission starts and ends) while you speak; release it
   to return to receive. It turns red while PTT is pressed and shows *On air* once
   the radio transmits. Without microphone access, a text replaces the button.
+- 🖥 **Space bar:** holding it transmits as holding the button does, while the main window is in front and no text
+  field takes the typing. The transmission ends when you let go, or when another window or app comes to the front.
+  The *Radio* menu names the key.
 - **Sticky PTT:** each click starts or ends the transmission, as in the Android
-  app.
+  app; 🖥 so does each press of the space bar.
 - **Mic gain boost:** *None*, *Low* (×1.5), *Med* (×2) or *High* (×2.5); use it
   if others hear you too quietly.
 - **High power** is in ⚙ **Settings** under **Radio**.
@@ -258,6 +264,7 @@ memory can have its own tone and length, or use the settings, which is the defau
 - The button shows the frequency of the tone; 📱 on an iPhone below a symbol of a tone burst.
 - If the radio does not transmit within 2 s, the app stops and says so.
 - 📱 The iPhone vibrates all the time while the button is held.
+- 🖥 Holding ⌥ and the space bar sends the tone as holding the button does.
 - The microphone stays closed, so other apps keep playing. Sticky PTT has no effect on the
   button, and the frequency limits apply.
 
