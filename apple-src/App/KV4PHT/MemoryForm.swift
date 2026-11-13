@@ -51,7 +51,7 @@ struct MemoryForm: View {
             Section {
                 LabeledField("Name", text: $memory.name)
                 Picker("Kind", selection: $memory.kind) {
-                    ForEach(MemoryKind.allCases, id: \.self) { Text(verbatim: $0.title) }
+                    ForEach(MemoryKind.allCases, id: \.self) { Label($0.title, systemImage: $0.symbol) }
                 }
                 GroupField(groups: model.groups, group: $memory.group)
                 LabeledField("Comment", text: $memory.comment)
