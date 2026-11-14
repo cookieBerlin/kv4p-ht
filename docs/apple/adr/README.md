@@ -81,3 +81,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0075](0075-connect-where-ptt-stands.md) | Connect where PTT stands; Mac keys for the connection, PTT and the access tone | Proposed |
 | [0076](0076-screenshots.md) | Screenshots for the App Store, the website and the manual, in light and dark | Proposed |
 | [0077](0077-talking-without-a-radio.md) | Talking without a radio: medium and frame format | Proposed |
+| [0078](0078-ci-skips-builds-for-docs.md) | CI skips the builds and tests when only documentation changed | Proposed |
