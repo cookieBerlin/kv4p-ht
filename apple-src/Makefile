@@ -18,7 +18,7 @@ APP_PROJECT := App/KV4PHT.xcodeproj
 APP_DERIVED_DATA := .build/app
 SWIFT_SOURCES := Package.swift Packages App
 
-.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci a11y a11y-mac site site-tools site-check
+.PHONY: test coverage lint format privacy changed vectors vectors-check nightly-firmware ios-build app icon testflight ci a11y a11y-mac screenshots site site-tools site-check
 
 test:
 	$(SWIFT) test
@@ -84,6 +84,13 @@ a11y:
 # The same audit on this Mac. It takes over the mouse and the keyboard while it runs, so it is started by hand only.
 a11y-mac:
 	scripts/a11y.sh '$(APP_PROJECT)' 'Mac'
+
+# The screenshots of the App Store, the website and the manual, in light and dark (docs/apple/release.md, ADR-0076), one
+# simulator at a time; "Mac" takes them on this Mac, which takes over the mouse and the keyboard meanwhile. The store's
+# images go to .build/screenshots/store, the website's copies to docs/apple/site/img/screens. Not part of `ci`.
+SCREENSHOT_DEVICES ?= iPhone 18 Pro,iPad Pro 13-inch (M5),Mac
+screenshots:
+	scripts/screenshots.sh '$(APP_PROJECT)' '$(SCREENSHOT_DEVICES)'
 
 # Signed iOS and macOS builds, uploaded to App Store Connect for TestFlight (ADR-0035). Needs TEAM_ID in the environment and the
 # account in Xcode; DRY_RUN=1 makes an unsigned dry run. Not part of `ci`.

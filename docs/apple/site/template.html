@@ -9,6 +9,13 @@
   <link rel="icon" type="image/png" href="img/app-icon.png">
   <link rel="apple-touch-icon" href="img/app-icon.png">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // The colour scheme chosen with the switch, kept in this browser only; otherwise the system's.
+    try {
+      var theme = localStorage.getItem("theme");
+      if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+    } catch (error) {}
+  </script>
 </head>
 <body>
   <header class="bar">
@@ -19,6 +26,7 @@
       <a href="manual.html">Manual</a>
       <a href="changelog.html">Changelog</a>
       <a class="button small" href="$testflight$">TestFlight</a>
+      <button class="theme" id="theme" type="button" hidden></button>
     </nav>
   </header>
 $if(hero)$
@@ -51,5 +59,29 @@ $endif$
       <a href="https://www.kv4p.com">kv4p HT project</a> or Apple. A valid amateur radio licence is required to
       transmit. Apple, iPhone, iPad, Mac and TestFlight are trademarks of Apple Inc.</p>
   </footer>
+  <script>
+    // System, light, dark, and again; without JavaScript the switch stays hidden and the page follows the system.
+    (function () {
+      var root = document.documentElement;
+      var button = document.getElementById("theme");
+      var names = { "": "Auto", light: "Light", dark: "Dark" };
+      var next = { "": "light", light: "dark", dark: "" };
+      function show() {
+        var theme = root.dataset.theme || "";
+        button.textContent = names[theme];
+        button.setAttribute("aria-label", "Colour scheme: " + names[theme] + ". Change");
+      }
+      button.addEventListener("click", function () {
+        var theme = next[root.dataset.theme || ""];
+        if (theme) root.dataset.theme = theme; else delete root.dataset.theme;
+        try {
+          if (theme) localStorage.setItem("theme", theme); else localStorage.removeItem("theme");
+        } catch (error) {}
+        show();
+      });
+      show();
+      button.hidden = false;
+    })();
+  </script>
 </body>
 </html>

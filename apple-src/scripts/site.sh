@@ -14,7 +14,7 @@ mkdir -p "$out/img"
 
 cp "$site/style.css" "$out/"
 cp "$root/apple-src/App/KV4PHT/Assets.xcassets/AppIcon.appiconset/AppIcon.png" "$out/img/app-icon.png"
-if [[ -d "$site/img" ]]; then cp "$site/img/"* "$out/img/"; fi
+if [[ -d "$site/img" ]]; then cp -R "$site/img/." "$out/img/"; fi
 
 # page <source, repository-relative> <reader> <output name> [pandoc options]
 page() {

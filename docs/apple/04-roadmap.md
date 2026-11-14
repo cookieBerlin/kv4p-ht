@@ -124,7 +124,7 @@ TestFlight only ([ADR-0036](adr/0036-no-distribution-outside-app-store.md)).
 
 |   | # | Milestone | Acceptance criteria |
 |---|---|---|---|
-| ⬜ | 99.1 | **App Store release** | Version 1.0.0 ([ADR-0070](adr/0070-own-app-version.md)). Store listing, screenshots, privacy policy, App Review for iOS, iPadOS and macOS. |
+| ⬜ | 99.1 | **App Store release** | Version 1.0.0 ([ADR-0070](adr/0070-own-app-version.md)). Store listing, screenshots, privacy policy, App Review for iOS, iPadOS and macOS, as planned in [release.md](release.md). |
 
 ## Hardware tests
 
