@@ -345,9 +345,8 @@ final class AccessibilityAuditTests: XCTestCase {
             let isTrait = issue.auditType == .trait
             let isTextClipped = issue.auditType == .textClipped
         #endif
-        // 1. Apple's secondary grey, a little below the line, also in the footers of the settings.
+        // 1. Contrast a little below the line, such as of the symbols in Apple's secondary grey.
         if isContrast, issue.compactDescription.contains("nearly passed") { return 1 }
-        if isContrast, screen.contains("settings"), elementType == .staticText { return 1 }
         // 2. Enough contrast on the screenshot: the audit misreads the background now and then, such as the material of a
         // bar. Or none to read: a row that a list scrolls below a bar is covered, and cannot be tapped either.
         if isContrast, let element = issue.element {
@@ -406,6 +405,8 @@ final class AccessibilityAuditTests: XCTestCase {
             if issue.auditType == .contrast, isBehindASheet(element) { return 11 }
             // 15. The markers MapKit draws on the Mac, without names; VoiceOver has the list of the map instead.
             if screen.hasSuffix(" map"), isInMap(element) { return 15 }
+            // 16. The Touch Bar that AppKit makes for a text field with the focus, such as the frequency, and its items.
+            if isDescription, isInTouchBar(element) { return 16 }
             // 12. The header of a section of a SwiftUI list: the groups of memories, and the memories and stations of the
             // map, whose list stays in the main window behind the other screens.
             if isDescription || issue.auditType == .parentChild, isUnnamedGroup,
@@ -419,6 +420,13 @@ final class AccessibilityAuditTests: XCTestCase {
         private func isInMapList(_ element: XCUIElement) -> Bool {
             let list = app.descendants(matching: .any)["map-list"].firstMatch
             return list.exists && list.frame.contains(element.frame)
+        }
+
+        /// The Touch Bar itself, or one of its items, which may stick out of it by a point.
+        private func isInTouchBar(_ element: XCUIElement) -> Bool {
+            let bar = app.touchBars.firstMatch
+            return element.elementType == .touchBar
+                || bar.exists && bar.frame.insetBy(dx: -2, dy: -2).contains(element.frame)
         }
 
         /// The map itself, or a part MapKit draws on it.
