@@ -1,8 +1,9 @@
 # Apple app pull request gate (docs/apple/adr/0013-ci-pr-gate.md).
 # Every job only calls a target of apple-src/Makefile.
 # Runs on every pull request so the required checks always report; the Apple
-# jobs are skipped (reported as successful) when no Apple port path changed
-# (docs/apple/adr/0017-ci-change-detection.md).
+# jobs are skipped (reported as successful) when no Apple port path changed,
+# and the build and test jobs also when only documentation changed
+# (docs/apple/adr/0017-ci-change-detection.md, 0078-ci-skips-builds-for-docs.md).
 name: Apple CI
 
 on:
@@ -32,6 +33,7 @@ jobs:
     outputs:
       apple: ${{ steps.detect.outputs.apple }}
       vectors: ${{ steps.detect.outputs.vectors }}
+      code: ${{ steps.detect.outputs.code }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,7 +41,8 @@ jobs:
       - id: detect
         run: |
           echo "apple=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF")" >> "$GITHUB_OUTPUT"
-          echo "vectors=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF" ORACLE=--oracle)" >> "$GITHUB_OUTPUT"
+          echo "vectors=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF" ORACLE=--oracle CODE=--code)" >> "$GITHUB_OUTPUT"
+          echo "code=$(make changed BASE="$BASE" HEAD_REF="$HEAD_REF" CODE=--code)" >> "$GITHUB_OUTPUT"
 
   vectors:
     needs: changes
@@ -59,7 +62,7 @@ jobs:
 
   lint:
     needs: changes
-    if: needs.changes.outputs.apple == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +82,7 @@ jobs:
 
   test:
     needs: changes
-    if: needs.changes.outputs.apple == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +97,7 @@ jobs:
 
   ios-build:
     needs: changes
-    if: needs.changes.outputs.apple == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +105,7 @@ jobs:
 
   app:
     needs: changes
-    if: needs.changes.outputs.apple == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +126,7 @@ jobs:
   # simulator per machine, as several at once made the test runner time out and crash.
   ui-tests:
     needs: changes
-    if: needs.changes.outputs.apple == 'true'
+    if: needs.changes.outputs.code == 'true'
     name: ui-tests (${{ matrix.device }}, ${{ matrix.tests }})
     strategy:
       fail-fast: false
