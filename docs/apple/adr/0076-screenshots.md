@@ -35,10 +35,10 @@ again for three kinds of device and two colour schemes takes long. App Store Con
   runtime, in English (`en_US`): an iPad's status bar shows the date in the simulator's language, which the status bar
   override cannot change, and the language of the simulators used otherwise stays as it is.
 - **Status bar:** `simctl status_bar override` sets 9:41, full signal and a full battery, as on Apple's images.
-- **Demo content:** with the colour scheme argument, the demo mode loads more than the audit gets, so that the images
-  look like a day on air: memories in three groups, stations apart from each other on the map, and a longer chat in the
-  abbreviations of radio amateurs. The audit keeps the small demo: with the longer lists, its checks of a screen ran
-  out of the time XCTest gives them on CI. Placeholder callsigns only; the names the UI tests look for stay.
+- **Demo content:** the demo mode shows a day on air, for the screenshots and the functional UI tests: memories in
+  three groups, stations apart from each other on the map, and a chat in the abbreviations of radio amateurs. Only the
+  accessibility audit asks for less, with `-uitest-small-demo`: with the longer lists, its checks of a screen ran out of
+  the time XCTest gives them on CI. Placeholder callsigns only; the names the UI tests look for stay.
 - **The Mac:** the test pulls the window to a fixed size and cuts it out of the screen, as the audit does. With the
   colour scheme argument, the app puts its windows at the level of a screen saver, in front of what other apps show
   below the menu bar, which would otherwise be cut out with the window.

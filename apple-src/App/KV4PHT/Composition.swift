@@ -44,6 +44,10 @@ enum Composition {
     /// which start anew, so that each audit begins on the same page.
     static let viewDefaults = isDemo ? UserDefaults(suiteName: demoSuite) ?? .standard : .standard
 
+    /// The accessibility audit's demo, `-uitest-small-demo`: with the lists of a day on air, its checks of a screen run
+    /// out of the time XCTest gives them on a slow machine (ADR-0076).
+    private static let isSmallDemo = ProcessInfo.processInfo.arguments.contains("-uitest-small-demo")
+
     /// The colour scheme of the demo mode, `-uitest-appearance light` or `dark`, so that `make screenshots` takes each
     /// screen in both; nil follows the system, as always outside the demo mode.
     static let demoAppearance = isDemo ? UserDefaults.standard.string(forKey: "uitest-appearance") : nil
@@ -201,8 +205,7 @@ enum Composition {
         )
         model.decimalSeparator = decimalSeparator
         Task {
-            // More for the screenshots, which set the colour scheme; the audit keeps within its time with less.
-            await model.loadDemoContent(forScreenshots: demoAppearance != nil)
+            await model.loadDemoContent(forAudit: isSmallDemo)
             await model.connect()
             model.simulatedSignal = demoSignal
         }

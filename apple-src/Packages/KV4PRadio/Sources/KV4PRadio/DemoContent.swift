@@ -1,22 +1,22 @@
 import Foundation
 import KV4PPersistence
 
-/// What the app shows in its demo mode, so that the accessibility audit finds every screen filled (ADR-0062), and
-/// more for the screenshots (ADR-0076). Placeholders only.
+/// What the app shows in its demo mode: a day on air for the UI tests and the screenshots (ADR-0076), and less for the
+/// accessibility audit, which only needs every screen filled (ADR-0062). Placeholders only.
 public enum DemoContent {
-    /// The memories of the audit, or with those of the screenshots, in the order of the list.
-    public static func memories(forScreenshots: Bool) -> [ChannelMemory] {
-        forScreenshots ? allMemories : allMemories.filter { !screenshotMemories.contains($0.name) }
+    /// All memories, or the audit's, in the order of the list.
+    public static func memories(forAudit: Bool) -> [ChannelMemory] {
+        forAudit ? allMemories.filter { !notForAuditMemories.contains($0.name) } : allMemories
     }
 
-    /// The packets of the audit, or with those of the screenshots, in the order they come in.
-    public static func aprsLines(forScreenshots: Bool) -> [String] {
-        forScreenshots ? allAPRSLines : allAPRSLines.filter { !screenshotAPRSLines.contains($0) }
+    /// All packets, or the audit's, in the order they come in.
+    public static func aprsLines(forAudit: Bool) -> [String] {
+        forAudit ? allAPRSLines.filter { !notForAuditAPRSLines.contains($0) } : allAPRSLines
     }
 
-    /// Only for the screenshots: a list as long as on a day on air would make each audit of a screen take longer than
-    /// XCTest allows on a slow machine.
-    private static let screenshotMemories: Set = [
+    /// Not for the audit: a list as long as on a day on air makes each audit of a screen take longer than XCTest allows
+    /// on a slow machine.
+    private static let notForAuditMemories: Set = [
         "Hilltop repeater", "Lake repeater", "Valley repeater", "Simplex 1", "Simplex 2", "Hiking net", "FreeDV",
     ]
 
@@ -81,7 +81,7 @@ public enum DemoContent {
         ChannelMemory(name: "APRS", frequency: 144.8, group: "Digital"),
     ]
 
-    /// Every kind of packet the list shows, and two chats, one of them unread. For the screenshots, more stations stand
+    /// Every kind of packet the list shows, and two chats, one of them unread. Beyond the audit's, more stations stand
     /// around the memories' repeaters, each at a place of its own, so that the map shows them apart, and the chat is
     /// longer.
     private static let allAPRSLines = [
@@ -102,7 +102,7 @@ public enum DemoContent {
         "N1CALL>APRS,TCPIP*::BLN1CQ   :Net tonight 8 pm on the hilltop rpt",
     ]
 
-    private static let screenshotAPRSLines: Set = [
+    private static let notForAuditAPRSLines: Set = [
         "N3CALL-9>APRS,WIDE1-1:=4904.20N/07158.90W>On the way home",
         "N5CALL-1>APRS,TCPIP*:!4904.90N/07155.00W#Fill-in digipeater",
         "N6CALL-7>APRS,WIDE1-1:=4901.50N/07206.20W[Hiking the north trail",
@@ -114,12 +114,12 @@ public enum DemoContent {
 }
 
 extension RadioViewModel {
-    /// Fills the app for the demo mode, with more for the screenshots; a second time adds nothing.
-    public func loadDemoContent(forScreenshots: Bool = false) async {
+    /// Fills the app for the demo mode, with less for the accessibility audit; a second time adds nothing.
+    public func loadDemoContent(forAudit: Bool = false) async {
         guard memories.isEmpty else { return }
-        for memory in DemoContent.memories(forScreenshots: forScreenshots) {
+        for memory in DemoContent.memories(forAudit: forAudit) {
             await save(memory)
         }
-        receiveDemo(DemoContent.aprsLines(forScreenshots: forScreenshots))
+        receiveDemo(DemoContent.aprsLines(forAudit: forAudit))
     }
 }
