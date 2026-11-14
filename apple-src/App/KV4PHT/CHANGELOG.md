@@ -35,6 +35,8 @@ own, with its version, build and date.
   stay.
 - iPhone Duo, folded: the next page no longer shows beside the status bar.
 - iPhone: the app starts much sooner when it was not running before, as the map is set up only when it is needed.
+- iPhone and iPad: with the largest text sizes, the frequency is no longer cut off at the left, nor the squelch symbol
+  at the right.
 
 ## 0.2.0 (20261111.2136) – 2026-11-11
 

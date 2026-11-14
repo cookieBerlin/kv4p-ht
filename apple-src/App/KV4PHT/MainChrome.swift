@@ -184,9 +184,18 @@ struct RadioHeader: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 
+    /// A phone and the column of an iPad are about as wide and also hold − and +; the Mac has the room for more.
+    private var frequencySize: CGFloat {
+        #if os(iOS)
+            34
+        #else
+            40
+        #endif
+    }
+
     private var frequency: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            FrequencyField(model: model, size: isCompact ? 34 : 40)
+            FrequencyField(model: model, size: frequencySize)
             Text("MHz").foregroundStyle(Color.strongSecondary).fixedSize()
             Spacer()
             #if os(iOS)
@@ -197,6 +206,9 @@ struct RadioHeader: View {
                 .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
                 .help(ControlHelp.meter)
         }
+        // An instrument, like the frequency in its size of its own: with a larger unit and symbol, the line no longer
+        // fits a phone or the column of an iPad and is cut off at both ends.
+        .dynamicTypeSize(...DynamicTypeSize.large)
     }
 }
 
