@@ -29,12 +29,6 @@ final class ScreenshotTests: XCTestCase {
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]
         app.launch()
-        #if os(macOS)
-            // The Mac restores the windows of the last run, which may be none at all; then a new one opens.
-            if !app.windows.firstMatch.waitForExistence(timeout: 10) {
-                app.typeKey("n", modifierFlags: .command)
-            }
-        #endif
         XCTAssertTrue(app.waitForStart(), "The app did not start")
         #if os(macOS)
             app.closeAbout()
