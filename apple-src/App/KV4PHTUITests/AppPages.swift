@@ -1,8 +1,19 @@
 import XCTest
 
 extension XCUIApplication {
-    /// The page bar on a phone, or PTT elsewhere, whatever the text size.
+    /// The page bar on a phone, or PTT elsewhere, whatever the text size. On the Mac, the windows of the last run come back, which may be none at all; then a new one opens. After a
+    /// crash, macOS first asks whether to reopen them, which keeps the app disabled until it is answered.
     func waitForStart() -> Bool {
+        #if os(macOS)
+            // "Don't Reopen", by its identifier, as its title follows the language of the Mac.
+            let dontReopen = dialogs.buttons["action-button--999"].firstMatch
+            if dontReopen.waitForExistence(timeout: 3) {
+                dontReopen.click()
+            }
+            if !windows.firstMatch.waitForExistence(timeout: 10) {
+                typeKey("n", modifierFlags: .command)
+            }
+        #endif
         let deadline = Date().addingTimeInterval(60)
         while Date() < deadline {
             if buttons["page-Memories"].exists || buttons["Push to talk"].exists {

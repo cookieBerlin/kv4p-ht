@@ -41,7 +41,7 @@ struct StationSetupView: View {
     private func explanation(_ title: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.subheadline.weight(.semibold))
-            Text(text).font(.footnote).foregroundStyle(.secondary)
+            Text(text).font(.footnote).foregroundStyle(Color.strongSecondary)
         }
     }
 

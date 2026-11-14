@@ -89,7 +89,7 @@ struct StationSettings: View {
                 Toggle("iCloud sync", isOn: $model.isSettingsSyncEnabled)
                     .explained(ControlHelp.settingsSync)
                 if let hint = model.settingsSyncHint {
-                    Text(hint).font(.footnote).foregroundStyle(.secondary)
+                    Text(hint).font(.footnote).foregroundStyle(Color.strongSecondary)
                 }
                 if model.isSettingsSyncEnabled {
                     lastSync("Settings last synced", model.lastSettingsSync)
@@ -123,7 +123,7 @@ private struct RadioSection<Rows: View>: View {
             if model.isReady {
                 rows
             } else {
-                Text("Not available while no radio is connected.").foregroundStyle(.secondary)
+                Text("Not available while no radio is connected.").foregroundStyle(Color.strongSecondary)
             }
         }
     }
@@ -187,7 +187,7 @@ struct RadioSettings: View {
                 .disabled(!model.supportsFreeDV)
                 .explained(ControlHelp.voiceMode)
                 if !model.supportsFreeDV {
-                    Text("The firmware of this radio has no FreeDV 2400B modem.").foregroundStyle(.secondary)
+                    Text("The firmware of this radio has no FreeDV 2400B modem.").foregroundStyle(Color.strongSecondary)
                 }
             }
             RadioSection(title: "Audio filters", model: model) {
@@ -203,12 +203,12 @@ struct RadioSettings: View {
                 limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
                 limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
                 limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
-                Text(ControlHelp.frequencyLimits).font(.footnote).foregroundStyle(.secondary)
+                Text(ControlHelp.frequencyLimits).font(.footnote).foregroundStyle(Color.strongSecondary)
             }
             if model.firmwareText != nil || showsFirmwareUpdate {
                 Section("Firmware") {
                     if let firmware = model.firmwareText {
-                        Text(firmware).foregroundStyle(.secondary)
+                        Text(firmware).foregroundStyle(Color.strongSecondary)
                     }
                     if showsFirmwareUpdate {
                         FirmwareUpdateRow(model: model)
@@ -302,10 +302,10 @@ struct AudioSettings: View {
                 .foregroundStyle(.orange)
         }
         if let hint = model.otherAudioHint {
-            Text(hint).font(.footnote).foregroundStyle(.secondary)
+            Text(hint).font(.footnote).foregroundStyle(Color.strongSecondary)
         }
         if model.otherAudioMode == .muteAll {
-            Text(ControlHelp.muteAll).font(.footnote).foregroundStyle(.secondary)
+            Text(ControlHelp.muteAll).font(.footnote).foregroundStyle(Color.strongSecondary)
         }
     }
 }
@@ -389,7 +389,7 @@ struct APRSSettings: View {
                         "The packet store could not be opened, so no packets are kept.",
                         systemImage: "exclamationmark.triangle"
                     )
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.strongSecondary)
                 }
                 Toggle("Keep packets", isOn: keepsPackets)
                     .explained(ControlHelp.keepPackets)
@@ -432,7 +432,7 @@ struct APRSSettings: View {
                         model.isInternetConnected ? "APRS-IS connected" : "Connecting to APRS-IS…",
                         systemImage: model.isInternetConnected ? "network" : "network.slash"
                     )
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.strongSecondary)
                 }
             }
         }

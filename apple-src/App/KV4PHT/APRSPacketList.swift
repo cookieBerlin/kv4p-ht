@@ -243,6 +243,9 @@ struct APRSPacketList: View {
         }
     }
 
+    /// Its texts can be selected, each on its own. Not the whole row: with the symbol, the menu and the map link in it,
+    /// which have labels of their own, SwiftUI on the Mac resolved their labels and roles through the selectable text's
+    /// AppKit element in a loop when asked for them, as XCTest and assistive apps do, until the app overflowed its stack.
     private func row(_ event: APRSEvent) -> some View {
         HStack(alignment: .top) {
             icon(event)
@@ -260,10 +263,10 @@ struct APRSPacketList: View {
                     }
                 }
                 if let text = event.text(units: model.units, locale: .current) {
-                    Text(text).font(event.isRawText ? .footnote.monospaced() : .body)
+                    Text(text).font(event.isRawText ? .footnote.monospaced() : .body).textSelection(.enabled)
                 }
                 if let caption = event.caption {
-                    Text(caption).font(.caption).foregroundStyle(Color.strongSecondary)
+                    Text(caption).font(.caption).foregroundStyle(Color.strongSecondary).textSelection(.enabled)
                 }
                 if let position = model.position(of: event) {
                     location(position)
@@ -277,12 +280,12 @@ struct APRSPacketList: View {
                 model.open(event)
             }
         }
-        .textSelection(.enabled)
     }
 
     private func title(_ event: APRSEvent) -> some View {
         Text(Self.title(event)).font(.headline).strikethrough(event.isRemovedObject)
             .fixedSize(horizontal: false, vertical: true)
+            .textSelection(.enabled)
     }
 
     /// The delivery, whether it is kept, how often it came, when, and what can be done with it.
@@ -292,7 +295,7 @@ struct APRSPacketList: View {
         }
         storedMark(event)
         if event.packetCount > 1 {
-            Text("×\(event.packetCount)").foregroundStyle(.secondary)
+            Text("×\(event.packetCount)").foregroundStyle(Color.strongSecondary)
         }
         Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: Self.timeStyle(event))
             .foregroundStyle(Color.strongSecondary)

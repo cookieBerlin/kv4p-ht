@@ -24,7 +24,7 @@ struct APRSView: View {
                     systemImage: "location.fill"
                 )
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.strongSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
             }
@@ -38,7 +38,7 @@ struct APRSView: View {
                 if model.canSendOnAir {
                     composer.padding(8)
                 } else if let blocked = model.transmitBlockedText {
-                    Text(blocked).font(.footnote).foregroundStyle(.secondary).padding(8)
+                    Text(blocked).font(.footnote).foregroundStyle(Color.strongSecondary).padding(8)
                 }
             }
         }
