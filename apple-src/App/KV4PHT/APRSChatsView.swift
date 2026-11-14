@@ -61,6 +61,7 @@ struct APRSChatsView: View {
                     "No chats yet",
                     systemImage: "bubble.left.and.bubble.right",
                     description: Text("Messages to and from your callsign show here, one chat for each station.")
+                        .foregroundStyle(Color.strongSecondary)
                 )
             }
         }
@@ -153,7 +154,7 @@ private struct APRSConversationView: View {
                         systemImage: "bubble.left.and.bubble.right",
                         description: Text(
                             "Messages go over the radio. A station only on the internet gets them if an iGate passes them on."
-                        )
+                        ).foregroundStyle(Color.strongSecondary)
                     )
                 }
             }

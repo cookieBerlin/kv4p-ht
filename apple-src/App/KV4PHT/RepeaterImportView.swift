@@ -31,19 +31,21 @@ struct RepeaterImportView: View {
 
     var body: some View {
         Form {
-            Section("CSV file") {
+            Section {
                 Text(instructions)
                 Text(link)
                 Button("Choose file…", systemImage: "doc") { isChoosingFile = true }
                 if let fileName {
-                    LabeledContent("File", value: fileName)
+                    LabeledContent("File") { Text(fileName).foregroundStyle(Color.strongSecondary) }
                 }
                 if cannotRead {
                     Text("This file cannot be read.").foregroundStyle(.red)
                 }
+            } header: {
+                Text("CSV file").foregroundStyle(Color.strongSecondary)
             }
             if csv != nil {
-                Section("Result") {
+                Section {
                     if let preview {
                         Toggle("Add to a group", isOn: $inGroup)
                         if inGroup {
@@ -56,6 +58,8 @@ struct RepeaterImportView: View {
                     } else {
                         Text(list.notThisList).foregroundStyle(.red)
                     }
+                } header: {
+                    Text("Result").foregroundStyle(Color.strongSecondary)
                 }
             }
         }

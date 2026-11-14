@@ -36,10 +36,10 @@ struct ManageMemoriesView: View {
                     Task { await model.moveGroups(offsets, to: destination) }
                 }
             } header: {
-                Text(ControlHelp.manageMemories)
+                Text(ControlHelp.manageMemories).foregroundStyle(Color.strongSecondary)
             } footer: {
                 if model.memories.isEmpty {
-                    Text("No memories yet.")
+                    Text("No memories yet.").foregroundStyle(Color.strongSecondary)
                 }
             }
             Section {

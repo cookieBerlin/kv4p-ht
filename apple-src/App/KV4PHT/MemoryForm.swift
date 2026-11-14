@@ -93,18 +93,20 @@ struct MemoryForm: View {
                     ForEach(AccessTone.lengthsMs, id: \.self) { Text(AccessTone.lengthLabel($0)).tag(Int?.some($0)) }
                 }
             } header: {
-                Text("Repeater access tone")
+                Text("Repeater access tone").foregroundStyle(Color.strongSecondary)
             }
             Section {
                 LabeledField("Latitude", text: $latitude, kind: .coordinate)
                 LabeledField("Longitude", text: $longitude, kind: .coordinate)
             } header: {
-                Text("Position")
+                Text("Position").foregroundStyle(Color.strongSecondary)
             } footer: {
                 VStack(alignment: .leading) {
-                    Text("In decimal degrees: north and east positive, south and west negative.")
+                    Text("In decimal degrees: north and east positive, south and west negative.").foregroundStyle(
+                        Color.strongSecondary
+                    )
                     if let problem = model.memoryProblem(entered) {
-                        Text(problem)
+                        Text(problem).foregroundStyle(Color.strongSecondary)
                     }
                 }
             }

@@ -23,6 +23,7 @@ struct MapPage: View {
                     "Nothing on the map",
                     systemImage: "map",
                     description: Text("Memories with a position and APRS stations show here; the layers choose which.")
+                        .foregroundStyle(Color.strongSecondary)
                 )
             } else if model.isMapShownAsList {
                 list
@@ -185,17 +186,21 @@ struct MapPage: View {
     private var list: some View {
         List {
             if !model.mapPoints.isEmpty {
-                Section("Memories") {
+                Section {
                     ForEach(model.mapPoints) { point in
                         MapPointRow(model: model, point: point)
                     }
+                } header: {
+                    Text("Memories").foregroundStyle(Color.strongSecondary)
                 }
             }
             if !model.mapStations.isEmpty {
-                Section("APRS stations") {
+                Section {
                     ForEach(model.mapStations) { station in
                         MapStationRow(model: model, station: station)
                     }
+                } header: {
+                    Text("APRS stations").foregroundStyle(Color.strongSecondary)
                 }
             }
         }
