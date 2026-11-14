@@ -34,8 +34,7 @@ final class ScreenshotTests: XCTestCase {
             app.closeAbout()
             app.resizeMainWindow(to: Self.macWindowSize)
             // A text field has the focus at the start, which marks it; tuning to the first memory takes the focus to
-            // the list, as a user would. The row is clicked by its place below Scan: asking the Mac's accessibility
-            // for the memory's text once made the app overflow its stack.
+            // the list, as a user would, clicked by its place below Scan.
             let scanButton = app.buttons["Scan"].firstMatch
             if scanButton.waitForExistence(timeout: 5) {
                 let window = app.windows.firstMatch.frame

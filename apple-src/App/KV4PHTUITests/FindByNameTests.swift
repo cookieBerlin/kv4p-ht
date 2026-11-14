@@ -1,10 +1,10 @@
 import XCTest
 
-/// Finding a memory by its name asks the accessibility of each element for its title, as XCTest and assistive
-/// technologies do. On the Mac, SwiftUI once resolved the role and the label of a memory row in a loop, until the app
-/// overflowed its stack and stopped.
+/// Finding an element by its name asks each element of the window for its title, as XCTest and assistive apps do. On
+/// the Mac, SwiftUI once resolved the labels and roles in the packets beside the memories in a loop, as the whole row of
+/// a packet could be selected as text, until the app overflowed its stack and stopped.
 @MainActor
-final class MemoryRowAccessibilityTests: XCTestCase {
+final class FindByNameTests: XCTestCase {
     private var app: XCUIApplication!
 
     override func setUp() async throws {
@@ -21,8 +21,10 @@ final class MemoryRowAccessibilityTests: XCTestCase {
 
     func testMemoriesAreFoundByName() {
         // The demo fills the memories after the start.
+        // The Mac shows static text as its value, iPhone and iPad as its label.
         let row = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS 'Calling channel'")).firstMatch
+            .matching(NSPredicate(format: "label CONTAINS 'Calling channel' OR value CONTAINS 'Calling channel'"))
+            .firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 30), "No memory in the list")
         // By name, which asks each element for its title.
         _ = app.staticTexts["Calling channel"].exists
