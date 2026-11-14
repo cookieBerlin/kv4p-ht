@@ -22,6 +22,7 @@ No changes to the firmware or the Android app are required.
 | [adr/](adr/README.md) | Architecture Decision Records |
 | [manual.md](manual.md) | User manual |
 | [faq.md](faq.md) | Apple FAQ |
+| [release.md](release.md) | App Store release: screenshots, store texts, website, steps |
 
 ## Key decisions at a glance
 
