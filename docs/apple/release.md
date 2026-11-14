@@ -5,7 +5,7 @@ release is version 1.0.0 ([ADR-0070](adr/0070-own-app-version.md)), for iPhone, 
 app record ([ADR-0035](adr/0035-testflight.md)). Until then the app reaches testers through TestFlight only
 ([ADR-0036](adr/0036-no-distribution-outside-app-store.md)).
 
-**Status:** planned. Part A is prepared ahead of the release, part B is done at the release.
+**Status:** part A is prepared ([ADR-0076](adr/0076-screenshots.md)); part B is done at the release.
 
 ## Decisions
 
@@ -31,35 +31,38 @@ app record ([ADR-0035](adr/0035-testflight.md)). Until then the app reaches test
 - **Output:** the images in full size for App Store Connect go to `.build/screenshots/` and stay out of the
   repository. Smaller, compressed copies (about 500 pixels wide) for the website and the manual are committed.
 - Images are generated on purpose only, not in CI, so that the repository does not grow with every run.
-- The sizes follow what App Store Connect asks for at the time: the largest iPhone and iPad classes, and 16:10 for the
-  Mac. They are checked there before the script fixes them.
-- An ADR records the workflow.
+- The sizes App Store Connect asks for (November 2026): iPhone with Dynamic Island, medium display, 1206 × 2622
+  (iPhone 18 Pro simulator); iPad 13-inch, 2064 × 2752 (iPad Pro 13-inch (M5) simulator); Mac 2560 × 1600. They are
+  checked there again at the release. iPhone Duo screenshots become required in April 2027 for apps built with the
+  iOS 27.1 SDK; they are taken by hand-folding the simulator ([ADR-0076](adr/0076-screenshots.md)).
+- [ADR-0076](adr/0076-screenshots.md) records the workflow.
 
 ### A2. Motifs
 
-The store shows up to ten images per platform; the first three are seen in the search results.
+The store shows up to ten images per platform; the first three are seen in the search results. The order is set in
+`scripts/screenshots.sh`; light and dark take turns.
 
 | # | iPhone | Also in |
 |---|---|---|
-| 1 | The main screen: frequency, S-meter, **Push to talk** | website, manual |
-| 2 | Memories in groups, with the scan running | website, manual |
-| 3 | APRS: chats and messages | website, manual |
-| 4 | The APRS map with stations | website, manual |
-| 5 | Importing a repeater list (RepeaterBook, DARC) | website, manual |
-| 6 | FreeDV 2400B | website, manual |
-| 7 | The built-in simulator: trying the app without a radio | website, manual |
-| 8 | Settings or dark mode | store |
+| 1 | The main screen: frequency, S-meter, memories, **Push to talk** | website, manual |
+| 2 | A chat over APRS | website, manual |
+| 3 | The APRS map with stations and repeaters | website, manual |
+| 4 | The APRS packets | website, manual |
+| 5 | A scan through the memories | website, manual |
+| 6 | Settings, *Memories*: groups and the imports of RepeaterBook and DARC lists | website, manual |
+| 7 | Settings, *Simulator*: trying the app without a radio | website, manual |
+| 8 | Settings, *Radio*: FreeDV 2400B | website, manual |
 
-- **iPad:** memories and APRS side by side.
-- **Mac:** the connection over USB and the firmware update, which only the Mac has.
-- **Manual only:** about five or six more images, one per main section that has none of the above: connecting,
-  transmitting, opening a repeater, settings, and on the Mac the firmware update and USB.
-- Before the first run, the demo content is checked: do the callsigns, repeaters and APRS stations look credible on
-  the images? Callsigns stay placeholders such as `N0CALL`.
+- **iPad:** memories and APRS side by side, the chat, the map, the scan, and the settings pages.
+- **Mac:** the same, and on its *Radio* page the firmware update over USB, which only the Mac has.
+- **Manual only:** the settings with the connection on top.
+- **Demo content:** placeholder callsigns only (`N0CALL` to `N7CALL`), fictional repeaters, and a chat in the
+  abbreviations of radio amateurs; the stations stand apart from each other on the map.
+- The import itself is not shown: it needs a file chosen in the system's dialog, which a UI test cannot reach.
 
 ### A3. Store texts
 
-In a new file, `docs/apple/app-store-listing.md`, next to the [App Review notes](app-review-notes.md), with the limit
+In [app-store-listing.md](app-store-listing.md), next to the [App Review notes](app-review-notes.md), with the limit
 of each field:
 
 - **Name:** *kv4p HT (by DB3AC)* (30 characters).

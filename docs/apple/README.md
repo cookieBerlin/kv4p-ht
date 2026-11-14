@@ -23,6 +23,7 @@ No changes to the firmware or the Android app are required.
 | [manual.md](manual.md) | User manual |
 | [faq.md](faq.md) | Apple FAQ |
 | [release.md](release.md) | App Store release: screenshots, store texts, website, steps |
+| [app-store-listing.md](app-store-listing.md) | The texts of the App Store product page |
 
 ## Key decisions at a glance
 
