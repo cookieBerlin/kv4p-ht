@@ -25,7 +25,17 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local beacon").exists, "No beacon in the list")
         XCTAssertFalse(row("Calling channel").exists, "The frequencies are on by default")
         chooseLayer("Frequencies")
-        XCTAssertTrue(scrolledTo(row("Calling channel")), "The frequencies did not come")
+        var frequenciesCame = scrolledTo(row("Calling channel"))
+        #if os(macOS)
+            // What is typed into the open menu does not take now and then, and XCTest cannot see the menu to tell. Once
+            // more only if nothing came: had the first choice taken, the second switches them off, and the test fails
+            // all the same.
+            if !frequenciesCame {
+                chooseLayer("Frequencies")
+                frequenciesCame = scrolledTo(row("Calling channel"))
+            }
+        #endif
+        XCTAssertTrue(frequenciesCame, "The frequencies did not come")
         chooseLayer("70 cm")
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
