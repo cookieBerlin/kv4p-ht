@@ -306,7 +306,7 @@ struct MapTests {
     func demo() async throws {
         let model = try await Self.model()
         await model.loadDemoContent()
-        #expect(await eventually { model.memories.count == DemoContent.memories.count })
+        #expect(await eventually { model.memories.count == DemoContent.memories(forAudit: false).count })
         model.mapLayers = Set(MapLayer.allCases)
         #expect(Set(model.mapPoints.map(\.memory.kind)) == [.repeater, .beacon, .frequency])
     }

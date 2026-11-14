@@ -1,10 +1,26 @@
 import Foundation
 import KV4PPersistence
 
-/// What the app shows in its demo mode, so that the accessibility audit finds every screen filled (ADR-0062).
-/// Placeholders only.
+/// What the app shows in its demo mode: a day on air for the UI tests and the screenshots (ADR-0076), and less for the
+/// accessibility audit, which only needs every screen filled (ADR-0062). Placeholders only.
 public enum DemoContent {
-    public static let memories = [
+    /// All memories, or the audit's, in the order of the list.
+    public static func memories(forAudit: Bool) -> [ChannelMemory] {
+        forAudit ? allMemories.filter { !notForAuditMemories.contains($0.name) } : allMemories
+    }
+
+    /// All packets, or the audit's, in the order they come in.
+    public static func aprsLines(forAudit: Bool) -> [String] {
+        forAudit ? allAPRSLines.filter { !notForAuditAPRSLines.contains($0) } : allAPRSLines
+    }
+
+    /// Not for the audit: a list as long as on a day on air makes each audit of a screen take longer than XCTest allows
+    /// on a slow machine.
+    private static let notForAuditMemories: Set = [
+        "Hilltop repeater", "Lake repeater", "Valley repeater", "Simplex 1", "Simplex 2", "Hiking net", "FreeDV",
+    ]
+
+    private static let allMemories = [
         // A meeting point, for the frequencies on the map.
         ChannelMemory(name: "Calling channel", frequency: 145.5, latitude: 49.02, longitude: -72.08),
         ChannelMemory(
@@ -65,9 +81,10 @@ public enum DemoContent {
         ChannelMemory(name: "APRS", frequency: 144.8, group: "Digital"),
     ]
 
-    /// Every kind of packet the list shows, and two chats, one of them unread. The stations stand around the memories'
-    /// repeaters, each at a place of its own, so that the map shows them apart; the screenshots show all of it.
-    public static let aprsLines = [
+    /// Every kind of packet the list shows, and two chats, one of them unread. Beyond the audit's, more stations stand
+    /// around the memories' repeaters, each at a place of its own, so that the map shows them apart, and the chat is
+    /// longer.
+    private static let allAPRSLines = [
         "N1CALL>APRS,TCPIP*:=4903.50N/07201.75W>Mobile station",
         "N1CALL>APRS,TCPIP*:;OBJECT   *111111z4902.10N/07204.30W-Test object",
         "N4CALL-13>APRS,TCPIP*:=4900.80N/07203.40W_220/004g005t077r000p000P000h50b09900",
@@ -84,15 +101,25 @@ public enum DemoContent {
         "N2CALL-7>APRS,TCPIP*::N0CALL   :QRV for a QSO on 145.550?{3",
         "N1CALL>APRS,TCPIP*::BLN1CQ   :Net tonight 8 pm on the hilltop rpt",
     ]
+
+    private static let notForAuditAPRSLines: Set = [
+        "N3CALL-9>APRS,WIDE1-1:=4904.20N/07158.90W>On the way home",
+        "N5CALL-1>APRS,TCPIP*:!4904.90N/07155.00W#Fill-in digipeater",
+        "N6CALL-7>APRS,WIDE1-1:=4901.50N/07206.20W[Hiking the north trail",
+        "N7CALL>APRS,TCPIP*:=4905.80N/07157.40W-Home station",
+        "N1CALL>APRS,TCPIP*::N0CALL   :FB, will call you on 145.725. WX looks good{3",
+        "N0CALL>APRS,TCPIP*::N1CALL   :TNX, CU on the rpt. 73{4",
+        "N1CALL>APRS,TCPIP*::N0CALL   :73 es CUL{5",
+    ]
 }
 
 extension RadioViewModel {
-    /// Fills the app for the demo mode; a second time adds nothing.
-    public func loadDemoContent() async {
+    /// Fills the app for the demo mode, with less for the accessibility audit; a second time adds nothing.
+    public func loadDemoContent(forAudit: Bool = false) async {
         guard memories.isEmpty else { return }
-        for memory in DemoContent.memories {
+        for memory in DemoContent.memories(forAudit: forAudit) {
             await save(memory)
         }
-        receiveDemo(DemoContent.aprsLines)
+        receiveDemo(DemoContent.aprsLines(forAudit: forAudit))
     }
 }

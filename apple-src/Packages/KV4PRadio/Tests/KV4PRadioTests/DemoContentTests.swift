@@ -18,13 +18,23 @@ struct DemoContentTests {
         )
         model.callsign = "N0CALL"
         await model.loadDemoContent()
-        #expect(await KV4PTestSupport.eventually { model.memories.count == DemoContent.memories.count })
+        #expect(
+            await KV4PTestSupport.eventually {
+                model.memories.count == DemoContent.memories(forAudit: false).count
+            }
+        )
         #expect(Set(model.aprsEvents.map(\.kind)).isSuperset(of: [.message, .position, .object, .weather, .status]))
         #expect(model.conversations.map(\.peer) == ["N2CALL-7", "N1CALL"])
         #expect(model.newAPRSMessages > 0)
     }
 
-    @Test("the demo looks like a day on air, for the screenshots: groups, stations around, a chat to read")
+    @Test("the audit's demo stays small, so that each audit of a screen keeps within the time XCTest gives it")
+    func small() {
+        #expect(DemoContent.memories(forAudit: true).count <= 5)
+        #expect(DemoContent.aprsLines(forAudit: true).count <= 8)
+    }
+
+    @Test("the demo looks like a day on air: groups, stations around, a chat to read")
     func lively() async throws {
         let model = RadioViewModel(
             makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
@@ -33,13 +43,18 @@ struct DemoContentTests {
         )
         model.callsign = "N0CALL"
         await model.loadDemoContent()
-        #expect(await KV4PTestSupport.eventually { model.memories.count == DemoContent.memories.count })
+        #expect(
+            await KV4PTestSupport.eventually {
+                model.memories.count == DemoContent.memories(forAudit: false).count
+            }
+        )
         #expect(model.groups.count >= 3)
         #expect(model.memories.count >= 10)
         let places = Set(model.mapStations.map { "\($0.point.latitude),\($0.point.longitude)" })
         #expect(places.count >= 6)
         let chat = model.aprsEvents.filter { $0.chatPeer(ownCallsign: "N0CALL") == "N1CALL" }
         #expect(chat.count >= 5)
+        #expect(model.conversations.map(\.peer) == ["N2CALL-7", "N1CALL"])
     }
 
     @Test("a second time adds nothing, so the demo stays as it is")
@@ -51,8 +66,9 @@ struct DemoContentTests {
         )
         model.callsign = "N0CALL"
         await model.loadDemoContent()
-        #expect(await KV4PTestSupport.eventually { model.memories.count == DemoContent.memories.count })
+        let count = DemoContent.memories(forAudit: false).count
+        #expect(await KV4PTestSupport.eventually { model.memories.count == count })
         await model.loadDemoContent()
-        #expect(model.memories.count == DemoContent.memories.count)
+        #expect(model.memories.count == count)
     }
 }
