@@ -201,7 +201,8 @@ enum Composition {
         )
         model.decimalSeparator = decimalSeparator
         Task {
-            await model.loadDemoContent()
+            // More for the screenshots, which set the colour scheme; the audit keeps within its time with less.
+            await model.loadDemoContent(forScreenshots: demoAppearance != nil)
             await model.connect()
             model.simulatedSignal = demoSignal
         }
