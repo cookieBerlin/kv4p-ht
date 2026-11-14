@@ -95,7 +95,7 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
 
 ## Consequences
 
-- A run takes about ten minutes for each simulator, and about seven on the Mac. The simulators run one after the other and nothing else should
+- A run takes about ten minutes for each simulator, and about five on the Mac. The simulators run one after the other and nothing else should
   run beside them: on a fully loaded machine the audit can catch a screen before its text has grown, and flag it. On
   CI's hosted runners a run of both takes 30 to 50 minutes.
 - The audit only finds what a machine can see; a screen it does not reach is not checked.
