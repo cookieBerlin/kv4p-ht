@@ -15,8 +15,9 @@ import XCTest
         }
 
         func testSwipesFromTheMemoriesToTheSettingsAndBack() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
             let memories = app.buttons["page-Memories"]
-            guard memories.waitForExistence(timeout: 60) else {
+            guard app.hasPageBar else {
                 throw XCTSkip("Only a phone has the page bar")
             }
             XCTAssertTrue(isSelected(memories))
@@ -31,8 +32,9 @@ import XCTest
         }
 
         func testSwipesBetweenThePagesWhileAPageOfTheSettingsIsOpen() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
             let settings = app.buttons["page-Settings"]
-            guard settings.waitForExistence(timeout: 60) else {
+            guard app.hasPageBar else {
                 throw XCTSkip("Only a phone has the page bar")
             }
             settings.tap()
