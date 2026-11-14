@@ -9,6 +9,7 @@ struct KV4PHTApp: App {
         WindowGroup {
             RootView(model: model)
                 .defaultAppStorage(Composition.viewDefaults)
+                .preferredColorScheme(demoColorScheme)
         }
         #if os(macOS)
             .defaultSize(width: 900, height: 720)
@@ -18,10 +19,19 @@ struct KV4PHTApp: App {
             }
         #endif
         #if os(macOS)
-            Settings { SettingsView(model: model) }
-            Window("About kv4p HT", id: AboutCommand.window) { AboutView() }
+            Settings { SettingsView(model: model).preferredColorScheme(demoColorScheme) }
+            Window("About kv4p HT", id: AboutCommand.window) { AboutView().preferredColorScheme(demoColorScheme) }
                 .windowResizability(.contentSize)
         #endif
+    }
+
+    /// Light or dark in the demo mode, for the screenshots; the system's otherwise.
+    private var demoColorScheme: ColorScheme? {
+        switch Composition.demoAppearance {
+        case "light": .light
+        case "dark": .dark
+        default: nil
+        }
     }
 }
 
