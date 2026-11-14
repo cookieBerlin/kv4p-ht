@@ -112,13 +112,10 @@ final class MapPageTests: XCTestCase {
         #endif
     }
 
+    /// Once the app has started, without waiting for the page bar of a phone where there is none.
     private func openMap() {
-        let page = app.buttons["page-Map"].firstMatch
-        if page.waitForExistence(timeout: 30) {
-            page.tap()
-        } else {
-            choose("Map")
-        }
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
+        app.showPage("Map")
     }
 
     /// An entry of the menu of the layers, by the start of its name. The Mac shows the menu, but XCTest does not see its
