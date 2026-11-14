@@ -282,22 +282,24 @@ final class AccessibilityAuditTests: XCTestCase {
     private static let attempts = 5
 
     private func runAudit(_ screen: String, _ type: XCUIAccessibilityAuditType) throws {
+        pass = Pass(app: app)
         try app.performAccessibilityAudit(for: type) { issue in
             // An element that went since, such as a part of the map that MapKit draws anew, cannot be read any more;
             // the second look finds it again if it stays (ADR-0062).
-            if let element = issue.element, !element.exists {
+            let seen = issue.element.flatMap(Seen.init)
+            if issue.element != nil, seen == nil {
                 print("A11Y-GONE \(screen): \(Self.name(of: issue.auditType))")
                 return true
             }
-            if let exception = self.exception(for: issue, on: screen) {
-                print("A11Y-EXCEPTION \(exception): \(screen): \(Self.describe(issue))")
+            if let exception = self.exception(for: issue, seen, on: screen) {
+                print("A11Y-EXCEPTION \(exception): \(screen): \(Self.describe(issue, seen))")
                 return true
             }
-            let place = "\(screen): \(Self.describe(issue))"
+            let place = "\(screen): \(Self.describe(issue, seen))"
             var finding = "A11Y \(place)"
-            if issue.auditType == .contrast, let element = issue.element {
-                let measured = self.measuredContrast(of: element).map { String(format: "%.1f:1", $0) } ?? "none"
-                finding += " — measured \(measured) in \(element.frame)"
+            if issue.auditType == .contrast, let seen {
+                let measured = self.measuredContrast(in: seen.frame).map { String(format: "%.1f:1", $0) } ?? "none"
+                finding += " — measured \(measured) in \(seen.frame)"
             }
             switch self.look {
             case .first:
@@ -317,24 +319,89 @@ final class AccessibilityAuditTests: XCTestCase {
         }
     }
 
-    private static func describe(_ issue: XCUIAccessibilityAuditIssue) -> String {
+    private static func describe(_ issue: XCUIAccessibilityAuditIssue, _ seen: Seen?) -> String {
         // Without an element, the long description tells where it is.
         // The Mac names many elements by nothing but their place.
         let element =
-            issue.element.map { element in
-                let identifier = element.identifier.isEmpty ? "" : " #\(element.identifier)"
-                return "\(name(of: element.elementType)) '\(element.label)'\(identifier) at \(element.frame)"
+            seen.map { seen in
+                let identifier = seen.identifier.isEmpty ? "" : " #\(seen.identifier)"
+                return "\(name(of: seen.elementType)) '\(seen.label)'\(identifier) at \(seen.frame)"
             }
             ?? "no element: \(issue.detailedDescription)"
         return "\(name(of: issue.auditType)) — \(issue.compactDescription) — \(element)"
     }
 
+    /// An element of a finding. Each question to an element is a query of its own, of a tenth of a second, and the
+    /// exceptions ask the same ones again and again; so each is asked once, when first needed. Not by a snapshot, which
+    /// also reads all the element holds, such as all of a window for a group as large as it.
+    @MainActor
+    private final class Seen {
+        let element: XCUIElement
+
+        /// None for an element that went since.
+        init?(_ element: XCUIElement) {
+            guard element.exists else { return nil }
+            self.element = element
+        }
+
+        lazy var elementType = element.elementType
+        lazy var label = element.label
+        lazy var identifier = element.identifier
+        lazy var frame = element.frame
+    }
+
+    /// What the exceptions ask of the app around a finding, the same for all findings of one audit: each asked once, when
+    /// first needed.
+    @MainActor
+    private final class Pass {
+        private let app: XCUIApplication
+
+        init(app: XCUIApplication) {
+            self.app = app
+        }
+
+        /// The frames of the lists, which a row may stick out of.
+        lazy var listFrames: [CGRect] =
+            (app.collectionViews.allElementsBoundByIndex + app.tables.allElementsBoundByIndex)
+            .map(\.frame)
+
+        /// The screen as it is now, and the frame it shows: the app's window, which an iPad may place elsewhere, or on
+        /// the Mac the whole main screen.
+        lazy var screenshot: (image: CGImage, frame: CGRect)? = {
+            #if os(macOS)
+                // The main screen spans its menu bar, and the frames start at its top left corner.
+                let image = XCUIScreen.main.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                let frame = app.menuBars.firstMatch.frame
+            #else
+                let image = app.screenshot().image.cgImage
+                let frame = app.frame
+            #endif
+            guard let image, frame.width > 0 else { return nil }
+            return (image, frame)
+        }()
+
+        #if os(macOS)
+            lazy var frontWindowFrame = app.windows.firstMatch.frame
+            lazy var windowFrames = app.windows.allElementsBoundByIndex.map(\.frame)
+            lazy var sheetFrame = frame(of: app.sheets.firstMatch)
+            lazy var mapFrame = frame(of: app.descendants(matching: .any)["map"].firstMatch)
+            lazy var mapListFrame = frame(of: app.descendants(matching: .any)["map-list"].firstMatch)
+            lazy var touchBarFrame = frame(of: app.touchBars.firstMatch)
+
+            private func frame(of element: XCUIElement) -> CGRect? {
+                element.exists ? element.frame : nil
+            }
+        #endif
+    }
+
+    private var pass: Pass!
+
     // MARK: Exceptions (ADR-0062)
 
     /// The number of the exception in ADR-0062 that covers a finding, if one does.
-    private func exception(for issue: XCUIAccessibilityAuditIssue, on screen: String) -> Int? {
-        let label = issue.element?.label ?? ""
-        let elementType = issue.element?.elementType
+    private func exception(for issue: XCUIAccessibilityAuditIssue, _ seen: Seen?, on screen: String) -> Int? {
+        let label = seen?.label ?? ""
+        let elementType = seen?.elementType
         let isContrast = issue.auditType == .contrast
         #if os(macOS)
             let isDynamicType = false
@@ -347,14 +414,19 @@ final class AccessibilityAuditTests: XCTestCase {
         #endif
         // 1. Contrast a little below the line, such as of the symbols in Apple's secondary grey.
         if isContrast, issue.compactDescription.contains("nearly passed") { return 1 }
+        #if os(macOS)
+            // 11 before 2, as it needs no screenshot: text in a window behind the front one, which macOS dims, or cut off
+            // at the front one's edge; also text of a window behind a sheet open on it, such as About behind What's New.
+            if isContrast, let seen, isBehindTheFront(seen.frame) { return 11 }
+        #endif
         // 2. Enough contrast on the screenshot: the audit misreads the background now and then, such as the material of a
         // bar. Or none to read: a row that a list scrolls below a bar is covered, and cannot be tapped either.
-        if isContrast, let element = issue.element {
-            if !element.isHittable || isCutOff(element) {
+        if isContrast, let seen {
+            if isCutOff(seen.frame) || !seen.element.isHittable {
                 print("A11Y-COVERED \(screen): \(label)")
                 return 2
             }
-            if let contrast = measuredContrast(of: element), contrast >= Self.minimumContrast {
+            if let contrast = measuredContrast(in: seen.frame), contrast >= Self.minimumContrast {
                 print("A11Y-MEASURED \(String(format: "%.1f", contrast)):1 \(screen): \(label)")
                 return 2
             }
@@ -372,92 +444,72 @@ final class AccessibilityAuditTests: XCTestCase {
         // 6. The long entries of the changelog, which wrap on the screenshots rather than being cut.
         if isTextClipped, screen.hasSuffix("whats new") { return 6 }
         // 7. Findings without an element, which no screen element can be matched to.
-        if issue.element == nil { return 7 }
+        guard let seen else { return 7 }
         // 13. The legal notice MapKit puts on the map, with its own small link (ADR-0068).
         if issue.auditType == .hitRegion, label == "Legal", screen.hasSuffix(" map") { return 13 }
         // 14. The mark of the band in a marker of the map, which MapKit draws in a size of its own.
         if isDynamicType || isTextClipped, ["2m", "70", "•"].contains(label), screen.hasSuffix(" map") { return 14 }
         #if os(macOS)
-            if let element = issue.element, let exception = macException(for: issue, element, on: screen) {
-                return exception
-            }
+            return macException(for: issue, seen, on: screen)
+        #else
+            return nil
         #endif
-        return nil
     }
 
     #if os(macOS)
         /// The exceptions of the Mac, where SwiftUI and AppKit add parts of their own.
-        private func macException(for issue: XCUIAccessibilityAuditIssue, _ element: XCUIElement, on screen: String)
-            -> Int?
-        {
-            let isUnnamedGroup = element.elementType == .group && element.label.isEmpty
+        private func macException(for issue: XCUIAccessibilityAuditIssue, _ seen: Seen, on screen: String) -> Int? {
+            let isUnnamedGroup = seen.elementType == .group && seen.label.isEmpty
             let isDescription = issue.auditType == .sufficientElementDescription
             // 8. SwiftUI's pop-up buttons, which VoiceOver opens by showing their menu rather than by pressing them.
-            if issue.auditType == .action, element.elementType == .popUpButton { return 8 }
+            if issue.auditType == .action, seen.elementType == .popUpButton { return 8 }
             // 9. The groups that SwiftUI puts around the content of a window and its columns, as high as the window, and
             // around the content of a sheet, as large as the sheet.
-            if isDescription, isUnnamedGroup, isAsHighAsAWindow(element) || isTheSheet(element) { return 9 }
+            if isDescription, isUnnamedGroup, isAsHighAsAWindow(seen.frame) || isTheSheet(seen.frame) { return 9 }
             // 10. The knob of a slider, a part of AppKit's own; the slider has the name.
-            if isDescription, element.elementType == .valueIndicator { return 10 }
-            // 11. Text in a window behind the front one, which macOS dims, or cut off at the front one's edge; also text
-            // of a window behind a sheet open on it, such as About behind What's New.
-            if issue.auditType == .contrast, !app.windows.firstMatch.frame.contains(element.frame) { return 11 }
-            if issue.auditType == .contrast, isBehindASheet(element) { return 11 }
+            if isDescription, seen.elementType == .valueIndicator { return 10 }
             // 15. The markers MapKit draws on the Mac, without names; VoiceOver has the list of the map instead.
-            if screen.hasSuffix(" map"), isInMap(element) { return 15 }
+            if screen.hasSuffix(" map"), pass.mapFrame?.contains(seen.frame) == true { return 15 }
             // 16. The Touch Bar that AppKit makes for a text field with the focus, such as the frequency, and its items.
-            if isDescription, isInTouchBar(element) { return 16 }
+            if isDescription, isInTouchBar(seen) { return 16 }
             // 12. The header of a section of a SwiftUI list: the groups of memories, and the memories and stations of the
             // map, whose list stays in the main window behind the other screens.
             if isDescription || issue.auditType == .parentChild, isUnnamedGroup,
-                screen.hasSuffix("settings Memories") || isInMapList(element)
+                screen.hasSuffix("settings Memories") || pass.mapListFrame?.contains(seen.frame) == true
             {
                 return 12
             }
             return nil
         }
 
-        private func isInMapList(_ element: XCUIElement) -> Bool {
-            let list = app.descendants(matching: .any)["map-list"].firstMatch
-            return list.exists && list.frame.contains(element.frame)
+        /// Outside the front window, or outside the sheet open on it, which macOS dims with the rest of its window.
+        private func isBehindTheFront(_ frame: CGRect) -> Bool {
+            if !pass.frontWindowFrame.contains(frame) { return true }
+            return pass.sheetFrame.map { !$0.contains(frame) } ?? false
         }
 
         /// The Touch Bar itself, or one of its items, which may stick out of it by a point.
-        private func isInTouchBar(_ element: XCUIElement) -> Bool {
-            let bar = app.touchBars.firstMatch
-            return element.elementType == .touchBar
-                || bar.exists && bar.frame.insetBy(dx: -2, dy: -2).contains(element.frame)
+        private func isInTouchBar(_ seen: Seen) -> Bool {
+            seen.elementType == .touchBar
+                || pass.touchBarFrame?.insetBy(dx: -2, dy: -2).contains(seen.frame) == true
         }
 
-        /// The map itself, or a part MapKit draws on it.
-        private func isInMap(_ element: XCUIElement) -> Bool {
-            let map = app.descendants(matching: .any)["map"].firstMatch
-            return map.exists && map.frame.contains(element.frame)
+        private func isTheSheet(_ frame: CGRect) -> Bool {
+            guard let sheet = pass.sheetFrame else { return false }
+            return sheet.contains(frame) && sheet.width == frame.width
         }
 
-        /// An element outside the sheet that is open, which macOS dims with the rest of its window.
-        private func isBehindASheet(_ element: XCUIElement) -> Bool {
-            let sheet = app.sheets.firstMatch
-            return sheet.exists && !sheet.frame.contains(element.frame)
-        }
-
-        private func isTheSheet(_ element: XCUIElement) -> Bool {
-            let sheet = app.sheets.firstMatch
-            return sheet.exists && sheet.frame.contains(element.frame) && sheet.frame.width == element.frame.width
-        }
-
-        private func isAsHighAsAWindow(_ element: XCUIElement) -> Bool {
-            app.windows.allElementsBoundByIndex.contains { window in
-                window.frame.minY == element.frame.minY && window.frame.height == element.frame.height
+        private func isAsHighAsAWindow(_ frame: CGRect) -> Bool {
+            pass.windowFrames.contains { window in
+                window.minY == frame.minY && window.height == frame.height
             }
         }
     #endif
 
     /// A row that sticks out of its list, below a bar: still hittable by the part that shows.
-    private func isCutOff(_ element: XCUIElement) -> Bool {
-        let lists = app.collectionViews.allElementsBoundByIndex + app.tables.allElementsBoundByIndex
-        return lists.contains { list in
-            list.frame.intersects(element.frame) && !list.frame.contains(element.frame)
+    private func isCutOff(_ frame: CGRect) -> Bool {
+        pass.listFrames.contains { list in
+            list.intersects(frame) && !list.contains(frame)
         }
     }
 
@@ -466,21 +518,12 @@ final class AccessibilityAuditTests: XCTestCase {
 
     /// The contrast of an element on a screenshot: its lightest against its darkest pixel, which for text is the text
     /// against its background. Its frame may hold more than that, so this is the best case of the element.
-    private func measuredContrast(of element: XCUIElement) -> Double? {
-        // Taken now, as a list may have moved since the screen was opened. The frame is on the screen; the screenshot
-        // shows the app's window, which an iPad may place elsewhere, or on the Mac the whole main screen.
-        #if os(macOS)
-            // The main screen spans its menu bar, and the frames start at its top left corner.
-            let image = XCUIScreen.main.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil)
-            let window = app.menuBars.firstMatch.frame
-        #else
-            let image = app.screenshot().image.cgImage
-            let window = app.frame
-        #endif
-        guard let image, window.width > 0 else { return nil }
+    private func measuredContrast(in frame: CGRect) -> Double? {
+        // Taken once for each audit, as a list may have moved since the screen was opened.
+        guard let (image, window) = pass.screenshot else { return nil }
         let scale = CGFloat(image.width) / window.width
         let bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
-        let rect = element.frame.offsetBy(dx: -window.minX, dy: -window.minY)
+        let rect = frame.offsetBy(dx: -window.minX, dy: -window.minY)
             .applying(CGAffineTransform(scaleX: scale, y: scale)).integral.intersection(bounds)
         guard !rect.isEmpty, let crop = image.cropping(to: rect),
             let space = CGColorSpace(name: CGColorSpace.sRGB)
