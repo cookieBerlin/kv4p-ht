@@ -39,9 +39,16 @@ final class ScreenshotTests: XCTestCase {
         #if os(macOS)
             app.closeAbout()
             app.resizeMainWindow(to: Self.macWindowSize)
-            // The frequency field has the focus at the start, which marks its text; a click on a label takes it away.
-            let label = app.staticTexts["Volume"].firstMatch
-            if label.waitForExistence(timeout: 5) { label.click() }
+            // A text field has the focus at the start, which marks it; tuning to the first memory takes the focus to
+            // the list, as a user would. The row is clicked by its place below Scan: asking the Mac's accessibility
+            // for the memory's text once made the app overflow its stack.
+            let scanButton = app.buttons["Scan"].firstMatch
+            if scanButton.waitForExistence(timeout: 5) {
+                let window = app.windows.firstMatch.frame
+                app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
+                    .withOffset(CGVector(dx: 150, dy: scanButton.frame.maxY - window.minY + 30))
+                    .click()
+            }
         #endif
         // The demo connects and fills the lists after the start.
         Thread.sleep(forTimeInterval: 3)
