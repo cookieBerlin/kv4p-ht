@@ -7,8 +7,10 @@ own, with its version, build and date.
 
 ### Changed
 
-- iPad: the radio is chosen and connected in the settings, as on the iPhone, which leaves the main screen more room
-  for the memories and APRS. Without a connection, **Connect in Settings** stands in place of **Push to talk**.
+- iPad: the radio is no longer chosen and connected at the top of the main screen, which leaves more room for the
+  memories and APRS.
+- Without a connection, the memories offer it in place of **Push to talk**: the status, the choice of radio and
+  **Connect**, or **Cancel** while connecting. **Disconnect** is in the settings, and on the Mac and a wide iPad also at the top right.
 - iPhone Duo, open: the title row goes, as the settings button stands at the side.
 - The **Layers** menu of the map closes after each choice.
 - iPhone: the frequency and the S-meter are on the memories page only, which leaves the packets, the chats and the
@@ -19,6 +21,8 @@ own, with its version, build and date.
 ### Added
 
 - **About** names who makes the Apple app: DB3AC.
+- Mac: hold the space bar to transmit, or ⌥ and the space bar for the access tone. ⌘K connects and disconnects, and
+  the new **Radio** menu lists the keys.
 - iPhone Duo, folded: the symbols of the pages stand at the side below the status bar, which leaves the pages more
   room.
 - iPhone and iPad: a launch screen in the colours of the app icon, with its radio, instead of a black screen.
@@ -36,6 +40,8 @@ own, with its version, build and date.
 
 ### Added
 
+- Mac: hold the space bar to transmit, or ⌥ and the space bar for the access tone. ⌘K connects and disconnects, and
+  the new **Radio** menu lists the keys.
 - A map with your position, the repeaters and frequencies of your memories, and the APRS beacons that have a position,
   each as a layer to switch on and off, by band.
 - The APRS stations and objects heard on the map, each at its last position with its symbol, within a time window
@@ -87,6 +93,8 @@ own, with its version, build and date.
 
 ### Added
 
+- Mac: hold the space bar to transmit, or ⌥ and the space bar for the access tone. ⌘K connects and disconnects, and
+  the new **Radio** menu lists the keys.
 - Control a kv4p HT radio from iPhone, iPad and Mac: over Bluetooth, or by USB cable on the Mac.
 - A built-in simulated radio, to try the app without hardware.
 - Frequency, bandwidth, CTCSS tones, squelch, power and filters, with an S-meter.

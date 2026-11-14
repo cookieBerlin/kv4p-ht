@@ -57,6 +57,13 @@ iOS does not allow access to the radio's USB port; use a Mac or the Android nigh
 project's [web flasher](https://kv4p.com/firmware.html) offers only firmware 17, which this app
 refuses.
 
+## Can I transmit with the keyboard on a Mac?
+
+Yes: hold the space bar for **Push to talk**, and ⌥ with the space bar for the access tone that opens a repeater.
+They work while the main window is in front and no text field takes the typing, so the space bar still types a
+space in the frequency field and in a message. Letting go ends the transmission, and so does a switch to another
+window or app, as its release would not reach the app. ⌘K connects and disconnects. The *Radio* menu lists all three.
+
 ## Which Macs are supported?
 
 Macs with Apple Silicon running macOS 27 or later. Intel Macs are not supported.

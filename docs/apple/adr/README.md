@@ -78,3 +78,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0072](0072-ui-tests-in-parallel.md) | UI tests in parallel jobs, one simulator each | Proposed |
 | [0073](0073-app-start.md) | The start of the app: measured, quick, and with a launch screen of its own | Proposed |
 | [0074](0074-header-on-the-memories.md) | The header on the memories only; in a wide window, APRS and the map reach to the top | Proposed |
+| [0075](0075-connect-where-ptt-stands.md) | Connect where PTT stands; Mac keys for the connection, PTT and the access tone | Proposed |

@@ -51,6 +51,7 @@ open until the maintainer marks it as done for that platform.
 | [HW-42](#hw-42) | Memory kinds and DARC import | ⬜ | ⬜ |
 | [HW-43](#hw-43) | Map | ⬜ | ⬜ |
 | [HW-44](#hw-44) | Layout change while in use | – | ⬜ |
+| [HW-45](#hw-45) | Connecting where PTT stands, and the Mac's keys | ⬜ | ⬜ |
 
 ## TestFlight
 
@@ -407,3 +408,13 @@ transmitting. With sticky PTT on, press PTT once and change the layout: it keeps
 again. Hold the access tone and change the layout: the tone ends. Write a message in the packets and in a chat without
 sending it, and change the layout: both texts are still there. Open a page of the settings and change the layout:
 it stays open, also when changed back. Show the map, change to the wide layout: the map is beside the memories.
+
+### HW-45
+
+Into a dummy load. With the radio off, open the memories: in place of **Push to talk**, the status, **Radio** and
+**Connect** show. Choose the radio and connect: while it connects, **Cancel** ends the attempt. Once connected, PTT
+stands there alone. Disconnect in ⚙ **Settings**: the connection comes back in place of PTT. On a Mac and a wide
+iPad, also disconnect with the small **Disconnect** at the top right; on a Mac also with ⌘K, and connect with ⌘K. On a Mac, hold the space
+bar: the radio transmits until you let go; with ⌥, the access tone goes out. Hold the space bar and switch to
+another app with ⌘Tab: the transmission ends. Click into the frequency field and press the space bar: nothing is
+sent.

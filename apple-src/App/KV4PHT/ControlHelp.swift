@@ -36,8 +36,16 @@ enum ControlHelp {
     static let settingsSync =
         "Your callsign, memories, the PTT, access tone and APRS options and the frequency limits follow you to your "
         + "other devices with the same Apple ID. For memories, a change of this switch takes effect at the next start."
-    static let accessTone =
-        "Hold to send the tone that opens a repeater. It ends by itself; releasing it earlier stops it."
+    #if os(macOS)
+        static let accessTone =
+            "Hold to send the tone that opens a repeater, or hold ⌥ and the space bar. It ends by itself; releasing it earlier stops it."
+        static let ptt = "Hold to transmit, or hold the space bar."
+        static let disconnect = "Ends the connection to the radio (⌘K)."
+    #else
+        static let disconnect = "Ends the connection to the radio."
+        static let accessTone =
+            "Hold to send the tone that opens a repeater. It ends by itself; releasing it earlier stops it."
+    #endif
     static let squelch = "How strong a signal must be to be heard. 0 keeps the speaker always on."
     static let txTone = "A tone sent with your voice. Many repeaters open only with the right one."
     static let rxTone = "Hear only signals that carry this tone."

@@ -31,8 +31,6 @@ struct MainColumn: View {
     static let width: CGFloat = 400
 
     let model: RadioViewModel
-    /// iPhone and iPad: the stack the settings open in.
-    var settingsPath: Binding<[SettingsDestination]> = .constant([])
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,12 +40,8 @@ struct MainColumn: View {
             }
             .background(Color.opaqueBar)
             MemoriesView(model: model).frame(maxHeight: .infinity)
-            #if os(iOS)
-                // As on a phone, the radio is chosen and connected in the settings (ADR-0071).
-                BottomBar(model: model, showsPTT: true) { settingsPath.wrappedValue = [.overview] }
-            #else
-                BottomBar(model: model, showsPTT: true)
-            #endif
+            // Without a connection, the radio is chosen and connected where PTT stands (ADR-0075).
+            BottomBar(model: model, showsPTT: true)
         }
     }
 }
@@ -89,7 +83,7 @@ private struct SettingsEntry: ViewModifier {
     }
 }
 
-/// The connection, the frequency and the S-meter, as at the top of the Android app.
+/// The frequency and the S-meter, as at the top of the Android app; the connection stands where PTT does (ADR-0075).
 struct RadioHeader: View {
     @Bindable var model: RadioViewModel
     #if os(iOS)
@@ -122,19 +116,39 @@ struct RadioHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // iPhone and iPad choose and connect the radio in the settings, which leaves the room here to the frequency
-            // and the lists below (ADR-0071).
-            #if os(macOS)
-                connection
-            #endif
             // The line stays without a memory, so that the frequency does not move under a finger that steps it.
-            ZStack(alignment: .leading) {
-                Text(verbatim: " ").hidden()
-                if let name = model.activeMemoryName {
-                    Text(name).lineLimit(1)
+            HStack(alignment: .firstTextBaseline) {
+                ZStack(alignment: .leading) {
+                    Text(verbatim: " ").hidden()
+                    if let name = model.activeMemoryName {
+                        Text(name).lineLimit(1)
+                    }
+                }
+                .font(.headline)
+                // With room for it, the connection ends here or in the settings; without one, it is made where PTT
+                // stands (ADR-0075).
+                if model.isReady, !isCompact {
+                    Spacer()
+                    Button {
+                        Task { await model.disconnect() }
+                    } label: {
+                        Label("Disconnect", systemImage: "eject")
+                            #if os(iOS)
+                                // A finger needs 44 pt; the line keeps its height, so the frequency stays put.
+                                .frame(minHeight: 44)
+                                .contentShape(.rect)
+                            #endif
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.callout)
+                    #if os(iOS)
+                        .padding(.vertical, -12)
+                        // The system's blue is too faint for this small text on the grey of the header (ADR-0062).
+                        .tint(Color.strongAccent)
+                    #endif
+                    .help(ControlHelp.disconnect)
                 }
             }
-            .font(.headline)
             frequency
             HStack {
                 SMeterBars(
@@ -170,16 +184,6 @@ struct RadioHeader: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 
-    #if os(macOS)
-        private var connection: some View {
-            HStack {
-                RadioPicker(model: model).fixedSize()
-                Spacer()
-                ConnectButton(model: model).keyboardShortcut(.defaultAction)
-            }
-        }
-    #endif
-
     private var frequency: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             FrequencyField(model: model, size: isCompact ? 34 : 40)
@@ -208,23 +212,51 @@ struct RadioPicker: View {
     }
 }
 
-/// Connect, or disconnect while connected or connecting.
+/// Connect, cancel while connecting, or disconnect while connected (ADR-0075).
 struct ConnectButton: View {
     let model: RadioViewModel
 
     var body: some View {
-        Group {
-            if model.canConnect {
-                Button("Connect") { Task { await model.connect() } }
-                    .disabled(!model.canStartConnection)
-            } else {
-                Button("Disconnect") { Task { await model.disconnect() } }
+        Button(model.connectionAction.title) { Task { await model.runConnectionAction() } }
+            .disabled(model.connectionAction == .connect && !model.canStartConnection)
+    }
+}
+
+/// Where PTT stands while no radio is connected: the status or the last error, the choice of radio and the way to
+/// connect, or to cancel while connecting (ADR-0075).
+struct ConnectionPanel: View {
+    let model: RadioViewModel
+
+    var body: some View {
+        VStack(spacing: 8) {
+            StatusLine(model: model)
+            AdaptiveStack(spacing: 8) {
+                // The picker keeps its name for VoiceOver; on iPhone and iPad it shows only the radio chosen.
+                Text("Radio").foregroundStyle(Color.strongSecondary).accessibilityHidden(true)
+                RadioPicker(model: model).labelsHidden()
+                Spacer(minLength: 0)
             }
+            action
         }
-        #if os(iOS)
-            // The system's blue is too faint for this small text on the grey of the header (ADR-0062).
-            .tint(Color.strongAccent)
-        #endif
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder private var action: some View {
+        let button = Button {
+            Task { await model.runConnectionAction() }
+        } label: {
+            Text(model.connectionAction.title).frame(maxWidth: .infinity, minHeight: 32)
+        }
+        .disabled(model.connectionAction == .connect && !model.canStartConnection)
+        .controlSize(.large)
+        // For the UI tests, beside the button of the settings with the same name.
+        .accessibilityIdentifier("connection-action")
+        if model.connectionAction == .connect {
+            button.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+        } else {
+            button.buttonStyle(.bordered)
+        }
     }
 }
 
@@ -354,24 +386,25 @@ private struct SquelchArrow: Shape {
 /// What stays at the bottom: the status, PTT and every message. The Mac shows the status as a bar of the window.
 struct BottomBar: View {
     let model: RadioViewModel
+    /// Where PTT stands, and without a connection the connection in its place; elsewhere the status of the
+    /// connection, while there is none (ADR-0075).
     let showsPTT: Bool
-    /// iPhone and iPad: the way to the settings, where they connect. PTT stands in for the status while connected, and
-    /// the status for PTT otherwise. The Mac has none, and shows the status at the bottom of its window.
-    var openSettings: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
             Divider()
-            #if os(iOS)
-                if let openSettings, !model.isReady {
-                    ConnectionStatus(model: model, openSettings: openSettings).padding(.vertical, 8)
+            if !model.isReady {
+                if showsPTT {
+                    ConnectionPanel(model: model)
+                } else {
+                    StatusLine(model: model).frame(minHeight: 44).padding(.vertical, 8)
                 }
-            #endif
+            }
             firmware
             if model.isBluetoothBlocked {
                 PermissionNotice(permission: .bluetooth).padding(.horizontal).padding(.vertical, 8)
             }
-            if showsPTT, openSettings == nil || model.isReady {
+            if showsPTT, model.isReady {
                 if model.isDenied(.microphone) {
                     PermissionNotice(permission: .microphone).padding(.horizontal).padding(.vertical, 8)
                 } else {
@@ -380,18 +413,27 @@ struct BottomBar: View {
             }
             NoticeBanner(model: model)
             #if os(macOS)
-                Divider()
-                Text(model.statusText)
-                    .font(.caption)
-                    .foregroundStyle(model.isStatusFailure ? Color.red : Color.secondary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.vertical, 4)
+                // Without a connection, the status stands above the choice of radio.
+                if model.isReady {
+                    statusBar
+                }
             #endif
         }
         .background(Color.opaqueBar)
     }
+
+    #if os(macOS)
+        @ViewBuilder private var statusBar: some View {
+            Divider()
+            Text(model.statusText)
+                .font(.caption)
+                .foregroundStyle(model.isStatusFailure ? Color.red : Color.secondary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.vertical, 4)
+        }
+    #endif
 
     @ViewBuilder private var firmware: some View {
         if model.needsFirmwareUpdateElsewhere {
@@ -436,32 +478,6 @@ struct StatusLine: View {
             .padding(.horizontal)
     }
 }
-
-#if os(iOS)
-    /// Without a connection, the status in place of PTT; while the radio can be connected, it leads to the settings.
-    private struct ConnectionStatus: View {
-        let model: RadioViewModel
-        let openSettings: () -> Void
-
-        var body: some View {
-            if model.canConnect {
-                Button(action: openSettings) {
-                    VStack(spacing: 4) {
-                        StatusLine(model: model)
-                        Label("Connect in Settings", systemImage: "gearshape")
-                            .font(.footnote)
-                            .foregroundStyle(Color.accentColor)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-            } else {
-                StatusLine(model: model).frame(minHeight: 44)
-            }
-        }
-    }
-#endif
 
 /// Why a function is not available, with the way to the system settings.
 struct PermissionNotice: View {
@@ -550,10 +566,9 @@ struct PTTBar: View {
             }
             if model.canSendOnAir {
                 HStack(spacing: 8) {
-                    PTTButton(model: model).disabled(!model.isReady || model.isSendingAccessTone)
+                    PTTButton(model: model).disabled(!model.canPress(.ptt))
                     if model.canSendAccessTone {
-                        AccessToneButton(model: model)
-                            .disabled(!model.canTransmit || (model.isTransmitting && !model.isSendingAccessTone))
+                        AccessToneButton(model: model).disabled(!model.canPress(.accessTone))
                     }
                 }
             }
@@ -606,6 +621,9 @@ private struct PTTButton: View {
         .sensoryFeedback(.impact, trigger: model.isTransmitting)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { Task { await model.isTransmitting ? model.releasePTT() : model.pressPTT() } }
+        #if os(macOS)
+            .help(ControlHelp.ptt)
+        #endif
     }
 
     private func pressed() {
