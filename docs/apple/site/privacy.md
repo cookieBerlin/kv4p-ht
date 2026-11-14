@@ -28,7 +28,8 @@ builds, may send Apple crash reports and feedback that you choose to share; Appl
 
 ## This website
 
-The website has no cookies, no analytics and no content from other servers. It is hosted by GitHub Pages, which
+The website has no cookies, no analytics and no content from other servers. A colour scheme chosen with its switch is
+kept in your browser only, and never leaves it. It is hosted by GitHub Pages, which
 may log the addresses of visitors for security; see the
 [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
 

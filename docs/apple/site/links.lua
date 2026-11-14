@@ -1,4 +1,4 @@
--- Rewrites the links of a page for the website (ADR-0067).
+-- Rewrites the links and images of a page for the website (ADR-0067).
 -- A link to a document that is a page of the site (faq.md, manual.md, CHANGELOG.md, ...) points to its .html page. Any other
 -- relative link points to the file on GitHub, so that the Markdown files keep working there unchanged.
 -- Metadata: `srcdir`, the repository-relative folder of the source file, and `repo`, the repository's GitHub URL.
@@ -43,8 +43,10 @@ local function rewrite(target)
   if own then
     return own .. ".html" .. fragment
   end
-  if file:match("^docs/apple/site/") then
-    return target
+  -- Another file of the site, such as an image, by its path in the site, also from the manual.
+  local inside = file:match("^docs/apple/site/(.+)$")
+  if inside then
+    return inside
   end
   local kind = path:match("/$") and "tree" or "blob"
   return repo .. "/" .. kind .. "/main/" .. file .. fragment
@@ -63,5 +65,61 @@ function Link(link)
   return link
 end
 
+-- A screenshot in light, `<name>-light.webp`, has a copy in dark beside it, which `make screenshots` takes too; the
+-- page shows both, and style.css the one of the colour scheme. GitHub shows the light one.
+local function dark_copy(src)
+  local dark, found = src:gsub("%-light%.webp$", "-dark.webp")
+  return found > 0 and dark or nil
+end
+
+function Image(image)
+  local dark = dark_copy(image.src)
+  image.src = rewrite(image.src)
+  if not dark then
+    return image
+  end
+  local copy = image:clone()
+  copy.src = rewrite(dark)
+  image.classes:insert("light")
+  copy.classes:insert("dark")
+  return { image, copy }
+end
+
+-- The manual sets the width of its images in HTML, which GitHub keeps: each <img> as an image of Markdown.
+local function html_images(text)
+  return (text:gsub("<img%s[^>]*>", function(tag)
+    local src = tag:match('src="([^"]+)"')
+    if not src then
+      return tag
+    end
+    local function with(path, class)
+      local result = tag:gsub('src="[^"]+"', function() return 'src="' .. rewrite(path) .. '"' end, 1)
+      if class then
+        result = result:gsub("^<img", '<img class="' .. class .. '"', 1)
+      end
+      return result
+    end
+    local dark = dark_copy(src)
+    if not dark then
+      return with(src)
+    end
+    return with(src, "light") .. with(dark, "dark")
+  end))
+end
+
+function RawInline(raw)
+  if raw.format == "html" then
+    raw.text = html_images(raw.text)
+  end
+  return raw
+end
+
+function RawBlock(raw)
+  if raw.format == "html" then
+    raw.text = html_images(raw.text)
+  end
+  return raw
+end
+
 -- The filter reads the metadata before it rewrites the links.
-return { { Meta = Meta }, { Link = Link } }
+return { { Meta = Meta }, { Link = Link, Image = Image, RawInline = RawInline, RawBlock = RawBlock } }
