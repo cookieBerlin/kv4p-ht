@@ -94,7 +94,7 @@ extension View {
     func explained(_ text: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             self
-            Text(text).font(.footnote).foregroundStyle(.secondary)
+            Text(text).font(.footnote).foregroundStyle(Color.strongSecondary)
         }
     }
 }

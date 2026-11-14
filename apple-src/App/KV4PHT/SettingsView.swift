@@ -227,7 +227,7 @@ struct FirmwareUpdateRow: View {
                 Text("The radio needs a firmware update.").foregroundStyle(.orange)
             }
             if let hint = model.firmwareUpdateHint {
-                Text(hint).font(.footnote).foregroundStyle(.secondary)
+                Text(hint).font(.footnote).foregroundStyle(Color.strongSecondary)
             }
             switch model.firmwareUpdate {
             case .idle: EmptyView()
@@ -278,7 +278,7 @@ struct FirmwareChoiceSheet: View {
                     : "This replaces the firmware on your kv4p HT. Keep the USB cable connected until the update is finished."
             )
             .font(.footnote)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.strongSecondary)
             HStack {
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
@@ -302,9 +302,9 @@ struct FirmwareChoiceSheet: View {
                 .foregroundStyle(.tint)
             VStack(alignment: .leading, spacing: 4) {
                 Text(choice.title).fontWeight(.semibold)
-                Text(choice.suitability).foregroundStyle(choice.isForThisApp ? Color.secondary : Color.orange)
+                Text(choice.suitability).foregroundStyle(choice.isForThisApp ? Color.strongSecondary : Color.orange)
                 ForEach(choice.details, id: \.self) {
-                    Text($0).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                    Text($0).font(.caption.monospaced()).foregroundStyle(Color.strongSecondary).textSelection(.enabled)
                 }
             }
         }
@@ -320,7 +320,7 @@ struct FirmwareElsewhereNotice: View {
             Text(
                 "Connect the radio by USB to a Mac with this app and choose the firmware for this app there. The Android nightly app can write it too."
             )
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.strongSecondary)
             if let manual = URL(string: FirmwareHelp.manualAddress) {
                 Link("Firmware updates in the manual", destination: manual)
             }

@@ -28,7 +28,7 @@ struct APRSChatsView: View {
             if !model.isKeepingPackets {
                 Label("Keep packets is off, so chats end with the app.", systemImage: "info.circle")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.strongSecondary)
             }
             ForEach(model.conversations) { conversation in
                 Button {
@@ -71,14 +71,14 @@ struct APRSChatsView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(conversation.peer).font(.headline)
                 Text(conversation.last.body ?? "")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.strongSecondary)
                     .lineLimit(1)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
                 Text(Date(timeIntervalSince1970: Double(conversation.last.lastSeenMs) / 1000), style: .relative)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.strongSecondary)
                 if conversation.unread > 0 {
                     CountBadge(count: conversation.unread, color: .accentColor)
                         .accessibilityLabel("\(conversation.unread) unread")
@@ -192,10 +192,13 @@ private struct APRSConversationView: View {
             }
             .padding(8)
             if !model.isReady {
-                Text("Connect the radio to send.").font(.footnote).foregroundStyle(.secondary).padding(.bottom, 8)
+                Text("Connect the radio to send.").font(.footnote).foregroundStyle(Color.strongSecondary).padding(
+                    .bottom,
+                    8
+                )
             }
         } else if let blocked = model.transmitBlockedText {
-            Text(blocked).font(.footnote).foregroundStyle(.secondary).padding(8)
+            Text(blocked).font(.footnote).foregroundStyle(Color.strongSecondary).padding(8)
         }
     }
 

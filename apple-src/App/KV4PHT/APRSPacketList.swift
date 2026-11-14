@@ -295,7 +295,7 @@ struct APRSPacketList: View {
         }
         storedMark(event)
         if event.packetCount > 1 {
-            Text("×\(event.packetCount)").foregroundStyle(.secondary)
+            Text("×\(event.packetCount)").foregroundStyle(Color.strongSecondary)
         }
         Text(Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000), style: Self.timeStyle(event))
             .foregroundStyle(Color.strongSecondary)

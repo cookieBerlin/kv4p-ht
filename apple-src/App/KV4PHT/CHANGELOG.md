@@ -38,7 +38,8 @@ own, with its version, build and date.
 - iPhone and iPad: with the largest text sizes, the frequency is no longer cut off at the left, nor the squelch symbol
   at the right.
 - Mac: the app no longer quits when VoiceOver or another assistive app reads the APRS packets beside the memories.
-- Mac: the state of the connection at the bottom of the window is easier to read.
+- Small grey texts are easier to read everywhere, such as hints below settings, the last message of a chat and, on
+  the Mac, the state of the connection at the bottom of the window.
 
 ## 0.2.0 (20261111.2136) – 2026-11-11
 

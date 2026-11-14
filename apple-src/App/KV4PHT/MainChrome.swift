@@ -501,7 +501,7 @@ struct PermissionNotice: View {
         HStack(alignment: .firstTextBaseline) {
             Text(permission.deniedMessage)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.strongSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
             if let settings {
@@ -575,7 +575,7 @@ struct PTTBar: View {
     var body: some View {
         VStack(spacing: 6) {
             if let blocked = model.transmitBlockedText {
-                Text(blocked).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                Text(blocked).font(.footnote).foregroundStyle(Color.strongSecondary).multilineTextAlignment(.center)
             }
             if model.canSendOnAir {
                 HStack(spacing: 8) {
