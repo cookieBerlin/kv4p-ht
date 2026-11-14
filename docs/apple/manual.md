@@ -42,6 +42,8 @@ the `KV4PHT` scheme (signed to run locally, no developer account needed), or see
 
 ## The main window
 
+<img src="site/img/screens/iphone-memories-light.webp" width="250" alt="The main screen of an iPhone: the frequency, the S-meter, the memories and Push to talk">
+
 The structure is the same on all devices, and similar to the Android app:
 
 - **On top:** the name of the active memory, the frequency, the squelch state and the S-meter; 🖥 and on a wide
@@ -86,6 +88,8 @@ The first time you connect, the app asks for access to the microphone and your l
 them denied: the functions that need one say so and offer **Open Settings**.
 
 ## Connecting the radio
+
+<img src="site/img/screens/iphone-settings-light.webp" width="250" alt="The settings of an iPhone, with the connection on top">
 
 Without a connection, the memories show it where **Push to talk** stands: choose the radio under **Radio** and
 click **Connect** (🖥 or press Return, or ⌘K in the *Radio* menu). 📱 On iPhone and iPad, ⚙ **Settings** has the same
@@ -274,6 +278,9 @@ analog voice.
 
 ## Memories and scanning
 
+<img src="site/img/screens/iphone-scan-light.webp" width="250" alt="A scan through the memories, stopped on a signal">
+<img src="site/img/screens/iphone-settings-memories-light.webp" width="250" alt="The memories, their groups and the imports in the settings">
+
 The memory list is next to APRS (on an iPhone, in the **Memories** tab).
 
 - **Tune:** click (📱 tap) a memory; 📱 a checkmark marks the active one. The radio switches to its frequency, repeater
@@ -324,6 +331,9 @@ The memory list is next to APRS (on an iPhone, in the **Memories** tab).
 - Memories are stored on this device.
 
 ## APRS
+
+<img src="site/img/screens/iphone-packets-light.webp" width="250" alt="The list of APRS packets">
+<img src="site/img/screens/iphone-chat-light.webp" width="250" alt="A chat with another station over APRS">
 
 The **APRS** tab lists the APRS packets the radio decodes on air, newest
 first: positions, messages, weather reports, objects, status reports and
@@ -428,6 +438,8 @@ digipeater is useful.
 
 ## Map
 
+<img src="site/img/screens/iphone-map-light.webp" width="250" alt="APRS stations and repeaters on the map">
+
 **Map** shows your memories that have a position, such as the repeaters imported from the DARC lists, and the APRS
 stations heard, with Apple's maps.
 
@@ -458,6 +470,8 @@ window stay on this device. You can switch the map off in ⚙ **Settings → Pag
 
 ## FreeDV digital voice
 
+<img src="site/img/screens/iphone-settings-radio-light.webp" width="250" alt="The radio settings, with the voice mode FM or FreeDV 2400B">
+
 FreeDV 2400B is digital voice on FM radios: the radio's firmware runs the
 modem, the app encodes and decodes the speech with Codec2.
 
@@ -473,6 +487,8 @@ modem, the app encodes and decodes the speech with Codec2.
   and choose a *Received signal* in ⚙ **Settings** under *Simulator*; you hear a vowel-like test sound.
 
 ## Settings
+
+<img src="site/img/screens/iphone-settings-simulator-light.webp" width="250" alt="The settings of the built-in simulator">
 
 ⚙ **Settings** opens an overview of pages: a sidebar on the Mac, a list on iPhone and iPad.
 A short text below a setting explains it. 📱 On iPhone and iPad, the list starts with
@@ -537,6 +553,8 @@ Accessibility); the Android app's own switches for them are not needed on the
 Mac.
 
 ## Firmware updates
+
+<img src="site/img/screens/mac-settings-radio-light.webp" width="600" alt="The radio settings on the Mac, with the firmware update">
 
 The app needs the firmware for this app, and warns when the radio has another or none
 (*The radio needs a firmware update.*). 🖥 The dialog and the main window then offer **Open
