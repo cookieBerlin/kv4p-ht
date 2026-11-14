@@ -1,10 +1,5 @@
 import XCTest
 
-#if os(macOS)
-    import ImageIO
-    import UniformTypeIdentifiers
-#endif
-
 /// Apple's accessibility audit on every screen of the app, in its demo mode (ADR-0062). A finding fails the test unless
 /// it is one of the exceptions the ADR names. Each one that fails is listed with a line that starts with `A11Y`, which
 /// `make a11y` collects.
@@ -39,14 +34,14 @@ final class AccessibilityAuditTests: XCTestCase {
         }
         app.launch()
         let size = textSize == nil ? "default" : "largest"
-        XCTAssertTrue(waitForStart(), "The app did not start")
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
         #if os(macOS)
             app.closeAbout()
         #endif
         try audit("\(size) memories")
-        tapPage("Packets")
+        app.showPage("Packets")
         try audit("\(size) packets")
-        tapPage("Chats")
+        app.showPage("Chats")
         try audit("\(size) chats")
         let chat = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'N1CALL'")).firstMatch
         if chat.waitForExistence(timeout: 2) {
@@ -61,7 +56,7 @@ final class AccessibilityAuditTests: XCTestCase {
                 findings.append(finding)
             }
         }
-        tapPage("Map")
+        app.showPage("Map")
         // The tiles come from the network; they are Apple's, so the audit waits for the controls only.
         Thread.sleep(forTimeInterval: 2)
         try audit("\(size) map")
@@ -69,7 +64,7 @@ final class AccessibilityAuditTests: XCTestCase {
             .allElementsBoundByIndex.first(where: \.isHittable)
         list?.tapOrClick()
         try audit("\(size) map list")
-        tapPage("Settings")
+        app.showPage("Settings")
         try audit("\(size) settings")
         // In the list of the settings, as "Memories" and "APRS" also name pages of the bar below.
         for page in ["Station", "Pages", "Radio", "Transmit", "Audio", "APRS", "Memories", "Simulator", "Logging"] {
@@ -174,33 +169,6 @@ final class AccessibilityAuditTests: XCTestCase {
         #endif
     }
 
-    /// The page bar of a phone; elsewhere the memories stand beside a switch between the packets, the chats and the
-    /// map, and the settings open from the toolbar.
-    private func tapPage(_ title: String) {
-        let pageButton = app.buttons["page-\(title)"].firstMatch
-        if !pageButton.exists, ["Packets", "Chats", "Map"].contains(title) {
-            // With unread messages, the switch says how many, as "Chats (2)". The Mac shows its parts as radio buttons.
-            let part = NSPredicate(format: "label BEGINSWITH %@", title)
-            #if os(macOS)
-                app.radioButtons.matching(part).firstMatch.click()
-            #else
-                app.buttons.matching(part).firstMatch.tap()
-            #endif
-        } else if pageButton.exists {
-            pageButton.tap()
-            // The pages scroll into place; an audit before that sees two halves.
-            let selected = NSPredicate(format: "isSelected == true")
-            _ = XCTWaiter.wait(for: [expectation(for: selected, evaluatedWith: pageButton)], timeout: 5)
-            Thread.sleep(forTimeInterval: 1)
-        } else if title == "Settings" {
-            #if os(macOS)
-                app.typeKey(",", modifierFlags: .command)
-            #else
-                app.buttons["Settings"].firstMatch.tap()
-            #endif
-        }
-    }
-
     #if os(iOS)
         /// Scrolls the settings until the link is on screen: the list makes rows out of sight only once they come near,
         /// and after a page, the list may stand below or above the next link. The swipe starts in the middle of the screen,
@@ -224,25 +192,13 @@ final class AccessibilityAuditTests: XCTestCase {
         }
     #endif
 
-    /// The page bar on a phone, or PTT elsewhere, whatever the text size.
-    private func waitForStart() -> Bool {
-        let deadline = Date().addingTimeInterval(60)
-        while Date() < deadline {
-            if app.buttons["page-Memories"].exists || app.buttons["Push to talk"].exists {
-                return true
-            }
-            Thread.sleep(forTimeInterval: 1)
-        }
-        return false
-    }
-
     /// Every kind of check on a screen. A screen with findings is checked once more after a pause, and only what both
     /// looks find counts: a slow machine lets the audit catch a screen before its text has grown, but seldom twice in the
     /// same place. A screen without findings says so, to show that it was checked.
     private func audit(_ screen: String) throws {
         // To judge a finding by looking at the screen; `make a11y` exports them.
         #if os(macOS)
-            let screenshot = windowScreenshot()
+            let screenshot = app.frontWindowScreenshot()
         #else
             let screenshot = XCTAttachment(screenshot: app.screenshot())
         #endif
@@ -293,30 +249,6 @@ final class AccessibilityAuditTests: XCTestCase {
             try runAuditRetrying(screen, .dynamicType)
         #endif
     }
-
-    #if os(macOS)
-        /// The front window, cut out of the screen, which shows whatever else is open. The test runner cannot take a
-        /// window on its own.
-        private func windowScreenshot() -> XCTAttachment {
-            let data = NSMutableData()
-            let frame = app.windows.firstMatch.frame
-            if let image = XCUIScreen.main.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-                let scale = screenScale(of: image),
-                let window = image.cropping(to: frame.applying(CGAffineTransform(scaleX: scale, y: scale)).integral),
-                let png = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)
-            {
-                CGImageDestinationAddImage(png, window, nil)
-                CGImageDestinationFinalize(png)
-            }
-            return XCTAttachment(data: data as Data, uniformTypeIdentifier: UTType.png.identifier)
-        }
-
-        /// The pixels of the main screen for each point: its menu bar spans it, and the test runner cannot ask AppKit.
-        private func screenScale(of image: CGImage) -> CGFloat? {
-            let width = app.menuBars.firstMatch.frame.width
-            return width > 0 ? CGFloat(image.width) / width : nil
-        }
-    #endif
 
     /// The kinds of check of each platform, but Dynamic Type, which runs on its own.
     #if os(macOS)

@@ -13,9 +13,11 @@ affiliated with the kv4p HT project, which makes and sells the radio. See [kv4p.
 what it looks like, how to build one and where to buy it.
 
 ::: screenshots
-![The memories on an iPhone](img/iphone.png){.iphone}
+![The memories on an iPhone, with the frequency and the S-meter](img/screens/iphone-memories-light.webp){.iphone}
 
-![Memories and APRS side by side on an iPad, in dark mode](img/ipad.png){.ipad}
+![Memories and APRS side by side on an iPad](img/screens/ipad-memories-light.webp){.ipad}
+
+![The Mac app, with the memories beside the map](img/screens/mac-map-light.webp){.mac}
 :::
 
 ## Features {#features}
@@ -100,6 +102,30 @@ A built-in radio simulator, and a virtual radio over Bluetooth that a Mac can pr
 
 No account, no ads, no tracking. The developer collects no data. See [Privacy](privacy.md).
 :::
+:::
+
+## A look at the app {#screenshots}
+
+The pictures follow the colour scheme of the switch at the top, or of your device.
+
+::: gallery
+![Scanning the memories](img/screens/iphone-scan-light.webp)
+
+![APRS packets of the stations around](img/screens/iphone-packets-light.webp)
+
+![A chat over APRS](img/screens/iphone-chat-light.webp)
+
+![Stations and repeaters on the map](img/screens/iphone-map-light.webp)
+
+![Memories in groups, and the imports of repeater lists](img/screens/iphone-settings-memories-light.webp)
+
+![The radio settings, with FreeDV digital voice](img/screens/iphone-settings-radio-light.webp)
+
+![The built-in simulator, to try the app without a radio](img/screens/iphone-settings-simulator-light.webp)
+
+![The chats on an iPad](img/screens/ipad-chat-light.webp){.wide}
+
+![The radio settings on the Mac, with the firmware update over USB](img/screens/mac-settings-radio-light.webp){.wide}
 :::
 
 ## Requirements

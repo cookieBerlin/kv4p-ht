@@ -24,6 +24,24 @@ struct DemoContentTests {
         #expect(model.newAPRSMessages > 0)
     }
 
+    @Test("the demo looks like a day on air, for the screenshots: groups, stations around, a chat to read")
+    func lively() async throws {
+        let model = RadioViewModel(
+            makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
+            serialDevices: { [] },
+            memories: try SwiftDataMemoryRepository.inMemory()
+        )
+        model.callsign = "N0CALL"
+        await model.loadDemoContent()
+        #expect(await KV4PTestSupport.eventually { model.memories.count == DemoContent.memories.count })
+        #expect(model.groups.count >= 3)
+        #expect(model.memories.count >= 10)
+        let places = Set(model.mapStations.map { "\($0.point.latitude),\($0.point.longitude)" })
+        #expect(places.count >= 6)
+        let chat = model.aprsEvents.filter { $0.chatPeer(ownCallsign: "N0CALL") == "N1CALL" }
+        #expect(chat.count >= 5)
+    }
+
     @Test("a second time adds nothing, so the demo stays as it is")
     func once() async throws {
         let model = RadioViewModel(

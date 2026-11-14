@@ -12,6 +12,8 @@
   --hero-bg: #000000;
   --hero-text: #FFFCEA;
   --code-bg: #EFEEE9;
+  --shot-border: #C9C7C0;
+  --shot-shadow: 0 6px 24px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.10);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,10 +25,15 @@
     --border: #2E2E2E;
     --accent-text: #E08E78;
     --code-bg: #262624;
+    --shot-border: #4A4945;
+    --shot-shadow: 0 6px 28px rgba(0, 0, 0, 0.65), 0 1px 3px rgba(0, 0, 0, 0.5);
   }
 }
 
+:root[data-theme="light"] { color-scheme: light; }
+
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #121212;
   --surface: #1C1C1C;
   --text: #EDEBE3;
@@ -34,6 +41,8 @@
   --border: #2E2E2E;
   --accent-text: #E08E78;
   --code-bg: #262624;
+  --shot-border: #4A4945;
+  --shot-shadow: 0 6px 28px rgba(0, 0, 0, 0.65), 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 * { box-sizing: border-box; }
@@ -83,6 +92,20 @@ img { max-width: 100%; height: auto; }
 .brand img { border-radius: 6px; }
 
 .bar nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.2rem; }
+
+/* The switch of the colour scheme, which the template's script shows: system, light or dark. */
+.theme {
+  padding: 0.25rem 0.7rem;
+  border: 1px solid rgba(255, 252, 234, 0.5);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hero-text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.theme:hover { border-color: var(--hero-text); }
 
 /* Buttons */
 
@@ -186,9 +209,46 @@ h1, h2, h3 { line-height: 1.25; }
 }
 
 .screenshots figure { margin: 0; text-align: center; color: var(--muted); font-size: 0.9rem; }
-.screenshots img { display: block; border-radius: 18px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18); }
+.screenshots img { display: block; border-radius: 18px; }
 .screenshots .iphone { width: 14rem; }
 .screenshots .ipad { width: 22rem; }
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 1.5rem 1rem;
+  margin: 1.5rem 0;
+}
+
+.gallery figure { margin: 0; text-align: center; color: var(--muted); font-size: 0.9rem; }
+.gallery img { display: block; margin: 0 auto 0.5rem; border-radius: 14px; }
+.gallery figure:has(.wide) { grid-column: 1 / -1; }
+.gallery .wide img { max-width: 40rem; width: 100%; border-radius: 10px; }
+
+.screenshots .mac { width: 40rem; border-radius: 10px; }
+
+/* Images of the app in the manual. */
+.doc img { border-radius: 14px; }
+
+/* Every screenshot has a frame and a shadow, so that its edge shows on a page of the same colour. */
+img.light, img.dark {
+  border: 1px solid var(--shot-border);
+  box-shadow: var(--shot-shadow);
+}
+
+.doc img.light, .doc img.dark { margin: 0.5rem 1rem 1rem 0; }
+
+/* Screenshots exist in light and dark: the one of the chosen colour scheme shows. */
+:root[data-theme="light"] img.dark,
+:root[data-theme="dark"] img.light { display: none; }
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) img.dark { display: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) img.light { display: none; }
+}
 
 .steps li { margin-bottom: 0.5rem; }
 

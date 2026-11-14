@@ -44,11 +44,25 @@ enum Composition {
     /// which start anew, so that each audit begins on the same page.
     static let viewDefaults = isDemo ? UserDefaults(suiteName: demoSuite) ?? .standard : .standard
 
+    /// The colour scheme of the demo mode, `-uitest-appearance light` or `dark`, so that `make screenshots` takes each
+    /// screen in both; nil follows the system, as always outside the demo mode.
+    static let demoAppearance = isDemo ? UserDefaults.standard.string(forKey: "uitest-appearance") : nil
+
+    /// The signal the simulator receives in the demo mode, `-uitest-signal <0–13>`, so that the S-meter shows one on the
+    /// screenshots; none without it.
+    private static var demoSignal: SimulatedSignal? {
+        UserDefaults.standard.string(forKey: "uitest-signal").flatMap(Int.init).flatMap(SimulatedSignal.init(rawValue:))
+    }
+
     /// Frequencies show the decimal separator of the user's language (ADR-0064).
     private static var decimalSeparator: String { Locale.current.decimalSeparator ?? "." }
 
     static func makeViewModel() -> RadioViewModel {
         if isDemo {
+            #if os(macOS)
+                // Only for the screenshots, which set the colour scheme.
+                if demoAppearance != nil { ScreenshotWindows.keepInFront() }
+            #endif
             return makeDemoViewModel()
         }
         LaunchTrace.appCodeStarts()
@@ -189,6 +203,7 @@ enum Composition {
         Task {
             await model.loadDemoContent()
             await model.connect()
+            model.simulatedSignal = demoSignal
         }
         return model
     }
