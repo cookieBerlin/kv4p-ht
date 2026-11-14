@@ -109,7 +109,7 @@ for device in "${devices[@]}"; do
       -only-testing:KV4PHTUITests/ScreenshotTests -resultBundlePath "$bundle" > "$log" 2>&1; then
       break
     fi
-    if [ "$attempt" = 1 ] && grep -qE "never finished bootstrapping|failed to initialize for UI testing|crashed while preparing to run tests" "$log"; then
+    if [ "$attempt" = 1 ] && grep -qE "never finished bootstrapping|failed to initialize for UI testing|crashed while preparing to run tests|timed out while preparing to run tests" "$log"; then
       echo "screenshots: the test runner did not start on $device, once more" >&2
       continue
     fi
