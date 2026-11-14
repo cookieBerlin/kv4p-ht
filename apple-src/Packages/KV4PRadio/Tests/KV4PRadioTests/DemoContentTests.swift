@@ -20,7 +20,7 @@ struct DemoContentTests {
         await model.loadDemoContent()
         #expect(
             await KV4PTestSupport.eventually {
-                model.memories.count == DemoContent.memories(forScreenshots: false).count
+                model.memories.count == DemoContent.memories(forAudit: false).count
             }
         )
         #expect(Set(model.aprsEvents.map(\.kind)).isSuperset(of: [.message, .position, .object, .weather, .status]))
@@ -30,11 +30,11 @@ struct DemoContentTests {
 
     @Test("the audit's demo stays small, so that each audit of a screen keeps within the time XCTest gives it")
     func small() {
-        #expect(DemoContent.memories(forScreenshots: false).count <= 5)
-        #expect(DemoContent.aprsLines(forScreenshots: false).count <= 8)
+        #expect(DemoContent.memories(forAudit: true).count <= 5)
+        #expect(DemoContent.aprsLines(forAudit: true).count <= 8)
     }
 
-    @Test("the screenshots' demo looks like a day on air: groups, stations around, a chat to read")
+    @Test("the demo looks like a day on air: groups, stations around, a chat to read")
     func lively() async throws {
         let model = RadioViewModel(
             makeController: { _, _ in RadioController(transport: ScriptedTransport()) },
@@ -42,10 +42,10 @@ struct DemoContentTests {
             memories: try SwiftDataMemoryRepository.inMemory()
         )
         model.callsign = "N0CALL"
-        await model.loadDemoContent(forScreenshots: true)
+        await model.loadDemoContent()
         #expect(
             await KV4PTestSupport.eventually {
-                model.memories.count == DemoContent.memories(forScreenshots: true).count
+                model.memories.count == DemoContent.memories(forAudit: false).count
             }
         )
         #expect(model.groups.count >= 3)
@@ -66,7 +66,7 @@ struct DemoContentTests {
         )
         model.callsign = "N0CALL"
         await model.loadDemoContent()
-        let count = DemoContent.memories(forScreenshots: false).count
+        let count = DemoContent.memories(forAudit: false).count
         #expect(await KV4PTestSupport.eventually { model.memories.count == count })
         await model.loadDemoContent()
         #expect(model.memories.count == count)
