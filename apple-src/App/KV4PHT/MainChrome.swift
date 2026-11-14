@@ -439,7 +439,8 @@ struct BottomBar: View {
             Divider()
             Text(model.statusText)
                 .font(.caption)
-                .foregroundStyle(model.isStatusFailure ? Color.red : Color.secondary)
+                // The strong grey, as plain secondary on the bar stays below 4.5:1.
+                .foregroundStyle(model.isStatusFailure ? Color.red : Color.strongSecondary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
