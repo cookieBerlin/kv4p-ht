@@ -79,7 +79,7 @@ struct ProblemReportSection: View {
                 "The report holds the app and system versions, the device type, the firmware, the app's log and crash data. Your callsign is replaced. Nothing leaves this device unless you send it."
             )
             .font(.footnote)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.strongSecondary)
             NavigationLink("Show the report") { reportText }
             if let file {
                 ShareLink("Share the report…", item: file)
@@ -88,7 +88,7 @@ struct ProblemReportSection: View {
                 Link("Open a GitHub issue", destination: issue)
                 Text("Issues are public. Look through the report before you attach it there.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.strongSecondary)
             }
         }
         .task { prepare() }
@@ -263,8 +263,8 @@ struct LiveLogView: View {
     }
 
     private func row(_ line: LogLine) -> some View {
-        let time = Text(line.date, format: .dateTime.hour().minute().second()).foregroundStyle(.secondary)
-        let category = Text(line.category.rawValue).foregroundStyle(.secondary)
+        let time = Text(line.date, format: .dateTime.hour().minute().second()).foregroundStyle(Color.strongSecondary)
+        let category = Text(line.category.rawValue).foregroundStyle(Color.strongSecondary)
         let message = Text(line.message).foregroundStyle(Self.color(of: line.level))
         return Text("\(time) \(category) \(message)")
             .font(.caption.monospaced())

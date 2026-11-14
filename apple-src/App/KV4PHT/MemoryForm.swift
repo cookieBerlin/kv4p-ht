@@ -67,10 +67,10 @@ struct MemoryForm: View {
                     LabeledField("Offset (kHz)", text: $offset, kind: .whole)
                 }
                 if entered.frequency.isFinite, let text = model.transmitText(for: entered) {
-                    Text(text).font(.footnote).foregroundStyle(.secondary)
+                    Text(text).font(.footnote).foregroundStyle(Color.strongSecondary)
                 }
                 if let note = model.receptionNote(entered) {
-                    Text(note).font(.footnote).foregroundStyle(.secondary)
+                    Text(note).font(.footnote).foregroundStyle(Color.strongSecondary)
                 }
             }
             Section {

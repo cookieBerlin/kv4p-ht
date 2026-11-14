@@ -24,7 +24,7 @@ struct ManageMemoriesView: View {
                             HStack {
                                 Text(block.title)
                                 Spacer()
-                                Text("\(block.memories.count)").foregroundStyle(.secondary)
+                                Text("\(block.memories.count)").foregroundStyle(Color.strongSecondary)
                                 Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.tertiary)
                             }
                             .contentShape(.rect)
@@ -154,7 +154,7 @@ struct GroupMemoriesView: View {
             MemoryKindSymbol(kind: memory.kind)
             VStack(alignment: .leading) {
                 Text(memory.name)
-                Text(model.shown(memory.frequency) + " MHz").font(.caption).foregroundStyle(.secondary)
+                Text(model.shown(memory.frequency) + " MHz").font(.caption).foregroundStyle(Color.strongSecondary)
             }
             Spacer()
         }

@@ -439,7 +439,8 @@ struct BottomBar: View {
             Divider()
             Text(model.statusText)
                 .font(.caption)
-                .foregroundStyle(model.isStatusFailure ? Color.red : Color.secondary)
+                // The strong grey, as plain secondary on the bar stays below 4.5:1.
+                .foregroundStyle(model.isStatusFailure ? Color.red : Color.strongSecondary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
@@ -500,7 +501,7 @@ struct PermissionNotice: View {
         HStack(alignment: .firstTextBaseline) {
             Text(permission.deniedMessage)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.strongSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
             if let settings {
@@ -574,7 +575,7 @@ struct PTTBar: View {
     var body: some View {
         VStack(spacing: 6) {
             if let blocked = model.transmitBlockedText {
-                Text(blocked).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                Text(blocked).font(.footnote).foregroundStyle(Color.strongSecondary).multilineTextAlignment(.center)
             }
             if model.canSendOnAir {
                 HStack(spacing: 8) {
