@@ -118,9 +118,9 @@ jobs:
       - run: make site-tools
       - run: make site-check
 
-  # The UI tests in the simulator, one device and one selection per job, side by side (ADR-0072): the functional tests,
-  # and Apple's accessibility audit (ADR-0062), whose findings are kept; only a run that cannot go through the screens
-  # fails. One simulator per machine, as several at once made the test runner time out and crash.
+  # The UI tests, one device and one selection per job, side by side (ADR-0072): the functional tests, and Apple's
+  # accessibility audit (ADR-0062), whose findings are kept; only a run that cannot go through the screens fails. One
+  # simulator per machine, as several at once made the test runner time out and crash.
   ui-tests:
     needs: changes
     if: needs.changes.outputs.apple == 'true'
@@ -128,7 +128,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        device: [iPhone 18 Pro, iPad Pro 11-inch (M5), iPhone Duo]
+        # "Mac" runs the app itself, on the runner's own desktop rather than in a simulator.
+        device: [iPhone 18 Pro, iPad Pro 11-inch (M5), iPhone Duo, Mac]
         tests: [functional, audit]
     runs-on: xcode-27
     steps:
@@ -138,7 +139,7 @@ jobs:
         env:
           DEVICE: ${{ matrix.device }}
           TESTS: ${{ matrix.tests }}
-      # The findings, the log of the simulator and a screenshot of each screen, to see why a run failed.
+      # The findings, the log of the run and a screenshot of each screen, to see why a run failed.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
