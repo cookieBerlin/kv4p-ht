@@ -24,11 +24,13 @@ final class ConnectionTests: XCTestCase {
         disconnectInSettings()
         XCTAssertTrue(connectHere.waitForExistence(timeout: 10), "No connection where PTT stands")
         XCTAssertFalse(pushToTalk.exists, "PTT without a connection")
+        // The packets have no line to write without a connection, but say why.
+        app.showPage("Packets")
+        XCTAssertTrue(connectToSend.waitForExistence(timeout: 5), "The packets do not say why nothing can be sent")
+        XCTAssertFalse(messageField.exists, "A line to write without a connection")
         #if os(iOS)
             // The other pages of a phone show the status only.
-            let packets = app.buttons["page-Packets"].firstMatch
-            if packets.exists {
-                packets.tap()
+            if app.hasPageBar {
                 XCTAssertTrue(connectHere.waitForNonExistence(timeout: 5), "The packets offer the connection")
                 app.buttons["page-Memories"].firstMatch.tap()
                 XCTAssertTrue(connectHere.waitForExistence(timeout: 5), "The connection does not come back")
@@ -37,6 +39,18 @@ final class ConnectionTests: XCTestCase {
         connectHere.tapOrClick()
         XCTAssertTrue(pushToTalk.waitForExistence(timeout: 10), "Did not connect")
         XCTAssertFalse(connectHere.exists, "The connection stays after connecting")
+        XCTAssertTrue(messageField.waitForExistence(timeout: 5), "No line to write once connected")
+        XCTAssertFalse(connectToSend.exists, "The packets still ask for a connection")
+    }
+
+    /// The line to write an APRS message, in the packets.
+    private var messageField: XCUIElement {
+        app.textFields.matching(NSPredicate(format: "label == 'Message' OR placeholderValue == 'Message'")).firstMatch
+    }
+
+    /// What the packets say in place of the line to write, without a connection.
+    private var connectToSend: XCUIElement {
+        app.staticTexts["Connect the radio to send."].firstMatch
     }
 
     /// A wide window also ends the connection in its header; the Mac's menu connects and disconnects with ⌘K.
