@@ -10,7 +10,7 @@ struct MemoryKindSymbol: View {
 
     var body: some View {
         Image(systemName: kind.symbol)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.strongSecondary)
             .frame(width: width)
             .accessibilityHidden(true)
     }

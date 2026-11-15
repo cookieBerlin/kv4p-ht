@@ -202,7 +202,7 @@ struct RadioHeader: View {
                 FrequencyStepButtons(model: model)
             #endif
             Image(systemName: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash")
-                .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
+                .foregroundStyle(model.isReceiving ? Color.green : Color.strongSecondary)
                 .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
                 .help(ControlHelp.meter)
         }

@@ -67,7 +67,8 @@ extension View {
 }
 
 extension Color {
-    /// For small text that must stay readable: darker than the system's secondary grey, which is too faint for it.
+    /// For small text and symbols that must stay readable: darker than the system's secondary grey, which is too faint
+    /// for them. Disabled controls, fills and borders keep the system's greys.
     static let strongSecondary = Color.primary.opacity(0.7)
     /// For small links: darker than the system's blue on a light background and lighter on a dark one.
     static let strongAccent = Color("StrongAccent")

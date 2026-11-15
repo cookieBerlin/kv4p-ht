@@ -514,7 +514,7 @@ struct SidePane: View {
                     .accessibilityValue(
                         item == .chats && model.newAPRSMessages > 0 ? "\(model.newAPRSMessages) new" : ""
                     )
-                    .foregroundStyle(page == item ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(page == item ? Color.accentColor : Color.strongSecondary)
                     .accessibilityAddTraits(page == item ? .isSelected : [])
                     // For the UI tests, as the pages are all there at once and share names with links (ADR-0062).
                     .accessibilityIdentifier("page-\(item.title)")
