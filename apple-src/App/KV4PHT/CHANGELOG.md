@@ -19,6 +19,8 @@ own, with its version, build and date.
   on iPhone, that stays open while you switch several. The packets have the callsign, **Only for me** and the types,
   with their symbols, in one panel, and a line above the list names the filter while it is on. The live log has its
   levels and categories in one panel.
+- iPad and Mac: **Packets**, **Chats** and **Map** are a sliding switch with a symbol and a name each, like the
+  switch between **Map** and **List**.
 - The buttons of the packets and the map float over them, which leaves the list and the map the full height. The
   map switches between **Map** and **List** with a symbol each, and **Show all** has a frame with a dot as its
   symbol.

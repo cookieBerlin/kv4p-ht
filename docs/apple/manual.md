@@ -50,8 +50,8 @@ The structure is the same on all devices, and similar to the Android app:
   📱 iPad, while connected, a small **Disconnect** at the top right. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
 - **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the header, the memories and **Push to talk**
-  form a column on the left, and beside it a switch between **Packets**, **Chats** and **Map** reaches from the top to
-  the bottom of the window. With APRS switched off (⚙ **Settings → Pages**), the map has that side to itself; with both
+  form a column on the left, and beside it a switch between **Packets**, **Chats** and **Map**, each with its symbol
+  and name, or its symbol alone with large text, reaches from the top to the bottom of the window. With APRS switched off (⚙ **Settings → Pages**), the map has that side to itself; with both
   switched off, the memories take the whole width.
 - **At the bottom:** a large **Push to talk** button and any messages. The button shows only while the radio is
   connected, 📱 on an iPhone as a microphone. Otherwise the connection stands in its place: the status or why the
