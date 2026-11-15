@@ -2233,6 +2233,8 @@ public final class RadioViewModel {
             limit: aprsListLimit + 1,
             filter: historyFilter(state.filter)
         )
+        // A filter changed meanwhile, as while a callsign is typed, loads its own page; this one is no longer wanted.
+        guard self[list].filter == state.filter else { return }
         let known = Set(shown.map(\.id))
         state.older += page.compactMap(Self.event).filter { !known.contains($0.id) }
         state.cursor = page.last?.lastSeenMs ?? start
