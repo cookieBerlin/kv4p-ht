@@ -1,4 +1,3 @@
-import KV4PProtocol
 import Testing
 
 @testable import KV4PRadio
@@ -6,14 +5,10 @@ import Testing
 /// The About window: version, build and the licences of what the app contains.
 @Suite("About")
 struct AboutInfoTests {
-    @Test("version and build come from the bundle, with the firmware the app ships")
+    @Test("version and build come from the bundle")
     func version() {
         let about = AboutInfo(info: ["CFBundleShortVersionString": "0.1", "CFBundleVersion": "7"])
         #expect(about.version == "Version 0.1 (7)")
-        #expect(
-            about.firmware
-                == "USB updates: nightly firmware for this app, firmware \(KV4P.packagedFirmwareVersion) for Android"
-        )
         #expect(AboutInfo(info: [:]).version == "Version unknown")
         #expect(AboutInfo(info: ["CFBundleShortVersionString": "0.1"]).version == "Version 0.1")
     }

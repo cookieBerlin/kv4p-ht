@@ -15,7 +15,6 @@ struct AboutView: View {
                     Text("kv4p HT").font(.title)
                     Text(AboutInfo.byline).foregroundStyle(Color.strongSecondary)
                     Text(about.version)
-                    Text(about.firmware).foregroundStyle(Color.strongSecondary)
                     if let url = URL(string: AboutInfo.sourceAddress) {
                         Link("Source code", destination: url)
                     }
