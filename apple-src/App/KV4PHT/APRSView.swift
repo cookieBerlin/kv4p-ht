@@ -35,10 +35,11 @@ struct APRSView: View {
             // A chat has its own line to write.
             if shownPage == .packets {
                 Divider()
-                if model.canSendOnAir {
-                    composer.padding(8)
-                } else if let blocked = model.transmitBlockedText {
+                // Without a way to send, the reason in place of the line to write, rather than a line that does nothing.
+                if let blocked = model.aprsSendBlockedText {
                     Text(blocked).font(.footnote).foregroundStyle(Color.strongSecondary).padding(8)
+                } else {
+                    composer.padding(8)
                 }
             }
         }
@@ -97,7 +98,7 @@ struct APRSView: View {
 
     private var sendButton: some View {
         Button("Send", systemImage: "paperplane", action: send)
-            .disabled(!model.isReady || model.aprsDraft.isEmpty)
+            .disabled(model.aprsDraft.isEmpty)
     }
 
     private func send() {
