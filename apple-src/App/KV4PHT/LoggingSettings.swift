@@ -55,6 +55,7 @@ struct LoggingSettings: View {
             ProblemReportSection(model: model)
             Section {
                 Button("Delete the log and crash data…", role: .destructive) { isConfirmingDelete = true }
+                    .strongDestructive()
             }
         }
         .task { summary = model.logSummary }

@@ -86,6 +86,24 @@ extension Color {
     #endif
 }
 
+/// A red button in a form, in the darker red of the app while it can be pressed; disabled, it keeps the system's grey.
+private struct StrongDestructive: ViewModifier {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.foregroundStyle(Color.strongRed)
+        } else {
+            content
+        }
+    }
+}
+
+extension View {
+    /// For a button of the role `destructive` in a form, whose system red is too faint on a light background.
+    func strongDestructive() -> some View { modifier(StrongDestructive()) }
+}
+
 /// A count in a capsule, such as the new messages; its colour darkened, so that the white digits stand out.
 struct CountBadge: View {
     let count: Int

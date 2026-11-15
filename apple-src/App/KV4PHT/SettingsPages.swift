@@ -121,12 +121,14 @@ private struct RadioSection<Rows: View>: View {
     @ViewBuilder let rows: Rows
 
     var body: some View {
-        Section(title) {
+        Section {
             if model.isReady {
                 rows
             } else {
                 Text("Not available while no radio is connected.").foregroundStyle(Color.strongSecondary)
             }
+        } header: {
+            Text(title).foregroundStyle(Color.strongSecondary)
         }
     }
 }
@@ -433,6 +435,7 @@ struct APRSSettings: View {
                     Text(model.storedPacketCount, format: .number).foregroundStyle(Color.strongSecondary)
                 }
                 Button("Delete all packets…", role: .destructive) { isConfirmingDeleteAll = true }
+                    .strongDestructive()
                     .disabled(model.storedPacketCount == 0 && model.aprsEvents.isEmpty)
             } header: {
                 Text("History").foregroundStyle(Color.strongSecondary)
