@@ -65,12 +65,15 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
    as it cannot be tapped, or as it sticks out of its list.
 3. **Dynamic Type of the header, the page bar and PTT:** kept small on purpose. The header grows up to the second
    accessibility size, like an instrument whose frequency has a size of its own; the symbols of the page bar keep
-   their size, and a long press shows them large instead; PTT has a limit of its own.
+   their size, and a long press shows them large instead; PTT has a limit of its own. The titles of a sliding switch,
+   as above the side pane of the iPad, grow until they no longer fit and then give way to the symbols alone (ADR-0068);
+   the audit counts the titles that go as unsupported.
 4. **Dynamic Type of text fields:** SwiftUI's text fields grow with the text on the screenshots; the audit does not see
    it.
 5. **A disabled choice without the trait "not enabled":** SwiftUI's own; VoiceOver reads it as dimmed all the same.
 6. **Dynamic Type and clipped text in SwiftUI's lists and forms:** their rows wrap on the screenshots rather than being
-   cut. The same for clipped text in *What's New*: the audit flags entries of three lines and more, whose frames hold
+   cut; in the settings and in the panels of choices, the filter of the packets and the layers of the map (ADR-0068),
+   whose forms the audit flags below their first rows. The same for clipped text in *What's New*: the audit flags entries of three lines and more, whose frames hold
    all their lines (ADR-0069).
 7. **Findings without an element:** the audit names no element, so none can be matched or fixed; the screenshot of the
    screen is checked instead.

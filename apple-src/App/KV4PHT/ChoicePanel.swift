@@ -5,16 +5,18 @@ extension View {
     /// window is narrow, as on a phone. It stays open while the choices change, so that several can be made at once,
     /// and closes with *Done*, a tap beside it or Esc (ADR-0068). The button takes `identifier`, the panel
     /// `<identifier>-panel` and its *Done* `<identifier>-done`, for the UI tests. A popover of the Mac does not size a
-    /// form to its rows, so it takes `macHeight`.
+    /// form to its rows, so it takes `macHeight`. A button at the bottom, as one that floats, opens it above with
+    /// `arrowEdge: .bottom`; below it, the panel would reach out of the window.
     func choicePanel<Content: View>(
         _ title: LocalizedStringKey,
         identifier: String,
         isPresented: Binding<Bool>,
         macHeight: CGFloat,
+        arrowEdge: Edge = .top,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
         accessibilityIdentifier(identifier)
-            .popover(isPresented: isPresented, arrowEdge: .top) {
+            .popover(isPresented: isPresented, arrowEdge: arrowEdge) {
                 ChoicePanel(
                     title: title,
                     identifier: identifier,
@@ -23,7 +25,7 @@ extension View {
                     content: content
                 )
                 .presentationCompactAdaptation(.sheet)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
             }
     }
 
@@ -49,14 +51,20 @@ private struct ChoicePanel<Content: View>: View {
                 HStack {
                     Text(title).font(.headline)
                     Spacer()
+                    // Of glass, as the buttons of a sheet's bar are, with room for a finger and the colour of the text.
                     Button("Done") { isShown = false }
                         .bold()
+                        .foregroundStyle(.primary)
+                        .buttonStyle(.glass)
+                        .controlSize(.large)
                         .accessibilityIdentifier("\(identifier)-done")
                 }
                 .padding()
                 form
             }
             .frame(minWidth: 320, idealWidth: 360, minHeight: 420, idealHeight: 520)
+            // One ground under the title and the form, as under a bar.
+            .background(Color(uiColor: .systemGroupedBackground))
         #endif
     }
 
@@ -117,6 +125,25 @@ extension View {
             #else
                 .controlSize(.large)
             #endif
+    }
+}
+
+extension View {
+    /// A menu in the look of `floatingButton`. On the Mac the glass is drawn around a plain menu, as in a bordered style
+    /// the Mac's VoiceOver cannot show its menu (ADR-0062), and as it drops the name of a menu with its symbol only.
+    @ViewBuilder func floatingMenu(_ name: LocalizedStringKey) -> some View {
+        #if os(macOS)
+            labelStyle(.iconOnly)
+                .menuIndicator(.hidden)
+                .buttonStyle(.plain)
+                .font(.title3)
+                .frame(width: 36, height: 36)
+                .contentShape(.circle)
+                .glassEffect(.regular.interactive(), in: .circle)
+                .accessibilityLabel(name)
+        #else
+            menuIndicator(.hidden).floatingButton()
+        #endif
     }
 }
 

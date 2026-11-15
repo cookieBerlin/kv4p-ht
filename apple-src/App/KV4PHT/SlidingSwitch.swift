@@ -104,7 +104,9 @@ struct SlidingSwitch<Value: Hashable>: View {
                     }
                 }
             if withTitles {
+                // For the accessibility audit: the titles give way to the symbols once they no longer fit (ADR-0062).
                 Text(option.title)
+                    .accessibilityIdentifier("switch-title")
                 if option.count > 0 {
                     CountBadge(count: option.count, color: .red)
                 }

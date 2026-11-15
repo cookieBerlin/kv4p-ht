@@ -103,7 +103,8 @@ struct MapPage: View {
                 "Layers",
                 identifier: "map-layers",
                 isPresented: $isShowingLayers,
-                macHeight: model.isAPRSEnabled ? 400 : 300
+                macHeight: model.isAPRSEnabled ? 400 : 300,
+                arrowEdge: .bottom
             ) {
                 MapLayers(model: model)
             }

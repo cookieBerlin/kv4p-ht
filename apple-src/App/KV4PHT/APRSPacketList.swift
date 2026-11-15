@@ -124,7 +124,13 @@ struct APRSPacketList: View {
         }
         .floatingButton()
         .help("Filter")
-        .choicePanel("Filter", identifier: "packet-filter", isPresented: $isShowingFilter, macHeight: 560) {
+        .choicePanel(
+            "Filter",
+            identifier: "packet-filter",
+            isPresented: $isShowingFilter,
+            macHeight: 560,
+            arrowEdge: .bottom
+        ) {
             Section {
                 TextField("Callsign", text: $search, prompt: Text("Callsign"))
                     .macName("Callsign")
@@ -192,8 +198,7 @@ struct APRSPacketList: View {
         } label: {
             Label("Export", systemImage: "square.and.arrow.up")
         }
-        .menuIndicator(.hidden)
-        .floatingButton()
+        .floatingMenu("Export")
         .help(ControlHelp.exportPackets)
     }
 

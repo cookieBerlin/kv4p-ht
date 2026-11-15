@@ -421,6 +421,11 @@ final class AccessibilityAuditTests: XCTestCase {
         screen.hasSuffix(" map") || screen.hasSuffix(" map layers")
     }
 
+    /// A panel of choices, a form in a sheet or a popover (ADR-0068).
+    private func isPanel(_ screen: String) -> Bool {
+        screen.hasSuffix(" packet filter") || screen.hasSuffix(" map layers")
+    }
+
     private func exception(for issue: XCUIAccessibilityAuditIssue, _ seen: Seen?, on screen: String) -> Int? {
         let label = seen?.label ?? ""
         let elementType = seen?.elementType
@@ -452,14 +457,16 @@ final class AccessibilityAuditTests: XCTestCase {
                 return 2
             }
         }
-        // 3. Sizes kept on purpose: the header, the page bar with its count, and PTT.
-        if isDynamicType, Self.isCappedOnPurpose(label) { return 3 }
+        // 3. Sizes kept on purpose: the header, the page bar with its count, and PTT; and the titles of a sliding switch,
+        // which give way to its symbols at larger sizes.
+        if isDynamicType, Self.isCappedOnPurpose(label) || seen?.identifier == "switch-title" { return 3 }
         // 4. SwiftUI's text fields, whose text grows on the screenshots.
         if isDynamicType, elementType == .textField { return 4 }
         // 5. SwiftUI's disabled choices, which VoiceOver reads as dimmed all the same.
         if isTrait, issue.compactDescription.contains("NotEnabled") { return 5 }
-        // 6. The rows of SwiftUI's lists and forms, which wrap on the screenshots rather than being cut.
-        if isDynamicType || isTextClipped, screen.contains("settings") || label == "New chat" {
+        // 6. The rows of SwiftUI's lists and forms, which wrap on the screenshots rather than being cut: the settings and
+        // the panels of choices.
+        if isDynamicType || isTextClipped, screen.contains("settings") || isPanel(screen) || label == "New chat" {
             return 6
         }
         // 6. The long entries of the changelog, which wrap on the screenshots rather than being cut.

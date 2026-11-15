@@ -61,10 +61,12 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(onMap(element("Local beacon")), "The beacon did not come back")
     }
 
-    /// A marker within the part of the map on screen.
+    /// A marker within the part of the map on screen. Read once, by a snapshot: MapKit draws its markers anew, and one
+    /// that goes between asking whether it is there and asking where would fail the test.
     private func onMap(_ marker: XCUIElement) -> Bool {
         let map = app.descendants(matching: .any)["map"].firstMatch
-        return marker.exists && map.frame.contains(CGPoint(x: marker.frame.midX, y: marker.frame.midY))
+        guard let frame = try? marker.snapshot().frame, let mapFrame = try? map.snapshot().frame else { return false }
+        return mapFrame.contains(CGPoint(x: frame.midX, y: frame.midY))
     }
 
     private func drag(_ element: XCUIElement, from start: CGVector, to end: CGVector) {
