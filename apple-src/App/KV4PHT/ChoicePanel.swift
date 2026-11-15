@@ -27,7 +27,7 @@ extension View {
             }
     }
 
-    /// A text field that filters, with a button that clears it once it holds text; on the Mac, Esc clears it too.
+    /// A text field that filters, with a button that clears it once it holds text. Esc stays with the panel around it.
     func clearable(_ text: Binding<String>) -> some View {
         modifier(ClearButton(text: text))
     }
@@ -44,16 +44,17 @@ private struct ChoicePanel<Content: View>: View {
         #if os(macOS)
             form.frame(width: 320, height: macHeight)
         #else
-            NavigationStack {
+            VStack(spacing: 0) {
+                // A title row of its own rather than a navigation bar, whose buttons do not grow with the text.
+                HStack {
+                    Text(title).font(.headline)
+                    Spacer()
+                    Button("Done") { isShown = false }
+                        .bold()
+                        .accessibilityIdentifier("\(identifier)-done")
+                }
+                .padding()
                 form
-                    .navigationTitle(title)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { isShown = false }
-                                .accessibilityIdentifier("\(identifier)-done")
-                        }
-                    }
             }
             .frame(minWidth: 320, idealWidth: 360, minHeight: 420, idealHeight: 520)
         #endif
@@ -91,8 +92,47 @@ private struct ClearButton: ViewModifier {
                         #endif
                 }
             }
-            #if os(macOS)
-                .onExitCommand { text = "" }
-            #endif
+    }
+}
+
+extension View {
+    /// Buttons that float over a list or the map, at the bottom on the right, within reach of a thumb, so that the
+    /// content has the full height. A list scrolls its last rows above them.
+    func floatingControls<Controls: View>(@ViewBuilder _ controls: () -> Controls) -> some View {
+        safeAreaInset(edge: .bottom, alignment: .trailing) {
+            VStack(spacing: 12) { controls() }
+                .padding([.trailing, .bottom], 16)
+        }
+    }
+
+    /// The look of a button that floats: a round one of glass, with its symbol only; the name stays for VoiceOver and
+    /// the tooltip.
+    func floatingButton() -> some View {
+        labelStyle(.iconOnly)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .controlSize(.large)
+    }
+}
+
+/// A line above a list while its filter hides rows: what it looks for, and a button to clear it.
+struct FilterNotice: View {
+    let text: String
+    let clear: () -> Void
+
+    var body: some View {
+        HStack {
+            Label(text, systemImage: "line.3.horizontal.decrease")
+                .font(.footnote)
+                .foregroundStyle(Color.strongSecondary)
+            Spacer()
+            Button("Clear filter", action: clear)
+                .font(.footnote)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(text)
+        .accessibilityIdentifier("filter-notice")
     }
 }

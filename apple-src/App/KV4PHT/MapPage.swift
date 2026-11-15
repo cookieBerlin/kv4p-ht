@@ -17,8 +17,7 @@ struct MapPage: View {
     @Environment(\.isPageOnScreen) private var isPageOnScreen
 
     var body: some View {
-        VStack(spacing: 0) {
-            controls
+        Group {
             if model.isMapShownAsList, model.mapPoints.isEmpty, model.mapStations.isEmpty {
                 ContentUnavailableView(
                     "Nothing on the map",
@@ -26,11 +25,18 @@ struct MapPage: View {
                     description: Text("Memories with a position and APRS stations show here; the layers choose which.")
                         .foregroundStyle(Color.strongSecondary)
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if model.isMapShownAsList {
                 list
             } else {
                 map
             }
+        }
+        // Over the map or the list, which take the full height beneath them. Outside the map, as the Mac's
+        // VoiceOver does not see what the map holds in its own margins; the card of a marker comes above them.
+        .floatingControls { controls }
+        .safeAreaInset(edge: .top, alignment: .leading) {
+            MapOrListSwitch(isList: $model.isMapShownAsList).padding([.leading, .top], 16)
         }
         .onAppear {
             isOnScreen = true
@@ -65,39 +71,34 @@ struct MapPage: View {
         )
     }
 
-    /// Map or list, and the layers; on a phone, the button for our position where its access is still open.
-    private var controls: some View {
-        HStack {
-            MapOrListSwitch(isList: $model.isMapShownAsList)
-            Spacer()
-            if model.offersDistances {
-                Button("Show my position", systemImage: "location") { model.askForDistances() }
-                    .labelStyle(.iconOnly)
-                    .help("Show my position")
-            }
-            if !model.isMapShownAsList {
-                Button("Show all", systemImage: "dot.viewfinder") {
-                    withAnimation { frame(always: true) }
-                }
-                .labelStyle(.iconOnly)
-                .capsuleButton()
-                .disabled(model.mapFrame == nil)
-                .help("Show all")
-                .accessibilityIdentifier("map-show-all")
-            }
-            Button("Layers", systemImage: "square.3.layers.3d") { isShowingLayers = true }
-                .capsuleButton()
-                .choicePanel(
-                    "Layers",
-                    identifier: "map-layers",
-                    isPresented: $isShowingLayers,
-                    macHeight: model.isAPRSEnabled ? 400 : 300
-                ) {
-                    MapLayers(model: model)
-                }
+    /// The buttons floating over the map or the list: the layers, *Show all* on the map, and on a phone the button for
+    /// our position where its access is still open.
+    @ViewBuilder private var controls: some View {
+        if model.offersDistances {
+            Button("Show my position", systemImage: "location") { model.askForDistances() }
+                .floatingButton()
+                .help("Show my position")
         }
-        .padding(.horizontal)
-        .padding(.vertical, 6)
+        if !model.isMapShownAsList {
+            Button("Show all", systemImage: "dot.viewfinder") {
+                withAnimation { frame(always: true) }
+            }
+            .floatingButton()
+            .disabled(model.mapFrame == nil)
+            .help("Show all")
+            .accessibilityIdentifier("map-show-all")
+        }
+        Button("Layers", systemImage: "square.3.layers.3d") { isShowingLayers = true }
+            .floatingButton()
+            .help("Layers")
+            .choicePanel(
+                "Layers",
+                identifier: "map-layers",
+                isPresented: $isShowingLayers,
+                macHeight: model.isAPRSEnabled ? 400 : 300
+            ) {
+                MapLayers(model: model)
+            }
     }
 
     private var map: some View {
@@ -413,7 +414,8 @@ private struct MapOrListSwitch: View {
             segment("List", systemImage: "list.number", isList: true)
         }
         .padding(inset)
-        .background(Color.primary.opacity(0.17), in: .capsule)
+        // Of glass, as the buttons floating beside it, so that it stands out over the map as over the list.
+        .glassEffect(.regular, in: .capsule)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Show as")
     }

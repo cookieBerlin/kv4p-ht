@@ -244,18 +244,7 @@ struct LiveLogView: View {
 
     /// A remembered filter hides lines from the start, so it says so.
     private var filterNotice: some View {
-        HStack {
-            Label(
-                "Filter on: \(live.lines.count) of \(live.totalCount) lines",
-                systemImage: "line.3.horizontal.decrease"
-            )
-            .font(.footnote)
-            Spacer()
-            Button("Clear") { live.filter = LogFilter() }
-                .font(.footnote)
-        }
-        .padding(.horizontal, 8)
-        .padding(.bottom, 6)
+        FilterNotice(text: "Filter on: \(live.lines.count) of \(live.totalCount) lines") { live.filter = LogFilter() }
     }
 
     private func membership<Value: Hashable>(
