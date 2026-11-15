@@ -111,7 +111,12 @@ extension View {
         labelStyle(.iconOnly)
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
-            .controlSize(.large)
+            // The Mac's large size stays small beside the switches; its extra large one matches them.
+            #if os(macOS)
+                .controlSize(.extraLarge)
+            #else
+                .controlSize(.large)
+            #endif
     }
 }
 

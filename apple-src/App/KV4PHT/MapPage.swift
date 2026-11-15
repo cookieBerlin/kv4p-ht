@@ -36,7 +36,15 @@ struct MapPage: View {
         // VoiceOver does not see what the map holds in its own margins; the card of a marker comes above them.
         .floatingControls { controls }
         .safeAreaInset(edge: .top, alignment: .leading) {
-            MapOrListSwitch(isList: $model.isMapShownAsList).padding([.leading, .top], 16)
+            SlidingSwitch(
+                "Show as",
+                selection: $model.isMapShownAsList,
+                options: [
+                    .init(value: false, title: "Map", symbol: "map"),
+                    // Numbered, as the list is in order of distance; the plain list stands for the memories.
+                    .init(value: true, title: "List", symbol: "list.number"),
+                ]
+            ).padding([.leading, .top], 16)
         }
         .onAppear {
             isOnScreen = true
@@ -388,62 +396,6 @@ extension MapPoint {
 extension MapStation {
     /// When it was last heard.
     fileprivate var heard: Date { Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000) }
-}
-
-/// Map or list, as a switch in the look of the capsules beside it, with a symbol each: a thumb slides to the one shown.
-/// VoiceOver and the UI tests see a button each, *Map* and *List*, the one shown marked as selected.
-private struct MapOrListSwitch: View {
-    @Binding var isList: Bool
-    @Namespace private var space
-    @Environment(\.colorScheme) private var colorScheme
-    #if os(iOS)
-        // As high as the large capsules, and growing with the text.
-        @ScaledMetric(relativeTo: .body) private var height = 44
-        @ScaledMetric(relativeTo: .body) private var width = 52
-        private let inset: CGFloat = 3
-    #else
-        private let height: CGFloat = 20
-        private let width: CGFloat = 32
-        private let inset: CGFloat = 2
-    #endif
-
-    var body: some View {
-        HStack(spacing: 0) {
-            segment("Map", systemImage: "map", isList: false)
-            // Numbered, as the list is in order of distance; the plain list stands for the memories.
-            segment("List", systemImage: "list.number", isList: true)
-        }
-        .padding(inset)
-        // Of glass, as the buttons floating beside it, so that it stands out over the map as over the list.
-        .glassEffect(.regular, in: .capsule)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Show as")
-    }
-
-    private func segment(_ title: LocalizedStringKey, systemImage: String, isList value: Bool) -> some View {
-        Button {
-            withAnimation(.snappy) { isList = value }
-        } label: {
-            Image(systemName: systemImage)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.primary)
-                .frame(width: width, height: height)
-                .background {
-                    if isList == value {
-                        // Lighter than the track in dark too, as the system's segmented switch has it.
-                        Capsule()
-                            .fill(colorScheme == .dark ? Color(white: 0.42) : .white)
-                            .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
-                            .matchedGeometryEffect(id: "thumb", in: space)
-                    }
-                }
-                .contentShape(.capsule)
-        }
-        .buttonStyle(.plain)
-        .help(Text(title))
-        .accessibilityLabel(Text(title))
-        .accessibilityAddTraits(isList == value ? .isSelected : [])
-    }
 }
 
 /// What the map shows: the kinds of memory, by colour, the band and the APRS stations.
