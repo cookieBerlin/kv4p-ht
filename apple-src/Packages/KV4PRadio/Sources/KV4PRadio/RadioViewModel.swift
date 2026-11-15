@@ -1205,6 +1205,12 @@ public final class RadioViewModel {
         return "Can't transmit here: with \(raster) kHz, the allowed range is \(lower)–\(upper) MHz."
     }
 
+    /// Why APRS cannot send now, said in place of the line to write: listen-only or no callsign, then no connection.
+    public var aprsSendBlockedText: String? {
+        guard canSendOnAir else { return transmitBlockedText }
+        return isReady ? nil : "Connect the radio to send."
+    }
+
     public var canSimulateSignal: Bool { isReady && connection == .simulator && simulator != nil }
 
     /// The simulator is the chosen radio, so its settings apply.
