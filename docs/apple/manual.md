@@ -360,7 +360,8 @@ with a filter of its own, so that looking through the history leaves the main pa
 **Messages** (licence required): enter your callsign in ⚙ **Settings** under *Station* (the app
 ships with none and remembers yours), then a recipient and the text below the APRS list,
 then press Return or **Send**. Without a recipient the message goes out as the
-bulletin BLN1CQ.
+bulletin BLN1CQ. Without a connection, or without a callsign, the list and a chat show why in place of the line to
+write, such as *Connect the radio to send.*
 
 - The message is sent on the current TX frequency, via WIDE1-1,WIDE2-1, only
   while the radio receives (not during PTT or a scan) and inside the ham band.
@@ -594,6 +595,7 @@ Settings**, which leads straight to the update.
 | *Microphone access is not allowed…* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
 | *The microphone could not be started.* | Press PTT again. If it stays, another app may be using the microphone, or restart the app. |
 | *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings** under *Station*. |
+| *Connect the radio to send.* | Connect the radio: on the memories, or in ⚙ **Settings**. |
 | *Set your callsign to transmit.* | Enter your callsign in ⚙ **Settings** under *Station*. |
 | *Listen only: this app does not transmit.* | Turn *Listen only* off in ⚙ **Settings** under *Station*. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |
