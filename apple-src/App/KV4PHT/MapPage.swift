@@ -87,13 +87,13 @@ struct MapPage: View {
             }
             Button("Layers", systemImage: "square.3.layers.3d") { isShowingLayers = true }
                 .capsuleButton()
-                .accessibilityIdentifier("map-layers")
-                // A popover on the Mac and the iPad, and a sheet where the window is narrow, as on a phone. It stays
-                // open while the layers change, so that several can be switched at once (ADR-0068).
-                .popover(isPresented: $isShowingLayers, arrowEdge: .top) {
-                    MapLayersPanel(model: model, isShown: $isShowingLayers)
-                        .presentationCompactAdaptation(.sheet)
-                        .presentationDetents([.medium, .large])
+                .choicePanel(
+                    "Layers",
+                    identifier: "map-layers",
+                    isPresented: $isShowingLayers,
+                    macHeight: model.isAPRSEnabled ? 400 : 300
+                ) {
+                    MapLayers(model: model)
                 }
         }
         .padding(.horizontal)
@@ -445,31 +445,11 @@ private struct MapOrListSwitch: View {
 }
 
 /// What the map shows: the kinds of memory, by colour, the band and the APRS stations.
-private struct MapLayersPanel: View {
+private struct MapLayers: View {
     @Bindable var model: RadioViewModel
-    @Binding var isShown: Bool
 
     var body: some View {
-        #if os(macOS)
-            form.frame(width: 320, height: model.isAPRSEnabled ? 400 : 300)
-        #else
-            NavigationStack {
-                form
-                    .navigationTitle("Layers")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { isShown = false }
-                                .accessibilityIdentifier("map-layers-done")
-                        }
-                    }
-            }
-            .frame(minWidth: 320, idealWidth: 360, minHeight: 420, idealHeight: 520)
-        #endif
-    }
-
-    private var form: some View {
-        Form {
+        Group {
             Section {
                 ForEach(MemoryKind.allCases, id: \.self) { kind in
                     Toggle(isOn: shows(MapLayer(kind))) {
@@ -508,12 +488,7 @@ private struct MapLayersPanel: View {
                 }
             }
         }
-        .formStyle(.grouped)
-        #if os(macOS)
-            // Checkboxes, as is the Mac's custom, which carry their names; its switches in a form stand apart from them.
-            .toggleStyle(.checkbox)
-        #endif
-        .accessibilityIdentifier("map-layers-panel")
+
     }
 
     private func shows(_ layer: MapLayer) -> Binding<Bool> {

@@ -153,6 +153,7 @@ struct LiveLogView: View {
     @Bindable var live: LiveLog
     @State private var position = ScrollPosition(edge: .bottom)
     @State private var isAtEnd = true
+    @State private var isShowingFilter = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -201,31 +202,27 @@ struct LiveLogView: View {
             TextField("Search", text: $live.filter.search, prompt: Text("Search"))
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled()
-            Menu {
-                ForEach(DiagnosticLog.Level.allCases, id: \.self) { level in
-                    Toggle(Self.name(of: level), isOn: membership(of: level, in: \.levels))
-                }
-            } label: {
-                Label(
-                    "Levels",
-                    systemImage: live.filter.levels.isEmpty ? "exclamationmark.circle" : "exclamationmark.circle.fill"
-                )
+                .clearable($live.filter.search)
+            Button("Filter", systemImage: filterSymbol) { isShowingFilter = true }
                 .labelStyle(.iconOnly)
-            }
-            .fixedSize()
-            Menu {
-                ForEach(DiagnosticLog.Category.allCases, id: \.self) { category in
-                    Toggle(category.rawValue.capitalized, isOn: membership(of: category, in: \.categories))
+                .choicePanel("Filter", identifier: "log-filter", isPresented: $isShowingFilter, macHeight: 460) {
+                    Section {
+                        ForEach(DiagnosticLog.Level.allCases, id: \.self) { level in
+                            Toggle(Self.name(of: level), isOn: membership(of: level, in: \.levels))
+                        }
+                    } header: {
+                        Text("Levels").foregroundStyle(Color.strongSecondary)
+                    }
+                    Section {
+                        ForEach(DiagnosticLog.Category.allCases, id: \.self) { category in
+                            Toggle(category.rawValue.capitalized, isOn: membership(of: category, in: \.categories))
+                        }
+                    } header: {
+                        Text("Categories").foregroundStyle(Color.strongSecondary)
+                    } footer: {
+                        Text("None chosen: all.").foregroundStyle(Color.strongSecondary)
+                    }
                 }
-            } label: {
-                Label(
-                    "Categories",
-                    systemImage: live.filter.categories.isEmpty
-                        ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
-                )
-                .labelStyle(.iconOnly)
-            }
-            .fixedSize()
             Button(
                 live.isPaused ? "Continue" : "Pause",
                 systemImage: live.isPaused ? "play.fill" : "pause.fill"
@@ -237,6 +234,12 @@ struct LiveLogView: View {
                 .labelStyle(.iconOnly)
         }
         .padding(8)
+    }
+
+    /// Filled while levels or categories are chosen.
+    private var filterSymbol: String {
+        live.filter.levels.isEmpty && live.filter.categories.isEmpty
+            ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
     }
 
     /// A remembered filter hides lines from the start, so it says so.

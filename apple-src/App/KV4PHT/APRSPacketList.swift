@@ -47,6 +47,7 @@ struct APRSPacketList: View {
     @State private var exportFormat = APRSExport.Format.csv
     @State private var isExporting = false
     @State private var isOnScreen = false
+    @State private var isShowingTypes = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isPageOnScreen) private var isPageOnScreen
 
@@ -106,13 +107,14 @@ struct APRSPacketList: View {
             TextField("Callsign", text: $search, prompt: Text("Callsign"))
                 .macName("Callsign")
                 .textFieldStyle(.roundedBorder)
+                .clearable($search)
                 #if os(iOS)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                 #endif
             HStack(spacing: 0) {
                 forMeButton
-                typesMenu
+                typesButton
                 exportMenu
             }
             // The icons end where the rows do, not their wider tap areas.
@@ -145,11 +147,10 @@ struct APRSPacketList: View {
         .help(ControlHelp.forMe)
     }
 
-    private var typesMenu: some View {
-        Menu {
-            ForEach(APRSEvent.Kind.filterOptions, id: \.self) { kind in
-                Toggle(kind.filterName, isOn: typeBinding(kind))
-            }
+    /// The types in a panel, each with the symbol a packet of its kind has in the list.
+    private var typesButton: some View {
+        Button {
+            isShowingTypes = true
         } label: {
             barIcon(
                 "Types",
@@ -157,10 +158,19 @@ struct APRSPacketList: View {
                     ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
             )
         }
-        .menuIndicator(.hidden)
         .buttonStyle(.plain)
-        .fixedSize()
         .help(ControlHelp.packetTypes)
+        .choicePanel("Types", identifier: "packet-types", isPresented: $isShowingTypes, macHeight: 360) {
+            Section {
+                ForEach(APRSEvent.Kind.filterOptions, id: \.self) { kind in
+                    Toggle(isOn: typeBinding(kind)) {
+                        Label(kind.filterName, systemImage: Self.symbol(kind))
+                    }
+                }
+            } footer: {
+                Text("None chosen: all types.").foregroundStyle(Color.strongSecondary)
+            }
+        }
     }
 
     private func typeBinding(_ kind: APRSEvent.Kind) -> Binding<Bool> {
