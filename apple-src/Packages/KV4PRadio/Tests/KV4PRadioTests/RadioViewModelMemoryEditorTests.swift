@@ -92,6 +92,20 @@ struct RadioViewModelMemoryEditorTests {
         #expect(model.selectedGroup == nil)
     }
 
+    @Test("the choice of groups holds the group shown before the memories are loaded, for a picker from the start")
+    func groupChoicesBeforeLoading() async throws {
+        let repository = try SwiftDataMemoryRepository.inMemory()
+        _ = try await repository.insert([Self.memory("A", group: "One"), Self.memory("C", group: "Two")])
+        let model = RadioViewModelMemoryTests.model(repository)
+        model.selectedGroup = "Two"
+        #expect(model.groups.isEmpty)
+        #expect(model.groupChoices == ["Two"])
+        await model.loadMemories()
+        #expect(model.groupChoices == ["One", "Two"])
+        model.selectedGroup = nil
+        #expect(model.groupChoices == ["One", "Two"])
+    }
+
     @Test("storage failures are reported")
     func storageFails() async {
         let model = RadioViewModel(
