@@ -351,9 +351,9 @@ position is known, the distance and direction from you stand below them, such as
 the units you chose under ⚙ **Settings**, *APRS*, *Units*: those of your system by default, or metric
 or imperial, also for the weather. Pressure stays in hPa; very near stations show no direction. Before you have decided on location
 access, **Show distances** at the top of the list asks for it. Without access, the list works as
-before. The list stays when the app ends: see *History* below. **Above the list:** the search finds a callsign in the sender or recipient, over everything stored. *For me*
-shows only messages from or to your callsign, with any SSID. *Types* narrows the list to the types you
-choose. *Export* saves what the list shows, also what is stored, as CSV or as raw packets. The app remembers
+before. The list stays when the app ends: see *History* below. **Above the list:** the search finds a callsign in the sender or recipient, over everything stored; ⓧ clears it. *For me*
+shows only messages from or to your callsign, with any SSID. *Types* opens a panel, a sheet on iPhone, with each type and its symbol in the list, and
+narrows the list to the types you switch on; with none on, all show. The panel stays open while you change several. *Export* saves what the list shows, also what is stored, as CSV or as raw packets. The app remembers
 the filter on this device. ⚙ **Settings**, *APRS*, *Packets* shows the same list over the full height,
 with a filter of its own, so that looking through the history leaves the main page as it is.
 
@@ -397,8 +397,8 @@ ended. A tap on the notification opens its chat. *Notify about messages to me* u
 *History* turns this off.
 
 **If something goes wrong:** the app keeps a log on your device, with frequencies and times but without callsigns, message texts or positions.
-⚙ **Settings**, *Logging*, *Live log* shows what is being logged as it happens: you can search, filter by level
-and category, pause and copy. On the same page, *Report a problem* shows a report, which you can share or attach to a
+⚙ **Settings**, *Logging*, *Live log* shows what is being logged as it happens: you can search (ⓧ clears it), filter by level
+and category in one panel, pause and copy. On the same page, *Report a problem* shows a report, which you can share or attach to a
 GitHub issue after looking through it. Issues are public. Nothing leaves your device without you. There you can
 also delete the log, and turn on *Detailed logging*, which ends by itself after a day. After a crash, the app asks once whether to report it.
 
