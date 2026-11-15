@@ -182,16 +182,21 @@ struct SidePane: View {
         VStack(spacing: 0) {
             // Without APRS, the map has the side to itself.
             if model.isAPRSEnabled {
-                Picker("Show", selection: part) {
-                    Text("Packets").tag(Part.aprs(.packets))
-                    Text(model.newAPRSMessages > 0 ? "Chats (\(model.newAPRSMessages))" : "Chats")
-                        .tag(Part.aprs(.chats))
-                    if model.isMapEnabled {
-                        Text("Map").tag(Part.map)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+                SlidingSwitch(
+                    "Show",
+                    selection: part,
+                    options: [
+                        .init(value: .aprs(.packets), title: "Packets", symbol: PageSymbol.packets),
+                        .init(
+                            value: .aprs(.chats),
+                            title: "Chats",
+                            symbol: PageSymbol.chats,
+                            count: model.newAPRSMessages
+                        ),
+                    ] + (model.isMapEnabled ? [.init(value: .map, title: "Map", symbol: PageSymbol.map)] : []),
+                    showsTitles: true
+                )
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal)
                 .padding(.top, 6)
             }
@@ -227,6 +232,15 @@ struct SidePane: View {
     }
 }
 
+/// The symbol of each page, the same in the page bar of a phone and in the switch beside the memories.
+enum PageSymbol {
+    static let memories = "list.bullet"
+    static let packets = "point.3.connected.trianglepath.dotted"
+    static let chats = "bubble.left.and.bubble.right"
+    static let map = "map"
+    static let settings = "gearshape"
+}
+
 #if os(iOS)
     /// The pages of the compact layout, in their order.
     enum CompactPage: String, CaseIterable, Identifiable {
@@ -249,11 +263,11 @@ struct SidePane: View {
 
         var symbol: String {
             switch self {
-            case .memories: "list.bullet"
-            case .packets: "point.3.connected.trianglepath.dotted"
-            case .chats: "bubble.left.and.bubble.right"
-            case .map: "map"
-            case .settings: "gearshape"
+            case .memories: PageSymbol.memories
+            case .packets: PageSymbol.packets
+            case .chats: PageSymbol.chats
+            case .map: PageSymbol.map
+            case .settings: PageSymbol.settings
             }
         }
 

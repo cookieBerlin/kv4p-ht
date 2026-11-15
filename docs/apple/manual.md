@@ -50,8 +50,8 @@ The structure is the same on all devices, and similar to the Android app:
   📱 iPad, while connected, a small **Disconnect** at the top right. Type a frequency and press Return to
   tune, or step it digit by digit (see *Receiving*).
 - **Below:** the memories, APRS and the map. 🖥 and on a wide 📱 iPad the header, the memories and **Push to talk**
-  form a column on the left, and beside it a switch between **Packets**, **Chats** and **Map** reaches from the top to
-  the bottom of the window. With APRS switched off (⚙ **Settings → Pages**), the map has that side to itself; with both
+  form a column on the left, and beside it a switch between **Packets**, **Chats** and **Map**, each with its symbol
+  and name, or its symbol alone with large text, reaches from the top to the bottom of the window. With APRS switched off (⚙ **Settings → Pages**), the map has that side to itself; with both
   switched off, the memories take the whole width.
 - **At the bottom:** a large **Push to talk** button and any messages. The button shows only while the radio is
   connected, 📱 on an iPhone as a microphone. Otherwise the connection stands in its place: the status or why the
@@ -351,9 +351,12 @@ position is known, the distance and direction from you stand below them, such as
 the units you chose under ⚙ **Settings**, *APRS*, *Units*: those of your system by default, or metric
 or imperial, also for the weather. Pressure stays in hPa; very near stations show no direction. Before you have decided on location
 access, **Show distances** at the top of the list asks for it. Without access, the list works as
-before. The list stays when the app ends: see *History* below. **Above the list:** the search finds a callsign in the sender or recipient, over everything stored. *For me*
-shows only messages from or to your callsign, with any SSID. *Types* narrows the list to the types you
-choose. *Export* saves what the list shows, also what is stored, as CSV or as raw packets. The app remembers
+before. The list stays when the app ends: see *History* below. **Over the list**, at the bottom right, float two buttons.
+**Filter** (the lines in a circle, filled while a filter is on) opens a panel, a sheet on iPhone, that stays open
+while you change several: **Callsign** finds a callsign in the sender or recipient, over everything stored, and ⓧ
+clears it; **Only for me** shows only messages from or to your callsign, with any SSID; **Types** narrows the list
+to the types you switch on, each with its symbol in the list, and with none on, all show. While a filter is on, a
+line above the list names it, and **Clear filter** there ends it. **Export** (the box with the arrow) saves what the list shows, also what is stored, as CSV or as raw packets. The app remembers
 the filter on this device. ⚙ **Settings**, *APRS*, *Packets* shows the same list over the full height,
 with a filter of its own, so that looking through the history leaves the main page as it is.
 
@@ -397,8 +400,8 @@ ended. A tap on the notification opens its chat. *Notify about messages to me* u
 *History* turns this off.
 
 **If something goes wrong:** the app keeps a log on your device, with frequencies and times but without callsigns, message texts or positions.
-⚙ **Settings**, *Logging*, *Live log* shows what is being logged as it happens: you can search, filter by level
-and category, pause and copy. On the same page, *Report a problem* shows a report, which you can share or attach to a
+⚙ **Settings**, *Logging*, *Live log* shows what is being logged as it happens: you can search (ⓧ clears it), filter by level
+and category in one panel, pause and copy. On the same page, *Report a problem* shows a report, which you can share or attach to a
 GitHub issue after looking through it. Issues are public. Nothing leaves your device without you. There you can
 also delete the log, and turn on *Detailed logging*, which ends by itself after a day. After a crash, the app asks once whether to report it.
 
@@ -444,9 +447,12 @@ digipeater is useful.
 **Map** shows your memories that have a position, such as the repeaters imported from the DARC lists, and the APRS
 stations heard, with Apple's maps.
 
-- **Layers** (the stacked squares) switch the **Repeaters** (blue), **Frequencies** (green) and **Beacons**
-  (orange) on and off, from all groups. Frequencies are off at first, as most of them have no fixed place. The menu
-  closes after each choice.
+- **Map** and **List**, the switch floating at the top left, with a folded map and a numbered list, choose how the
+  points show. The other buttons float at the bottom right, so that the map and the list have the full height.
+- **Layers** (the stacked squares) opens a panel, a sheet on iPhone, that switches the **Repeaters** (blue),
+  **Frequencies** (green) and **Beacons** (orange) on and off, from all groups. Frequencies are off at first, as most
+  of them have no fixed place. The panel stays open while you change several; **Done**, a tap beside it or Esc
+  closes it.
 - **Band**, also under *Layers*, chooses what the map shows: **Radio's band**, at first, shows only the band of
   the connected radio, and 2 m and 70 cm while none is connected. **2 m** or **70 cm** shows that band, and
   **All** also memories of other bands, such as 6 m. A marker reads *2m* or *70*, or a dot for another band.
@@ -454,16 +460,16 @@ stations heard, with Apple's maps.
   symbol: those heard within **Heard within**, 1 hour at first, from the packets kept as well. Only packets with a
   position count, so a station that only sent messages is not there. Without APRS, the stations go.
 - **Your position** is the blue dot. The map does not follow it: the arrow button of the map centres it. While
-  the app has not asked for your location yet, the arrow at the top asks. The position stays on your device and
+  the app has not asked for your location yet, the arrow at the bottom right asks. The position stays on your device and
   is read only while the map is on screen.
 - The map shows all its points and your position, also after a change of the layers or the band. Once you move
-  it, it stays where you moved it; **Show all** (the arrows pointing outwards) brings all of them back into
+  it, it stays where you moved it; **Show all** (the frame with a dot) brings all of them back into
   view.
 - **Tap a marker** to see the memory's frequency, comment and distance. **Tune** tunes the radio to it, while the
   radio is connected and receives it.
 - **Tap a station** to see when it was heard, how far it is and its comment. **Packets** shows its packets, and
   **Chat** opens a chat with it.
-- **List** shows the same memories and stations as a list, the nearest first, with their distance and direction;
+- The **List** shows the same memories and stations, the nearest first, with their distance and direction;
   it is easier with VoiceOver. Tap a memory to tune to it, or a station to see its packets.
 
 The map needs the internet; without it, only the parts seen before show. Map and list, the layers, the band and the time

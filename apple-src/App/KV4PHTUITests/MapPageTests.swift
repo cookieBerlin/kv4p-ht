@@ -24,19 +24,15 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local repeater").waitForExistence(timeout: 5), "No repeater in the list")
         XCTAssertTrue(row("Local beacon").exists, "No beacon in the list")
         XCTAssertFalse(row("Calling channel").exists, "The frequencies are on by default")
-        chooseLayer("Frequencies")
-        var frequenciesCame = scrolledTo(row("Calling channel"))
-        #if os(macOS)
-            // What is typed into the open menu does not take now and then, and XCTest cannot see the menu to tell. Once
-            // more only if nothing came: had the first choice taken, the second switches them off, and the test fails
-            // all the same.
-            if !frequenciesCame {
-                chooseLayer("Frequencies")
-                frequenciesCame = scrolledTo(row("Calling channel"))
-            }
-        #endif
-        XCTAssertTrue(frequenciesCame, "The frequencies did not come")
-        chooseLayer("70 cm")
+        XCTAssertTrue(app.openPanel("map-layers"), "The layers did not open")
+        app.choosePanelEntry("map-layers", "Frequencies")
+        // The layers stay open after a choice, so that several can be switched at once.
+        XCTAssertTrue(app.panelEntry("map-layers", "Beacons").exists, "The layers closed after a choice")
+        XCTAssertTrue(app.closePanel("map-layers"), "The layers stay open")
+        XCTAssertTrue(scrolledTo(row("Calling channel")), "The frequencies did not come")
+        XCTAssertTrue(app.openPanel("map-layers"), "The layers did not open")
+        app.choosePanelEntry("map-layers", "70 cm")
+        XCTAssertTrue(app.closePanel("map-layers"), "The layers stay open")
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
 
@@ -65,10 +61,12 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(onMap(element("Local beacon")), "The beacon did not come back")
     }
 
-    /// A marker within the part of the map on screen.
+    /// A marker within the part of the map on screen. Read once, by a snapshot: MapKit draws its markers anew, and one
+    /// that goes between asking whether it is there and asking where would fail the test.
     private func onMap(_ marker: XCUIElement) -> Bool {
         let map = app.descendants(matching: .any)["map"].firstMatch
-        return marker.exists && map.frame.contains(CGPoint(x: marker.frame.midX, y: marker.frame.midY))
+        guard let frame = try? marker.snapshot().frame, let mapFrame = try? map.snapshot().frame else { return false }
+        return mapFrame.contains(CGPoint(x: frame.midX, y: frame.midY))
     }
 
     private func drag(_ element: XCUIElement, from start: CGVector, to end: CGVector) {
@@ -88,18 +86,10 @@ final class MapPageTests: XCTestCase {
             .matching(NSPredicate(format: "label BEGINSWITH 'N1CALL, '")).firstMatch
         XCTAssertTrue(scrolledTo(station), "No station in the list")
         station.tapOrClick()
-        // The page bar of a phone, or the switch beside the memories elsewhere, whose chosen part the Mac marks by its
-        // value.
-        #if os(macOS)
-            let packets = app.radioButtons.matching(NSPredicate(format: "label BEGINSWITH 'Packets' AND value == 1"))
-                .firstMatch
-        #else
-            let packets = app.descendants(matching: .any).matching(
-                NSPredicate(
-                    format: "(identifier == 'page-Packets' OR label BEGINSWITH 'Packets') AND isSelected == true"
-                )
-            ).firstMatch
-        #endif
+        // The page bar of a phone, or the switch beside the memories elsewhere.
+        let packets = app.descendants(matching: .any).matching(
+            NSPredicate(format: "(identifier == 'page-Packets' OR label BEGINSWITH 'Packets') AND isSelected == true")
+        ).firstMatch
         XCTAssertTrue(packets.waitForExistence(timeout: 5), "The packets are not shown")
     }
 
@@ -115,11 +105,7 @@ final class MapPageTests: XCTestCase {
 
     /// The page bar of a phone, or the switch beside the memories elsewhere; the switch in the settings is no button.
     private var mapPage: XCUIElement {
-        #if os(macOS)
-            app.radioButtons["Map"].firstMatch
-        #else
-            app.buttons.matching(NSPredicate(format: "identifier == 'page-Map' OR label == 'Map'")).firstMatch
-        #endif
+        app.buttons.matching(NSPredicate(format: "identifier == 'page-Map' OR label == 'Map'")).firstMatch
     }
 
     /// Once the app has started, without waiting for the page bar of a phone where there is none.
@@ -128,53 +114,11 @@ final class MapPageTests: XCTestCase {
         app.showPage("Map")
     }
 
-    /// An entry of the menu of the layers, by the start of its name. The Mac shows the menu, but XCTest does not see its
-    /// entries while it is open, so they are chosen by typing, as a menu of the Mac offers.
-    private func chooseLayer(_ name: String) {
-        let layers = app.descendants(matching: .any)["map-layers"].firstMatch
-        XCTAssertTrue(layers.waitForExistence(timeout: 5), "No layers")
-        #if os(macOS)
-            layers.tapOrClick()
-            Thread.sleep(forTimeInterval: 1)
-            app.typeText(name)
-            app.typeKey(.return, modifierFlags: [])
-        #else
-            let entry = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
-            layers.tap()
-            XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in the layers")
-            // The entries of the open menu report no point to tap at times, also once they are on screen, so the middle
-            // of the frame is tapped, once the menu has stopped moving.
-            var frame = entry.frame
-            let deadline = Date.now.addingTimeInterval(3)
-            repeat {
-                Thread.sleep(forTimeInterval: 0.3)
-                let next = entry.frame
-                if next == frame { break }
-                frame = next
-            } while Date.now < deadline
-            // The menu closes after a choice, so while it stays open, the tap did not take and is made again; a tap that
-            // took cannot be repeated by this. Until it has closed, the list below takes no queries.
-            // While the menu comes or goes, the frame of an entry can be infinite, which a tap does not take.
-            for _ in 0..<3 where entry.exists {
-                let frame = entry.frame
-                if !frame.isInfinite, !frame.isEmpty {
-                    entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-                }
-                _ = entry.waitForNonExistence(timeout: 5)
-            }
-            XCTAssertFalse(entry.exists, "The layers stay open")
-        #endif
-    }
-
-    /// A part of a segmented switch: buttons on iPhone and iPad, radio buttons on the Mac.
+    /// A part of the switch between map and list: a button each, beside the page of the map on a phone.
     private func choose(_ label: String) {
-        #if os(macOS)
-            let part = app.radioButtons[label].firstMatch
-        #else
-            let part =
-                app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != 'page-Map'", label))
-                .allElementsBoundByIndex.first(where: \.isHittable) ?? app.buttons[label].firstMatch
-        #endif
+        let part =
+            app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != 'page-Map'", label))
+            .allElementsBoundByIndex.first(where: \.isHittable) ?? app.buttons[label].firstMatch
         XCTAssertTrue(part.waitForExistence(timeout: 30), "No \(label) to choose")
         part.tapOrClick()
     }

@@ -47,7 +47,9 @@ others add to it.
   messages between other stations, while positions and all else stayed, so it seemed not to work. The
   GUI of this app may be better than the Android app's, as only the layers that talk to the hardware
   must be the same, so its port and vectors go.
-- **The bar has a search by callsign, *For me*, *Types* and *Export*.** *For me* means messages from
+- **The bar has a search by callsign, *For me*, *Types* and *Export*.** Since then, the filter is one panel, opened
+  by a button that floats over the list beside *Export*, with a line above the list while it is on
+  ([ADR-0068](0068-map.md) has the panels and the floating buttons). *For me* means messages from
   or to this station with any SSID, without those to everyone, as for the notice of 4.6c.
 - **Search and types go over all that is stored,** and more can be loaded for them.
 - **A page *Packets* under APRS in the settings shows the same list over the full height,** from one

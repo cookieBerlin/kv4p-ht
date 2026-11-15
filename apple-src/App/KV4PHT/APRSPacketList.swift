@@ -47,6 +47,7 @@ struct APRSPacketList: View {
     @State private var exportFormat = APRSExport.Format.csv
     @State private var isExporting = false
     @State private var isOnScreen = false
+    @State private var isShowingFilter = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isPageOnScreen) private var isPageOnScreen
 
@@ -55,8 +56,14 @@ struct APRSPacketList: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            filterBar
+            if !filter.isEmpty {
+                FilterNotice(text: "Filter: \(filter.summary)", clear: clearFilter)
+            }
             packets
+                .floatingControls {
+                    filterButton
+                    exportMenu
+                }
         }
         .onAppear {
             search = filter.callsign
@@ -98,69 +105,75 @@ struct APRSPacketList: View {
         Task { await model.setAPRSFilter(changed, in: list) }
     }
 
-    // MARK: Search, filter, export
+    // MARK: Filter, export
 
-    /// The search with the icons beside it, or below it with the accessibility text sizes.
-    private var filterBar: some View {
-        AdaptiveStack(spacing: 8) {
-            TextField("Callsign", text: $search, prompt: Text("Callsign"))
-                .macName("Callsign")
-                .textFieldStyle(.roundedBorder)
-                #if os(iOS)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                #endif
-            HStack(spacing: 0) {
-                forMeButton
-                typesMenu
-                exportMenu
+    private func clearFilter() {
+        search = ""
+        setFilter { $0 = APRSListFilter() }
+    }
+
+    /// The whole filter in one panel: the callsign, *For me* and the types, each with the symbol a packet of its kind
+    /// has in the list. *For me* finds messages only, so the types wait while it is on.
+    private var filterButton: some View {
+        Button(
+            "Filter",
+            systemImage: filter.isEmpty
+                ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
+        ) {
+            isShowingFilter = true
+        }
+        .floatingButton()
+        .help("Filter")
+        .choicePanel(
+            "Filter",
+            identifier: "packet-filter",
+            isPresented: $isShowingFilter,
+            macHeight: 560,
+            arrowEdge: .bottom
+        ) {
+            Section {
+                TextField("Callsign", text: $search, prompt: Text("Callsign"))
+                    .macName("Callsign")
+                    #if os(iOS)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                    #endif
+                    .clearable($search)
+            } header: {
+                Text("Callsign").foregroundStyle(Color.strongSecondary)
+            } footer: {
+                Text("In the sender or the recipient, over everything stored.").foregroundStyle(Color.strongSecondary)
             }
-            // The icons end where the rows do, not their wider tap areas.
-            .padding(.trailing, -10)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 2)
-    }
-
-    /// The same size for each, whatever its icon, so that the gaps are even; filled when it is in use.
-    private func barIcon(_ title: LocalizedStringKey, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .labelStyle(.iconOnly)
-            .font(.title3)
-            .foregroundStyle(.tint)
-            .frame(minWidth: 44, minHeight: 44)
-            .contentShape(.rect)
-    }
-
-    private var forMeButton: some View {
-        Button {
-            setFilter { $0.isForMe.toggle() }
-        } label: {
-            barIcon("For me", systemImage: filter.isForMe ? "person.crop.circle.fill" : "person.crop.circle")
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(filter.isForMe ? .isSelected : [])
-        .help(ControlHelp.forMe)
-    }
-
-    private var typesMenu: some View {
-        Menu {
-            ForEach(APRSEvent.Kind.filterOptions, id: \.self) { kind in
-                Toggle(kind.filterName, isOn: typeBinding(kind))
+            Section {
+                Toggle("Only for me", isOn: forMeBinding)
+                    .disabled(model.callsign.isEmpty)
+            } header: {
+                Text("Messages").foregroundStyle(Color.strongSecondary)
+            } footer: {
+                Text(model.callsign.isEmpty ? "Set your callsign in Settings, Station." : ControlHelp.forMe)
+                    .foregroundStyle(Color.strongSecondary)
             }
-        } label: {
-            barIcon(
-                "Types",
-                systemImage: filter.kinds.isEmpty
-                    ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
-            )
+            Section {
+                ForEach(APRSEvent.Kind.filterOptions, id: \.self) { kind in
+                    Toggle(isOn: typeBinding(kind)) {
+                        Label(kind.filterName, systemImage: Self.symbol(kind))
+                    }
+                }
+                .disabled(filter.isForMe)
+            } header: {
+                Text("Types").foregroundStyle(Color.strongSecondary)
+            } footer: {
+                Text("None chosen: all types.").foregroundStyle(Color.strongSecondary)
+            }
         }
-        .menuIndicator(.hidden)
-        .buttonStyle(.plain)
-        .fixedSize()
-        .help(ControlHelp.packetTypes)
+    }
+
+    private var forMeBinding: Binding<Bool> {
+        Binding {
+            filter.isForMe
+        } set: { isOn in
+            setFilter { $0.isForMe = isOn }
+        }
     }
 
     private func typeBinding(_ kind: APRSEvent.Kind) -> Binding<Bool> {
@@ -183,11 +196,9 @@ struct APRSPacketList: View {
                 Button(format.label) { export(format) }
             }
         } label: {
-            barIcon("Export", systemImage: "square.and.arrow.up")
+            Label("Export", systemImage: "square.and.arrow.up")
         }
-        .menuIndicator(.hidden)
-        .buttonStyle(.plain)
-        .fixedSize()
+        .floatingMenu("Export")
         .help(ControlHelp.exportPackets)
     }
 
@@ -236,10 +247,7 @@ struct APRSPacketList: View {
             ContentUnavailableView {
                 Label("No packets fit the filter", systemImage: "line.3.horizontal.decrease.circle")
             } actions: {
-                Button("Clear filter") {
-                    search = ""
-                    setFilter { $0 = APRSListFilter() }
-                }
+                Button("Clear filter", action: clearFilter)
             }
         }
     }

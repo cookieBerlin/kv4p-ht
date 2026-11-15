@@ -12,12 +12,12 @@ struct MapPage: View {
     @State private var camera = MapCameraPosition.automatic
     @State private var selected: MapSelection?
     @State private var isOnScreen = false
+    @State private var isShowingLayers = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isPageOnScreen) private var isPageOnScreen
 
     var body: some View {
-        VStack(spacing: 0) {
-            controls
+        Group {
             if model.isMapShownAsList, model.mapPoints.isEmpty, model.mapStations.isEmpty {
                 ContentUnavailableView(
                     "Nothing on the map",
@@ -25,11 +25,26 @@ struct MapPage: View {
                     description: Text("Memories with a position and APRS stations show here; the layers choose which.")
                         .foregroundStyle(Color.strongSecondary)
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if model.isMapShownAsList {
                 list
             } else {
                 map
             }
+        }
+        // Over the map or the list, which take the full height beneath them. Outside the map, as the Mac's
+        // VoiceOver does not see what the map holds in its own margins; the card of a marker comes above them.
+        .floatingControls { controls }
+        .safeAreaInset(edge: .top, alignment: .leading) {
+            SlidingSwitch(
+                "Show as",
+                selection: $model.isMapShownAsList,
+                options: [
+                    .init(value: false, title: "Map", symbol: "map"),
+                    // Numbered, as the list is in order of distance; the plain list stands for the memories.
+                    .init(value: true, title: "List", symbol: "list.number"),
+                ]
+            ).padding([.leading, .top], 16)
         }
         .onAppear {
             isOnScreen = true
@@ -64,77 +79,35 @@ struct MapPage: View {
         )
     }
 
-    /// Map or list, and the layers; on a phone, the button for our position where its access is still open.
-    private var controls: some View {
-        HStack {
-            Picker("Show as", selection: $model.isMapShownAsList) {
-                Text("Map").tag(false)
-                Text("List").tag(true)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
-            Spacer()
-            if model.offersDistances {
-                Button("Show my position", systemImage: "location") { model.askForDistances() }
-                    .labelStyle(.iconOnly)
-                    .help("Show my position")
-            }
-            if !model.isMapShownAsList {
-                Button("Show all", systemImage: "arrow.up.left.and.arrow.down.right") {
-                    withAnimation { frame(always: true) }
-                }
-                .labelStyle(.iconOnly)
-                .capsuleButton()
-                .disabled(model.mapFrame == nil)
-                .help("Show all")
-                .accessibilityIdentifier("map-show-all")
-            }
-            Menu("Layers", systemImage: "square.3.layers.3d") {
-                // A menu shows no colours of its own, so their names stand there.
-                Section("Kind, by colour") {
-                    ForEach(MemoryKind.allCases, id: \.self) { kind in
-                        Toggle("\(MapLayer(kind).title) (\(kind.mapColorName))", isOn: shows(MapLayer(kind)))
-                    }
-                }
-                Section("Band, marked 2m or 70") {
-                    Picker("Band", selection: $model.mapBand) {
-                        ForEach(MapBand.allCases, id: \.self) { band in
-                            Text(band.title).tag(band)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                }
-                if model.isAPRSEnabled {
-                    Section("APRS, by symbol") {
-                        Toggle(MapLayer.stations.title, isOn: shows(.stations))
-                        Picker("Heard within", selection: $model.mapStationWindow) {
-                            ForEach(MapStationWindow.allCases, id: \.self) { window in
-                                Text(window.title).tag(window)
-                            }
-                        }
-                    }
-                }
-            }
-            .menuIndicator(.hidden)
-            // Closes after each choice: an open menu keeps the app from going idle, which held up the UI tests until
-            // they gave up, and a choice did not always take while it stayed open.
-            .menuActionDismissBehavior(.enabled)
-            .capsuleMenu()
-            .accessibilityIdentifier("map-layers")
+    /// The buttons floating over the map or the list: the layers, *Show all* on the map, and on a phone the button for
+    /// our position where its access is still open.
+    @ViewBuilder private var controls: some View {
+        if model.offersDistances {
+            Button("Show my position", systemImage: "location") { model.askForDistances() }
+                .floatingButton()
+                .help("Show my position")
         }
-        .padding(.horizontal)
-        .padding(.vertical, 6)
-    }
-
-    private func shows(_ layer: MapLayer) -> Binding<Bool> {
-        Binding(
-            get: { model.mapLayers.contains(layer) },
-            set: { isOn in
-                if isOn { model.mapLayers.insert(layer) } else { model.mapLayers.remove(layer) }
+        if !model.isMapShownAsList {
+            Button("Show all", systemImage: "dot.viewfinder") {
+                withAnimation { frame(always: true) }
             }
-        )
+            .floatingButton()
+            .disabled(model.mapFrame == nil)
+            .help("Show all")
+            .accessibilityIdentifier("map-show-all")
+        }
+        Button("Layers", systemImage: "square.3.layers.3d") { isShowingLayers = true }
+            .floatingButton()
+            .help("Layers")
+            .choicePanel(
+                "Layers",
+                identifier: "map-layers",
+                isPresented: $isShowingLayers,
+                macHeight: model.isAPRSEnabled ? 400 : 300,
+                arrowEdge: .bottom
+            ) {
+                MapLayers(model: model)
+            }
     }
 
     private var map: some View {
@@ -426,8 +399,65 @@ extension MapStation {
     fileprivate var heard: Date { Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000) }
 }
 
+/// What the map shows: the kinds of memory, by colour, the band and the APRS stations.
+private struct MapLayers: View {
+    @Bindable var model: RadioViewModel
+
+    var body: some View {
+        Group {
+            Section {
+                ForEach(MemoryKind.allCases, id: \.self) { kind in
+                    Toggle(isOn: shows(MapLayer(kind))) {
+                        Label {
+                            // Named as well, for those who cannot tell the colours apart.
+                            Text("\(MapLayer(kind).title) (\(kind.mapColorName))")
+                        } icon: {
+                            Image(systemName: "circle.fill").foregroundStyle(kind.mapColor)
+                        }
+                    }
+                }
+            } header: {
+                Text("Kind, by colour").foregroundStyle(Color.strongSecondary)
+            }
+            Section {
+                Picker("Band", selection: $model.mapBand) {
+                    ForEach(MapBand.allCases, id: \.self) { band in
+                        Text(band.title).tag(band)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } header: {
+                Text("Band, marked 2m or 70").foregroundStyle(Color.strongSecondary)
+            }
+            if model.isAPRSEnabled {
+                Section {
+                    Toggle(MapLayer.stations.title, isOn: shows(.stations))
+                    Picker("Heard within", selection: $model.mapStationWindow) {
+                        ForEach(MapStationWindow.allCases, id: \.self) { window in
+                            Text(window.title).tag(window)
+                        }
+                    }
+                } header: {
+                    Text("APRS, by symbol").foregroundStyle(Color.strongSecondary)
+                }
+            }
+        }
+
+    }
+
+    private func shows(_ layer: MapLayer) -> Binding<Bool> {
+        Binding(
+            get: { model.mapLayers.contains(layer) },
+            set: { isOn in
+                if isOn { model.mapLayers.insert(layer) } else { model.mapLayers.remove(layer) }
+            }
+        )
+    }
+}
+
 extension MemoryKind {
-    /// The colour of its markers, and its name for the menu. Darker than the system's colours, on which MapKit's white
+    /// The colour of its markers, and its name for the layers. Darker than the system's colours, on which MapKit's white
     /// mark of the band would be too faint: at least 5:1 against it, in light and dark alike.
     fileprivate var mapColor: Color {
         switch self {

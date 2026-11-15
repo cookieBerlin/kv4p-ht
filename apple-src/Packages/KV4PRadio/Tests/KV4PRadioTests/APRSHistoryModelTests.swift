@@ -24,6 +24,50 @@ struct APRSHistoryModelTests {
         func highestId() async throws -> Int64 { throw Failure() }
     }
 
+    /// A store that holds the first page asked for with `heldCallsign` until it is let go, as a slow store does.
+    private final class HeldPage: APRSHistoryStoring, @unchecked Sendable {
+        let inner: any APRSHistoryStoring
+        let heldCallsign: String
+        private let gate = AsyncStream<Void>.makeStream()
+        @MainActor private(set) var isHolding = false
+        @MainActor private var hasHeld = false
+
+        init(_ inner: any APRSHistoryStoring, holding callsign: String) {
+            self.inner = inner
+            heldCallsign = callsign
+        }
+
+        @MainActor func release() {
+            gate.continuation.yield()
+        }
+
+        func page(before lastSeenMs: Int64?, limit: Int, filter: APRSHistoryFilter) async throws -> [APRSHistoryEntry] {
+            if await holds(filter) {
+                for await _ in gate.stream { break }
+            }
+            return try await inner.page(before: lastSeenMs, limit: limit, filter: filter)
+        }
+
+        @MainActor private func holds(_ filter: APRSHistoryFilter) -> Bool {
+            guard filter.callsign == heldCallsign, !hasHeld else { return false }
+            hasHeld = true
+            isHolding = true
+            return true
+        }
+
+        func save(_ entries: [APRSHistoryEntry]) async throws { try await inner.save(entries) }
+        func delete(id: Int64) async throws { try await inner.delete(id: id) }
+        func deleteOlder(than lastSeenMs: Int64, except filter: APRSHistoryFilter) async throws {
+            try await inner.deleteOlder(than: lastSeenMs, except: filter)
+        }
+        func deleteOlder(than lastSeenMs: Int64, matching filter: APRSHistoryFilter) async throws {
+            try await inner.deleteOlder(than: lastSeenMs, matching: filter)
+        }
+        func deleteAll() async throws { try await inner.deleteAll() }
+        func count() async throws -> Int { try await inner.count() }
+        func highestId() async throws -> Int64 { try await inner.highestId() }
+    }
+
     private static let day: Int64 = 86_400_000
     private static let position = "N1CALL>APRS,TCPIP*:=4903.50N/07201.75W>Hello"
     private static let toMe = "N1CALL>APRS,TCPIP*::N0CALL   :Hello"
@@ -440,6 +484,21 @@ struct APRSHistoryModelTests {
             await setup.model.loadMoreAPRSHistory()
         }
         #expect(setup.model.aprsEvents.map(\.toCallsign) == ["N0CALL"])
+    }
+
+    @Test("a filter changed while the store still looks for the one before stays, as when typing a callsign")
+    func filterChangedWhileLooking() async throws {
+        let held = HeldPage(try SwiftDataAPRSHistory.inMemory(), holding: "N1")
+        let setup = try Setup(history: held, settings: Self.keepingInternet())
+        await setup.receive(Self.toMe)
+        let first = Task { await setup.model.setAPRSFilter(APRSListFilter(callsign: "N1")) }
+        #expect(await KV4PTestSupport.eventually { held.isHolding })
+        let second = Task { await setup.model.setAPRSFilter(APRSListFilter(callsign: "N1CALL")) }
+        #expect(await KV4PTestSupport.eventually { setup.model.aprsFilter().callsign == "N1CALL" })
+        held.release()
+        await first.value
+        await second.value
+        #expect(setup.model.aprsFilter().callsign == "N1CALL")
     }
 
     @Test("a new packet that fits shows at once, one that does not stays out")
