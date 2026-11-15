@@ -17,6 +17,15 @@ public struct APRSListFilter: Codable, Equatable, Sendable {
         searchTerm.isEmpty && kinds.isEmpty && !isForMe
     }
 
+    /// What the filter looks for, in a few words, as a list shows it above its rows: the callsign, *For me* and the
+    /// types, in the order the filter offers them.
+    public var summary: String {
+        var parts = searchTerm.isEmpty ? [] : [searchTerm]
+        if isForMe { parts.append("For me") }
+        parts += APRSEvent.Kind.filterOptions.filter(kinds.contains).map(\.filterName)
+        return parts.joined(separator: ", ")
+    }
+
     /// The callsign as it is looked for.
     public var searchTerm: String {
         Java.trim(callsign).uppercased()
