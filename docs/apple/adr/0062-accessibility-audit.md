@@ -78,7 +78,8 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
    all the same. Menus of the app's own keep both: in a bordered style SwiftUI drops "show menu", so a menu in the look of
    a capsule is drawn around a plain one on the Mac.
 9. **Mac: groups without a name as high as a window:** the containers SwiftUI puts around a window's content and its
-   sidebar column, and around the content of a sheet, such as *What's New*.
+   sidebar column, and around the content of a sheet, such as *What's New*, or of a popover, such as the layers of
+   the map, together with the popover itself, which SwiftUI gives no name.
 10. **Mac: the knob of a slider:** a part of AppKit's own, without a name; the slider has it.
 11. **Mac: contrast in a window behind the front one, or cut off at its edge:** macOS dims a window that is not in front,
     and the rest of a window behind a sheet open on it, such as About behind *What's New*.

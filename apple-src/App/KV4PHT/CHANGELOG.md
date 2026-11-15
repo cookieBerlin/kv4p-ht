@@ -15,7 +15,9 @@ own, with its version, build and date.
 - **About** no longer lists the firmwares for USB updates.
 - Without a connection, the packets and a chat say *Connect the radio to send.* in place of the line to write, rather
   than showing it with a dimmed **Send**.
-- The **Layers** menu of the map closes after each choice.
+- The **Layers** of the map open in a panel, a sheet on iPhone, that stays open while you switch several.
+- The map switches between **Map** and **List** with a symbol each, in the look of the buttons beside it, and
+  **Show all** has a frame with a dot as its symbol.
 - iPhone: the frequency and the S-meter are on the memories page only, which leaves the packets, the chats and the
   map the whole height.
 - iPad and Mac: the frequency, the memories and **Push to talk** stand in a column on the left, and the packets, the
