@@ -127,7 +127,8 @@ final class MapPageTests: XCTestCase {
     /// A switch or a band of the open layers, by the start of its name.
     private func layer(_ name: String) -> XCUIElement {
         app.mapLayersPanel.descendants(matching: .any)
-            .matching(NSPredicate(format: "label BEGINSWITH %@", name))
+            // The Mac names a band after its picker, as "Band, 70 cm".
+            .matching(NSPredicate(format: "label BEGINSWITH %@ OR label ENDSWITH %@", name, ", \(name)"))
             .matching(
                 NSPredicate(
                     format: "elementType IN %@",
@@ -143,7 +144,13 @@ final class MapPageTests: XCTestCase {
     private func chooseLayer(_ name: String) {
         let entry = layer(name)
         XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in the layers")
-        #if os(iOS)
+        #if os(macOS)
+            // A radio button of the Mac reaches across the row, and only its circle and its name take a click.
+            if entry.elementType == .radioButton {
+                entry.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.5)).click()
+                return
+            }
+        #else
             // A switch of iOS takes a tap on its knob, not on the middle of its row.
             if entry.elementType == .switch {
                 entry.switches.firstMatch.exists ? entry.switches.firstMatch.tap() : entry.tap()
