@@ -280,7 +280,7 @@ struct LiveLogView: View {
 
     private static func color(of level: DiagnosticLog.Level) -> Color {
         switch level {
-        case .error: .red
+        case .error: .strongRed
         case .info: .primary
         case .detail: .strongSecondary
         }

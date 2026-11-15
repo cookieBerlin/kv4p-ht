@@ -80,7 +80,7 @@ struct StationSettings: View {
                 if let warning = model.stationWarning {
                     Label(warning, systemImage: "exclamationmark.triangle")
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.strongRed)
                 }
                 Toggle("Listen only", isOn: $model.isListenOnly)
                     .explained(ControlHelp.listenOnly)
@@ -172,7 +172,7 @@ struct RadioSettings: View {
                 if let warning = model.squelchWarning {
                     Label(warning, systemImage: "exclamationmark.triangle")
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.strongRed)
                 }
                 Picker("TX tone (CTCSS)", selection: $model.txTone) {
                     ForEach(CTCSS.labels, id: \.self) { Text($0) }
@@ -309,7 +309,7 @@ struct AudioSettings: View {
         if let warning = model.otherAudioMode.warning {
             Label(warning, systemImage: "exclamationmark.triangle")
                 .font(.footnote)
-                .foregroundStyle(.orange)
+                .foregroundStyle(Color.strongOrange)
         }
         if let hint = model.otherAudioHint {
             Text(hint).font(.footnote).foregroundStyle(Color.strongSecondary)

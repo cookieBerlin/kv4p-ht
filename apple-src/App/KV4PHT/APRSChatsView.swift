@@ -185,7 +185,7 @@ private struct APRSConversationView: View {
                     KeyboardDismissButton()
                     Text("\(text.count)/\(limit)")
                         .font(.caption.monospacedDigit())
-                        .foregroundStyle(text.count == limit ? Color.red : Color.strongSecondary)
+                        .foregroundStyle(text.count == limit ? Color.strongRed : Color.strongSecondary)
                         .fixedSize()
                         .accessibilityLabel("\(limit - text.count) characters left")
                     Spacer(minLength: 0).frame(maxWidth: textSize.isAccessibilitySize ? .infinity : 0)

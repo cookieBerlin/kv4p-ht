@@ -72,6 +72,11 @@ extension Color {
     static let strongSecondary = Color.primary.opacity(0.7)
     /// For small links: darker than the system's blue on a light background and lighter on a dark one.
     static let strongAccent = Color("StrongAccent")
+    /// For text in red, orange or green, such as a failure, a warning or a success, and for a red button: darker than the
+    /// system's colours on a light background and lighter on a dark one. Bars, badges and fills keep the system's.
+    static let strongRed = Color("StrongRed")
+    static let strongOrange = Color("StrongOrange")
+    static let strongGreen = Color("StrongGreen")
     /// The background of the bars above and below the lists: opaque, as text that a list scrolls behind a translucent bar
     /// shows through it, too faint to read (ADR-0062).
     #if os(macOS)
