@@ -43,13 +43,8 @@ extension XCUIApplication {
     func showPage(_ title: String) {
         let pageButton = buttons["page-\(title)"].firstMatch
         if !pageButton.exists, ["Packets", "Chats", "Map"].contains(title) {
-            // With unread messages, the switch says how many, as "Chats (2)". The Mac shows its parts as radio buttons.
-            let part = NSPredicate(format: "label BEGINSWITH %@", title)
-            #if os(macOS)
-                radioButtons.matching(part).firstMatch.click()
-            #else
-                buttons.matching(part).firstMatch.tap()
-            #endif
+            // With unread messages, the switch says how many, as "Chats (2)".
+            buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch.tapOrClick()
         } else if pageButton.exists {
             pageButton.tap()
             // The pages scroll into place; a look before that sees two halves.

@@ -42,11 +42,7 @@ final class HeaderPlacementTests: XCTestCase {
         guard !app.hasPageBar else {
             throw XCTSkip("A phone has pages instead")
         }
-        #if os(macOS)
-            let packets = app.radioButtons.matching(NSPredicate(format: "label BEGINSWITH 'Packets'")).firstMatch
-        #else
-            let packets = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Packets'")).firstMatch
-        #endif
+        let packets = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Packets'")).firstMatch
         XCTAssertTrue(frequency.waitForExistence(timeout: 30), "No header")
         XCTAssertTrue(packets.waitForExistence(timeout: 5), "No packets beside the memories")
         XCTAssertLessThan(packets.frame.minY, frequency.frame.minY, "The packets do not reach above the frequency")

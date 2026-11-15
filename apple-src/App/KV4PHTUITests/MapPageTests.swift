@@ -84,18 +84,10 @@ final class MapPageTests: XCTestCase {
             .matching(NSPredicate(format: "label BEGINSWITH 'N1CALL, '")).firstMatch
         XCTAssertTrue(scrolledTo(station), "No station in the list")
         station.tapOrClick()
-        // The page bar of a phone, or the switch beside the memories elsewhere, whose chosen part the Mac marks by its
-        // value.
-        #if os(macOS)
-            let packets = app.radioButtons.matching(NSPredicate(format: "label BEGINSWITH 'Packets' AND value == 1"))
-                .firstMatch
-        #else
-            let packets = app.descendants(matching: .any).matching(
-                NSPredicate(
-                    format: "(identifier == 'page-Packets' OR label BEGINSWITH 'Packets') AND isSelected == true"
-                )
-            ).firstMatch
-        #endif
+        // The page bar of a phone, or the switch beside the memories elsewhere.
+        let packets = app.descendants(matching: .any).matching(
+            NSPredicate(format: "(identifier == 'page-Packets' OR label BEGINSWITH 'Packets') AND isSelected == true")
+        ).firstMatch
         XCTAssertTrue(packets.waitForExistence(timeout: 5), "The packets are not shown")
     }
 
@@ -111,11 +103,7 @@ final class MapPageTests: XCTestCase {
 
     /// The page bar of a phone, or the switch beside the memories elsewhere; the switch in the settings is no button.
     private var mapPage: XCUIElement {
-        #if os(macOS)
-            app.radioButtons["Map"].firstMatch
-        #else
-            app.buttons.matching(NSPredicate(format: "identifier == 'page-Map' OR label == 'Map'")).firstMatch
-        #endif
+        app.buttons.matching(NSPredicate(format: "identifier == 'page-Map' OR label == 'Map'")).firstMatch
     }
 
     /// Once the app has started, without waiting for the page bar of a phone where there is none.
