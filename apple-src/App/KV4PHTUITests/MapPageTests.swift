@@ -160,15 +160,11 @@ final class MapPageTests: XCTestCase {
         entry.tapOrClick()
     }
 
-    /// A part of a segmented switch: buttons on iPhone and iPad, radio buttons on the Mac.
+    /// A part of the switch between map and list: a button each, beside the page of the map on a phone.
     private func choose(_ label: String) {
-        #if os(macOS)
-            let part = app.radioButtons[label].firstMatch
-        #else
-            let part =
-                app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != 'page-Map'", label))
-                .allElementsBoundByIndex.first(where: \.isHittable) ?? app.buttons[label].firstMatch
-        #endif
+        let part =
+            app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != 'page-Map'", label))
+            .allElementsBoundByIndex.first(where: \.isHittable) ?? app.buttons[label].firstMatch
         XCTAssertTrue(part.waitForExistence(timeout: 30), "No \(label) to choose")
         part.tapOrClick()
     }

@@ -392,6 +392,7 @@ final class AccessibilityAuditTests: XCTestCase {
             lazy var frontWindowFrame = app.windows.firstMatch.frame
             lazy var windowFrames = app.windows.allElementsBoundByIndex.map(\.frame)
             lazy var sheetFrame = frame(of: app.sheets.firstMatch)
+            lazy var popoverFrame = frame(of: app.popovers.firstMatch)
             lazy var mapFrame = frame(of: app.descendants(matching: .any)["map"].firstMatch)
             lazy var mapListFrame = frame(of: app.descendants(matching: .any)["map-list"].firstMatch)
             lazy var touchBarFrame = frame(of: app.touchBars.firstMatch)
@@ -407,6 +408,11 @@ final class AccessibilityAuditTests: XCTestCase {
     // MARK: Exceptions (ADR-0062)
 
     /// The number of the exception in ADR-0062 that covers a finding, if one does.
+    /// The map, also with its layers open over it.
+    private func isMap(_ screen: String) -> Bool {
+        screen.hasSuffix(" map") || screen.hasSuffix(" map layers")
+    }
+
     private func exception(for issue: XCUIAccessibilityAuditIssue, _ seen: Seen?, on screen: String) -> Int? {
         let label = seen?.label ?? ""
         let elementType = seen?.elementType
@@ -453,9 +459,9 @@ final class AccessibilityAuditTests: XCTestCase {
         // 7. Findings without an element, which no screen element can be matched to.
         guard let seen else { return 7 }
         // 13. The legal notice MapKit puts on the map, with its own small link (ADR-0068).
-        if issue.auditType == .hitRegion, label == "Legal", screen.hasSuffix(" map") { return 13 }
+        if issue.auditType == .hitRegion, label == "Legal", isMap(screen) { return 13 }
         // 14. The mark of the band in a marker of the map, which MapKit draws in a size of its own.
-        if isDynamicType || isTextClipped, ["2m", "70", "•"].contains(label), screen.hasSuffix(" map") { return 14 }
+        if isDynamicType || isTextClipped, ["2m", "70", "•"].contains(label), isMap(screen) { return 14 }
         #if os(macOS)
             return macException(for: issue, seen, on: screen)
         #else
@@ -471,12 +477,17 @@ final class AccessibilityAuditTests: XCTestCase {
             // 8. SwiftUI's pop-up buttons, which VoiceOver opens by showing their menu rather than by pressing them.
             if issue.auditType == .action, seen.elementType == .popUpButton { return 8 }
             // 9. The groups that SwiftUI puts around the content of a window and its columns, as high as the window, and
-            // around the content of a sheet, as large as the sheet.
+            // around the content of a sheet or a popover, as large as it; and the popover itself, which takes no name.
             if isDescription, isUnnamedGroup, isAsHighAsAWindow(seen.frame) || isTheSheet(seen.frame) { return 9 }
+            if isDescription, seen.label.isEmpty, seen.elementType == .popover || seen.elementType == .group,
+                isThePopover(seen.frame)
+            {
+                return 9
+            }
             // 10. The knob of a slider, a part of AppKit's own; the slider has the name.
             if isDescription, seen.elementType == .valueIndicator { return 10 }
             // 15. The markers MapKit draws on the Mac, without names; VoiceOver has the list of the map instead.
-            if screen.hasSuffix(" map"), pass.mapFrame?.contains(seen.frame) == true { return 15 }
+            if isMap(screen), pass.mapFrame?.contains(seen.frame) == true { return 15 }
             // 16. The Touch Bar that AppKit makes for a text field with the focus, such as the frequency, and its items.
             if isDescription, isInTouchBar(seen) { return 16 }
             // 12. The header of a section of a SwiftUI list: the groups of memories, and the memories and stations of the
@@ -499,6 +510,11 @@ final class AccessibilityAuditTests: XCTestCase {
         private func isInTouchBar(_ seen: Seen) -> Bool {
             seen.elementType == .touchBar
                 || pass.touchBarFrame?.insetBy(dx: -2, dy: -2).contains(seen.frame) == true
+        }
+
+        private func isThePopover(_ frame: CGRect) -> Bool {
+            guard let popover = pass.popoverFrame else { return false }
+            return popover.contains(frame) && popover.width == frame.width
         }
 
         private func isTheSheet(_ frame: CGRect) -> Bool {
