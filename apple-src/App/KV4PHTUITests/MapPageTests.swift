@@ -24,15 +24,15 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local repeater").waitForExistence(timeout: 5), "No repeater in the list")
         XCTAssertTrue(row("Local beacon").exists, "No beacon in the list")
         XCTAssertFalse(row("Calling channel").exists, "The frequencies are on by default")
-        XCTAssertTrue(app.openMapLayers(), "The layers did not open")
-        chooseLayer("Frequencies")
+        XCTAssertTrue(app.openPanel("map-layers"), "The layers did not open")
+        app.choosePanelEntry("map-layers", "Frequencies")
         // The layers stay open after a choice, so that several can be switched at once.
-        XCTAssertTrue(layer("Beacons").exists, "The layers closed after a choice")
-        XCTAssertTrue(app.closeMapLayers(), "The layers stay open")
+        XCTAssertTrue(app.panelEntry("map-layers", "Beacons").exists, "The layers closed after a choice")
+        XCTAssertTrue(app.closePanel("map-layers"), "The layers stay open")
         XCTAssertTrue(scrolledTo(row("Calling channel")), "The frequencies did not come")
-        XCTAssertTrue(app.openMapLayers(), "The layers did not open")
-        chooseLayer("70 cm")
-        XCTAssertTrue(app.closeMapLayers(), "The layers stay open")
+        XCTAssertTrue(app.openPanel("map-layers"), "The layers did not open")
+        app.choosePanelEntry("map-layers", "70 cm")
+        XCTAssertTrue(app.closePanel("map-layers"), "The layers stay open")
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
 
@@ -122,42 +122,6 @@ final class MapPageTests: XCTestCase {
     private func openMap() {
         XCTAssertTrue(app.waitForStart(), "The app did not start")
         app.showPage("Map")
-    }
-
-    /// A switch or a band of the open layers, by the start of its name.
-    private func layer(_ name: String) -> XCUIElement {
-        app.mapLayersPanel.descendants(matching: .any)
-            // The Mac names a band after its picker, as "Band, 70 cm".
-            .matching(NSPredicate(format: "label BEGINSWITH %@ OR label ENDSWITH %@", name, ", \(name)"))
-            .matching(
-                NSPredicate(
-                    format: "elementType IN %@",
-                    [
-                        XCUIElement.ElementType.switch.rawValue, XCUIElement.ElementType.checkBox.rawValue,
-                        XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.radioButton.rawValue,
-                    ]
-                )
-            )
-            .firstMatch
-    }
-
-    private func chooseLayer(_ name: String) {
-        let entry = layer(name)
-        XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in the layers")
-        #if os(macOS)
-            // A radio button of the Mac reaches across the row, and only its circle and its name take a click.
-            if entry.elementType == .radioButton {
-                entry.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.5)).click()
-                return
-            }
-        #else
-            // A switch of iOS takes a tap on its knob, not on the middle of its row.
-            if entry.elementType == .switch {
-                entry.switches.firstMatch.exists ? entry.switches.firstMatch.tap() : entry.tap()
-                return
-            }
-        #endif
-        entry.tapOrClick()
     }
 
     /// A part of the switch between map and list: a button each, beside the page of the map on a phone.

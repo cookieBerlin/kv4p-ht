@@ -42,6 +42,14 @@ final class AccessibilityAuditTests: XCTestCase {
         try audit("\(size) memories")
         app.showPage("Packets")
         try audit("\(size) packets")
+        if app.openPanel("packet-types") {
+            try audit("\(size) packet types")
+            _ = app.closePanel("packet-types")
+        } else {
+            let finding = "A11Y \(size) packet types: did not open"
+            print(finding)
+            findings.append(finding)
+        }
         app.showPage("Chats")
         try audit("\(size) chats")
         let chat = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'N1CALL'")).firstMatch
@@ -61,9 +69,9 @@ final class AccessibilityAuditTests: XCTestCase {
         // The tiles come from the network; they are Apple's, so the audit waits for the controls only.
         Thread.sleep(forTimeInterval: 2)
         try audit("\(size) map")
-        if app.openMapLayers() {
+        if app.openPanel("map-layers") {
             try audit("\(size) map layers")
-            _ = app.closeMapLayers()
+            _ = app.closePanel("map-layers")
         } else {
             let finding = "A11Y \(size) map layers: did not open"
             print(finding)

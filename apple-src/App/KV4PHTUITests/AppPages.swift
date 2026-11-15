@@ -68,25 +68,66 @@ extension XCUIApplication {
         }
     }
 
-    /// The layers beside the map: a popover, which a phone shows as a sheet. Whether they opened.
-    func openMapLayers() -> Bool {
-        let layers = descendants(matching: .any)["map-layers"].firstMatch
-        guard layers.waitForExistence(timeout: 5) else { return false }
-        layers.tapOrClick()
-        return mapLayersPanel.waitForExistence(timeout: 5)
+    /// A panel of choices, such as the layers of the map or the types of packets, by the identifier of its button: a
+    /// popover, which a phone shows as a sheet. Whether it opened.
+    func openPanel(_ identifier: String) -> Bool {
+        // The settings show the packets once more, on a page beside it on a phone; the one that can be tapped is taken.
+        let buttons = descendants(matching: .any).matching(identifier: identifier)
+        guard buttons.firstMatch.waitForExistence(timeout: 5),
+            let button = buttons.allElementsBoundByIndex.first(where: \.isHittable)
+        else { return false }
+        button.tapOrClick()
+        return panel(identifier).waitForExistence(timeout: 5)
     }
 
-    var mapLayersPanel: XCUIElement {
-        descendants(matching: .any)["map-layers-panel"].firstMatch
+    func panel(_ identifier: String) -> XCUIElement {
+        descendants(matching: .any)["\(identifier)-panel"].firstMatch
     }
 
-    /// Done on iPhone and iPad; the Mac closes a popover with Esc. Whether they closed.
-    func closeMapLayers() -> Bool {
+    /// Done on iPhone and iPad; the Mac closes a popover with Esc. Whether it closed.
+    func closePanel(_ identifier: String) -> Bool {
         #if os(macOS)
             typeKey(.escape, modifierFlags: [])
         #else
-            buttons["map-layers-done"].firstMatch.tap()
+            buttons["\(identifier)-done"].firstMatch.tap()
         #endif
-        return mapLayersPanel.waitForNonExistence(timeout: 5)
+        return panel(identifier).waitForNonExistence(timeout: 5)
+    }
+
+    /// An entry of an open panel, a switch, checkbox or choice, by the start of its name. The Mac names a choice after
+    /// its picker, as "Band, 70 cm".
+    func panelEntry(_ identifier: String, _ name: String) -> XCUIElement {
+        panel(identifier).descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH %@ OR label ENDSWITH %@", name, ", \(name)"))
+            .matching(
+                NSPredicate(
+                    format: "elementType IN %@",
+                    [
+                        XCUIElement.ElementType.switch.rawValue, XCUIElement.ElementType.checkBox.rawValue,
+                        XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.radioButton.rawValue,
+                    ]
+                )
+            )
+            .firstMatch
+    }
+
+    /// Switches or chooses an entry of an open panel.
+    func choosePanelEntry(_ identifier: String, _ name: String) {
+        let entry = panelEntry(identifier, name)
+        XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in \(identifier)")
+        #if os(macOS)
+            // A radio button of the Mac reaches across the row, and only its circle and its name take a click.
+            if entry.elementType == .radioButton {
+                entry.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.5)).click()
+                return
+            }
+        #else
+            // A switch of iOS takes a tap on its knob, not on the middle of its row.
+            if entry.elementType == .switch, entry.switches.firstMatch.exists {
+                entry.switches.firstMatch.tap()
+                return
+            }
+        #endif
+        entry.tapOrClick()
     }
 }
