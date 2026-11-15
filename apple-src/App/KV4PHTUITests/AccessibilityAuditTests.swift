@@ -412,8 +412,7 @@ final class AccessibilityAuditTests: XCTestCase {
             let isTrait = issue.auditType == .trait
             let isTextClipped = issue.auditType == .textClipped
         #endif
-        // 1. Contrast a little below the line, such as of the symbols in Apple's secondary grey.
-        if isContrast, issue.compactDescription.contains("nearly passed") { return 1 }
+        // 1. Withdrawn: contrast that nearly passes is measured as any other, by 2.
         #if os(macOS)
             // 11 before 2, as it needs no screenshot: text in a window behind the front one, which macOS dims, or cut off
             // at the front one's edge; also text of a window behind a sheet open on it, such as About behind What's New.
