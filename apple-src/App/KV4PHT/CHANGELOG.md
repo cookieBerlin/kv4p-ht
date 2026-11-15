@@ -47,6 +47,8 @@ own, with its version, build and date.
 - Mac: VoiceOver names the frequency field.
 - Grey symbols, such as the kind of a memory, the symbol of a packet and the pages not shown, are as dark as the
   grey texts.
+- Buttons, links and red, orange or green texts, such as a failure, a warning or **Disconnect**, are in darker colours,
+  so that they are easier to read on a light background.
 - Map: the markers of repeaters, frequencies and beacons are a darker blue, green and orange, so that their *2m* or
   *70* is easy to read.
 
