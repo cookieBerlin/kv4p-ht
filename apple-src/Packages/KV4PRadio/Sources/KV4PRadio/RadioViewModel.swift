@@ -2559,6 +2559,12 @@ public final class RadioViewModel {
     private static let highestFrequency: Float = 500
 
     public var groups: [String] { ChannelMemory.groups(in: memories) }
+    /// The groups to choose from: also the group shown when its memories are not loaded yet, as at the start, so that a
+    /// picker has a choice for it from the first frame. Once they are loaded, a group that went falls back to all.
+    public var groupChoices: [String] {
+        guard let selectedGroup, !groups.contains(selectedGroup) else { return groups }
+        return groups + [selectedGroup]
+    }
 
     /// The memories of the chosen group that the connected radio receives; all of them before a radio is known.
     public var visibleMemories: [ChannelMemory] {

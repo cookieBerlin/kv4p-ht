@@ -62,7 +62,7 @@ struct MemoriesView: View {
             Text("Group")
             Picker("Group", selection: $model.selectedGroup) {
                 Text("All").tag(String?.none)
-                ForEach(model.groups, id: \.self) { Text($0).tag(String?.some($0)) }
+                ForEach(model.groupChoices, id: \.self) { Text($0).tag(String?.some($0)) }
             }
             .labelsHidden()
             .fixedSize()
