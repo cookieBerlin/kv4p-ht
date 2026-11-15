@@ -351,9 +351,12 @@ position is known, the distance and direction from you stand below them, such as
 the units you chose under ⚙ **Settings**, *APRS*, *Units*: those of your system by default, or metric
 or imperial, also for the weather. Pressure stays in hPa; very near stations show no direction. Before you have decided on location
 access, **Show distances** at the top of the list asks for it. Without access, the list works as
-before. The list stays when the app ends: see *History* below. **Above the list:** the search finds a callsign in the sender or recipient, over everything stored; ⓧ clears it. *For me*
-shows only messages from or to your callsign, with any SSID. *Types* opens a panel, a sheet on iPhone, with each type and its symbol in the list, and
-narrows the list to the types you switch on; with none on, all show. The panel stays open while you change several. *Export* saves what the list shows, also what is stored, as CSV or as raw packets. The app remembers
+before. The list stays when the app ends: see *History* below. **Over the list**, at the bottom right, float two buttons.
+**Filter** (the lines in a circle, filled while a filter is on) opens a panel, a sheet on iPhone, that stays open
+while you change several: **Callsign** finds a callsign in the sender or recipient, over everything stored, and ⓧ
+clears it; **Only for me** shows only messages from or to your callsign, with any SSID; **Types** narrows the list
+to the types you switch on, each with its symbol in the list, and with none on, all show. While a filter is on, a
+line above the list names it, and **Clear filter** there ends it. **Export** (the box with the arrow) saves what the list shows, also what is stored, as CSV or as raw packets. The app remembers
 the filter on this device. ⚙ **Settings**, *APRS*, *Packets* shows the same list over the full height,
 with a filter of its own, so that looking through the history leaves the main page as it is.
 
@@ -444,7 +447,8 @@ digipeater is useful.
 **Map** shows your memories that have a position, such as the repeaters imported from the DARC lists, and the APRS
 stations heard, with Apple's maps.
 
-- **Map** and **List**, the switch at the top left, with a folded map and a numbered list, choose how the points show.
+- **Map** and **List**, the switch floating at the top left, with a folded map and a numbered list, choose how the
+  points show. The other buttons float at the bottom right, so that the map and the list have the full height.
 - **Layers** (the stacked squares) opens a panel, a sheet on iPhone, that switches the **Repeaters** (blue),
   **Frequencies** (green) and **Beacons** (orange) on and off, from all groups. Frequencies are off at first, as most
   of them have no fixed place. The panel stays open while you change several; **Done**, a tap beside it or Esc
@@ -456,7 +460,7 @@ stations heard, with Apple's maps.
   symbol: those heard within **Heard within**, 1 hour at first, from the packets kept as well. Only packets with a
   position count, so a station that only sent messages is not there. Without APRS, the stations go.
 - **Your position** is the blue dot. The map does not follow it: the arrow button of the map centres it. While
-  the app has not asked for your location yet, the arrow at the top asks. The position stays on your device and
+  the app has not asked for your location yet, the arrow at the bottom right asks. The position stays on your device and
   is read only while the map is on screen.
 - The map shows all its points and your position, also after a change of the layers or the band. Once you move
   it, it stays where you moved it; **Show all** (the frame with a dot) brings all of them back into

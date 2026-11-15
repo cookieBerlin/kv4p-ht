@@ -15,11 +15,13 @@ own, with its version, build and date.
 - **About** no longer lists the firmwares for USB updates.
 - Without a connection, the packets and a chat say *Connect the radio to send.* in place of the line to write, rather
   than showing it with a dimmed **Send**.
-- The **Layers** of the map, the **Types** of the packets and the filter of the live log open in a panel, a sheet on
-  iPhone, that stays open while you switch several. The types show their symbols, and the live log has its levels
-  and categories in one panel.
-- The map switches between **Map** and **List** with a symbol each, in the look of the buttons beside it, and
-  **Show all** has a frame with a dot as its symbol.
+- The **Layers** of the map, the **Filter** of the packets and the filter of the live log open in a panel, a sheet
+  on iPhone, that stays open while you switch several. The packets have the callsign, **Only for me** and the types,
+  with their symbols, in one panel, and a line above the list names the filter while it is on. The live log has its
+  levels and categories in one panel.
+- The buttons of the packets and the map float over them, which leaves the list and the map the full height. The
+  map switches between **Map** and **List** with a symbol each, and **Show all** has a frame with a dot as its
+  symbol.
 - iPhone: the frequency and the S-meter are on the memories page only, which leaves the packets, the chats and the
   map the whole height.
 - iPad and Mac: the frequency, the memories and **Push to talk** stand in a column on the left, and the packets, the
@@ -27,7 +29,7 @@ own, with its version, build and date.
 
 ### Added
 
-- ⓧ clears the callsign above the packets and the search of the live log.
+- ⓧ clears the callsign of the packets' filter and the search of the live log.
 - **About** names who makes the Apple app: DB3AC.
 - Mac: hold the space bar to transmit, or ⌥ and the space bar for the access tone. ⌘K connects and disconnects, and
   the new **Radio** menu lists the keys.
