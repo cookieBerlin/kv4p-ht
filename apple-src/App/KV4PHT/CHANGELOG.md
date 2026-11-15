@@ -42,6 +42,10 @@ own, with its version, build and date.
   the Mac, the state of the connection at the bottom of the window. So are the titles and notes of sections, the
   values in the settings and in **About**, the texts of empty lists and the detailed lines of the log.
 - Mac: VoiceOver names the frequency field.
+- Grey symbols, such as the kind of a memory, the symbol of a packet and the pages not shown, are as dark as the
+  grey texts.
+- Map: the markers of repeaters, frequencies and beacons are a darker blue, green and orange, so that their *2m* or
+  *70* is easy to read.
 
 ## 0.2.0 (20261111.2136) – 2026-11-11
 

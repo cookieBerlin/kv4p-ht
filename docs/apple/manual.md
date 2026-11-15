@@ -550,8 +550,9 @@ update, the app shows once what is new in that build; after the first installati
 
 For reduced motion and live captions use the system settings (System Settings →
 Accessibility); the Android app's own switches for them are not needed on the
-Mac. Grey texts, such as hints, values and the titles of sections, are in a darker grey than the system's, so that
-small text stays readable.
+Mac. Grey texts and symbols, such as hints, values, the titles of sections and the kind of a memory, are in a darker
+grey than the system's, so that they stay readable. The markers of the map are a darker blue, green and orange than
+the system's, so that the *2m* or *70* on them is easy to read.
 
 ## Firmware updates
 
