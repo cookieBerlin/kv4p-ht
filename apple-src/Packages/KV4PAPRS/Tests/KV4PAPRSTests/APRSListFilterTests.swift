@@ -80,4 +80,15 @@ struct APRSListFilterTests {
         #expect(APRSEvent.Kind.filterOptions.count == 7)
         #expect(Set(APRSEvent.Kind.filterOptions.map(\.filterName)).count == 7)
     }
+
+    @Test("the summary names the callsign, for me and the types, in the order of the filter")
+    func summary() {
+        #expect(APRSListFilter().summary == "")
+        #expect(APRSListFilter(callsign: " n1call ").summary == "N1CALL")
+        #expect(APRSListFilter(isForMe: true).summary == "For me")
+        #expect(
+            APRSListFilter(callsign: "n1call", kinds: [.weather, .message], isForMe: true).summary
+                == "N1CALL, For me, Messages, Weather"
+        )
+    }
 }
