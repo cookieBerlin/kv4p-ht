@@ -166,7 +166,7 @@ struct ConnectAtStartToggle: View {
                                 // Green text is too faint on white; the mark carries the colour.
                                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                             }
-                            Text(model.statusText)
+                            Text(model.statusText).foregroundStyle(Color.strongSecondary)
                         }
                     }
                 }
@@ -174,10 +174,12 @@ struct ConnectAtStartToggle: View {
                     .tint(model.canConnect ? nil : .red)
                 ConnectAtStartToggle(model: model)
             } header: {
-                Text("Connection")
+                Text("Connection").foregroundStyle(Color.strongSecondary)
             } footer: {
                 if model.canConnect {
-                    Text("The radio connects over Bluetooth, or the simulator stands in for it.")
+                    Text("The radio connects over Bluetooth, or the simulator stands in for it.").foregroundStyle(
+                        Color.strongSecondary
+                    )
                 }
             }
         }

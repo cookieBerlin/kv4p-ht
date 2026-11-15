@@ -31,21 +31,26 @@ struct LoggingSettings: View {
 
     var body: some View {
         Form {
-            Section("Log") {
+            Section {
                 if let live = model.liveLog {
                     NavigationLink("Live log") { LiveLogView(model: model, live: live) }
                 }
                 if let summary {
-                    LabeledContent(
-                        "Stored",
-                        value: summary.since.map { "\(Self.size(summary)), since \($0)" } ?? Self.size(summary)
-                    )
+                    LabeledContent("Stored") {
+                        Text(summary.since.map { "\(Self.size(summary)), since \($0)" } ?? Self.size(summary))
+                            .foregroundStyle(Color.strongSecondary)
+                    }
                 }
                 Toggle("Detailed logging", isOn: $model.isDetailedLogging)
                     .explained(ControlHelp.detailedLogging)
                 if let ends = model.detailedLoggingEnds {
-                    LabeledContent("Ends") { Text(ends, format: .dateTime.day().month().hour().minute()) }
+                    LabeledContent("Ends") {
+                        Text(ends, format: .dateTime.day().month().hour().minute())
+                            .foregroundStyle(Color.strongSecondary)
+                    }
                 }
+            } header: {
+                Text("Log").foregroundStyle(Color.strongSecondary)
             }
             ProblemReportSection(model: model)
             Section {
@@ -74,7 +79,7 @@ struct ProblemReportSection: View {
     @State private var file: URL?
 
     var body: some View {
-        Section("Report a problem") {
+        Section {
             Text(
                 "The report holds the app and system versions, the device type, the firmware, the app's log and crash data. Your callsign is replaced. Nothing leaves this device unless you send it."
             )
@@ -90,6 +95,8 @@ struct ProblemReportSection: View {
                     .font(.footnote)
                     .foregroundStyle(Color.strongSecondary)
             }
+        } header: {
+            Text("Report a problem").foregroundStyle(Color.strongSecondary)
         }
         .task { prepare() }
     }
@@ -275,7 +282,7 @@ struct LiveLogView: View {
         switch level {
         case .error: .red
         case .info: .primary
-        case .detail: .secondary
+        case .detail: .strongSecondary
         }
     }
 

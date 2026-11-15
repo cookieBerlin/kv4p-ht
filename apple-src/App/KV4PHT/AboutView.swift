@@ -25,25 +25,31 @@ struct AboutView: View {
                     .accessibilityIdentifier("about-whats-new")
                     .frame(maxWidth: .infinity)
             }
-            Section("Data") {
+            Section {
                 ForEach(AboutInfo.dataSources) { source in
                     if let url = URL(string: source.address) {
                         Link(destination: url) {
-                            LabeledContent(source.name, value: source.licence)
+                            LabeledContent(source.name) {
+                                Text(source.licence).foregroundStyle(Color.strongSecondary)
+                            }
                         }
                     }
                 }
+            } header: {
+                Text("Data").foregroundStyle(Color.strongSecondary)
             }
-            Section("Licences") {
+            Section {
                 ForEach(AboutInfo.components) { component in
                     LabeledContent {
                         Button(component.licence.title) { shown = LicenceFile(name: component.licence.textFile) }
                             .buttonStyle(.borderless)
                     } label: {
                         Text(component.name)
-                        Text(component.note)
+                        Text(component.note).foregroundStyle(Color.strongSecondary)
                     }
                 }
+            } header: {
+                Text("Licences").foregroundStyle(Color.strongSecondary)
             }
         }
         .formStyle(.grouped)

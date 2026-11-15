@@ -85,7 +85,7 @@ struct StationSettings: View {
                 Toggle("Listen only", isOn: $model.isListenOnly)
                     .explained(ControlHelp.listenOnly)
             }
-            Section("iCloud") {
+            Section {
                 Toggle("iCloud sync", isOn: $model.isSettingsSyncEnabled)
                     .explained(ControlHelp.settingsSync)
                 if let hint = model.settingsSyncHint {
@@ -95,6 +95,8 @@ struct StationSettings: View {
                     lastSync("Settings last synced", model.lastSettingsSync)
                     lastSync("Memories last synced", model.lastMemorySync)
                 }
+            } header: {
+                Text("iCloud").foregroundStyle(Color.strongSecondary)
             }
         }
         .onAppear { callsign = model.callsign }
@@ -148,12 +150,14 @@ struct RadioSettings: View {
     var body: some View {
         Form {
             if hasConnectAtStart {
-                Section("Connection") {
+                Section {
                     #if os(macOS)
                         // The main window connects where PTT stands; here the connection ends (ADR-0075).
                         ConnectButton(model: model)
                     #endif
                     ConnectAtStartToggle(model: model)
+                } header: {
+                    Text("Connection").foregroundStyle(Color.strongSecondary)
                 }
             }
             RadioSection(title: "Channel", model: model) {
@@ -198,21 +202,25 @@ struct RadioSettings: View {
                 Toggle("Low-pass", isOn: $model.filters.lowPass)
                     .explained(ControlHelp.lowPass)
             }
-            Section("Frequency limits") {
+            Section {
                 limitPicker("2 m from", $model.txLimits.min2m, TXLimits.min2mOptions)
                 limitPicker("2 m to", $model.txLimits.max2m, TXLimits.max2mOptions)
                 limitPicker("70 cm from", $model.txLimits.min70cm, TXLimits.min70cmOptions)
                 limitPicker("70 cm to", $model.txLimits.max70cm, TXLimits.max70cmOptions)
                 Text(ControlHelp.frequencyLimits).font(.footnote).foregroundStyle(Color.strongSecondary)
+            } header: {
+                Text("Frequency limits").foregroundStyle(Color.strongSecondary)
             }
             if model.firmwareText != nil || showsFirmwareUpdate {
-                Section("Firmware") {
+                Section {
                     if let firmware = model.firmwareText {
                         Text(firmware).foregroundStyle(Color.strongSecondary)
                     }
                     if showsFirmwareUpdate {
                         FirmwareUpdateRow(model: model)
                     }
+                } header: {
+                    Text("Firmware").foregroundStyle(Color.strongSecondary)
                 }
             }
         }
@@ -244,7 +252,7 @@ struct TransmitSettings: View {
                 }
                 .explained(ControlHelp.micGain)
             }
-            Section("Repeater access tone") {
+            Section {
                 Picker("Tone", selection: $model.accessToneHz) {
                     Text("Off").tag(0)
                     ForEach(AccessTone.frequencies, id: \.self) { Text("\($0) Hz").tag($0) }
@@ -258,6 +266,8 @@ struct TransmitSettings: View {
                         ForEach(AccessTone.waitsMs, id: \.self) { Text("\($0) ms").tag($0) }
                     }
                 }
+            } header: {
+                Text("Repeater access tone").foregroundStyle(Color.strongSecondary)
             }
         }
     }
@@ -343,10 +353,12 @@ struct APRSSettings: View {
                 NavigationLink {
                     APRSPacketsPage(model: model)
                 } label: {
-                    LabeledContent("Packets", value: "\(model.storedPacketCount) stored")
+                    LabeledContent("Packets") {
+                        Text("\(model.storedPacketCount) stored").foregroundStyle(Color.strongSecondary)
+                    }
                 }
             }
-            Section("Position beacon") {
+            Section {
                 Toggle("Position beacon", isOn: $model.isBeaconEnabled)
                     .disabled(!model.canBeacon || !model.canSendOnAir)
                     .explained(ControlHelp.beacon)
@@ -376,14 +388,18 @@ struct APRSSettings: View {
                     }
                 }
                 .explained(ControlHelp.beaconFrequency)
+            } header: {
+                Text("Position beacon").foregroundStyle(Color.strongSecondary)
             }
-            Section("List") {
+            Section {
                 Picker("Units", selection: $model.units) {
                     ForEach(APRSUnits.allCases, id: \.self) { Text($0.label) }
                 }
                 .explained(ControlHelp.units)
+            } header: {
+                Text("List").foregroundStyle(Color.strongSecondary)
             }
-            Section("History") {
+            Section {
                 if !model.canStorePackets {
                     Label(
                         "The packet store could not be opened, so no packets are kept.",
@@ -413,11 +429,15 @@ struct APRSSettings: View {
                 if model.notifiesAboutMessages, model.isDenied(.notifications) {
                     PermissionNotice(permission: .notifications)
                 }
-                LabeledContent("Stored packets", value: "\(model.storedPacketCount)")
+                LabeledContent("Stored packets") {
+                    Text(model.storedPacketCount, format: .number).foregroundStyle(Color.strongSecondary)
+                }
                 Button("Delete all packets…", role: .destructive) { isConfirmingDeleteAll = true }
                     .disabled(model.storedPacketCount == 0 && model.aprsEvents.isEmpty)
+            } header: {
+                Text("History").foregroundStyle(Color.strongSecondary)
             }
-            Section("Network") {
+            Section {
                 Toggle("Digipeat", isOn: $model.isDigipeatingEnabled)
                     .disabled(!model.canSendOnAir)
                     .explained(ControlHelp.digipeat)
@@ -434,6 +454,8 @@ struct APRSSettings: View {
                     )
                     .foregroundStyle(Color.strongSecondary)
                 }
+            } header: {
+                Text("Network").foregroundStyle(Color.strongSecondary)
             }
         }
         .alert("Delete the stored packets?", isPresented: $isAskingToDeleteStored) {
@@ -468,12 +490,13 @@ struct SimulatorSettings: View {
                 Toggle("SA818 module found", isOn: $model.simulatorSettings.hasRadioModule)
                 Toggle("Radio answers", isOn: $model.simulatorSettings.answers)
             } header: {
-                Text("Simulated radio")
+                Text("Simulated radio").foregroundStyle(Color.strongSecondary)
             } footer: {
                 Text(
                     model.canConnect
                         ? "These take effect at the next connection." : "Disconnect to change these settings."
                 )
+                .foregroundStyle(Color.strongSecondary)
             }
             .disabled(!model.canConnect)
             // The actions stay visible without a connection, so that one can see that they exist.
@@ -503,10 +526,10 @@ struct SimulatorSettings: View {
                     Button("Receive APRS \(packet.label.lowercased())") { model.simulatePacket(packet) }
                 }
             } header: {
-                Text("Simulator actions")
+                Text("Simulator actions").foregroundStyle(Color.strongSecondary)
             } footer: {
                 if !model.canSimulateSignal {
-                    Text("Available while the simulated radio is connected.")
+                    Text("Available while the simulated radio is connected.").foregroundStyle(Color.strongSecondary)
                 }
             }
             .disabled(!model.canSimulateSignal)

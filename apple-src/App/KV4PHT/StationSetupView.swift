@@ -21,9 +21,11 @@ struct StationSetupView: View {
                         #endif
                 }
             } header: {
-                Text("Welcome to kv4p HT")
+                Text("Welcome to kv4p HT").foregroundStyle(Color.strongSecondary)
             } footer: {
-                Text("Transmitting needs an amateur radio licence. Without one, choose Listen only.")
+                Text("Transmitting needs an amateur radio licence. Without one, choose Listen only.").foregroundStyle(
+                    Color.strongSecondary
+                )
             }
             Section {
                 explanation("Continue", ControlHelp.transmitWithCallsign)

@@ -25,7 +25,17 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local beacon").exists, "No beacon in the list")
         XCTAssertFalse(row("Calling channel").exists, "The frequencies are on by default")
         chooseLayer("Frequencies")
-        XCTAssertTrue(scrolledTo(row("Calling channel")), "The frequencies did not come")
+        var frequenciesCame = scrolledTo(row("Calling channel"))
+        #if os(macOS)
+            // What is typed into the open menu does not take now and then, and XCTest cannot see the menu to tell. Once
+            // more only if nothing came: had the first choice taken, the second switches them off, and the test fails
+            // all the same.
+            if !frequenciesCame {
+                chooseLayer("Frequencies")
+                frequenciesCame = scrolledTo(row("Calling channel"))
+            }
+        #endif
+        XCTAssertTrue(frequenciesCame, "The frequencies did not come")
         chooseLayer("70 cm")
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
@@ -112,13 +122,10 @@ final class MapPageTests: XCTestCase {
         #endif
     }
 
+    /// Once the app has started, without waiting for the page bar of a phone where there is none.
     private func openMap() {
-        let page = app.buttons["page-Map"].firstMatch
-        if page.waitForExistence(timeout: 30) {
-            page.tap()
-        } else {
-            choose("Map")
-        }
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
+        app.showPage("Map")
     }
 
     /// An entry of the menu of the layers, by the start of its name. The Mac shows the menu, but XCTest does not see its

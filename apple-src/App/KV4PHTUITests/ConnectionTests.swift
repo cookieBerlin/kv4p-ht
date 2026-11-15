@@ -73,14 +73,17 @@ final class ConnectionTests: XCTestCase {
         app.openSettings()
         #if os(macOS)
             app.openSettingsPage("Radio")
+            // The window of the settings by its sidebar; the main window behind it has a Disconnect of its own in its
+            // header, and ⌘W may reach the main window too.
+            let settings = app.windows.containing(.any, identifier: "settings-Radio").firstMatch
+            let disconnect = settings.buttons["Disconnect"].firstMatch
+        #else
+            let disconnect = app.buttons["Disconnect"].firstMatch
         #endif
-        let disconnect = app.buttons["Disconnect"].firstMatch
         XCTAssertTrue(disconnect.waitForExistence(timeout: 5), "The settings do not offer to disconnect")
         disconnect.tapOrClick()
         XCTAssertTrue(app.buttons["Connect"].firstMatch.waitForExistence(timeout: 10), "Did not disconnect")
         #if os(macOS)
-            // The window of the settings by its sidebar; ⌘W may reach the main window instead.
-            let settings = app.windows.containing(.any, identifier: "settings-Radio").firstMatch
             settings.buttons[XCUIIdentifierCloseWindow].click()
             XCTAssertTrue(settings.waitForNonExistence(timeout: 5), "The settings stay open")
         #else

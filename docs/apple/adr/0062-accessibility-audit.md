@@ -53,9 +53,9 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
 
 ### Exceptions
 
-1. **Contrast that nearly passes, and the grey text of the settings:** Apple's secondary grey for secondary text and the
-   footers of forms. The app's own small text that must stay readable, in the header, the status and the times, uses a
-   darker grey.
+1. **Contrast that nearly passes:** Apple's secondary grey, which the app keeps for symbols only. Every grey text, also
+   the titles and notes of sections, the values of forms and the texts of empty lists, uses a darker grey of the app's
+   own, so the audit checks the settings as any other screen.
 2. **Contrast that the screenshot shows to be enough:** the audit misreads the background now and then, above all on the
    iPad, and flags black text on white from one run to the next. For such a finding the test measures the element on the
    screenshot of the screen, its lightest against its darkest pixel, and lets it pass at 4.5:1 or more, with the value
@@ -90,10 +90,12 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
     marker's name, which VoiceOver reads, and the list grow with the text.
 15. **Mac: the markers of the map:** MapKit draws them on the Mac as images and text without names, and the audit
     cannot read their contrast on the map. The list of the map has every marker with its name for VoiceOver.
+16. **Mac: the Touch Bar of a text field:** AppKit makes one for the field with the focus, such as the frequency, with
+    items such as *emoji & symbols* and without a name of its own; it is the system's and not the app's.
 
 ## Consequences
 
-- A run takes about ten minutes for each simulator, and about seven on the Mac. The simulators run one after the other and nothing else should
+- A run takes about ten minutes for each simulator, and about five on the Mac. The simulators run one after the other and nothing else should
   run beside them: on a fully loaded machine the audit can catch a screen before its text has grown, and flag it. On
   CI's hosted runners a run of both takes 30 to 50 minutes.
 - The audit only finds what a machine can see; a screen it does not reach is not checked.

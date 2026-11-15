@@ -230,6 +230,7 @@ struct APRSPacketList: View {
                 "No APRS packets yet",
                 systemImage: "point.3.connected.trianglepath.dotted",
                 description: Text("Tune to the APRS frequency of your region, e.g. 144.800 or 144.390 MHz.")
+                    .foregroundStyle(Color.strongSecondary)
             )
         } else {
             ContentUnavailableView {

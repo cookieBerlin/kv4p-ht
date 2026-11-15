@@ -16,6 +16,14 @@ extension XCUIApplication {
     /// pages beside the ring, so the one that can be tapped is taken.
     func openSettingsPage(_ name: String) {
         let links = descendants(matching: .any).matching(identifier: "settings-\(name)")
+        #if os(iOS)
+            // The list makes its rows as they come on screen, and below the connection of a phone the last pages are
+            // further down than the screen reaches.
+            for _ in 0..<4 where !links.firstMatch.waitForExistence(timeout: 2) {
+                coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
+                    .press(forDuration: 0.05, thenDragTo: coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35)))
+            }
+        #endif
         XCTAssertTrue(links.firstMatch.waitForExistence(timeout: 5), "No page \(name) in the settings")
         let deadline = Date.now.addingTimeInterval(15)
         var link = links.allElementsBoundByIndex.first(where: \.isHittable)

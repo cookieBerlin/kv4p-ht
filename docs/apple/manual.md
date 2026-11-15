@@ -550,7 +550,8 @@ update, the app shows once what is new in that build; after the first installati
 
 For reduced motion and live captions use the system settings (System Settings →
 Accessibility); the Android app's own switches for them are not needed on the
-Mac.
+Mac. Grey texts, such as hints, values and the titles of sections, are in a darker grey than the system's, so that
+small text stays readable.
 
 ## Firmware updates
 

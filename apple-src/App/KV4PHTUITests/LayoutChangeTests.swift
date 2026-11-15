@@ -54,7 +54,8 @@ import XCTest
 
         /// Only a device whose width class changes as it turns, such as a large iPhone, changes the layout.
         private func requireLayoutChange() throws {
-            guard app.buttons["page-Memories"].waitForExistence(timeout: 60) else {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
                 throw XCTSkip("Starts in the wide layout")
             }
             XCUIDevice.shared.orientation = .landscapeLeft

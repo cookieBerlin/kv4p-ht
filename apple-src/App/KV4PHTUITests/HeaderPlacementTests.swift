@@ -22,10 +22,11 @@ final class HeaderPlacementTests: XCTestCase {
     }
 
     func testThePhoneShowsTheHeaderOnTheMemoriesOnly() throws {
-        let packets = app.buttons["page-Packets"].firstMatch
-        guard packets.waitForExistence(timeout: 60) else {
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
+        guard app.hasPageBar else {
             throw XCTSkip("Only a phone has the page bar")
         }
+        let packets = app.buttons["page-Packets"].firstMatch
         app.buttons["page-Memories"].firstMatch.tap()
         XCTAssertTrue(frequency.waitForExistence(timeout: 5), "No header on the memories")
         packets.tap()
@@ -37,7 +38,8 @@ final class HeaderPlacementTests: XCTestCase {
     }
 
     func testAWideWindowShowsThePacketsBesideTheHeader() throws {
-        guard !app.buttons["page-Packets"].firstMatch.waitForExistence(timeout: 10) else {
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
+        guard !app.hasPageBar else {
             throw XCTSkip("A phone has pages instead")
         }
         #if os(macOS)

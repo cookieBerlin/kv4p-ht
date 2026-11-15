@@ -24,6 +24,12 @@ extension XCUIApplication {
         return false
     }
 
+    /// Whether the app shows the page bar of a phone, once it has started: a wide window or the Mac never does, so
+    /// waiting for it there only costs the time of the wait.
+    var hasPageBar: Bool {
+        buttons["page-Memories"].firstMatch.exists
+    }
+
     /// The page bar of a phone; elsewhere the memories stand beside a switch between the packets, the chats and the
     /// map, and the settings open from the toolbar.
     func showPage(_ title: String) {

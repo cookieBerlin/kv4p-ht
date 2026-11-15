@@ -38,6 +38,8 @@ struct FrequencyField: View {
                 width = $0
             }
             .disabled(!model.isReady)
+            // The Mac gives a field with a prompt no name of its own.
+            .accessibilityLabel("Frequency")
             .accessibilityIdentifier("frequency")
             .accessibilityAdjustableAction { direction in
                 switch direction {
