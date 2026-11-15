@@ -543,8 +543,7 @@ its settings between launches:
 - **APRS list:** the list filter.
 - **Memories:** the group shown.
 
-**kv4p HT → About kv4p HT** (📱 at the end of ⚙ **Settings**) shows the version, build and commit of the app, the
-firmwares it contains for USB updates, and the licences of everything it contains
+**kv4p HT → About kv4p HT** (📱 at the end of ⚙ **Settings**) shows the version, build and commit of the app, and the licences of everything it contains
 or is ported from, with the licence texts. **What's New** there shows the
 [changelog](../../apple-src/App/KV4PHT/CHANGELOG.md): what changed in each TestFlight build, newest first. After an
 update, the app shows once what is new in that build; after the first installation it does not.
