@@ -61,6 +61,14 @@ final class AccessibilityAuditTests: XCTestCase {
         // The tiles come from the network; they are Apple's, so the audit waits for the controls only.
         Thread.sleep(forTimeInterval: 2)
         try audit("\(size) map")
+        if app.openMapLayers() {
+            try audit("\(size) map layers")
+            _ = app.closeMapLayers()
+        } else {
+            let finding = "A11Y \(size) map layers: did not open"
+            print(finding)
+            findings.append(finding)
+        }
         let list = app.descendants(matching: .any).matching(NSPredicate(format: "label == 'List'"))
             .allElementsBoundByIndex.first(where: \.isHittable)
         list?.tapOrClick()

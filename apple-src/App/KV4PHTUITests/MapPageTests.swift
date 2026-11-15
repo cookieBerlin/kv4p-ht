@@ -24,19 +24,15 @@ final class MapPageTests: XCTestCase {
         XCTAssertTrue(row("Local repeater").waitForExistence(timeout: 5), "No repeater in the list")
         XCTAssertTrue(row("Local beacon").exists, "No beacon in the list")
         XCTAssertFalse(row("Calling channel").exists, "The frequencies are on by default")
+        XCTAssertTrue(app.openMapLayers(), "The layers did not open")
         chooseLayer("Frequencies")
-        var frequenciesCame = scrolledTo(row("Calling channel"))
-        #if os(macOS)
-            // What is typed into the open menu does not take now and then, and XCTest cannot see the menu to tell. Once
-            // more only if nothing came: had the first choice taken, the second switches them off, and the test fails
-            // all the same.
-            if !frequenciesCame {
-                chooseLayer("Frequencies")
-                frequenciesCame = scrolledTo(row("Calling channel"))
-            }
-        #endif
-        XCTAssertTrue(frequenciesCame, "The frequencies did not come")
+        // The layers stay open after a choice, so that several can be switched at once.
+        XCTAssertTrue(layer("Beacons").exists, "The layers closed after a choice")
+        XCTAssertTrue(app.closeMapLayers(), "The layers stay open")
+        XCTAssertTrue(scrolledTo(row("Calling channel")), "The frequencies did not come")
+        XCTAssertTrue(app.openMapLayers(), "The layers did not open")
         chooseLayer("70 cm")
+        XCTAssertTrue(app.closeMapLayers(), "The layers stay open")
         XCTAssertTrue(row("Local repeater").waitForNonExistence(timeout: 5), "The 2 m repeater is still there")
     }
 
@@ -128,42 +124,33 @@ final class MapPageTests: XCTestCase {
         app.showPage("Map")
     }
 
-    /// An entry of the menu of the layers, by the start of its name. The Mac shows the menu, but XCTest does not see its
-    /// entries while it is open, so they are chosen by typing, as a menu of the Mac offers.
+    /// A switch or a band of the open layers, by the start of its name.
+    private func layer(_ name: String) -> XCUIElement {
+        app.mapLayersPanel.descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH %@", name))
+            .matching(
+                NSPredicate(
+                    format: "elementType IN %@",
+                    [
+                        XCUIElement.ElementType.switch.rawValue, XCUIElement.ElementType.checkBox.rawValue,
+                        XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.radioButton.rawValue,
+                    ]
+                )
+            )
+            .firstMatch
+    }
+
     private func chooseLayer(_ name: String) {
-        let layers = app.descendants(matching: .any)["map-layers"].firstMatch
-        XCTAssertTrue(layers.waitForExistence(timeout: 5), "No layers")
-        #if os(macOS)
-            layers.tapOrClick()
-            Thread.sleep(forTimeInterval: 1)
-            app.typeText(name)
-            app.typeKey(.return, modifierFlags: [])
-        #else
-            let entry = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
-            layers.tap()
-            XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in the layers")
-            // The entries of the open menu report no point to tap at times, also once they are on screen, so the middle
-            // of the frame is tapped, once the menu has stopped moving.
-            var frame = entry.frame
-            let deadline = Date.now.addingTimeInterval(3)
-            repeat {
-                Thread.sleep(forTimeInterval: 0.3)
-                let next = entry.frame
-                if next == frame { break }
-                frame = next
-            } while Date.now < deadline
-            // The menu closes after a choice, so while it stays open, the tap did not take and is made again; a tap that
-            // took cannot be repeated by this. Until it has closed, the list below takes no queries.
-            // While the menu comes or goes, the frame of an entry can be infinite, which a tap does not take.
-            for _ in 0..<3 where entry.exists {
-                let frame = entry.frame
-                if !frame.isInfinite, !frame.isEmpty {
-                    entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-                }
-                _ = entry.waitForNonExistence(timeout: 5)
+        let entry = layer(name)
+        XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in the layers")
+        #if os(iOS)
+            // A switch of iOS takes a tap on its knob, not on the middle of its row.
+            if entry.elementType == .switch {
+                entry.switches.firstMatch.exists ? entry.switches.firstMatch.tap() : entry.tap()
+                return
             }
-            XCTAssertFalse(entry.exists, "The layers stay open")
         #endif
+        entry.tapOrClick()
     }
 
     /// A part of a segmented switch: buttons on iPhone and iPad, radio buttons on the Mac.

@@ -67,4 +67,26 @@ extension XCUIApplication {
             #endif
         }
     }
+
+    /// The layers beside the map: a popover, which a phone shows as a sheet. Whether they opened.
+    func openMapLayers() -> Bool {
+        let layers = descendants(matching: .any)["map-layers"].firstMatch
+        guard layers.waitForExistence(timeout: 5) else { return false }
+        layers.tapOrClick()
+        return mapLayersPanel.waitForExistence(timeout: 5)
+    }
+
+    var mapLayersPanel: XCUIElement {
+        descendants(matching: .any)["map-layers-panel"].firstMatch
+    }
+
+    /// Done on iPhone and iPad; the Mac closes a popover with Esc. Whether they closed.
+    func closeMapLayers() -> Bool {
+        #if os(macOS)
+            typeKey(.escape, modifierFlags: [])
+        #else
+            buttons["map-layers-done"].firstMatch.tap()
+        #endif
+        return mapLayersPanel.waitForNonExistence(timeout: 5)
+    }
 }
