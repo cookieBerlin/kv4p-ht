@@ -80,7 +80,7 @@ struct StationSettings: View {
                 if let warning = model.stationWarning {
                     Label(warning, systemImage: "exclamationmark.triangle")
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.strongRed)
                 }
                 Toggle("Listen only", isOn: $model.isListenOnly)
                     .explained(ControlHelp.listenOnly)
@@ -121,12 +121,14 @@ private struct RadioSection<Rows: View>: View {
     @ViewBuilder let rows: Rows
 
     var body: some View {
-        Section(title) {
+        Section {
             if model.isReady {
                 rows
             } else {
                 Text("Not available while no radio is connected.").foregroundStyle(Color.strongSecondary)
             }
+        } header: {
+            Text(title).foregroundStyle(Color.strongSecondary)
         }
     }
 }
@@ -172,7 +174,7 @@ struct RadioSettings: View {
                 if let warning = model.squelchWarning {
                     Label(warning, systemImage: "exclamationmark.triangle")
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.strongRed)
                 }
                 Picker("TX tone (CTCSS)", selection: $model.txTone) {
                     ForEach(CTCSS.labels, id: \.self) { Text($0) }
@@ -309,7 +311,7 @@ struct AudioSettings: View {
         if let warning = model.otherAudioMode.warning {
             Label(warning, systemImage: "exclamationmark.triangle")
                 .font(.footnote)
-                .foregroundStyle(.orange)
+                .foregroundStyle(Color.strongOrange)
         }
         if let hint = model.otherAudioHint {
             Text(hint).font(.footnote).foregroundStyle(Color.strongSecondary)
@@ -433,6 +435,7 @@ struct APRSSettings: View {
                     Text(model.storedPacketCount, format: .number).foregroundStyle(Color.strongSecondary)
                 }
                 Button("Delete all packets…", role: .destructive) { isConfirmingDeleteAll = true }
+                    .strongDestructive()
                     .disabled(model.storedPacketCount == 0 && model.aprsEvents.isEmpty)
             } header: {
                 Text("History").foregroundStyle(Color.strongSecondary)

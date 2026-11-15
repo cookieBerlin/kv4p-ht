@@ -67,10 +67,16 @@ extension View {
 }
 
 extension Color {
-    /// For small text that must stay readable: darker than the system's secondary grey, which is too faint for it.
+    /// For small text and symbols that must stay readable: darker than the system's secondary grey, which is too faint
+    /// for them. Disabled controls, fills and borders keep the system's greys.
     static let strongSecondary = Color.primary.opacity(0.7)
     /// For small links: darker than the system's blue on a light background and lighter on a dark one.
     static let strongAccent = Color("StrongAccent")
+    /// For text in red, orange or green, such as a failure, a warning or a success, and for a red button: darker than the
+    /// system's colours on a light background and lighter on a dark one. Bars, badges and fills keep the system's.
+    static let strongRed = Color("StrongRed")
+    static let strongOrange = Color("StrongOrange")
+    static let strongGreen = Color("StrongGreen")
     /// The background of the bars above and below the lists: opaque, as text that a list scrolls behind a translucent bar
     /// shows through it, too faint to read (ADR-0062).
     #if os(macOS)
@@ -78,6 +84,24 @@ extension Color {
     #else
         static let opaqueBar = Color(uiColor: .secondarySystemBackground)
     #endif
+}
+
+/// A red button in a form, in the darker red of the app while it can be pressed; disabled, it keeps the system's grey.
+private struct StrongDestructive: ViewModifier {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.foregroundStyle(Color.strongRed)
+        } else {
+            content
+        }
+    }
+}
+
+extension View {
+    /// For a button of the role `destructive` in a form, whose system red is too faint on a light background.
+    func strongDestructive() -> some View { modifier(StrongDestructive()) }
 }
 
 /// A count in a capsule, such as the new messages; its colour darkened, so that the white digits stand out.

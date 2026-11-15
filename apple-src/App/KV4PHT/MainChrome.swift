@@ -202,7 +202,7 @@ struct RadioHeader: View {
                 FrequencyStepButtons(model: model)
             #endif
             Image(systemName: model.isReceiving ? "speaker.wave.2.fill" : "speaker.slash")
-                .foregroundStyle(model.isReceiving ? Color.green : Color.secondary)
+                .foregroundStyle(model.isReceiving ? Color.green : Color.strongSecondary)
                 .accessibilityLabel(model.isReceiving ? "Squelch open" : "Squelch closed")
                 .help(ControlHelp.meter)
         }
@@ -440,7 +440,7 @@ struct BottomBar: View {
             Text(model.statusText)
                 .font(.caption)
                 // The strong grey, as plain secondary on the bar stays below 4.5:1.
-                .foregroundStyle(model.isStatusFailure ? Color.red : Color.strongSecondary)
+                .foregroundStyle(model.isStatusFailure ? Color.strongRed : Color.strongSecondary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
@@ -467,7 +467,7 @@ struct BottomBar: View {
 
         var body: some View {
             HStack(alignment: .firstTextBaseline) {
-                Text("The radio needs a firmware update.").foregroundStyle(.orange)
+                Text("The radio needs a firmware update.").foregroundStyle(Color.strongOrange)
                 Spacer()
                 Button("Open Settings") {
                     model.requestFirmwareSettings()
@@ -486,7 +486,7 @@ struct StatusLine: View {
         Text(model.statusText)
             .font(.footnote)
             .multilineTextAlignment(.center)
-            .foregroundStyle(model.isStatusFailure ? Color.red : Color.strongSecondary)
+            .foregroundStyle(model.isStatusFailure ? Color.strongRed : Color.strongSecondary)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal)
     }
@@ -540,7 +540,7 @@ struct NoticeBanner: View {
         if let notice = model.notice {
             HStack(alignment: .firstTextBaseline) {
                 Text(notice)
-                    .foregroundStyle(model.isNoticeSuccess ? Color.green : Color.red)
+                    .foregroundStyle(model.isNoticeSuccess ? Color.strongGreen : Color.strongRed)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button("Dismiss", systemImage: "xmark.circle.fill") { model.dismissNotice() }

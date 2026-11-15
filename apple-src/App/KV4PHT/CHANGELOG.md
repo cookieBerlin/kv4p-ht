@@ -12,6 +12,9 @@ own, with its version, build and date.
 - Without a connection, the memories offer it in place of **Push to talk**: the status, the choice of radio and
   **Connect**, or **Cancel** while connecting. **Disconnect** is in the settings, and on the Mac and a wide iPad also at the top right.
 - iPhone Duo, open: the title row goes, as the settings button stands at the side.
+- **About** no longer lists the firmwares for USB updates.
+- Without a connection, the packets and a chat say *Connect the radio to send.* in place of the line to write, rather
+  than showing it with a dimmed **Send**.
 - The **Layers** menu of the map closes after each choice.
 - iPhone: the frequency and the S-meter are on the memories page only, which leaves the packets, the chats and the
   map the whole height.
@@ -42,6 +45,12 @@ own, with its version, build and date.
   the Mac, the state of the connection at the bottom of the window. So are the titles and notes of sections, the
   values in the settings and in **About**, the texts of empty lists and the detailed lines of the log.
 - Mac: VoiceOver names the frequency field.
+- Grey symbols, such as the kind of a memory, the symbol of a packet and the pages not shown, are as dark as the
+  grey texts.
+- Buttons, links and red, orange or green texts, such as a failure, a warning or **Disconnect**, are in darker colours,
+  so that they are easier to read on a light background.
+- Map: the markers of repeaters, frequencies and beacons are a darker blue, green and orange, so that their *2m* or
+  *70* is easy to read.
 
 ## 0.2.0 (20261111.2136) – 2026-11-11
 

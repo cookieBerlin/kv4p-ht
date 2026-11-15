@@ -158,20 +158,20 @@ struct ConnectAtStartToggle: View {
                 RadioPicker(model: model)
                 // A failure says why at length, so it gets a row of its own.
                 if model.isStatusFailure {
-                    Text(model.statusText).foregroundStyle(.red)
+                    Text(model.statusText).foregroundStyle(Color.strongRed)
                 } else {
                     LabeledContent("State") {
                         HStack(spacing: 6) {
                             if model.isReady {
                                 // Green text is too faint on white; the mark carries the colour.
-                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.strongGreen)
                             }
                             Text(model.statusText).foregroundStyle(Color.strongSecondary)
                         }
                     }
                 }
                 ConnectButton(model: model)
-                    .tint(model.canConnect ? nil : .red)
+                    .tint(model.canConnect ? nil : Color.strongRed)
                 ConnectAtStartToggle(model: model)
             } header: {
                 Text("Connection").foregroundStyle(Color.strongSecondary)
@@ -226,7 +226,7 @@ struct FirmwareUpdateRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if model.offersFirmwareSettings {
-                Text("The radio needs a firmware update.").foregroundStyle(.orange)
+                Text("The radio needs a firmware update.").foregroundStyle(Color.strongOrange)
             }
             if let hint = model.firmwareUpdateHint {
                 Text(hint).font(.footnote).foregroundStyle(Color.strongSecondary)
@@ -242,7 +242,7 @@ struct FirmwareUpdateRow: View {
                     "Firmware updated and verified. The radio is now set up for the Android app.",
                     systemImage: "checkmark.circle"
                 )
-            case .failed(let message): Text(message).foregroundStyle(.red)
+            case .failed(let message): Text(message).foregroundStyle(Color.strongRed)
             }
             Button("Update firmware…") { isChoosing = true }
                 .disabled(!model.canUpdateFirmware)
@@ -304,7 +304,9 @@ struct FirmwareChoiceSheet: View {
                 .foregroundStyle(.tint)
             VStack(alignment: .leading, spacing: 4) {
                 Text(choice.title).fontWeight(.semibold)
-                Text(choice.suitability).foregroundStyle(choice.isForThisApp ? Color.strongSecondary : Color.orange)
+                Text(choice.suitability).foregroundStyle(
+                    choice.isForThisApp ? Color.strongSecondary : Color.strongOrange
+                )
                 ForEach(choice.details, id: \.self) {
                     Text($0).font(.caption.monospaced()).foregroundStyle(Color.strongSecondary).textSelection(.enabled)
                 }
@@ -318,7 +320,7 @@ struct FirmwareChoiceSheet: View {
 struct FirmwareElsewhereNotice: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("The radio needs a firmware update.").foregroundStyle(.orange)
+            Text("The radio needs a firmware update.").foregroundStyle(Color.strongOrange)
             Text(
                 "Connect the radio by USB to a Mac with this app and choose the firmware for this app there. The Android nightly app can write it too."
             )

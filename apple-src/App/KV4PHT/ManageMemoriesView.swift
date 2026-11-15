@@ -25,7 +25,9 @@ struct ManageMemoriesView: View {
                                 Text(block.title)
                                 Spacer()
                                 Text("\(block.memories.count)").foregroundStyle(Color.strongSecondary)
-                                Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.tertiary)
+                                Image(systemName: "chevron.right").font(.footnote).foregroundStyle(
+                                    Color.strongSecondary
+                                )
                             }
                             .contentShape(.rect)
                         }
@@ -258,7 +260,7 @@ extension MemoryGroup {
 private struct DragHandle: View {
     var body: some View {
         #if os(macOS)
-            Image(systemName: "line.3.horizontal").foregroundStyle(.tertiary).accessibilityHidden(true)
+            Image(systemName: "line.3.horizontal").foregroundStyle(Color.strongSecondary).accessibilityHidden(true)
         #endif
     }
 }

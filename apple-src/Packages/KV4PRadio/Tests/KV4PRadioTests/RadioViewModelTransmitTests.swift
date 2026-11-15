@@ -49,6 +49,20 @@ struct RadioViewModelTransmitTests {
         }
     }
 
+    @Test("APRS says why it cannot send, in place of the line to write: listen-only or no callsign, then no connection")
+    func aprsSendBlocked() async {
+        let setup = Setup()
+        let model = setup.model
+        #expect(model.aprsSendBlockedText == "Connect the radio to send.")
+        model.isListenOnly = true
+        #expect(model.aprsSendBlockedText == "Listen only: this app does not transmit.")
+        model.isListenOnly = false
+        await setup.tuned()
+        #expect(model.aprsSendBlockedText == nil)
+        model.callsign = ""
+        #expect(model.aprsSendBlockedText == "Set your callsign to transmit.")
+    }
+
     @Test("the squelch stays as it is while transmitting")
     func squelchLocked() async {
         let setup = Setup()

@@ -1,5 +1,3 @@
-import KV4PProtocol
-
 /// What the About window shows: version and build, and the licences of what the app contains or ports.
 public struct AboutInfo: Sendable {
     public enum Licence: CaseIterable, Sendable {
@@ -81,8 +79,6 @@ public struct AboutInfo: Sendable {
     ]
 
     public let version: String
-    public let firmware =
-        "USB updates: nightly firmware for this app, firmware \(KV4P.packagedFirmwareVersion) for Android"
 
     /// `info`: the bundle's info dictionary.
     public init(info: [String: Any]) {

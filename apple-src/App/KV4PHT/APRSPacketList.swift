@@ -335,7 +335,7 @@ struct APRSPacketList: View {
         )
         .labelStyle(.iconOnly)
         .font(.caption)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.strongSecondary)
         .help(isStored ? ControlHelp.packetStored : ControlHelp.packetNotStored)
     }
 
@@ -346,7 +346,7 @@ struct APRSPacketList: View {
             if let symbol = event.symbol {
                 APRSSymbolView(symbol: symbol)
             } else {
-                Image(systemName: Self.symbol(event.kind)).foregroundStyle(.secondary)
+                Image(systemName: Self.symbol(event.kind)).foregroundStyle(Color.strongSecondary)
             }
         }
         .frame(width: 24)

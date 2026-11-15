@@ -360,7 +360,8 @@ with a filter of its own, so that looking through the history leaves the main pa
 **Messages** (licence required): enter your callsign in ⚙ **Settings** under *Station* (the app
 ships with none and remembers yours), then a recipient and the text below the APRS list,
 then press Return or **Send**. Without a recipient the message goes out as the
-bulletin BLN1CQ.
+bulletin BLN1CQ. Without a connection, or without a callsign, the list and a chat show why in place of the line to
+write, such as *Connect the radio to send.*
 
 - The message is sent on the current TX frequency, via WIDE1-1,WIDE2-1, only
   while the radio receives (not during PTT or a scan) and inside the ham band.
@@ -542,16 +543,18 @@ its settings between launches:
 - **APRS list:** the list filter.
 - **Memories:** the group shown.
 
-**kv4p HT → About kv4p HT** (📱 at the end of ⚙ **Settings**) shows the version, build and commit of the app, the
-firmwares it contains for USB updates, and the licences of everything it contains
+**kv4p HT → About kv4p HT** (📱 at the end of ⚙ **Settings**) shows the version, build and commit of the app, and the licences of everything it contains
 or is ported from, with the licence texts. **What's New** there shows the
 [changelog](../../apple-src/App/KV4PHT/CHANGELOG.md): what changed in each TestFlight build, newest first. After an
 update, the app shows once what is new in that build; after the first installation it does not.
 
 For reduced motion and live captions use the system settings (System Settings →
 Accessibility); the Android app's own switches for them are not needed on the
-Mac. Grey texts, such as hints, values and the titles of sections, are in a darker grey than the system's, so that
-small text stays readable.
+Mac. Grey texts and symbols, such as hints, values, the titles of sections and the kind of a memory, are in a darker
+grey than the system's, so that they stay readable. Buttons, links and red, orange or green texts are in darker
+colours than the system's for the same reason; on the Mac, buttons keep the accent colour chosen in System Settings.
+The markers of the map are a darker blue, green and orange than the system's, so that the *2m* or *70* on them is
+easy to read.
 
 ## Firmware updates
 
@@ -593,6 +596,7 @@ Settings**, which leads straight to the update.
 | *Microphone access is not allowed…* | 🖥 System Settings / 📱 Settings → Privacy & Security → Microphone, then press PTT again. |
 | *The microphone could not be started.* | Press PTT again. If it stays, another app may be using the microphone, or restart the app. |
 | *Set your callsign to send APRS messages.* | Enter your callsign in ⚙ **Settings** under *Station*. |
+| *Connect the radio to send.* | Connect the radio: on the memories, or in ⚙ **Settings**. |
 | *Set your callsign to transmit.* | Enter your callsign in ⚙ **Settings** under *Station*. |
 | *Listen only: this app does not transmit.* | Turn *Listen only* off in ⚙ **Settings** under *Station*. |
 | *Your location is unknown.* | Allow location access in System Settings → Privacy & Security → Location Services, or wait until the Mac has a location. |

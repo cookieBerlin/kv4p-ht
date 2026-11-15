@@ -6,11 +6,19 @@ extension XCUIApplication {
     func waitForStart() -> Bool {
         #if os(macOS)
             // "Don't Reopen", by its identifier, as its title follows the language of the Mac.
+            // The window or the question, whichever comes first: the question comes only after a crash, so waiting for it
+            // alone would cost every start its time.
             let dontReopen = dialogs.buttons["action-button--999"].firstMatch
-            if dontReopen.waitForExistence(timeout: 3) {
-                dontReopen.click()
+            let windowDeadline = Date().addingTimeInterval(10)
+            var hasWindow = false
+            while !hasWindow, Date() < windowDeadline {
+                if dontReopen.exists {
+                    dontReopen.click()
+                }
+                hasWindow = windows.firstMatch.exists
+                if !hasWindow { Thread.sleep(forTimeInterval: 0.2) }
             }
-            if !windows.firstMatch.waitForExistence(timeout: 10) {
+            if !hasWindow {
                 typeKey("n", modifierFlags: .command)
             }
         #endif

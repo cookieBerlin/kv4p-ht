@@ -54,9 +54,9 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
 
 ### Exceptions
 
-1. **Contrast that nearly passes:** Apple's secondary grey, which the app keeps for symbols only. Every grey text, also
-   the titles and notes of sections, the values of forms and the texts of empty lists, uses a darker grey of the app's
-   own, so the audit checks the settings as any other screen.
+1. **Withdrawn.** It let contrast pass that nearly passes. Every grey text and symbol uses a darker grey of the app's
+   own, also the titles and notes of sections, the values of forms and the texts of empty lists, so such a finding is
+   measured on the screenshot as any other, by exception 2.
 2. **Contrast that the screenshot shows to be enough:** the audit misreads the background now and then, above all on the
    iPad, and flags black text on white from one run to the next. For such a finding the test measures the element on the
    screenshot of the screen, its lightest against its darkest pixel, and lets it pass at 4.5:1 or more, with the value

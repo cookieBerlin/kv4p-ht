@@ -55,6 +55,7 @@ struct LoggingSettings: View {
             ProblemReportSection(model: model)
             Section {
                 Button("Delete the log and crash data…", role: .destructive) { isConfirmingDelete = true }
+                    .strongDestructive()
             }
         }
         .task { summary = model.logSummary }
@@ -280,7 +281,7 @@ struct LiveLogView: View {
 
     private static func color(of level: DiagnosticLog.Level) -> Color {
         switch level {
-        case .error: .red
+        case .error: .strongRed
         case .info: .primary
         case .detail: .strongSecondary
         }

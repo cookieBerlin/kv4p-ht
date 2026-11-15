@@ -170,7 +170,10 @@ private struct APRSConversationView: View {
     }
 
     @ViewBuilder private var input: some View {
-        if model.canSendOnAir {
+        // Without a way to send, the reason in place of the line to write, rather than a line that does nothing.
+        if let blocked = model.aprsSendBlockedText {
+            Text(blocked).font(.footnote).foregroundStyle(Color.strongSecondary).padding(8)
+        } else {
             AdaptiveStack {
                 TextField("Message", text: draft, axis: .vertical)
                     .macName("Message")
@@ -182,24 +185,16 @@ private struct APRSConversationView: View {
                     KeyboardDismissButton()
                     Text("\(text.count)/\(limit)")
                         .font(.caption.monospacedDigit())
-                        .foregroundStyle(text.count == limit ? Color.red : Color.strongSecondary)
+                        .foregroundStyle(text.count == limit ? Color.strongRed : Color.strongSecondary)
                         .fixedSize()
                         .accessibilityLabel("\(limit - text.count) characters left")
                     Spacer(minLength: 0).frame(maxWidth: textSize.isAccessibilitySize ? .infinity : 0)
                     Button("Send", systemImage: "paperplane", action: send)
                         .labelStyle(.iconOnly)
-                        .disabled(!model.isReady || text.isEmpty)
+                        .disabled(text.isEmpty)
                 }
             }
             .padding(8)
-            if !model.isReady {
-                Text("Connect the radio to send.").font(.footnote).foregroundStyle(Color.strongSecondary).padding(
-                    .bottom,
-                    8
-                )
-            }
-        } else if let blocked = model.transmitBlockedText {
-            Text(blocked).font(.footnote).foregroundStyle(Color.strongSecondary).padding(8)
         }
     }
 

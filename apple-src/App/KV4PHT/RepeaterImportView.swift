@@ -39,7 +39,7 @@ struct RepeaterImportView: View {
                     LabeledContent("File") { Text(fileName).foregroundStyle(Color.strongSecondary) }
                 }
                 if cannotRead {
-                    Text("This file cannot be read.").foregroundStyle(.red)
+                    Text("This file cannot be read.").foregroundStyle(Color.strongRed)
                 }
             } header: {
                 Text("CSV file").foregroundStyle(Color.strongSecondary)
@@ -56,7 +56,7 @@ struct RepeaterImportView: View {
                         }
                         Text(preview.summary)
                     } else {
-                        Text(list.notThisList).foregroundStyle(.red)
+                        Text(list.notThisList).foregroundStyle(Color.strongRed)
                     }
                 } header: {
                     Text("Result").foregroundStyle(Color.strongSecondary)
