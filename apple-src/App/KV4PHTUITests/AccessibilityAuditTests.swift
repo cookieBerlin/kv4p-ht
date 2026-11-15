@@ -42,11 +42,11 @@ final class AccessibilityAuditTests: XCTestCase {
         try audit("\(size) memories")
         app.showPage("Packets")
         try audit("\(size) packets")
-        if app.openPanel("packet-types") {
-            try audit("\(size) packet types")
-            _ = app.closePanel("packet-types")
+        if app.openPanel("packet-filter") {
+            try audit("\(size) packet filter")
+            _ = app.closePanel("packet-filter")
         } else {
-            let finding = "A11Y \(size) packet types: did not open"
+            let finding = "A11Y \(size) packet filter: did not open"
             print(finding)
             findings.append(finding)
         }
