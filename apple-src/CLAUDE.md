@@ -52,7 +52,7 @@ make coverage   # tests + coverage report + 100 % gate
 make lint       # swift format lint --strict
 make format     # swift format --in-place
 make privacy    # personal data check (files + commit e-mails), BASE=<ref> optional
-make changed    # print true/false: does BASE...HEAD_REF touch an Apple path?
+make changed    # print true/false: does BASE...HEAD_REF touch an Apple path? CODE=--code: not counting docs (ADR-0078)
 make ios-build  # compile all modules for iOS (no simulator)
 make app        # build the app for macOS and iOS, check the iOS bundle, release dry runs
 make testflight # signed iOS and macOS builds, uploaded to App Store Connect; needs TEAM_ID (PLATFORMS=macOS for one platform, DRY_RUN=1 for a dry run); writes the What to Test texts

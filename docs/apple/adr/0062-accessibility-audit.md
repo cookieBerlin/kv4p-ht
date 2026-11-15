@@ -41,15 +41,16 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
   translucent bar, a row that a list scrolled out of sight still showed through, too faint to read, and the audit
   flagged it; on the iPad with the largest text that happened on every run. The button to connect and disconnect uses
   the app's darker blue on iPhone and iPad, as the system's blue on the grey of the header fails the contrast check.
-- **The Mac since 3.7c, with `make a11y-mac`:** the same test, run by hand only, as it takes over the mouse and the
-  keyboard. Its own kinds of check stand in for Dynamic Type, clipped text and traits, which the Mac does not have: the
-  actions of an element and the match of parent and child. It goes through the main window, the chats and a chat, each
-  page of the settings window by its sidebar, and the About window. The test runner is signed ad hoc, without a team,
-  and without the hardened runtime, which would not let it load the tests; it is built outside the checkout, as macOS
-  asks each new build for access to a folder such as Documents. Screenshots show the app's window only, cut out of the
-  screen, which shows whatever else is open; for the same reason the scheme keeps no attachments of its own, such as
-  screen recordings, and the test fails on its findings at the end rather than through issues of XCTest, which would
-  attach the whole screen. macOS opens the windows of the last run again; the test closes the About window first.
+- **The Mac since 3.7c, with `make a11y-mac`:** the same test, by hand on a Mac, as it takes over the mouse and the
+  keyboard, and in CI on GitHub's macOS runner ([ADR-0072](0072-ui-tests-in-parallel.md)). Its own kinds of check stand
+  in for Dynamic Type, clipped text and traits, which the Mac does not have: the actions of an element and the match of
+  parent and child. It goes through the main window, the chats and a chat, each page of the settings window by its
+  sidebar, and the About window. The test runner is signed ad hoc, without a team, and without the hardened runtime,
+  which would not let it load the tests; it is built outside the checkout, as macOS asks each new build for access to a
+  folder such as Documents. Screenshots show the app's window only, cut out of the screen, which shows whatever else is
+  open; for the same reason the scheme keeps no attachments of its own, such as screen recordings, and the test fails on
+  its findings at the end rather than through issues of XCTest, which would attach the whole screen. macOS opens the
+  windows of the last run again; the test closes the About window first.
 
 ### Exceptions
 

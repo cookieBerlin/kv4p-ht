@@ -39,7 +39,7 @@ for device in "${devices[@]}"; do
       -resultBundlePath "$bundle" > "$log" 2>&1; then
       break
     fi
-    if [ "$attempt" = 1 ] && grep -qE "never finished bootstrapping|failed to initialize for UI testing|crashed while preparing to run tests" "$log"; then
+    if [ "$attempt" = 1 ] && grep -qE "never finished bootstrapping|failed to initialize for UI testing|crashed while preparing to run tests|timed out while preparing to run tests" "$log"; then
       echo "a11y: the test runner did not start on $device, once more" >&2
       continue
     fi

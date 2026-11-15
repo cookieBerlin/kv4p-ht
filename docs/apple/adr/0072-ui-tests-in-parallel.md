@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13
+- **Date:** 2026-11-13, the Mac added 2026-11-15
 
 ## Context
 
@@ -15,6 +15,13 @@ at once. The job is not a required check, so the failures went unnoticed.
 
 The iPhone Duo ([ADR-0071](0071-iphone-duo.md)) adds a third device whose layout
 differs from both.
+
+The Mac's UI tests ran by hand only (`make a11y-mac`), as they take over the mouse and
+the keyboard. A trial on GitHub's macOS runner (`xcode-27`, macOS 27) showed that they
+run there as well: XCTest drives the app on the runner's own desktop, which nobody
+uses, without asking for automation mode, and the screenshots show the app's window.
+The trial also found the failures the Mac had locally, a crash and the audit's
+findings, which were fixed before the jobs were added.
 
 ## Considered options
 
@@ -30,19 +37,22 @@ differs from both.
 - **`scripts/a11y.sh` takes a selection:** `all` (the default), `audit` (only
   `AccessibilityAuditTests`) or `functional` (every other UI test). `make a11y` passes
   it as `UI_TESTS`. The devices are the iPhone 18 Pro, the iPad Pro 11-inch (M5) and
-  the iPhone Duo.
-- **CI job `ui-tests`:** a matrix of the three devices and the two selections, six
+  the iPhone Duo, and the Mac, which runs the app itself.
+- **CI job `ui-tests`:** a matrix of the four devices and the two selections, eight
   jobs side by side, `fail-fast: false`, each with its own artifact.
 - **Retries:** a failing test runs once more (`-retry-tests-on-failure
   -test-iterations 2`). A test runner that crashes before the tests start gets a
-  second start.
+  second start, also when it times out while preparing to run the tests.
 
 ## Consequences
 
 - **Faster and steadier:** a run takes as long as its slowest job, about the audit on
   one device, rather than the sum of all.
-- **Billing:** six macOS jobs per pull request. On a runner that is billed per minute,
-  this costs about as many minutes as before, plus a build per job.
+- **Billing:** eight macOS jobs per pull request that changes more than documentation
+  ([ADR-0078](0078-ci-skips-builds-for-docs.md)). On a runner that is billed per
+  minute, this costs about as many minutes as before, plus a build per job.
 - **Folding:** the iPhone Duo runs folded, as it boots; unfolding cannot be scripted.
+- **The Mac in CI:** `make a11y-mac` is still there for a run on the maintainer's
+  Mac, but a pull request no longer needs one.
 - **Required check:** once the functional jobs pass steadily, they should become
   required ([ADR-0016](0016-branch-protection.md)). That is the maintainer's decision.
