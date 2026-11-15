@@ -44,6 +44,8 @@ own, with its version, build and date.
 - Packets: a callsign typed quickly into the filter is kept whole; the list no longer falls back to its first
   letters.
 - Packets, Mac: VoiceOver names the button that exports the packets and opens its menu.
+- Packets: *Clear filter* in the line above the list has room for a finger, also at the top edge of a folded iPhone
+  Duo.
 - Memories: frequencies and beacons have clear symbols of their own, also when choosing the kind of a memory.
 - When an iPhone Duo folds or unfolds, an iPad window changes from narrow to wide or back, or a large iPhone turns,
   PTT and the access tone stop if they were held, and an unsent APRS message, the open settings and the page shown

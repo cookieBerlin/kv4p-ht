@@ -160,9 +160,16 @@ struct FilterNotice: View {
             Spacer()
             Button("Clear filter", action: clear)
                 .font(.footnote)
+                #if os(iOS)
+                    // Room enough for a finger, also where the line is at the top edge, as on a folded iPhone Duo.
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+                #endif
         }
         .padding(.horizontal)
-        .padding(.vertical, 6)
+        #if os(macOS)
+            .padding(.vertical, 6)
+        #endif
         .accessibilityElement(children: .contain)
         .accessibilityLabel(text)
         .accessibilityIdentifier("filter-notice")
