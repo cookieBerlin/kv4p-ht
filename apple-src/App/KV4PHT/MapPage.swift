@@ -12,6 +12,7 @@ struct MapPage: View {
     @State private var camera = MapCameraPosition.automatic
     @State private var selected: MapSelection?
     @State private var isOnScreen = false
+    @State private var isShowingLayers = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isPageOnScreen) private var isPageOnScreen
 
@@ -90,51 +91,19 @@ struct MapPage: View {
                 .help("Show all")
                 .accessibilityIdentifier("map-show-all")
             }
-            Menu("Layers", systemImage: "square.3.layers.3d") {
-                // A menu shows no colours of its own, so their names stand there.
-                Section("Kind, by colour") {
-                    ForEach(MemoryKind.allCases, id: \.self) { kind in
-                        Toggle("\(MapLayer(kind).title) (\(kind.mapColorName))", isOn: shows(MapLayer(kind)))
-                    }
+            Button("Layers", systemImage: "square.3.layers.3d") { isShowingLayers = true }
+                .capsuleButton()
+                .accessibilityIdentifier("map-layers")
+                // A popover on the Mac and the iPad, and a sheet where the window is narrow, as on a phone. It stays
+                // open while the layers change, so that several can be switched at once (ADR-0068).
+                .popover(isPresented: $isShowingLayers, arrowEdge: .top) {
+                    MapLayersPanel(model: model, isShown: $isShowingLayers)
+                        .presentationCompactAdaptation(.sheet)
+                        .presentationDetents([.medium, .large])
                 }
-                Section("Band, marked 2m or 70") {
-                    Picker("Band", selection: $model.mapBand) {
-                        ForEach(MapBand.allCases, id: \.self) { band in
-                            Text(band.title).tag(band)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                }
-                if model.isAPRSEnabled {
-                    Section("APRS, by symbol") {
-                        Toggle(MapLayer.stations.title, isOn: shows(.stations))
-                        Picker("Heard within", selection: $model.mapStationWindow) {
-                            ForEach(MapStationWindow.allCases, id: \.self) { window in
-                                Text(window.title).tag(window)
-                            }
-                        }
-                    }
-                }
-            }
-            .menuIndicator(.hidden)
-            // Closes after each choice: an open menu keeps the app from going idle, which held up the UI tests until
-            // they gave up, and a choice did not always take while it stayed open.
-            .menuActionDismissBehavior(.enabled)
-            .capsuleMenu()
-            .accessibilityIdentifier("map-layers")
         }
         .padding(.horizontal)
         .padding(.vertical, 6)
-    }
-
-    private func shows(_ layer: MapLayer) -> Binding<Bool> {
-        Binding(
-            get: { model.mapLayers.contains(layer) },
-            set: { isOn in
-                if isOn { model.mapLayers.insert(layer) } else { model.mapLayers.remove(layer) }
-            }
-        )
     }
 
     private var map: some View {
@@ -426,8 +395,90 @@ extension MapStation {
     fileprivate var heard: Date { Date(timeIntervalSince1970: Double(event.lastSeenMs) / 1000) }
 }
 
+/// What the map shows: the kinds of memory, by colour, the band and the APRS stations.
+private struct MapLayersPanel: View {
+    @Bindable var model: RadioViewModel
+    @Binding var isShown: Bool
+
+    var body: some View {
+        #if os(macOS)
+            form.frame(width: 320, height: model.isAPRSEnabled ? 400 : 300)
+        #else
+            NavigationStack {
+                form
+                    .navigationTitle("Layers")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { isShown = false }
+                                .accessibilityIdentifier("map-layers-done")
+                        }
+                    }
+            }
+            .frame(minWidth: 320, idealWidth: 360, minHeight: 420, idealHeight: 520)
+        #endif
+    }
+
+    private var form: some View {
+        Form {
+            Section {
+                ForEach(MemoryKind.allCases, id: \.self) { kind in
+                    Toggle(isOn: shows(MapLayer(kind))) {
+                        Label {
+                            // Named as well, for those who cannot tell the colours apart.
+                            Text("\(MapLayer(kind).title) (\(kind.mapColorName))")
+                        } icon: {
+                            Image(systemName: "circle.fill").foregroundStyle(kind.mapColor)
+                        }
+                    }
+                }
+            } header: {
+                Text("Kind, by colour").foregroundStyle(Color.strongSecondary)
+            }
+            Section {
+                Picker("Band", selection: $model.mapBand) {
+                    ForEach(MapBand.allCases, id: \.self) { band in
+                        Text(band.title).tag(band)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } header: {
+                Text("Band, marked 2m or 70").foregroundStyle(Color.strongSecondary)
+            }
+            if model.isAPRSEnabled {
+                Section {
+                    Toggle(MapLayer.stations.title, isOn: shows(.stations))
+                    Picker("Heard within", selection: $model.mapStationWindow) {
+                        ForEach(MapStationWindow.allCases, id: \.self) { window in
+                            Text(window.title).tag(window)
+                        }
+                    }
+                } header: {
+                    Text("APRS, by symbol").foregroundStyle(Color.strongSecondary)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        #if os(macOS)
+            // Checkboxes, as is the Mac's custom, which carry their names; its switches in a form stand apart from them.
+            .toggleStyle(.checkbox)
+        #endif
+        .accessibilityIdentifier("map-layers-panel")
+    }
+
+    private func shows(_ layer: MapLayer) -> Binding<Bool> {
+        Binding(
+            get: { model.mapLayers.contains(layer) },
+            set: { isOn in
+                if isOn { model.mapLayers.insert(layer) } else { model.mapLayers.remove(layer) }
+            }
+        )
+    }
+}
+
 extension MemoryKind {
-    /// The colour of its markers, and its name for the menu. Darker than the system's colours, on which MapKit's white
+    /// The colour of its markers, and its name for the layers. Darker than the system's colours, on which MapKit's white
     /// mark of the band would be too faint: at least 5:1 against it, in light and dark alike.
     fileprivate var mapColor: Color {
         switch self {
