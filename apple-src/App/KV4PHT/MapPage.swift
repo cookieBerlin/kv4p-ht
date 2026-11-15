@@ -427,12 +427,13 @@ extension MapStation {
 }
 
 extension MemoryKind {
-    /// The colour of its markers, and its name for the menu.
+    /// The colour of its markers, and its name for the menu. Darker than the system's colours, on which MapKit's white
+    /// mark of the band would be too faint: at least 5:1 against it, in light and dark alike.
     fileprivate var mapColor: Color {
         switch self {
-        case .repeater: .blue
-        case .frequency: .green
-        case .beacon: .orange
+        case .repeater: Color(red: 0x00 / 255, green: 0x58 / 255, blue: 0xD0 / 255)
+        case .frequency: Color(red: 0x1A / 255, green: 0x7F / 255, blue: 0x37 / 255)
+        case .beacon: Color(red: 0xB5 / 255, green: 0x4A / 255, blue: 0x00 / 255)
         }
     }
 
