@@ -120,6 +120,7 @@ final class MapPageTests: XCTestCase {
             app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != 'page-Map'", label))
             .allElementsBoundByIndex.first(where: \.isHittable) ?? app.buttons[label].firstMatch
         XCTAssertTrue(part.waitForExistence(timeout: 30), "No \(label) to choose")
+        XCTAssertTrue(part.waitForHittable(timeout: 10), "\(label) cannot be chosen")
         part.tapOrClick()
     }
 

@@ -110,6 +110,8 @@ extension XCUIApplication {
     func choosePanelEntry(_ identifier: String, _ name: String) {
         let entry = panelEntry(identifier, name)
         XCTAssertTrue(entry.waitForExistence(timeout: 5), "No \(name) in \(identifier)")
+        // The panel may still slide in, on a busy machine for seconds.
+        XCTAssertTrue(entry.waitForHittable(timeout: 10), "\(name) in \(identifier) cannot be tapped")
         #if os(macOS)
             // A radio button of the Mac reaches across the row, and only its circle and its name take a click.
             if entry.elementType == .radioButton {

@@ -1,7 +1,7 @@
 # ADR-0062: Accessibility audit
 
 - **Status:** Proposed
-- **Date:** 2026-11-06
+- **Date:** 2026-11-06, the third look 2026-11-16
 
 ## Context
 
@@ -31,12 +31,15 @@ parts: making the audit run (3.7a), fixing what it finds on iPhone and iPad (3.7
   audit run out of time now and then; it then runs one kind of check at a time, each up to five times, with a pause
   that grows from one attempt to the next. The check of Dynamic Type always runs on its own: together with the others
   it flags text that grows, such as all of a chat.
-- **A screen with findings is checked twice:** after a pause of three seconds, the test runs every check on it once
-  more, and only what both looks find counts. On a slow machine, such as CI's, the audit catches a screen before its
-  text has grown, and flags it, but seldom twice the same text; a real finding is there both times. The log keeps the
-  first look's findings as `A11Y-FIRST-LOOK` and those of the second look alone as `A11Y-ONCE`, which `make a11y` does
-  not count. A finding whose element has gone since, such as a part of a map drawn anew, is passed over, as nothing
-  is left to read; if it stays, the second look finds it.
+- **A screen with findings is checked up to three times:** after a pause of three seconds, the test runs every check
+  on it once more, and if that finds something the first look found too, a third time after ten seconds; only what
+  all looks find counts. On a slow machine, such as CI's, the audit catches a screen before its text has grown, and
+  flags it, now and then twice the same text, but seldom three times; a real finding is there each time. Two looks
+  were not enough: findings on What's New, a footnote of the memories and a chat were found twice in a row in some CI
+  runs and failed them, though dozens of other runs found them on the first look only. The log keeps the first
+  look's findings as `A11Y-FIRST-LOOK`, the second's as `A11Y-SECOND-LOOK`, and those a later look finds without the
+  one before as `A11Y-ONCE`, which `make a11y` does not count. A finding whose element has gone since, such as a part
+  of a map drawn anew, is passed over, as nothing is left to read; if it stays, the next look finds it.
 - **The bars above and below the lists are opaque, and the lists end at them,** on every platform. Behind a
   translucent bar, a row that a list scrolled out of sight still showed through, too faint to read, and the audit
   flagged it; on the iPad with the largest text that happened on every run. The button to connect and disconnect uses

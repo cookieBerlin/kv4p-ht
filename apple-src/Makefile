@@ -76,7 +76,8 @@ app:
 
 # The UI tests in the app's demo mode, with Apple's accessibility audit on every screen, on an iPhone, an iPad and an
 # iPhone Duo simulator (ADR-0062). The findings go to .build/a11y/findings.txt. Not part of `ci`, as it needs the
-# simulator; CI runs it in jobs of their own, one per device and selection (ADR-0072). UI_TESTS: all, audit or functional.
+# simulator; CI runs it in jobs of their own, one per device and selection (ADR-0072). UI_TESTS: all, audit,
+# audit-pages, audit-settings or functional.
 A11Y_DEVICES ?= iPhone 18 Pro,iPad Pro 11-inch (M5),iPhone Duo
 UI_TESTS ?= all
 a11y:
