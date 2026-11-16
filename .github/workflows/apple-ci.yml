@@ -4,10 +4,13 @@
 # jobs are skipped (reported as successful) when no Apple port path changed,
 # and the build and test jobs also when only documentation changed
 # (docs/apple/adr/0017-ci-change-detection.md, 0078-ci-skips-builds-for-docs.md).
+# A draft pull request skips the app build, the iOS build and the UI tests; marking it
+# ready for review runs them (docs/apple/adr/0079-ci-skips-long-jobs-for-drafts.md).
 name: Apple CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
 
@@ -97,7 +100,7 @@ jobs:
 
   ios-build:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && github.event.pull_request.draft != true
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +108,7 @@ jobs:
 
   app:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && github.event.pull_request.draft != true
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
@@ -126,7 +129,7 @@ jobs:
   # simulator per machine, as several at once made the test runner time out and crash.
   ui-tests:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && github.event.pull_request.draft != true
     name: ui-tests (${{ matrix.device }}, ${{ matrix.tests }})
     strategy:
       fail-fast: false
