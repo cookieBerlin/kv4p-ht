@@ -39,6 +39,8 @@ final class ConnectionTests: XCTestCase {
         connectHere.tapOrClick()
         XCTAssertTrue(pushToTalk.waitForExistence(timeout: 10), "Did not connect")
         XCTAssertFalse(connectHere.exists, "The connection stays after connecting")
+        // A phone shows the memories now, and the pages beside them are out of reach.
+        app.showPage("Packets")
         XCTAssertTrue(messageField.waitForExistence(timeout: 5), "No line to write once connected")
         XCTAssertFalse(connectToSend.exists, "The packets still ask for a connection")
     }
