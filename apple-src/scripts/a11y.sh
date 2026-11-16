@@ -2,7 +2,7 @@
 # Runs the UI tests on each simulator, or on this Mac, and collects the findings of the accessibility audit (ADR-0062).
 # Usage: scripts/a11y.sh <project> "<device>,<device>" [all|audit|audit-pages|audit-settings|functional], where the
 # device "Mac" stands for this Mac; `audit` runs only the accessibility audit, `audit-pages` and `audit-settings` one of
-# its two parts, and `functional` all other UI tests (ADR-0072).
+# its two parts, and `functional` all other UI tests (ADR-0072). With A11Y_LOAD_LOG=1, it logs how busy the machine is.
 set -euo pipefail
 
 project="$1"
@@ -50,24 +50,7 @@ failed_tests() {
     | if index("all") then "all" else unique[] end'
 }
 
-# Waits until this machine has settled after starting a simulator, for at most `settle_limit` seconds: a new simulator
-# keeps it busy for minutes after it reports its start, and tests that start meanwhile fail to launch the app or to
-# read its screen in time. Settled is a mean load of the last minute below half the cores.
-settle_limit=300
-settle() {
-  local cores load waited=0
-  cores=$(sysctl -n hw.ncpu)
-  while :; do
-    load=$(sysctl -n vm.loadavg | awk '{print $2}')
-    awk -v load="$load" -v cores="$cores" 'BEGIN { exit !(load < cores / 2) }' && break
-    [ "$waited" -lt "$settle_limit" ] || break
-    sleep 10
-    waited=$((waited + 10))
-  done
-  echo "a11y: $device settled for $waited s, load $load on $cores cores"
-}
-
-# How busy this machine is while a device runs, every 10 s into `load_log`, to choose when it has settled: the seconds
+# How busy this machine is while a device runs, every 10 s into `load_log` if A11Y_LOAD_LOG is 1: the seconds
 # since the device started, the mean load of the last 1, 5 and 15 minutes, the share of the CPU that is idle and the
 # share of the memory that is free. The script writes a line `# <step>` there when a step starts.
 load_log=""
@@ -121,10 +104,13 @@ for device in "${devices[@]}"; do
   mkdir -p "$results/runs/$run"
   started=$SECONDS
   stop_sampler # of a device that stopped early
-  load_log="$results/$device load.log"
-  echo "# seconds, load of 1, 5 and 15 minutes, idle CPU, free memory, on $(sysctl -n hw.ncpu) cores" > "$load_log"
-  sample_load &
-  sampler=$!
+  load_log=/dev/null
+  if [ "${A11Y_LOAD_LOG:-}" = 1 ]; then
+    load_log="$results/$device load.log"
+    echo "# seconds, load of 1, 5 and 15 minutes, idle CPU, free memory, on $(sysctl -n hw.ncpu) cores" > "$load_log"
+    sample_load &
+    sampler=$!
+  fi
   step build
   # The Mac runs the tests itself, and its test runner must be signed: ad hoc, without a team. It is built outside the
   # checkout, as macOS asks each new build for access to a protected folder such as Documents, where the checkout may be.
@@ -151,8 +137,6 @@ for device in "${devices[@]}"; do
   if [ -n "$booted" ]; then
     step boot
     xcrun simctl bootstatus "$udid" -b > /dev/null
-    step settle
-    settle
   fi
   step warm-up
   # The first launch of the app on its own, once more if it fails: a launch that fails on a fresh machine then does not
@@ -184,8 +168,10 @@ for device in "${devices[@]}"; do
   echo "a11y: $device took $((SECONDS - started)) s"
   step end
   stop_sampler
-  echo "a11y: load on $device:"
-  cat "$load_log"
+  if [ "$load_log" != /dev/null ]; then
+    echo "a11y: load on $device:"
+    cat "$load_log"
+  fi
   # The screenshots of each screen, to judge the findings.
   for each in "$bundle" "$retry_bundle"; do
     [ -d "$each" ] || continue

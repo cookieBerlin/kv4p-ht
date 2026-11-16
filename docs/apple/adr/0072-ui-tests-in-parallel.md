@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the wait for a settled machine, the warm-up and the load log 2026-11-16
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the build before the boot, the warm-up and the load log 2026-11-16
 
 ## Context
 
@@ -53,16 +53,13 @@ findings, which were fixed before the jobs were added.
   names no test, such as a runner that crashed between two tests, runs the whole
   selection once more. A test runner that crashes before the tests start gets a
   second start, also when it times out while preparing to run the tests.
-- **Build, boot, settle, test:** `scripts/a11y.sh` builds with `build-for-testing`,
-  then starts the simulator and waits until the machine has settled, a mean load of the
-  last minute below half its cores, for at most five minutes, and only then runs the
-  tests with `test-without-building`. A simulator that was already running is not
-  waited for. Meanwhile the script writes how busy the machine is every 10 s, the load,
-  the idle CPU and the free memory, into `<device> load.log`, and prints it at the end of
-  each device, so that the condition can be chosen from runs on the CI runners: in a
-  first local run, the CPU stayed fully busy for about 2.5 minutes after the boot, and
-  the mean load lagged about 2 minutes behind the idle CPU and never fell below half the
-  cores, so the wait always ran its five minutes.
+- **Build, boot, test:** `scripts/a11y.sh` builds with `build-for-testing`, then starts
+  the simulator, waits for `simctl bootstatus`, and runs the tests with
+  `test-without-building`. It does not wait for the machine to settle: on the CI
+  runners it never does (see the consequences).
+- **A load log on request:** with `A11Y_LOAD_LOG=1`, the script writes how busy the
+  machine is every 10 s, the load, the idle CPU and the free memory, with a mark at
+  each step, into `<device> load.log`, and prints it at the end of each device.
 - **A warm-up first:** before the selection, `WarmUpTests` starts the app once and
   closes it, and once more if that fails; no selection includes it. Most launch
   failures came at the first launch of a job, where they failed the first test of the
@@ -87,14 +84,16 @@ findings, which were fixed before the jobs were added.
   as before, Xcode 27.1 ran the whole selection a second time after one failure. On
   CI that happened in about half of the iPhone and iPad jobs and in most of the iPhone
   Duo's, and cost 10–17 minutes each time.
-- **The simulator starts after the build, and the tests wait for it:** a new simulator
-  keeps the machine busy for minutes after it reports its start. Booted beside the
-  build, it made the build take 6–19 minutes rather than about 1.5; booted after the
-  build with the tests right behind it, the first launch of the app timed out twice and
-  a test runner did not start twice, in three CI runs. The first app launch of a job
-  was also where most launch failures of the UI tests came from. The wait for a
-  settled machine is the step those runs lacked; the script prints how long it waited
-  and at what load.
+- **The simulator starts after the build, and the machine stays busy:** a new
+  simulator keeps the machine busy after it reports its start. Booted beside the build,
+  it made the build take 6–19 minutes rather than about 1.5. On a Mac with 8 cores the
+  CPU was fully busy for about 2.5 minutes after the boot and then mostly idle. On the CI
+  runners, with 3 cores, the load log of all nine simulator jobs of one run showed no
+  idle CPU from the boot to the end of the job, 20–45 minutes, at a mean load of
+  300–750; free memory stayed at 30–60 %. A wait for a settled machine, tried for five
+  minutes per job, therefore bought nothing there. What keeps the jobs green on such a
+  machine is the warm-up, the second start of a test runner, the run once more of the
+  tests that failed, and timeouts long enough for a busy machine.
 - **Billing:** eight macOS jobs per pull request that changes more than documentation
   ([ADR-0078](0078-ci-skips-builds-for-docs.md)). On a runner that is billed per
   minute, this costs about as many minutes as before, plus a build per job.
