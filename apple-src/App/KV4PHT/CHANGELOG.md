@@ -42,6 +42,7 @@ own, with its version, build and date.
 ### Fixed
 
 - iPhone: VoiceOver reads the page shown only, not the pages beside it.
+- Packets, iPhone and iPad: the coordinates that open Maps have room for a finger.
 - Packets: a callsign typed quickly into the filter is kept whole; the list no longer falls back to its first
   letters.
 - Packets, Mac: VoiceOver names the button that exports the packets and opens its menu.
