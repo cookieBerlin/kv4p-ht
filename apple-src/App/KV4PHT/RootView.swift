@@ -329,6 +329,9 @@ enum PageSymbol {
                 .environment(\.isScrollEnabled, true)
                 .containerRelativeFrame(.horizontal)
                 .environment(\.isPageOnScreen, page == item)
+                // The pages beside it are out of sight: VoiceOver does not reach them, and neither do the queries of
+                // the UI tests and the accessibility audit, which otherwise ask every page each time.
+                .accessibilityHidden(page != item)
                 .id(Slot.page(item))
         }
 
