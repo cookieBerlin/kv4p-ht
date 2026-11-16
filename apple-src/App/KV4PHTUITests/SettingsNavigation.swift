@@ -80,6 +80,16 @@ extension XCUIApplication {
 }
 
 extension XCUIElement {
+    /// Whether it can be tapped within the time: an element that exists may still be on its way, such as an entry of a
+    /// panel that slides in, and a tap then goes to a point without a place.
+    func waitForHittable(timeout: TimeInterval) -> Bool {
+        let deadline = Date.now.addingTimeInterval(timeout)
+        while !(exists && isHittable), Date.now < deadline {
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+        return exists && isHittable
+    }
+
     func tapOrClick() {
         #if os(macOS)
             click()
