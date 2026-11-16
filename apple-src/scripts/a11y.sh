@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
 # Runs the UI tests on each simulator, or on this Mac, and collects the findings of the accessibility audit (ADR-0062).
-# Usage: scripts/a11y.sh <project> "<device>,<device>" [all|audit|functional], where the device "Mac" stands for this
-# Mac; `audit` runs only the accessibility audit, `functional` all other UI tests (ADR-0072).
+# Usage: scripts/a11y.sh <project> "<device>,<device>" [all|audit|audit-pages|audit-settings|functional], where the
+# device "Mac" stands for this Mac; `audit` runs only the accessibility audit, `audit-pages` and `audit-settings` one of
+# its two parts, and `functional` all other UI tests (ADR-0072). With A11Y_LOAD_LOG=1, it logs how busy the machine is.
 set -euo pipefail
 
 project="$1"
 IFS=',' read -r -a devices <<< "$2"
+audit=KV4PHTUITests/AccessibilityAuditTests
+# The first start of the app, which runs before every selection and in none of them.
+warm_up=KV4PHTUITests/WarmUpTests
 case "${3:-all}" in
-  all) tests=(-only-testing:KV4PHTUITests) ;;
-  audit) tests=(-only-testing:KV4PHTUITests/AccessibilityAuditTests) ;;
-  functional) tests=(-only-testing:KV4PHTUITests -skip-testing:KV4PHTUITests/AccessibilityAuditTests) ;;
-  *) echo "a11y: unknown selection $3, use all, audit or functional" >&2; exit 2 ;;
+  all) tests=(-only-testing:KV4PHTUITests -skip-testing:"$warm_up") ;;
+  audit) tests=(-only-testing:"$audit") ;;
+  audit-pages) tests=(-only-testing:"$audit/testPagesWithDefaultText" -only-testing:"$audit/testPagesWithLargestText") ;;
+  audit-settings)
+    tests=(-only-testing:"$audit/testSettingsWithDefaultText" -only-testing:"$audit/testSettingsWithLargestText") ;;
+  functional) tests=(-only-testing:KV4PHTUITests -skip-testing:"$audit" -skip-testing:"$warm_up") ;;
+  *) echo "a11y: unknown selection $3, use all, audit, audit-pages, audit-settings or functional" >&2; exit 2 ;;
 esac
 results=.build/a11y
 mkdir -p "$results"
@@ -24,7 +31,6 @@ shutdown_simulator() {
     booted=""
   fi
 }
-trap shutdown_simulator EXIT
 
 # The UDID of the simulator of this name with the newest iOS, the one a destination by name would take; empty if none.
 simulator() {
@@ -44,6 +50,30 @@ failed_tests() {
     | if index("all") then "all" else unique[] end'
 }
 
+# How busy this machine is while a device runs, every 10 s into `load_log` if A11Y_LOAD_LOG is 1: the seconds
+# since the device started, the mean load of the last 1, 5 and 15 minutes, the share of the CPU that is idle and the
+# share of the memory that is free. The script writes a line `# <step>` there when a step starts.
+load_log=""
+sampler=""
+sample_load() {
+  local start=$SECONDS idle free
+  while :; do
+    idle=$(top -l 2 -n 0 -s 1 | awk '/^CPU usage/ { idle = $7 } END { print idle }')
+    free=$(memory_pressure -Q 2> /dev/null | awk '/free percentage/ { print $NF }')
+    echo "$((SECONDS - start)) $(sysctl -n vm.loadavg | awk '{print $2, $3, $4}') ${idle:-?} ${free:-?}" >> "$load_log"
+    sleep 9
+  done
+}
+step() { echo "# $1 at $((SECONDS - started)) s" >> "$load_log"; }
+stop_sampler() {
+  if [ -n "$sampler" ]; then
+    kill "$sampler" 2> /dev/null || true
+    wait "$sampler" 2> /dev/null || true
+    sampler=""
+  fi
+}
+trap 'stop_sampler; shutdown_simulator' EXIT
+
 # One run of the given tests into a result bundle of its own, which must not exist yet. A test runner that crashes
 # before the tests start, as it does at times on a busy machine, gets a second start; the log of the first stays.
 run_tests() {
@@ -51,7 +81,7 @@ run_tests() {
   shift 2
   for attempt in 1 2; do
     rm -rf "$bundle"
-    if xcodebuild test -project "$project" -scheme KV4PHT "${target[@]}" "$@" \
+    if xcodebuild test-without-building -project "$project" -scheme KV4PHT "${target[@]}" "$@" \
       -resultBundlePath "$bundle" > "$log" 2>&1; then
       return 0
     fi
@@ -68,11 +98,20 @@ run=$(date +%Y%m%d-%H%M%S)
 for device in "${devices[@]}"; do
   log="$results/$device.log"
   retry_log="$results/$device retry.log"
-  rm -f "$retry_log" "$results/$device not started.log" "$results/$device retry not started.log"
+  rm -f "$retry_log" "$results/$device"*" not started.log"
   bundle="$results/runs/$run/$device.xcresult"
   retry_bundle="$results/runs/$run/$device retry.xcresult"
   mkdir -p "$results/runs/$run"
   started=$SECONDS
+  stop_sampler # of a device that stopped early
+  load_log=/dev/null
+  if [ "${A11Y_LOAD_LOG:-}" = 1 ]; then
+    load_log="$results/$device load.log"
+    echo "# seconds, load of 1, 5 and 15 minutes, idle CPU, free memory, on $(sysctl -n hw.ncpu) cores" > "$load_log"
+    sample_load &
+    sampler=$!
+  fi
+  step build
   # The Mac runs the tests itself, and its test runner must be signed: ad hoc, without a team. It is built outside the
   # checkout, as macOS asks each new build for access to a protected folder such as Documents, where the checkout may be.
   if [ "$device" = Mac ]; then
@@ -88,9 +127,32 @@ for device in "${devices[@]}"; do
     target=(-destination "platform=iOS Simulator,id=$udid" CODE_SIGNING_ALLOWED=NO -derivedDataPath "$results/derived")
     xcrun simctl list devices booted | grep -q "$udid" || booted="$udid"
   fi
+  # Built first, and only then a simulator started: beside a new simulator, the build took several times as long.
+  if ! xcodebuild build-for-testing -project "$project" -scheme KV4PHT "${target[@]}" \
+    > "$results/$device build.log" 2>&1; then
+    echo "a11y: the build for $device failed, see $results/$device build.log" >&2
+    status=1
+    continue
+  fi
+  if [ -n "$booted" ]; then
+    step boot
+    xcrun simctl bootstatus "$udid" -b > /dev/null
+  fi
+  step warm-up
+  # The first launch of the app on its own, once more if it fails: a launch that fails on a fresh machine then does not
+  # fail the first test of the selection. The run goes on either way; its tests tell whether the app starts.
+  for attempt in 1 2; do
+    warm_bundle="$results/runs/$run/$device warm-up $attempt.xcresult"
+    if run_tests "$warm_bundle" "$results/$device warm-up.log" -only-testing:"$warm_up"; then
+      break
+    fi
+    echo "a11y: the app did not start on $device at warm-up $attempt" >&2
+  done
   # A test that fails runs once more, in a new test runner, and only that test: once the run of the whole selection is
   # over, its result bundle names the tests that failed.
+  step tests
   if ! run_tests "$bundle" "$log" "${tests[@]}"; then
+    step retry
     retry=()
     while IFS= read -r test; do
       [ "$test" = all ] && retry=("${tests[@]}") && break
@@ -104,6 +166,12 @@ for device in "${devices[@]}"; do
     fi
   fi
   echo "a11y: $device took $((SECONDS - started)) s"
+  step end
+  stop_sampler
+  if [ "$load_log" != /dev/null ]; then
+    echo "a11y: load on $device:"
+    cat "$load_log"
+  fi
   # The screenshots of each screen, to judge the findings.
   for each in "$bundle" "$retry_bundle"; do
     [ -d "$each" ] || continue

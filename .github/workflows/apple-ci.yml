@@ -14,9 +14,11 @@ on:
   push:
     branches: [main]
 
+# A new push to a pull request cancels its run before; a run on main is let finish, as each merge is worth a complete
+# result (docs/apple/adr/0079-ci-skips-long-jobs-for-drafts.md).
 concurrency:
   group: apple-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -136,7 +138,8 @@ jobs:
       matrix:
         # "Mac" runs the app itself, on the runner's own desktop rather than in a simulator.
         device: [iPhone 18 Pro, iPad Pro 11-inch (M5), iPhone Duo, Mac]
-        tests: [functional, audit]
+        # The audit in two parts, each a job of its own: a retry then runs one part only.
+        tests: [functional, audit-pages, audit-settings]
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
