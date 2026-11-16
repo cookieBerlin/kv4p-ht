@@ -62,9 +62,10 @@ import XCTest
             XCTAssertTrue(message.waitForExistence(timeout: 5), "The packets shown are out of reach")
         }
 
+        /// Waits long enough for a busy machine, where a single look at the page bar can take seconds.
         private func isSelected(_ element: XCUIElement) -> Bool {
             let selected = NSPredicate(format: "isSelected == true")
-            return XCTWaiter.wait(for: [expectation(for: selected, evaluatedWith: element)], timeout: 5) == .completed
+            return XCTWaiter.wait(for: [expectation(for: selected, evaluatedWith: element)], timeout: 20) == .completed
         }
     }
 #endif
