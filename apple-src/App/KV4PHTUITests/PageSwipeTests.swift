@@ -48,6 +48,20 @@ import XCTest
             XCTAssertTrue(isSelected(app.buttons["page-Packets"]), "The pages still swipe outside the settings")
         }
 
+        func testThePagesBesideTheOneShownAreOutOfReach() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
+                throw XCTSkip("Only a phone has the page bar")
+            }
+            // The line to write an APRS message stands on the packets, beside the memories.
+            let isMessage = NSPredicate(format: "label == 'Message' OR placeholderValue == 'Message'")
+            let message = app.textFields.matching(isMessage).firstMatch
+            XCTAssertTrue(app.buttons["Push to talk"].waitForExistence(timeout: 60), "Not connected")
+            XCTAssertFalse(message.exists, "The packets beside the memories are in reach")
+            app.buttons["page-Packets"].tap()
+            XCTAssertTrue(message.waitForExistence(timeout: 5), "The packets shown are out of reach")
+        }
+
         private func isSelected(_ element: XCUIElement) -> Bool {
             let selected = NSPredicate(format: "isSelected == true")
             return XCTWaiter.wait(for: [expectation(for: selected, evaluatedWith: element)], timeout: 5) == .completed
