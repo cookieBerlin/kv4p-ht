@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job and the audit in two parts 2026-11-16
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts and the wait for a settled machine 2026-11-16
 
 ## Context
 
@@ -53,6 +53,11 @@ findings, which were fixed before the jobs were added.
   names no test, such as a runner that crashed between two tests, runs the whole
   selection once more. A test runner that crashes before the tests start gets a
   second start, also when it times out while preparing to run the tests.
+- **Build, boot, settle, test:** `scripts/a11y.sh` builds with `build-for-testing`,
+  then starts the simulator and waits until the machine has settled, a mean load of the
+  last minute below half its cores, for at most five minutes, and only then runs the
+  tests with `test-without-building`. A simulator that was already running is not
+  waited for.
 - **One simulator at a time:** a simulator the script started is shut down once its
   device is done.
 
@@ -73,12 +78,14 @@ findings, which were fixed before the jobs were added.
   as before, Xcode 27.1 ran the whole selection a second time after one failure. On
   CI that happened in about half of the iPhone and iPad jobs and in most of the iPhone
   Duo's, and cost 10–17 minutes each time.
-- **The simulator still starts after the build:** booting it beside the build
-  (`build-for-testing`, then `test-without-building`) was tried in three CI runs. A new
-  simulator keeps the machine busy for minutes after it reports its start: beside it,
-  the build took 6–19 minutes rather than about 1.5. Booted only after the build, the
-  first launch of the app timed out twice and a test runner did not start twice. Three
-  runs did not show a clear gain, so `xcodebuild test` builds and boots as before.
+- **The simulator starts after the build, and the tests wait for it:** a new simulator
+  keeps the machine busy for minutes after it reports its start. Booted beside the
+  build, it made the build take 6–19 minutes rather than about 1.5; booted after the
+  build with the tests right behind it, the first launch of the app timed out twice and
+  a test runner did not start twice, in three CI runs. The first app launch of a job
+  was also where most launch failures of the UI tests came from. The wait for a
+  settled machine is the step those runs lacked; the script prints how long it waited
+  and at what load.
 - **Billing:** eight macOS jobs per pull request that changes more than documentation
   ([ADR-0078](0078-ci-skips-builds-for-docs.md)). On a runner that is billed per
   minute, this costs about as many minutes as before, plus a build per job.

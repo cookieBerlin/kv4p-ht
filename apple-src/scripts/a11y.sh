@@ -49,6 +49,23 @@ failed_tests() {
     | if index("all") then "all" else unique[] end'
 }
 
+# Waits until this machine has settled after starting a simulator, for at most `settle_limit` seconds: a new simulator
+# keeps it busy for minutes after it reports its start, and tests that start meanwhile fail to launch the app or to
+# read its screen in time. Settled is a mean load of the last minute below half the cores.
+settle_limit=300
+settle() {
+  local cores load waited=0
+  cores=$(sysctl -n hw.ncpu)
+  while :; do
+    load=$(sysctl -n vm.loadavg | awk '{print $2}')
+    awk -v load="$load" -v cores="$cores" 'BEGIN { exit !(load < cores / 2) }' && break
+    [ "$waited" -lt "$settle_limit" ] || break
+    sleep 10
+    waited=$((waited + 10))
+  done
+  echo "a11y: $device settled for $waited s, load $load on $cores cores"
+}
+
 # One run of the given tests into a result bundle of its own, which must not exist yet. A test runner that crashes
 # before the tests start, as it does at times on a busy machine, gets a second start; the log of the first stays.
 run_tests() {
@@ -56,7 +73,7 @@ run_tests() {
   shift 2
   for attempt in 1 2; do
     rm -rf "$bundle"
-    if xcodebuild test -project "$project" -scheme KV4PHT "${target[@]}" "$@" \
+    if xcodebuild test-without-building -project "$project" -scheme KV4PHT "${target[@]}" "$@" \
       -resultBundlePath "$bundle" > "$log" 2>&1; then
       return 0
     fi
@@ -92,6 +109,17 @@ for device in "${devices[@]}"; do
     fi
     target=(-destination "platform=iOS Simulator,id=$udid" CODE_SIGNING_ALLOWED=NO -derivedDataPath "$results/derived")
     xcrun simctl list devices booted | grep -q "$udid" || booted="$udid"
+  fi
+  # Built first, and only then a simulator started: beside a new simulator, the build took several times as long.
+  if ! xcodebuild build-for-testing -project "$project" -scheme KV4PHT "${target[@]}" \
+    > "$results/$device build.log" 2>&1; then
+    echo "a11y: the build for $device failed, see $results/$device build.log" >&2
+    status=1
+    continue
+  fi
+  if [ -n "$booted" ]; then
+    xcrun simctl bootstatus "$udid" -b > /dev/null
+    settle
   fi
   # A test that fails runs once more, in a new test runner, and only that test: once the run of the whole selection is
   # over, its result bundle names the tests that failed.
