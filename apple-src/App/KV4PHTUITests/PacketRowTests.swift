@@ -20,7 +20,13 @@ import XCTest
         func testTheLinkToTheMapIsTallEnoughForAFinger() {
             let isMapLink = NSPredicate(format: "label BEGINSWITH 'Open ' AND label ENDSWITH ' in Maps'")
             let link = app.descendants(matching: .any).matching(isMapLink).firstMatch
-            XCTAssertTrue(link.waitForExistence(timeout: 60), "No packet with a position")
+            // A phone shows a few packets only, and those with a position may stand further down.
+            var swipes = 0
+            while !link.waitForExistence(timeout: swipes == 0 ? 30 : 2), swipes < 10 {
+                app.swipeUp()
+                swipes += 1
+            }
+            XCTAssertTrue(link.exists, "No packet with a position")
             XCTAssertGreaterThanOrEqual(link.frame.height, 44, "The link to the map is too small for a finger")
         }
     }
