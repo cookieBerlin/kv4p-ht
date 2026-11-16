@@ -369,6 +369,9 @@ struct APRSPacketList: View {
         .accessibilityLabel(event.details.joined(separator: ", "))
     }
 
+    /// What the link to the map reaches above and below its text, for a hit area 44 points high.
+    private static let mapLinkPadding: CGFloat = 15
+
     /// The coordinates lead to the map; the distance stands below them, as a phone has little room.
     @ViewBuilder private func location(_ position: StationPosition) -> some View {
         let coordinates = String(format: "%.5f, %.5f", position.point.latitude, position.point.longitude)
@@ -378,6 +381,12 @@ struct APRSPacketList: View {
             }
             .font(.caption.monospacedDigit())
             .tint(Color.strongAccent)
+            #if os(iOS)
+                // A finger needs 44 points, which the small text does not have; the row stays as low as before.
+                .padding(.vertical, Self.mapLinkPadding)
+                .contentShape(.rect)
+                .padding(.vertical, -Self.mapLinkPadding)
+            #endif
             .accessibilityLabel("Open \(coordinates) in Maps")
         }
         if let distance = position.distanceMeters {
