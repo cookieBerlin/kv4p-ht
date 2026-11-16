@@ -29,8 +29,11 @@ Facts that bound the choice:
   The FAQ and the manual are read as GitHub Flavored Markdown, so their anchors match GitHub's. `links.lua` turns
   a link to a page of the site into its `.html` page, a link to any other file into its GitHub URL, and
   `$name$` at the start of a link into the value from `site.yaml`. The app icon comes from the asset catalogue.
+- **Links to other sites** open in a new tab (`target="_blank" rel="noopener"`): `links.lua` marks them in the pages,
+  the template by hand. Each carries the hidden hint *(opens in a new tab)* for screen readers, and the style sheet
+  draws an arrow ↗ after it.
 - **Check:** `make site-check` builds the site and checks its links and anchors with lychee, without the
-  internet. Apple CI runs it in the `site` job for every pull request that touches an Apple path. `make
+  internet, and with `scripts/site-links.sh` that every link to another site opens a new tab and says so. Apple CI runs it in the `site` job for every pull request that touches an Apple path. `make
   site-tools` installs pandoc and lychee, pinned and checked against their SHA-256, on the Linux runner.
 - **Publish:** `.github/workflows/apple-pages.yml` builds and checks the site on each push to `main` that changes
   it, and publishes it with GitHub's Pages actions to `https://cookieberlin.github.io/kv4p-ht/`. The repository's
@@ -40,7 +43,10 @@ Facts that bound the choice:
 - **Privacy:** no cookies, no analytics, nothing loaded from other servers. The privacy page states what the
   developer collects, which is nothing, and links to the FAQ for what the app sends where. No custom domain.
 - **Naming:** the site uses the App Store name *kv4p HT (by DB3AC)*, names DB3AC as the developer, says that the
-  app is an unofficial port, and links to the original project for the radio.
+  app is an unofficial port, and links to the original project for the radio. `site.yaml` holds the original
+  project's site, repository and Android app: the home page links to its Android app and site below the TestFlight
+  button, says in the introduction that the project makes the radio, its firmware and the Android app, and credits
+  its author and contributors; the footer links to its repository.
 
 ## Consequences
 
