@@ -154,3 +154,12 @@ jobs:
             apple-src/.build/a11y/findings.txt
             apple-src/.build/a11y/*.log
             apple-src/.build/a11y/runs/*/*screenshots/
+      # The result bundles of a run that failed, with the crash reports and diagnostics of a test runner that exited in
+      # the middle of a test; up to some 170 MB each, so only then, and not kept long.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ui-tests ${{ matrix.device }} ${{ matrix.tests }} results
+          path: apple-src/.build/a11y/runs/*/*.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
