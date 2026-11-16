@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts and the wait for a settled machine 2026-11-16
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the wait for a settled machine and the warm-up 2026-11-16
 
 ## Context
 
@@ -58,6 +58,10 @@ findings, which were fixed before the jobs were added.
   last minute below half its cores, for at most five minutes, and only then runs the
   tests with `test-without-building`. A simulator that was already running is not
   waited for.
+- **A warm-up first:** before the selection, `WarmUpTests` starts the app once and
+  closes it, and once more if that fails; no selection includes it. Most launch
+  failures came at the first launch of a job, where they failed the first test of the
+  selection, a part of the audit among them.
 - **One simulator at a time:** a simulator the script started is shut down once its
   device is done.
 

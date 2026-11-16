@@ -8,13 +8,15 @@ set -euo pipefail
 project="$1"
 IFS=',' read -r -a devices <<< "$2"
 audit=KV4PHTUITests/AccessibilityAuditTests
+# The first start of the app, which runs before every selection and in none of them.
+warm_up=KV4PHTUITests/WarmUpTests
 case "${3:-all}" in
-  all) tests=(-only-testing:KV4PHTUITests) ;;
+  all) tests=(-only-testing:KV4PHTUITests -skip-testing:"$warm_up") ;;
   audit) tests=(-only-testing:"$audit") ;;
   audit-pages) tests=(-only-testing:"$audit/testPagesWithDefaultText" -only-testing:"$audit/testPagesWithLargestText") ;;
   audit-settings)
     tests=(-only-testing:"$audit/testSettingsWithDefaultText" -only-testing:"$audit/testSettingsWithLargestText") ;;
-  functional) tests=(-only-testing:KV4PHTUITests -skip-testing:"$audit") ;;
+  functional) tests=(-only-testing:KV4PHTUITests -skip-testing:"$audit" -skip-testing:"$warm_up") ;;
   *) echo "a11y: unknown selection $3, use all, audit, audit-pages, audit-settings or functional" >&2; exit 2 ;;
 esac
 results=.build/a11y
@@ -90,7 +92,7 @@ run=$(date +%Y%m%d-%H%M%S)
 for device in "${devices[@]}"; do
   log="$results/$device.log"
   retry_log="$results/$device retry.log"
-  rm -f "$retry_log" "$results/$device not started.log" "$results/$device retry not started.log"
+  rm -f "$retry_log" "$results/$device"*" not started.log"
   bundle="$results/runs/$run/$device.xcresult"
   retry_bundle="$results/runs/$run/$device retry.xcresult"
   mkdir -p "$results/runs/$run"
@@ -121,6 +123,15 @@ for device in "${devices[@]}"; do
     xcrun simctl bootstatus "$udid" -b > /dev/null
     settle
   fi
+  # The first launch of the app on its own, once more if it fails: a launch that fails on a fresh machine then does not
+  # fail the first test of the selection. The run goes on either way; its tests tell whether the app starts.
+  for attempt in 1 2; do
+    warm_bundle="$results/runs/$run/$device warm-up $attempt.xcresult"
+    if run_tests "$warm_bundle" "$results/$device warm-up.log" -only-testing:"$warm_up"; then
+      break
+    fi
+    echo "a11y: the app did not start on $device at warm-up $attempt" >&2
+  done
   # A test that fails runs once more, in a new test runner, and only that test: once the run of the whole selection is
   # over, its result bundle names the tests that failed.
   if ! run_tests "$bundle" "$log" "${tests[@]}"; then
