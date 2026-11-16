@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the wait for a settled machine and the warm-up 2026-11-16
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the wait for a settled machine, the warm-up and the load log 2026-11-16
 
 ## Context
 
@@ -57,7 +57,12 @@ findings, which were fixed before the jobs were added.
   then starts the simulator and waits until the machine has settled, a mean load of the
   last minute below half its cores, for at most five minutes, and only then runs the
   tests with `test-without-building`. A simulator that was already running is not
-  waited for.
+  waited for. Meanwhile the script writes how busy the machine is every 10 s, the load,
+  the idle CPU and the free memory, into `<device> load.log`, and prints it at the end of
+  each device, so that the condition can be chosen from runs on the CI runners: in a
+  first local run, the CPU stayed fully busy for about 2.5 minutes after the boot, and
+  the mean load lagged about 2 minutes behind the idle CPU and never fell below half the
+  cores, so the wait always ran its five minutes.
 - **A warm-up first:** before the selection, `WarmUpTests` starts the app once and
   closes it, and once more if that fails; no selection includes it. Most launch
   failures came at the first launch of a job, where they failed the first test of the
