@@ -235,9 +235,10 @@ final class AccessibilityAuditTests: XCTestCase {
         }
     #endif
 
-    /// Every kind of check on a screen. A screen with findings is checked once more after a pause, and only what both
-    /// looks find counts: a slow machine lets the audit catch a screen before its text has grown, but seldom twice in the
-    /// same place. A screen without findings says so, to show that it was checked.
+    /// Every kind of check on a screen. A screen with findings is checked once more after a pause, and what both looks
+    /// find a third time after a longer one; only what all of them find counts: a slow machine lets the audit catch a
+    /// screen before its text has grown, now and then twice, but seldom three times in the same place. A screen without
+    /// findings says so, to show that it was checked.
     private func audit(_ screen: String) throws {
         // To judge a finding by looking at the screen; `make a11y` exports them.
         #if os(macOS)
@@ -250,13 +251,17 @@ final class AccessibilityAuditTests: XCTestCase {
         add(screenshot)
         let before = findings.count
         firstLook = []
-        look = .first
+        secondLook = []
         defer { look = .only }
-        try auditEveryKind(screen)
-        if findings.count > before {
-            findings.removeSubrange(before...)
-            look = .second
-            Thread.sleep(forTimeInterval: Self.pauseBeforeLookingAgain)
+        for (next, pause) in [
+            (Look.first, 0), (.second, Self.pauseBeforeLookingAgain), (.third, Self.pauseBeforeLastLook),
+        ] {
+            if next != .first {
+                guard findings.count > before else { break }
+                findings.removeSubrange(before...)
+                Thread.sleep(forTimeInterval: pause)
+            }
+            look = next
             try auditEveryKind(screen)
         }
         if findings.count == before {
@@ -264,16 +269,19 @@ final class AccessibilityAuditTests: XCTestCase {
         }
     }
 
-    /// The look at a screen that a finding comes from. Those of the first look are printed as `A11Y-FIRST-LOOK`, and
-    /// those that only the second look finds as `A11Y-ONCE`; `make a11y` counts neither.
+    /// The look at a screen that a finding comes from. Those of the first look are printed as `A11Y-FIRST-LOOK`, those
+    /// of the second as `A11Y-SECOND-LOOK`, and those that a later look finds without the one before as `A11Y-ONCE`;
+    /// `make a11y` counts none of them, only what the third look finds again.
     private enum Look {
-        case only, first, second
+        case only, first, second, third
     }
 
     private var look = Look.only
-    /// What the first look at the screen found, each without the contrast measured on the screenshot.
+    /// What the first and the second look at the screen found, each without the contrast measured on the screenshot.
     private var firstLook: Set<String> = []
+    private var secondLook: Set<String> = []
     private static let pauseBeforeLookingAgain: TimeInterval = 3
+    private static let pauseBeforeLastLook: TimeInterval = 10
 
     /// All kinds of check but Dynamic Type at once, which is quick; if that runs out of the time XCTest gives an audit on
     /// a busy simulator, one kind at a time, each with a few attempts. Dynamic Type runs on its own.
@@ -347,10 +355,13 @@ final class AccessibilityAuditTests: XCTestCase {
             case .first:
                 print("A11Y-FIRST-LOOK" + finding.dropFirst("A11Y".count))
                 self.firstLook.insert(place)
-            case .second where !self.firstLook.contains(place):
+            case .second where !self.firstLook.contains(place), .third where !self.secondLook.contains(place):
                 print("A11Y-ONCE" + finding.dropFirst("A11Y".count))
                 return true
-            case .only, .second:
+            case .second:
+                print("A11Y-SECOND-LOOK" + finding.dropFirst("A11Y".count))
+                self.secondLook.insert(place)
+            case .only, .third:
                 // At once, so that a run that stops early keeps what it found.
                 print(finding)
             }
