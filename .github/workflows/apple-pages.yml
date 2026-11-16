@@ -12,6 +12,7 @@ on:
       - apple-src/App/KV4PHT/CHANGELOG.md
       - apple-src/App/KV4PHT/Assets.xcassets/AppIcon.appiconset/AppIcon.png
       - apple-src/scripts/site.sh
+      - apple-src/scripts/site-links.sh
       - apple-src/scripts/site-tools.sh
       - apple-src/Makefile
       - .github/workflows/apple-pages.yml

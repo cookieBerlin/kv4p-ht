@@ -63,6 +63,18 @@ a:hover { color: var(--accent-hover); }
 
 img { max-width: 100%; height: auto; }
 
+/* A link to another site opens in a new tab: an arrow after it, and the hint for screen readers, hidden. */
+a[target="_blank"]::after { content: "\2009\2197"; content: "\2009\2197" / ""; }
+
+.new-tab {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Bar on top */
 
 .bar {
@@ -157,6 +169,10 @@ img { max-width: 100%; height: auto; }
 }
 
 .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+
+.android { margin: 1.25rem auto 0; max-width: 34rem; font-size: 0.9rem; }
+
+.android a { color: var(--hero-text); }
 
 .note { margin-top: 1.5rem; font-size: 0.9rem; opacity: 0.7; }
 

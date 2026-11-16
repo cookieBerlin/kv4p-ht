@@ -2,3 +2,7 @@
 name: kv4p HT (by DB3AC)
 repo: https://github.com/cookieBerlin/kv4p-ht
 testflight: https://testflight.apple.com/join/YyNEfBpK
+# The original kv4p HT project: its website, its repository and its Android app.
+kv4p: https://www.kv4p.com
+upstream: https://github.com/VanceVagell/kv4p-ht
+android: https://play.google.com/store/apps/details?id=com.vagell.kv4pht

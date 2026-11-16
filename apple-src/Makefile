@@ -114,5 +114,6 @@ site-tools:
 
 site-check: site
 	lychee --offline --include-fragments --no-progress '$(SITE_DIR)/**/*.html'
+	scripts/site-links.sh $(SITE_DIR)
 
 ci: lint privacy coverage ios-build app
