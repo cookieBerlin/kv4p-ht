@@ -136,7 +136,8 @@ jobs:
       matrix:
         # "Mac" runs the app itself, on the runner's own desktop rather than in a simulator.
         device: [iPhone 18 Pro, iPad Pro 11-inch (M5), iPhone Duo, Mac]
-        tests: [functional, audit]
+        # The audit in two parts, each a job of its own: a retry then runs one part only.
+        tests: [functional, audit-pages, audit-settings]
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4

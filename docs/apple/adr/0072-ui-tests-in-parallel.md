@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only and the result bundles of a failed job 2026-11-16
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job and the audit in two parts 2026-11-16
 
 ## Context
 
@@ -35,11 +35,15 @@ findings, which were fixed before the jobs were added.
 ## Decision
 
 - **`scripts/a11y.sh` takes a selection:** `all` (the default), `audit` (only
-  `AccessibilityAuditTests`) or `functional` (every other UI test). `make a11y` passes
-  it as `UI_TESTS`. The devices are the iPhone 18 Pro, the iPad Pro 11-inch (M5) and
+  `AccessibilityAuditTests`), `audit-pages` or `audit-settings` (one of its two parts),
+  or `functional` (every other UI test). `make a11y` passes it as `UI_TESTS`. The devices are the iPhone 18 Pro, the iPad Pro 11-inch (M5) and
   the iPhone Duo, and the Mac, which runs the app itself.
-- **CI job `ui-tests`:** a matrix of the four devices and the two selections, eight
-  jobs side by side, `fail-fast: false`, each with its own artifact: the findings, the
+- **The audit in two parts:** each text size has a test for the pages (the memories,
+  the packets, the chats and the map, with their panels) and one for the settings (each
+  of their pages, and What's New; on the Mac also About). Each part starts the app on
+  its own.
+- **CI job `ui-tests`:** a matrix of the four devices and three selections,
+  `functional`, `audit-pages` and `audit-settings`: twelve jobs side by side, `fail-fast: false`, each with its own artifact: the findings, the
   logs and the screenshots. A job that fails also keeps its result bundles for a week,
   with the crash reports of a test runner that exited in the middle of a test; at up
   to some 170 MB each, a job that passes does not.
@@ -53,6 +57,15 @@ findings, which were fixed before the jobs were added.
   device is done.
 
 ## Consequences
+
+- **A failed audit costs one part:** a test that fails, such as one whose first app
+  launch fails on a freshly booted simulator, or whose test runner exits in the middle,
+  runs once more alone. With one test per text size, that was the whole audit of that
+  size, 10 to 22 minutes; a part takes about half. Of the restarts in the logs so far,
+  most followed a failed test, which Xcode does by itself; the few runners that exited
+  in the middle of a test all did so in the long audit of the default text size.
+- **Four more jobs:** the two parts of the audit run side by side, so a run ends
+  sooner, but each job builds the app once more, a few minutes of runner time each.
 
 - **Faster and steadier:** a run takes as long as its slowest job, about the audit on
   one device, rather than the sum of all.

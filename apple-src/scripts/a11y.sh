@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 # Runs the UI tests on each simulator, or on this Mac, and collects the findings of the accessibility audit (ADR-0062).
-# Usage: scripts/a11y.sh <project> "<device>,<device>" [all|audit|functional], where the device "Mac" stands for this
-# Mac; `audit` runs only the accessibility audit, `functional` all other UI tests (ADR-0072).
+# Usage: scripts/a11y.sh <project> "<device>,<device>" [all|audit|audit-pages|audit-settings|functional], where the
+# device "Mac" stands for this Mac; `audit` runs only the accessibility audit, `audit-pages` and `audit-settings` one of
+# its two parts, and `functional` all other UI tests (ADR-0072).
 set -euo pipefail
 
 project="$1"
 IFS=',' read -r -a devices <<< "$2"
+audit=KV4PHTUITests/AccessibilityAuditTests
 case "${3:-all}" in
   all) tests=(-only-testing:KV4PHTUITests) ;;
-  audit) tests=(-only-testing:KV4PHTUITests/AccessibilityAuditTests) ;;
-  functional) tests=(-only-testing:KV4PHTUITests -skip-testing:KV4PHTUITests/AccessibilityAuditTests) ;;
-  *) echo "a11y: unknown selection $3, use all, audit or functional" >&2; exit 2 ;;
+  audit) tests=(-only-testing:"$audit") ;;
+  audit-pages) tests=(-only-testing:"$audit/testPagesWithDefaultText" -only-testing:"$audit/testPagesWithLargestText") ;;
+  audit-settings)
+    tests=(-only-testing:"$audit/testSettingsWithDefaultText" -only-testing:"$audit/testSettingsWithLargestText") ;;
+  functional) tests=(-only-testing:KV4PHTUITests -skip-testing:"$audit") ;;
+  *) echo "a11y: unknown selection $3, use all, audit, audit-pages, audit-settings or functional" >&2; exit 2 ;;
 esac
 results=.build/a11y
 mkdir -p "$results"

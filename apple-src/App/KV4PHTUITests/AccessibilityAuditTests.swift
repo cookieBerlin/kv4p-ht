@@ -14,19 +14,39 @@ final class AccessibilityAuditTests: XCTestCase {
         findings = []
     }
 
-    func testDefaultTextSize() throws {
-        try runAudit(textSize: nil)
+    // Two parts per text size, each in a job of its own on CI (ADR-0072): a failure, or a test runner that exits in the
+    // middle, then runs only its part once more.
+
+    /// The pages: the memories, the packets with their filter, the chats, and the map with its layers and its list.
+    func testPagesWithDefaultText() throws {
+        try auditThePages(textSize: nil)
     }
 
-    func testLargestTextSize() throws {
+    func testPagesWithLargestText() throws {
         #if os(macOS)
             throw XCTSkip("The Mac has no Dynamic Type")
         #else
-            try runAudit(textSize: "UICTContentSizeCategoryAccessibilityXXXL")
+            try auditThePages(textSize: Self.largestTextSize)
         #endif
     }
 
-    private func runAudit(textSize: String?) throws {
+    /// The settings with each of their pages, and What's New; on the Mac also About.
+    func testSettingsWithDefaultText() throws {
+        try auditTheSettings(textSize: nil)
+    }
+
+    func testSettingsWithLargestText() throws {
+        #if os(macOS)
+            throw XCTSkip("The Mac has no Dynamic Type")
+        #else
+            try auditTheSettings(textSize: Self.largestTextSize)
+        #endif
+    }
+
+    private static let largestTextSize = "UICTContentSizeCategoryAccessibilityXXXL"
+
+    /// Starts the app in the given text size, the system's if none; returns the name of the size for the findings.
+    private func launch(textSize: String?) -> String {
         app = XCUIApplication()
         // The small demo: with longer lists, the audit of a screen runs out of time on a slow machine.
         app.launchArguments = ["-uitest-demo", "-uitest-small-demo"]
@@ -34,11 +54,15 @@ final class AccessibilityAuditTests: XCTestCase {
             app.launchArguments += ["-UIPreferredContentSizeCategoryName", textSize]
         }
         app.launch()
-        let size = textSize == nil ? "default" : "largest"
         XCTAssertTrue(app.waitForStart(), "The app did not start")
         #if os(macOS)
             app.closeAbout()
         #endif
+        return textSize == nil ? "default" : "largest"
+    }
+
+    private func auditThePages(textSize: String?) throws {
+        let size = launch(textSize: textSize)
         try audit("\(size) memories")
         app.showPage("Packets")
         try audit("\(size) packets")
@@ -46,9 +70,7 @@ final class AccessibilityAuditTests: XCTestCase {
             try audit("\(size) packet filter")
             _ = app.closePanel("packet-filter")
         } else {
-            let finding = "A11Y \(size) packet filter: did not open"
-            print(finding)
-            findings.append(finding)
+            record("A11Y \(size) packet filter: did not open")
         }
         app.showPage("Chats")
         try audit("\(size) chats")
@@ -60,9 +82,7 @@ final class AccessibilityAuditTests: XCTestCase {
             if back.waitForExistence(timeout: 2) {
                 back.press()
             } else {
-                let finding = "A11Y \(size) chat: did not open"
-                print(finding)
-                findings.append(finding)
+                record("A11Y \(size) chat: did not open")
             }
         }
         app.showPage("Map")
@@ -73,14 +93,17 @@ final class AccessibilityAuditTests: XCTestCase {
             try audit("\(size) map layers")
             _ = app.closePanel("map-layers")
         } else {
-            let finding = "A11Y \(size) map layers: did not open"
-            print(finding)
-            findings.append(finding)
+            record("A11Y \(size) map layers: did not open")
         }
         let list = app.descendants(matching: .any).matching(NSPredicate(format: "label == 'List'"))
             .allElementsBoundByIndex.first(where: \.isHittable)
         list?.tapOrClick()
         try audit("\(size) map list")
+        report("\(size) pages")
+    }
+
+    private func auditTheSettings(textSize: String?) throws {
+        let size = launch(textSize: textSize)
         app.showPage("Settings")
         try audit("\(size) settings")
         // In the list of the settings, as "Memories" and "APRS" also name pages of the bar below.
@@ -92,10 +115,21 @@ final class AccessibilityAuditTests: XCTestCase {
         #else
             try auditWhatsNew(size: size)
         #endif
-        let report = findings.isEmpty ? "A11Y \(size): no findings" : findings.joined(separator: "\n")
-        XCTAssertTrue(findings.isEmpty, "\(findings.count) findings with \(size) text")
+        report("\(size) settings")
+    }
+
+    /// A finding of the test itself, such as a screen it could not reach.
+    private func record(_ finding: String) {
+        print(finding)
+        findings.append(finding)
+    }
+
+    /// Fails the test if any finding counts, and keeps them all with the test.
+    private func report(_ part: String) {
+        let report = findings.isEmpty ? "A11Y \(part): no findings" : findings.joined(separator: "\n")
+        XCTAssertTrue(findings.isEmpty, "\(findings.count) findings on the \(part)")
         let attachment = XCTAttachment(string: report)
-        attachment.name = "Accessibility findings, \(size) text"
+        attachment.name = "Accessibility findings, \(part)"
         attachment.lifetime = .keepAlways
         add(attachment)
     }
@@ -108,9 +142,7 @@ final class AccessibilityAuditTests: XCTestCase {
                 // A page without anything to set has no row, such as the simulator's without the simulator; the first
                 // page always has one, or the sidebar cannot be found.
                 guard page != "Station" else {
-                    let finding = "A11Y \(size) settings: no sidebar"
-                    print(finding)
-                    findings.append(finding)
+                    record("A11Y \(size) settings: no sidebar")
                     return
                 }
                 print("A11Y-NOT-OFFERED \(size) settings \(page)")
@@ -139,9 +171,7 @@ final class AccessibilityAuditTests: XCTestCase {
             case .onScreen: break
             case .notOffered: return
             case .notReached:
-                let finding = "A11Y \(size) settings \(page): not reached"
-                print(finding)
-                findings.append(finding)
+                record("A11Y \(size) settings \(page): not reached")
                 return
             }
             link.tap()
@@ -157,9 +187,7 @@ final class AccessibilityAuditTests: XCTestCase {
         #if os(iOS)
             let about = app.buttons["About kv4p HT"].firstMatch
             guard reveal(about) == .onScreen else {
-                let finding = "A11Y \(size) about: not reached"
-                print(finding)
-                findings.append(finding)
+                record("A11Y \(size) about: not reached")
                 return
             }
             about.tap()
@@ -170,9 +198,7 @@ final class AccessibilityAuditTests: XCTestCase {
             _ = whatsNew.waitForExistence(timeout: 5) || reveal(whatsNew) == .onScreen
         #endif
         guard whatsNew.waitForExistence(timeout: 5) else {
-            let finding = "A11Y \(size) whats new: not reached"
-            print(finding)
-            findings.append(finding)
+            record("A11Y \(size) whats new: not reached")
             return
         }
         whatsNew.press()
