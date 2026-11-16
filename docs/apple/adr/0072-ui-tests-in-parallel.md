@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only 2026-11-16
 
 ## Context
 
@@ -40,14 +40,29 @@ findings, which were fixed before the jobs were added.
   the iPhone Duo, and the Mac, which runs the app itself.
 - **CI job `ui-tests`:** a matrix of the four devices and the two selections, eight
   jobs side by side, `fail-fast: false`, each with its own artifact.
-- **Retries:** a failing test runs once more (`-retry-tests-on-failure
-  -test-iterations 2`). A test runner that crashes before the tests start gets a
+- **Retries:** a failing test runs once more, and only that test: once the run of the
+  whole selection is over, `scripts/a11y.sh` reads the failed tests from its result
+  bundle and starts a second run of just those, in a new test runner. A failure that
+  names no test, such as a runner that crashed between two tests, runs the whole
+  selection once more. A test runner that crashes before the tests start gets a
   second start, also when it times out while preparing to run the tests.
+- **One simulator at a time:** a simulator the script started is shut down once its
+  device is done.
 
 ## Consequences
 
 - **Faster and steadier:** a run takes as long as its slowest job, about the audit on
   one device, rather than the sum of all.
+- **Retries cost only what failed:** with `-retry-tests-on-failure -test-iterations 2`,
+  as before, Xcode 27.1 ran the whole selection a second time after one failure. On
+  CI that happened in about half of the iPhone and iPad jobs and in most of the iPhone
+  Duo's, and cost 10–17 minutes each time.
+- **The simulator still starts after the build:** booting it beside the build
+  (`build-for-testing`, then `test-without-building`) was tried in three CI runs. A new
+  simulator keeps the machine busy for minutes after it reports its start: beside it,
+  the build took 6–19 minutes rather than about 1.5. Booted only after the build, the
+  first launch of the app timed out twice and a test runner did not start twice. Three
+  runs did not show a clear gain, so `xcodebuild test` builds and boots as before.
 - **Billing:** eight macOS jobs per pull request that changes more than documentation
   ([ADR-0078](0078-ci-skips-builds-for-docs.md)). On a runner that is billed per
   minute, this costs about as many minutes as before, plus a build per job.
