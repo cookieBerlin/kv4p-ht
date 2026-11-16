@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only 2026-11-16
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only and the result bundles of a failed job 2026-11-16
 
 ## Context
 
@@ -39,7 +39,10 @@ findings, which were fixed before the jobs were added.
   it as `UI_TESTS`. The devices are the iPhone 18 Pro, the iPad Pro 11-inch (M5) and
   the iPhone Duo, and the Mac, which runs the app itself.
 - **CI job `ui-tests`:** a matrix of the four devices and the two selections, eight
-  jobs side by side, `fail-fast: false`, each with its own artifact.
+  jobs side by side, `fail-fast: false`, each with its own artifact: the findings, the
+  logs and the screenshots. A job that fails also keeps its result bundles for a week,
+  with the crash reports of a test runner that exited in the middle of a test; at up
+  to some 170 MB each, a job that passes does not.
 - **Retries:** a failing test runs once more, and only that test: once the run of the
   whole selection is over, `scripts/a11y.sh` reads the failed tests from its result
   bundle and starts a second run of just those, in a new test runner. A failure that
