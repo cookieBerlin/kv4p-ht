@@ -1,6 +1,7 @@
 -- Rewrites the links and images of a page for the website (ADR-0067).
 -- A link to a document that is a page of the site (faq.md, manual.md, CHANGELOG.md, ...) points to its .html page. Any other
 -- relative link points to the file on GitHub, so that the Markdown files keep working there unchanged.
+-- A link to another site opens in a new tab.
 -- Metadata: `srcdir`, the repository-relative folder of the source file, and `repo`, the repository's GitHub URL.
 
 local pages = {
@@ -60,8 +61,14 @@ function Meta(meta)
   repo = values.repo
 end
 
+-- A link to another site opens in a new tab, and says so to screen readers; style.css draws the arrow after it.
 function Link(link)
   link.target = rewrite(link.target)
+  if link.target:match("^https?://") then
+    link.attributes.target = "_blank"
+    link.attributes.rel = "noopener"
+    link.content:insert(pandoc.Span(pandoc.Inlines(" (opens in a new tab)"), { class = "new-tab" }))
+  end
   return link
 end
 

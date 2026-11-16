@@ -6,11 +6,11 @@ description: A native app for iPhone, iPad and Mac for the kv4p HT, an open sour
 
 ## A native app for the kv4p HT
 
-The [kv4p HT](https://www.kv4p.com) is an open source handheld ham radio for 2 m or 70 cm: a small board that
-the phone controls, with no screen or buttons of its own. Its project makes the radio and an Android app. This
-app is an unofficial port for Apple devices by DB3AC, written in Swift and SwiftUI for iPhone, iPad and Mac. It is not
-affiliated with the kv4p HT project, which makes and sells the radio. See [kv4p.com](https://www.kv4p.com) for
-what it looks like, how to build one and where to buy it.
+The [kv4p HT]($kv4p$) is an open source handheld ham radio for 2 m or 70 cm: a small board that
+the phone controls, with no screen or buttons of its own. Its [open source project]($upstream$) makes the radio, its
+firmware and an Android app. This app is an unofficial port for Apple devices by DB3AC, written in Swift and SwiftUI
+for iPhone, iPad and Mac. It is not affiliated with the kv4p HT project, which makes and sells the radio. See
+[kv4p.com]($kv4p$) for what it looks like, how to build one and where to buy it.
 
 ::: screenshots
 ![The memories on an iPhone, with the frequency and the S-meter](img/screens/iphone-memories-light.webp){.iphone}
@@ -147,3 +147,9 @@ The app is in testing, and test builds come through Apple's TestFlight app:
 :::
 
 The [manual](../manual.md) explains the app, and the [FAQ](../faq.md) answers common questions.
+
+## Credits
+
+The kv4p HT radio, its firmware and the Android app come from the [kv4p HT project]($upstream$) by Vance Vagell
+(KV4P) and its contributors. This app talks to the same firmware and follows its protocol. Thanks to them for an open
+radio.

@@ -25,7 +25,7 @@
       <a href="faq.html">FAQ</a>
       <a href="manual.html">Manual</a>
       <a href="changelog.html">Changelog</a>
-      <a class="button small" href="$testflight$">TestFlight</a>
+      <a class="button small" href="$testflight$" target="_blank" rel="noopener">TestFlight<span class="new-tab"> (opens in a new tab)</span></a>
       <button class="theme" id="theme" type="button" hidden></button>
     </nav>
   </header>
@@ -36,9 +36,12 @@ $if(hero)$
     <p class="tagline">Turn your iPhone, iPad or Mac into a modern ham radio transceiver,
       with the open source kv4p HT radio.</p>
     <div class="actions">
-      <a class="button" href="$testflight$">Join the TestFlight beta</a>
+      <a class="button" href="$testflight$" target="_blank" rel="noopener">Join the TestFlight beta<span class="new-tab"> (opens in a new tab)</span></a>
       <a class="button secondary" href="manual.html">Read the manual</a>
     </div>
+    <p class="android">On Android? Get the original app on
+      <a href="$android$" target="_blank" rel="noopener">Google Play<span class="new-tab"> (opens in a new tab)</span></a><br>
+      Radio, build guide and shop on <a href="$kv4p$" target="_blank" rel="noopener">kv4p.com<span class="new-tab"> (opens in a new tab)</span></a></p>
     <p class="note">Free and open source · No account · No tracking</p>
   </section>
   <main class="home">
@@ -51,12 +54,13 @@ $body$
 $endif$
   <footer>
     <p>$name$ is free software under the
-      <a href="$repo$/blob/main/LICENSE">GNU GPL 3.0</a> ·
-      <a href="$repo$">Source code</a> ·
+      <a href="$repo$/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL 3.0<span class="new-tab"> (opens in a new tab)</span></a> ·
+      <a href="$repo$" target="_blank" rel="noopener">Source code<span class="new-tab"> (opens in a new tab)</span></a> ·
+      <a href="$upstream$" target="_blank" rel="noopener">Original project<span class="new-tab"> (opens in a new tab)</span></a> ·
       <a href="privacy.html">Privacy</a> ·
       <a href="support.html">Support</a></p>
     <p>An unofficial port by DB3AC, not affiliated with or endorsed by the
-      <a href="https://www.kv4p.com">kv4p HT project</a> or Apple. A valid amateur radio licence is required to
+      <a href="$kv4p$" target="_blank" rel="noopener">kv4p HT project<span class="new-tab"> (opens in a new tab)</span></a> or Apple. A valid amateur radio licence is required to
       transmit. Apple, iPhone, iPad, Mac and TestFlight are trademarks of Apple Inc.</p>
   </footer>
   <script>

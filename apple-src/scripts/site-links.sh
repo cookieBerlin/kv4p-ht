@@ -8,7 +8,7 @@ perl -0777 -ne '
   while (m{(<a\b[^>]*\bhref="https?://[^"]*"[^>]*>)(.*?)</a>}gs) {
     my ($tag, $text) = ($1, $2);
     next if $tag =~ /\btarget="_blank"/ && $tag =~ /\brel="noopener"/
-      && $text =~ m{<span class="new-tab">\s*\(opens in a new tab\)</span>};
+      && $text =~ m{<span\s+class="new-tab">\s*\(opens\s+in\s+a\s+new\s+tab\)</span>};
     (my $shown = $tag) =~ s/\s+/ /g;
     print "$ARGV: $shown\n";
     $failed = 1;
