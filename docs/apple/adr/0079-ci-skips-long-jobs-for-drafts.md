@@ -1,7 +1,7 @@
 # ADR-0079: CI skips the long jobs of a draft pull request
 
 - **Status:** Proposed
-- **Date:** 2026-11-16
+- **Date:** 2026-11-16, runs on main let finish the same day
 - **Amends:** [ADR-0072](0072-ui-tests-in-parallel.md) and
   [ADR-0078](0078-ci-skips-builds-for-docs.md) (which jobs run)
 
@@ -34,6 +34,10 @@ Option 3.
   request, so it runs them as before.
 - `lint`, `privacy`, `test`, `vectors` and `site` still run on a draft: they take a
   few minutes and catch most mistakes early.
+- A new push to a pull request cancels its run before, as it did; a run on `main` is
+  no longer cancelled by the next merge, and the next one waits for it. Several merges
+  in a row had left `main` without a single complete run, which a flaky test needs to
+  tell it from a real failure.
 
 ## Consequences
 
@@ -43,5 +47,7 @@ Option 3.
 - `ios-build` is a required check. On a draft, GitHub reports it as skipped, which
   counts as passed; a draft cannot be merged, and the run that marking it ready
   starts reports the check anew.
+- Merges in quick succession queue their runs on `main`; GitHub keeps only the newest
+  waiting one, so the runner time grows by one run at most.
 - A draft shows no UI test results. To see them for a draft, mark it ready for
   review.
