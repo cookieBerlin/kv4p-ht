@@ -205,7 +205,7 @@ enum Composition {
         )
         model.decimalSeparator = decimalSeparator
         Task {
-            await model.loadDemoContent(forAudit: isSmallDemo)
+            await model.loadDemoContent(small: isSmallDemo)
             await model.connect()
             model.simulatedSignal = demoSignal
         }
