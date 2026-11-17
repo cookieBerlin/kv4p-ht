@@ -10,7 +10,7 @@ import XCTest
         override func setUp() async throws {
             continueAfterFailure = false
             app = XCUIApplication()
-            app.launchArguments = ["-uitest-demo"]
+            app.launchArguments = XCUIApplication.demoArguments
             app.launch()
         }
 

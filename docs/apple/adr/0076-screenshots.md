@@ -1,7 +1,7 @@
 # ADR-0076: Screenshots for the App Store, the website and the manual
 
 - **Status:** Proposed
-- **Date:** 2026-11-14
+- **Date:** 2026-11-14, the small demo for all UI tests 2026-11-17
 
 ## Context
 
@@ -35,10 +35,12 @@ again for three kinds of device and two colour schemes takes long. App Store Con
   runtime, in English (`en_US`): an iPad's status bar shows the date in the simulator's language, which the status bar
   override cannot change, and the language of the simulators used otherwise stays as it is.
 - **Status bar:** `simctl status_bar override` sets 9:41, full signal and a full battery, as on Apple's images.
-- **Demo content:** the demo mode shows a day on air, for the screenshots and the functional UI tests: memories in
-  three groups, stations apart from each other on the map, and a chat in the abbreviations of radio amateurs. Only the
-  accessibility audit asks for less, with `-uitest-small-demo`: with the longer lists, its checks of a screen ran out of
-  the time XCTest gives them on CI. Placeholder callsigns only; the names the UI tests look for stay.
+- **Demo content:** the demo mode shows a day on air for the screenshots: memories in three groups, stations apart
+  from each other on the map, and a chat in the abbreviations of radio amateurs. The UI tests, the accessibility audit
+  and the functional ones alike, ask for less, with `-uitest-small-demo`, which `XCUIApplication.demoArguments` sets:
+  with the longer lists, the audit's checks of a screen ran out of the time XCTest gives them on CI, and so did reading
+  a screen in a functional test, on runners without idle CPU (ADR-0072). The small demo keeps every kind of memory and
+  packet, and the names the UI tests look for. Placeholder callsigns only.
 - **The Mac:** the test pulls the window to a fixed size and cuts it out of the screen, as the audit does. With the
   colour scheme argument, the app puts its windows at the level of a screen saver, in front of what other apps show
   below the menu bar, which would otherwise be cut out with the window.

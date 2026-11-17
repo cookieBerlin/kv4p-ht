@@ -44,7 +44,7 @@ enum Composition {
     /// which start anew, so that each audit begins on the same page.
     static let viewDefaults = isDemo ? UserDefaults(suiteName: demoSuite) ?? .standard : .standard
 
-    /// The accessibility audit's demo, `-uitest-small-demo`: with the lists of a day on air, its checks of a screen run
+    /// The UI tests' demo, `-uitest-small-demo`: with the lists of a day on air, their checks of a screen run
     /// out of the time XCTest gives them on a slow machine (ADR-0076).
     private static let isSmallDemo = ProcessInfo.processInfo.arguments.contains("-uitest-small-demo")
 

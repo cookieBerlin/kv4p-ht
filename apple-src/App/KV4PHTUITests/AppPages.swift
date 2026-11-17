@@ -1,6 +1,10 @@
 import XCTest
 
 extension XCUIApplication {
+    /// How the UI tests start the app: in the demo mode, with the small demo's lists (ADR-0076). With the lists of a day
+    /// on air, reading a screen runs out of time on a busy machine. The screenshots start with the whole demo instead.
+    static let demoArguments = ["-uitest-demo", "-uitest-small-demo"]
+
     /// The page bar on a phone, or PTT elsewhere, whatever the text size. On the Mac, the windows of the last run come back, which may be none at all; then a new one opens. After a
     /// crash, macOS first asks whether to reopen them, which keeps the app disabled until it is answered.
     func waitForStart() -> Bool {

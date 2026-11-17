@@ -11,7 +11,7 @@ final class FindByNameTests: XCTestCase {
         connectToWindowServer()
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-uitest-demo"]
+        app.launchArguments = XCUIApplication.demoArguments
         app.launch()
         XCTAssertTrue(app.waitForStart(), "The app did not start")
         #if os(macOS)

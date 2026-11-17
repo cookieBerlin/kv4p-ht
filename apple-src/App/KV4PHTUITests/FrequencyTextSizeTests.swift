@@ -9,9 +9,10 @@ final class FrequencyTextSizeTests: XCTestCase {
             throw XCTSkip("The Mac has no larger text for apps")
         #else
             let app = XCUIApplication()
-            app.launchArguments = [
-                "-uitest-demo", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
-            ]
+            app.launchArguments =
+                XCUIApplication.demoArguments + [
+                    "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
+                ]
             app.launch()
             let field = app.textFields["frequency"].firstMatch
             XCTAssertTrue(field.waitForExistence(timeout: 60), "No frequency field")

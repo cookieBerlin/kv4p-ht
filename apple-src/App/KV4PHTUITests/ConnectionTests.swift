@@ -10,7 +10,7 @@ final class ConnectionTests: XCTestCase {
         connectToWindowServer()
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-uitest-demo"]
+        app.launchArguments = XCUIApplication.demoArguments
         app.launch()
         #if os(macOS)
             app.closeAbout()

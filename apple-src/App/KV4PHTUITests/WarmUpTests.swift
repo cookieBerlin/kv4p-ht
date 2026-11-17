@@ -8,7 +8,7 @@ final class WarmUpTests: XCTestCase {
     func testTheAppStarts() {
         connectToWindowServer()
         let app = XCUIApplication()
-        app.launchArguments = ["-uitest-demo"]
+        app.launchArguments = XCUIApplication.demoArguments
         app.launch()
         XCTAssertTrue(app.waitForStart(), "The app did not start")
         app.terminate()
