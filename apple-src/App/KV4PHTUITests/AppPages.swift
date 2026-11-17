@@ -28,7 +28,7 @@ extension XCUIApplication {
         #endif
         let deadline = Date().addingTimeInterval(60)
         while Date() < deadline {
-            if buttons["page-Memories"].exists || buttons["Push to talk"].exists {
+            if buttons["page-Memories"].firstMatch.exists || buttons["Push to talk"].firstMatch.exists {
                 return true
             }
             Thread.sleep(forTimeInterval: 1)
