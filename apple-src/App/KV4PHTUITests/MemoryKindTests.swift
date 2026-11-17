@@ -9,7 +9,7 @@ final class MemoryKindTests: XCTestCase {
         connectToWindowServer()
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-uitest-demo"]
+        app.launchArguments = XCUIApplication.demoArguments
         app.launch()
     }
 

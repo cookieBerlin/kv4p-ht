@@ -48,8 +48,7 @@ final class AccessibilityAuditTests: XCTestCase {
     /// Starts the app in the given text size, the system's if none; returns the name of the size for the findings.
     private func launch(textSize: String?) -> String {
         app = XCUIApplication()
-        // The small demo: with longer lists, the audit of a screen runs out of time on a slow machine.
-        app.launchArguments = ["-uitest-demo", "-uitest-small-demo"]
+        app.launchArguments = XCUIApplication.demoArguments
         if let textSize {
             app.launchArguments += ["-UIPreferredContentSizeCategoryName", textSize]
         }

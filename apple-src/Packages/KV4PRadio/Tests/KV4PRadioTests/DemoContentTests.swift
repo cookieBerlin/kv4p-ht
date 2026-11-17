@@ -20,7 +20,7 @@ struct DemoContentTests {
         await model.loadDemoContent()
         #expect(
             await KV4PTestSupport.eventually {
-                model.memories.count == DemoContent.memories(forAudit: false).count
+                model.memories.count == DemoContent.memories(small: false).count
             }
         )
         #expect(Set(model.aprsEvents.map(\.kind)).isSuperset(of: [.message, .position, .object, .weather, .status]))
@@ -28,10 +28,10 @@ struct DemoContentTests {
         #expect(model.newAPRSMessages > 0)
     }
 
-    @Test("the audit's demo stays small, so that each audit of a screen keeps within the time XCTest gives it")
+    @Test("the UI tests' demo stays small, so that each check of a screen keeps within the time XCTest gives it")
     func small() {
-        #expect(DemoContent.memories(forAudit: true).count <= 5)
-        #expect(DemoContent.aprsLines(forAudit: true).count <= 8)
+        #expect(DemoContent.memories(small: true).count <= 5)
+        #expect(DemoContent.aprsLines(small: true).count <= 8)
     }
 
     @Test("the demo looks like a day on air: groups, stations around, a chat to read")
@@ -45,7 +45,7 @@ struct DemoContentTests {
         await model.loadDemoContent()
         #expect(
             await KV4PTestSupport.eventually {
-                model.memories.count == DemoContent.memories(forAudit: false).count
+                model.memories.count == DemoContent.memories(small: false).count
             }
         )
         #expect(model.groups.count >= 3)
@@ -66,7 +66,7 @@ struct DemoContentTests {
         )
         model.callsign = "N0CALL"
         await model.loadDemoContent()
-        let count = DemoContent.memories(forAudit: false).count
+        let count = DemoContent.memories(small: false).count
         #expect(await KV4PTestSupport.eventually { model.memories.count == count })
         await model.loadDemoContent()
         #expect(model.memories.count == count)

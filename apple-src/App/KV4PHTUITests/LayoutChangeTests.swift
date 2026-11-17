@@ -12,7 +12,7 @@ import XCTest
             continueAfterFailure = false
             XCUIDevice.shared.orientation = .portrait
             app = XCUIApplication()
-            app.launchArguments = ["-uitest-demo"]
+            app.launchArguments = XCUIApplication.demoArguments
             app.launch()
         }
 
