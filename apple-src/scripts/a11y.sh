@@ -50,6 +50,13 @@ failed_tests() {
     | if index("all") then "all" else unique[] end'
 }
 
+# Why the tests of a result bundle failed, one line each with the test and the start of its failure text, into the
+# job log: the result bundles are kept only when a job fails, not when a test passed on its run once more.
+failures() {
+  xcrun xcresulttool get test-results summary --path "$1" 2> /dev/null | jq -r --arg prefix "$2" '
+    .testFailures[]? | "\($prefix)\(.testIdentifierString): \(.failureText | gsub("\\s+"; " ") | .[0:300])"' >&2 || true
+}
+
 # How busy this machine is while a device runs, every 10 s into `load_log` if A11Y_LOAD_LOG is 1: the seconds
 # since the device started, the mean load of the last 1, 5 and 15 minutes, the share of the CPU that is idle and the
 # share of the memory that is free. The script writes a line `# <step>` there when a step starts.
@@ -147,12 +154,14 @@ for device in "${devices[@]}"; do
       break
     fi
     echo "a11y: the app did not start on $device at warm-up $attempt" >&2
+    failures "$warm_bundle" "a11y: failed on $device at warm-up $attempt: "
   done
   # A test that fails runs once more, in a new test runner, and only that test: once the run of the whole selection is
   # over, its result bundle names the tests that failed.
   step tests
   if ! run_tests "$bundle" "$log" "${tests[@]}"; then
     step retry
+    failures "$bundle" "a11y: failed on $device: "
     retry=()
     while IFS= read -r test; do
       [ "$test" = all ] && retry=("${tests[@]}") && break
@@ -162,6 +171,7 @@ for device in "${devices[@]}"; do
     echo "a11y: once more on $device: ${retry[*]#-only-testing:}" >&2
     if ! run_tests "$retry_bundle" "$retry_log" "${retry[@]}"; then
       echo "a11y: the UI tests failed on $device, see $retry_log" >&2
+      failures "$retry_bundle" "a11y: failed on $device once more: "
       status=1
     fi
   fi
