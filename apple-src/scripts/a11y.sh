@@ -15,7 +15,11 @@ case "${3:-all}" in
   audit) tests=(-only-testing:"$audit") ;;
   audit-pages) tests=(-only-testing:"$audit/testPagesWithDefaultText" -only-testing:"$audit/testPagesWithLargestText") ;;
   audit-settings)
-    tests=(-only-testing:"$audit/testSettingsWithDefaultText" -only-testing:"$audit/testSettingsWithLargestText") ;;
+    tests=()
+    for test in testFirstSettingsWithDefaultText testFirstSettingsWithLargestText testLastSettingsWithDefaultText \
+      testLastSettingsWithLargestText; do
+      tests+=(-only-testing:"$audit/$test")
+    done ;;
   functional) tests=(-only-testing:KV4PHTUITests -skip-testing:"$audit" -skip-testing:"$warm_up") ;;
   *) echo "a11y: unknown selection $3, use all, audit, audit-pages, audit-settings or functional" >&2; exit 2 ;;
 esac

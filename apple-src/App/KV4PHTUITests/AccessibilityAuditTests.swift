@@ -30,17 +30,46 @@ final class AccessibilityAuditTests: XCTestCase {
         #endif
     }
 
-    /// The settings with each of their pages, and What's New; on the Mac also About.
-    func testSettingsWithDefaultText() throws {
-        try auditTheSettings(textSize: nil)
+    // The settings in two halves, each a test of its own: with the largest text, a check of a screen runs out of time now
+    // and then on CI, and a retry then repeats only the half it happened in.
+
+    /// The list of the settings and the pages of the radio: the station, the pages, the radio, transmit and audio.
+    func testFirstSettingsWithDefaultText() throws {
+        try auditTheSettings(.first, textSize: nil)
     }
 
-    func testSettingsWithLargestText() throws {
+    func testFirstSettingsWithLargestText() throws {
         #if os(macOS)
             throw XCTSkip("The Mac has no Dynamic Type")
         #else
-            try auditTheSettings(textSize: Self.largestTextSize)
+            try auditTheSettings(.first, textSize: Self.largestTextSize)
         #endif
+    }
+
+    /// The other pages of the settings, and What's New; on the Mac also About.
+    func testLastSettingsWithDefaultText() throws {
+        try auditTheSettings(.last, textSize: nil)
+    }
+
+    func testLastSettingsWithLargestText() throws {
+        #if os(macOS)
+            throw XCTSkip("The Mac has no Dynamic Type")
+        #else
+            try auditTheSettings(.last, textSize: Self.largestTextSize)
+        #endif
+    }
+
+    private enum SettingsHalf: String {
+        case first, last
+
+        /// The pages of the settings, by their names in the list of the settings, as "Memories" and "APRS" also name
+        /// pages of the bar below.
+        var pages: [String] {
+            switch self {
+            case .first: ["Station", "Pages", "Radio", "Transmit", "Audio"]
+            case .last: ["APRS", "Memories", "Simulator", "Logging"]
+            }
+        }
     }
 
     private static let largestTextSize = "UICTContentSizeCategoryAccessibilityXXXL"
@@ -101,20 +130,24 @@ final class AccessibilityAuditTests: XCTestCase {
         report("\(size) pages")
     }
 
-    private func auditTheSettings(textSize: String?) throws {
+    /// The list of the settings itself with the first half, About and What's New with the last.
+    private func auditTheSettings(_ half: SettingsHalf, textSize: String?) throws {
         let size = launch(textSize: textSize)
         app.showPage("Settings")
-        try audit("\(size) settings")
-        // In the list of the settings, as "Memories" and "APRS" also name pages of the bar below.
-        for page in ["Station", "Pages", "Radio", "Transmit", "Audio", "APRS", "Memories", "Simulator", "Logging"] {
+        if half == .first {
+            try audit("\(size) settings")
+        }
+        for page in half.pages {
             try auditSettings(page, size: size)
         }
-        #if os(macOS)
-            try auditAbout()
-        #else
-            try auditWhatsNew(size: size)
-        #endif
-        report("\(size) settings")
+        if half == .last {
+            #if os(macOS)
+                try auditAbout()
+            #else
+                try auditWhatsNew(size: size)
+            #endif
+        }
+        report("\(size) settings, \(half.rawValue) half")
     }
 
     /// A finding of the test itself, such as a screen it could not reach.

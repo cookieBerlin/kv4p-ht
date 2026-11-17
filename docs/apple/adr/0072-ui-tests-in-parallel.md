@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the build before the boot, the warm-up and the load log 2026-11-16, the failures of a run once more in the job log 2026-11-17
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the build before the boot, the warm-up and the load log 2026-11-16, the failures of a run once more in the job log, with where in the tests they came from, and the settings in two halves 2026-11-17
 
 ## Context
 
@@ -39,9 +39,10 @@ findings, which were fixed before the jobs were added.
   or `functional` (every other UI test). `make a11y` passes it as `UI_TESTS`. The devices are the iPhone 18 Pro, the iPad Pro 11-inch (M5) and
   the iPhone Duo, and the Mac, which runs the app itself.
 - **The audit in two parts:** each text size has a test for the pages (the memories,
-  the packets, the chats and the map, with their panels) and one for the settings (each
-  of their pages, and What's New; on the Mac also About). Each part starts the app on
-  its own.
+  the packets, the chats and the map, with their panels) and two for the settings: the
+  list with the first half of their pages, and the other half with What's New; on the
+  Mac also About. Each test starts the app on its own, so a retry after a check of a
+  screen that ran out of time repeats only half of the settings.
 - **CI job `ui-tests`:** a matrix of the four devices and three selections,
   `functional`, `audit-pages` and `audit-settings`: twelve jobs side by side, `fail-fast: false`, each with its own artifact: the findings, the
   logs and the screenshots. A job that fails also keeps its result bundles for a week,
@@ -54,7 +55,8 @@ findings, which were fixed before the jobs were added.
   selection once more. A test runner that crashes before the tests start gets a
   second start, also when it times out while preparing to run the tests. Before a run
   once more, the script prints each failure of the first run, the test and the start of
-  its failure text, into the job log; the result bundles are kept only when a job
+  its failure text, and below it where in the tests each failure came from, the
+  innermost functions with their lines, into the job log; the result bundles are kept only when a job
   fails, so a test that passed on its run once more leaves no other trace there.
 - **Build, boot, test:** `scripts/a11y.sh` builds with `build-for-testing`, then starts
   the simulator, waits for `simctl bootstatus`, and runs the tests with
