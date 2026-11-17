@@ -1,7 +1,7 @@
 # ADR-0072: UI tests in parallel jobs, one simulator each
 
 - **Status:** Proposed
-- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the build before the boot, the warm-up and the load log 2026-11-16
+- **Date:** 2026-11-13, the Mac added 2026-11-15, retries of the failed tests only, the result bundles of a failed job, the audit in two parts, the build before the boot, the warm-up and the load log 2026-11-16, the failures of a run once more in the job log 2026-11-17
 
 ## Context
 
@@ -52,7 +52,10 @@ findings, which were fixed before the jobs were added.
   bundle and starts a second run of just those, in a new test runner. A failure that
   names no test, such as a runner that crashed between two tests, runs the whole
   selection once more. A test runner that crashes before the tests start gets a
-  second start, also when it times out while preparing to run the tests.
+  second start, also when it times out while preparing to run the tests. Before a run
+  once more, the script prints each failure of the first run, the test and the start of
+  its failure text, into the job log; the result bundles are kept only when a job
+  fails, so a test that passed on its run once more leaves no other trace there.
 - **Build, boot, test:** `scripts/a11y.sh` builds with `build-for-testing`, then starts
   the simulator, waits for `simctl bootstatus`, and runs the tests with
   `test-without-building`. It does not wait for the machine to settle: on the CI
