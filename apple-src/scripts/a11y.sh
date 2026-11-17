@@ -51,10 +51,23 @@ failed_tests() {
 }
 
 # Why the tests of a result bundle failed, one line each with the test and the start of its failure text, into the
-# job log: the result bundles are kept only when a job fails, not when a test passed on its run once more.
+# job log: the result bundles are kept only when a job fails, not when a test passed on its run once more. Below each
+# test, where in the tests each of its failures came from, innermost first, so that a query that ran out of time can be
+# found.
 failures() {
-  xcrun xcresulttool get test-results summary --path "$1" 2> /dev/null | jq -r --arg prefix "$2" '
-    .testFailures[]? | "\($prefix)\(.testIdentifierString): \(.failureText | gsub("\\s+"; " ") | .[0:300])"' >&2 || true
+  local summary test
+  summary=$(xcrun xcresulttool get test-results summary --path "$1" 2> /dev/null) || return 0
+  jq -r '[.testFailures[]?.testIdentifierString] | unique[]' <<< "$summary" 2> /dev/null |
+    while IFS= read -r test; do
+      jq -r --arg prefix "$2" --arg test "$test" '
+        .testFailures[] | select(.testIdentifierString == $test)
+        | "\($prefix)\($test): \(.failureText | gsub("\\s+"; " ") | .[0:300])"' <<< "$summary" >&2 || true
+      xcrun xcresulttool get test-results test-details --path "$1" --test-id "$test" 2> /dev/null | jq -r '
+        [.. | objects | select(any(.children[]?; .nodeType == "Source Code Reference"))
+          | "  at " + ([.children[] | select(.nodeType == "Source Code Reference")
+            | "\(.name | sub("^[^.]*\\."; "")):\(.sourceLocation.lineNumber)"] | .[0:4] | join(" < "))]
+        | unique[]' >&2 || true
+    done
 }
 
 # How busy this machine is while a device runs, every 10 s into `load_log` if A11Y_LOAD_LOG is 1: the seconds
