@@ -6,7 +6,7 @@ extension XCUIApplication {
         #if os(macOS)
             typeKey(",", modifierFlags: .command)
         #else
-            let page = buttons["page-Settings"]
+            let page = buttons["page-Settings"].firstMatch
             if page.exists { page.tap() } else { buttons["Settings"].firstMatch.tap() }
         #endif
     }
