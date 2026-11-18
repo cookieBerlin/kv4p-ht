@@ -381,7 +381,10 @@ enum PageSymbol {
                     }
                     .scrollTargetLayout()
                 }
-                .scrollTargetBehavior(.paging)
+                // Aligned to the pages rather than paged by the width of the scroll view: that one reaches into the
+                // sides of the screen that are not free, in landscape on an iPhone with a notch, and each page then
+                // stood further off than the one before it.
+                .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne))
                 .scrollIndicators(.hidden)
                 // The scroll view draws into the sides of the screen that are not free, such as the status bar that a
                 // foldable iPhone shows at the side, where the next page would show.

@@ -54,6 +54,8 @@ own, with its version, build and date.
   PTT and the access tone stop if they were held, and an unsent APRS message, the open settings and the page shown
   stay.
 - iPhone Duo, folded: the next page no longer shows beside the status bar.
+- iPhone with a notch, in landscape: the pages stand in place again, rather than further to the side with each page,
+  with the next one showing at the edge.
 - iPhone: the app starts much sooner when it was not running before, as the map is set up only when it is needed.
 - iPhone and iPad: with the largest text sizes, the frequency is no longer cut off at the left, nor the squelch symbol
   at the right.
