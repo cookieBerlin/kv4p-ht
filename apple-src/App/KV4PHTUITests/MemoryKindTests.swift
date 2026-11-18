@@ -14,6 +14,9 @@ final class MemoryKindTests: XCTestCase {
     }
 
     func testListMarksTheKindOfEachMemory() {
+        // First the start, by its identifiers: a look for text anywhere on the screen reads all of it, and while the app
+        // starts on a busy machine, that runs out of the time XCTest gives a query.
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
         #if os(macOS)
             app.closeAbout()
         #endif
@@ -31,6 +34,7 @@ final class MemoryKindTests: XCTestCase {
     }
 
     func testListHidesWhatTheRadioCannotReceive() {
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
         #if os(macOS)
             app.closeAbout()
         #endif
