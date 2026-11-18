@@ -97,29 +97,3 @@ extension View {
         }
     }
 }
-
-/// For a control without room for a text: iPhone and iPad show the explanation on a tap. The Mac has the tooltip.
-struct HelpButton: View {
-    let text: String
-    @State private var isShown = false
-
-    init(_ text: String) {
-        self.text = text
-    }
-
-    var body: some View {
-        #if os(iOS)
-            Button("Explain", systemImage: "info.circle") { isShown = true }
-                .labelStyle(.iconOnly)
-                .capsuleButton()
-                .popover(isPresented: $isShown) {
-                    Text(text)
-                        .font(.footnote)
-                        .padding()
-                        .frame(idealWidth: 280)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .presentationCompactAdaptation(.popover)
-                }
-        #endif
-    }
-}

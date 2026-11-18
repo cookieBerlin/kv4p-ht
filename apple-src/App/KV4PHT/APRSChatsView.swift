@@ -189,9 +189,7 @@ private struct APRSConversationView: View {
                         .fixedSize()
                         .accessibilityLabel("\(limit - text.count) characters left")
                     Spacer(minLength: 0).frame(maxWidth: textSize.isAccessibilitySize ? .infinity : 0)
-                    Button("Send", systemImage: "paperplane", action: send)
-                        .labelStyle(.iconOnly)
-                        .disabled(text.isEmpty)
+                    SendButton(isDisabled: text.isEmpty, action: send)
                 }
             }
             .padding(8)

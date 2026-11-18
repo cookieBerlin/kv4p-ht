@@ -66,27 +66,23 @@ struct APRSView: View {
     /// The recipient and the message side by side, or one below the other with the accessibility text sizes.
     private var composer: some View {
         AdaptiveStack {
-            HStack {
-                recipientField.frame(maxWidth: isAccessibilitySize ? .infinity : 140).help(ControlHelp.recipient)
-                HelpButton(ControlHelp.recipient)
-            }
+            recipientField.frame(maxWidth: isAccessibilitySize ? .infinity : 140)
             HStack {
                 messageField
                 KeyboardDismissButton()
-                sendButton.labelStyle(.iconOnly)
+                SendButton(isDisabled: model.aprsDraft.isEmpty, action: send)
             }
         }
         .textFieldStyle(.roundedBorder)
         .onChange(of: model.aprsReplyCount) { isWriting = true }
     }
 
+    /// Empty, it says whom the message goes to; the whole of it is a hint for VoiceOver and a tooltip on the Mac.
     private var recipientField: some View {
-        // iOS: a phone has room for the short label only.
-        #if os(macOS)
-            TextField("To (empty: bulletin)", text: $model.aprsRecipient).macName("To")
-        #else
-            TextField("To", text: $model.aprsRecipient)
-        #endif
+        TextField("To: all", text: $model.aprsRecipient)
+            .macName("To")
+            .help(ControlHelp.recipient)
+            .accessibilityHint(ControlHelp.recipient)
     }
 
     private var messageField: some View {
@@ -96,12 +92,24 @@ struct APRSView: View {
             .onSubmit(send)
     }
 
-    private var sendButton: some View {
-        Button("Send", systemImage: "paperplane", action: send)
-            .disabled(model.aprsDraft.isEmpty)
-    }
-
     private func send() {
         model.sendAPRSDraft()
+    }
+}
+
+/// Sends what was written, below the packets and in a chat: a filled circle, to see as the button of the line, and grey
+/// while there is nothing to send.
+struct SendButton: View {
+    let isDisabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button("Send", systemImage: "paperplane.fill", action: action)
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.circle)
+            // Large enough for a finger, as tall as the line or a little more.
+            .controlSize(.large)
+            .disabled(isDisabled)
     }
 }

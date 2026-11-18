@@ -7,6 +7,8 @@ own, with its version, build and date.
 
 ### Changed
 
+- APRS: **Send** below the packets and in a chat is a blue circle, grey while there is nothing to send. The recipient
+  field says *To: all* while empty, in place of the ⓘ button on iPhone and iPad.
 - iPad: the radio is no longer chosen and connected at the top of the main screen, which leaves more room for the
   memories and APRS.
 - Without a connection, the memories offer it in place of **Push to talk**: the status, the choice of radio and
