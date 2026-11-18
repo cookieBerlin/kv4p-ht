@@ -73,6 +73,23 @@ import XCTest
             XCTAssertTrue(message.waitForExistence(timeout: 5), "The packets shown are out of reach")
         }
 
+        /// In landscape, the sides of the screen are not free; a page then stands between them, rather than drifting
+        /// further to the side with each page that lies before it.
+        func testAPageStandsInTheMiddleInLandscape() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
+                throw XCTSkip("Only a phone has the page bar")
+            }
+            // Also when the test fails: a failure ends it at once, and the tests after it would start in landscape.
+            addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+            XCUIDevice.shared.orientation = .landscapeLeft
+            app.buttons["page-Settings"].firstMatch.tap()
+            let settings = app.navigationBars["Settings"].firstMatch
+            XCTAssertTrue(settings.waitForExistence(timeout: 5))
+            let window = app.windows.firstMatch.frame
+            XCTAssertEqual(settings.frame.midX, window.midX, accuracy: 5, "The settings stand off the middle")
+        }
+
         /// Waits long enough for a busy machine, where a single look at the page bar can take seconds.
         private func isSelected(_ element: XCUIElement) -> Bool {
             let selected = NSPredicate(format: "isSelected == true")
