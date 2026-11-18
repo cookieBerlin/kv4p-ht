@@ -400,14 +400,15 @@ enum PageSymbol {
                 }
                 .onChange(of: pages) {
                     showMemoriesIfHidden()
-                    // The pages before it come or go, and the scroll view stays where it was, on another page. Once
-                    // they are laid out, it goes back to the page; unset first, as the same value moves nothing.
-                    shownSlot = nil
-                    Task {
-                        var jump = Transaction()
-                        jump.disablesAnimations = true
-                        withTransaction(jump) { shownSlot = .page(page) }
-                    }
+                    // The pages before it come or go, and the scroll view stays where it was, on another page.
+                    returnToPage()
+                }
+                // The pages get wider or narrower when the iPhone turns, and the scroll view keeps its offset, which
+                // then lies on another page.
+                .onGeometryChange(for: CGFloat.self) { (proxy: GeometryProxy) in
+                    proxy.size.width
+                } action: { (_: CGFloat) in
+                    returnToPage()
                 }
                 .onChange(of: shownSlot) {
                     if let shownSlot, shownSlot.page != page { page = shownSlot.page }
@@ -476,6 +477,17 @@ enum PageSymbol {
                         .frame(width: barEdge == .leading ? sideInsets.leading : sideInsets.trailing)
                         .ignoresSafeArea(.container, edges: barEdge == .leading ? .leading : .trailing)
                 }
+            }
+        }
+
+        /// Puts the scroll view back on the page, without moving, once the pages are laid out anew; unset first, as the
+        /// same value moves nothing.
+        private func returnToPage() {
+            shownSlot = nil
+            Task {
+                var jump = Transaction()
+                jump.disablesAnimations = true
+                withTransaction(jump) { shownSlot = .page(page) }
             }
         }
 
