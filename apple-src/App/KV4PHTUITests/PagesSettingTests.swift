@@ -14,6 +14,9 @@ final class PagesSettingTests: XCTestCase {
     }
 
     func testSwitchingAPRSOffHidesItsPages() {
+        // First the start, by its identifiers: the look for the APRS pages also compares labels, which reads all of the
+        // screen, and while the app starts on a busy machine, that runs out of the time XCTest gives a query.
+        XCTAssertTrue(app.waitForStart(), "The app did not start")
         #if os(macOS)
             app.closeAbout()
         #endif
