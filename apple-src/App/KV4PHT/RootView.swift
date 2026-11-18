@@ -320,6 +320,8 @@ enum PageSymbol {
         @State private var isMapBuilt = false
         /// The side where the system puts vertical bars, if it does: the page bar then stands there (ADR-0071).
         @Environment(\.verticalBarEdge) private var barEdge
+        /// Compact on an iPhone in landscape, where the height is short.
+        @Environment(\.verticalSizeClass) private var verticalSizeClass
         @Environment(\.scenePhase) private var scenePhase
 
         /// One page over the full width; all are there at once, so each is told whether it is the one shown.
@@ -444,11 +446,21 @@ enum PageSymbol {
                         // The memories offer the connection where PTT stands; the other pages show its status (ADR-0075).
                         BottomBar(model: model, showsPTT: page == .memories)
                     }
-                    if barEdge == nil {
+                    if barEdge == nil, !isLandscape {
                         pageBar(.horizontal)
                             .padding(.top, 4)
                             .background(Color.opaqueBar)
                     }
+                }
+            }
+            // In landscape, the height is short: the page bar stands at the side, within the free part of the screen,
+            // so that a notch on either side stays clear of it; its background reaches to the edge (ADR-0080).
+            .safeAreaInset(edge: .trailing, spacing: 0) {
+                if isLandscape {
+                    pageBar(.vertical)
+                        .frame(width: 60)
+                        .frame(maxHeight: .infinity)
+                        .background(Color.opaqueBar.ignoresSafeArea())
                 }
             }
             .observesKeyboard($isKeyboardShown)
@@ -465,6 +477,11 @@ enum PageSymbol {
                         .ignoresSafeArea(.container, edges: barEdge == .leading ? .leading : .trailing)
                 }
             }
+        }
+
+        /// An iPhone in landscape, where the system puts no vertical bars; the page bar then stands at the side.
+        private var isLandscape: Bool {
+            barEdge == nil && verticalSizeClass == .compact
         }
 
         /// The pages there are: without APRS, its two go, and the map without the map.

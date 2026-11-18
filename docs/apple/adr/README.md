@@ -83,3 +83,4 @@ Process: [ADR-0001](0001-record-architecture-decisions.md) · Template: [0000-te
 | [0077](0077-talking-without-a-radio.md) | Talking without a radio: medium and frame format | Proposed |
 | [0078](0078-ci-skips-builds-for-docs.md) | CI skips the builds and tests when only documentation changed | Proposed |
 | [0079](0079-ci-skips-long-jobs-for-drafts.md) | CI skips the long jobs of a draft pull request | Proposed |
+| [0080](0080-page-bar-at-the-side-in-landscape.md) | The page bar of an iPhone stands at the side in landscape | Proposed |
