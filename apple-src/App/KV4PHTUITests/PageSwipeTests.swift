@@ -116,6 +116,30 @@ import XCTest
             XCTAssertGreaterThan(memories.frame.minX, ptt.frame.maxX, "The page bar does not stand at the side")
         }
 
+        /// Turning the iPhone changes the width of the pages; the page shown stays, in both directions.
+        func testThePageStaysWhenTheIPhoneTurns() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
+                throw XCTSkip("Only a phone has the page bar")
+            }
+            addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+            let chats = app.buttons["page-Chats"].firstMatch
+            let newChat = app.buttons["New chat"].firstMatch
+            let window = app.windows.firstMatch
+            XCUIDevice.shared.orientation = .landscapeLeft
+            chats.tap()
+            XCTAssertTrue(isSelected(chats))
+            for orientation in [UIDeviceOrientation.portrait, .landscapeLeft, .portrait] {
+                XCUIDevice.shared.orientation = orientation
+                XCTAssertTrue(isSelected(chats), "Another page is chosen after turning to \(orientation.rawValue)")
+                XCTAssertTrue(newChat.waitForExistence(timeout: 5))
+                XCTAssertTrue(
+                    window.frame.contains(CGPoint(x: newChat.frame.midX, y: newChat.frame.midY)),
+                    "Another page shows after turning to \(orientation.rawValue)"
+                )
+            }
+        }
+
         /// Waits long enough for a busy machine, where a single look at the page bar can take seconds.
         private func isSelected(_ element: XCUIElement) -> Bool {
             let selected = NSPredicate(format: "isSelected == true")
