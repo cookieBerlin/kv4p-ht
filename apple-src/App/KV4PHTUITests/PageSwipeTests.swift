@@ -73,7 +73,7 @@ import XCTest
             XCTAssertTrue(message.waitForExistence(timeout: 5), "The packets shown are out of reach")
         }
 
-        /// In landscape, the sides of the screen are not free; a page then stands between them, rather than drifting
+        /// In landscape, the sides of the screen are not free; a page then stands within the rest, rather than drifting
         /// further to the side with each page that lies before it.
         func testAPageStandsInTheMiddleInLandscape() throws {
             XCTAssertTrue(app.waitForStart(), "The app did not start")
@@ -87,7 +87,33 @@ import XCTest
             let settings = app.navigationBars["Settings"].firstMatch
             XCTAssertTrue(settings.waitForExistence(timeout: 5))
             let window = app.windows.firstMatch.frame
-            XCTAssertEqual(settings.frame.midX, window.midX, accuracy: 5, "The settings stand off the middle")
+            // The page bar stands at the side in landscape, or below the pages.
+            let bar = app.buttons["page-Memories"].firstMatch.frame
+            let end = bar.minX > window.midX ? bar.minX : window.maxX
+            XCTAssertGreaterThanOrEqual(settings.frame.minX, window.minX, "The settings are cut off at the left")
+            XCTAssertLessThanOrEqual(settings.frame.maxX, end, "The settings are cut off at the right")
+        }
+
+        /// In landscape, the height is short; the page bar stands at the side, and the memories with the header and PTT
+        /// fit between the top and the bottom.
+        func testTheMemoriesFitInLandscape() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
+                throw XCTSkip("Only a phone has the page bar")
+            }
+            addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+            XCUIDevice.shared.orientation = .landscapeLeft
+            let window = app.windows.firstMatch
+            let frequency = app.textFields["frequency"].firstMatch
+            let ptt = app.buttons["mic"].firstMatch
+            let memories = app.buttons["page-Memories"].firstMatch
+            let settings = app.buttons["page-Settings"].firstMatch
+            XCTAssertTrue(ptt.waitForExistence(timeout: 60), "Not connected")
+            XCTAssertTrue(window.frame.width > window.frame.height, "Not in landscape")
+            XCTAssertGreaterThanOrEqual(frequency.frame.minY, window.frame.minY, "The frequency is cut off at the top")
+            XCTAssertLessThanOrEqual(ptt.frame.maxY, window.frame.maxY, "PTT is cut off at the bottom")
+            XCTAssertLessThanOrEqual(settings.frame.maxY, window.frame.maxY, "The page bar is cut off at the bottom")
+            XCTAssertGreaterThan(memories.frame.minX, ptt.frame.maxX, "The page bar does not stand at the side")
         }
 
         /// Waits long enough for a busy machine, where a single look at the page bar can take seconds.
