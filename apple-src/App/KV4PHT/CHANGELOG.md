@@ -7,6 +7,8 @@ own, with its version, build and date.
 
 ### Changed
 
+- APRS: **Send** below the packets and in a chat is a blue circle, grey while there is nothing to send. The recipient
+  field says *To: all* while empty, in place of the ⓘ button on iPhone and iPad.
 - iPad: the radio is no longer chosen and connected at the top of the main screen, which leaves more room for the
   memories and APRS.
 - Without a connection, the memories offer it in place of **Push to talk**: the status, the choice of radio and
@@ -54,6 +56,12 @@ own, with its version, build and date.
   PTT and the access tone stop if they were held, and an unsent APRS message, the open settings and the page shown
   stay.
 - iPhone Duo, folded: the next page no longer shows beside the status bar.
+- iPhone with a notch, in landscape: the pages stand in place again, rather than further to the side with each page,
+  with the next one showing at the edge.
+- iPhone in landscape: the frequency is no longer cut off at the top, nor the page bar at the bottom; the bar stands
+  at the right edge.
+- iPhone: turning the iPhone keeps the page shown, rather than showing another one, such as the settings in place of
+  the chats.
 - iPhone: the app starts much sooner when it was not running before, as the map is set up only when it is needed.
 - iPhone and iPad: with the largest text sizes, the frequency is no longer cut off at the left, nor the squelch symbol
   at the right.

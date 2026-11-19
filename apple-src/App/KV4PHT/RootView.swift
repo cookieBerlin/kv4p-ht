@@ -320,6 +320,8 @@ enum PageSymbol {
         @State private var isMapBuilt = false
         /// The side where the system puts vertical bars, if it does: the page bar then stands there (ADR-0071).
         @Environment(\.verticalBarEdge) private var barEdge
+        /// Compact on an iPhone in landscape, where the height is short.
+        @Environment(\.verticalSizeClass) private var verticalSizeClass
         @Environment(\.scenePhase) private var scenePhase
 
         /// One page over the full width; all are there at once, so each is told whether it is the one shown.
@@ -381,7 +383,10 @@ enum PageSymbol {
                     }
                     .scrollTargetLayout()
                 }
-                .scrollTargetBehavior(.paging)
+                // Aligned to the pages rather than paged by the width of the scroll view: that one reaches into the
+                // sides of the screen that are not free, in landscape on an iPhone with a notch, and each page then
+                // stood further off than the one before it.
+                .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne))
                 .scrollIndicators(.hidden)
                 // The scroll view draws into the sides of the screen that are not free, such as the status bar that a
                 // foldable iPhone shows at the side, where the next page would show.
@@ -395,14 +400,15 @@ enum PageSymbol {
                 }
                 .onChange(of: pages) {
                     showMemoriesIfHidden()
-                    // The pages before it come or go, and the scroll view stays where it was, on another page. Once
-                    // they are laid out, it goes back to the page; unset first, as the same value moves nothing.
-                    shownSlot = nil
-                    Task {
-                        var jump = Transaction()
-                        jump.disablesAnimations = true
-                        withTransaction(jump) { shownSlot = .page(page) }
-                    }
+                    // The pages before it come or go, and the scroll view stays where it was, on another page.
+                    returnToPage()
+                }
+                // The pages get wider or narrower when the iPhone turns, and the scroll view keeps its offset, which
+                // then lies on another page.
+                .onGeometryChange(for: CGFloat.self) { (proxy: GeometryProxy) in
+                    proxy.size.width
+                } action: { (_: CGFloat) in
+                    returnToPage()
                 }
                 .onChange(of: shownSlot) {
                     if let shownSlot, shownSlot.page != page { page = shownSlot.page }
@@ -441,11 +447,21 @@ enum PageSymbol {
                         // The memories offer the connection where PTT stands; the other pages show its status (ADR-0075).
                         BottomBar(model: model, showsPTT: page == .memories)
                     }
-                    if barEdge == nil {
+                    if barEdge == nil, !isLandscape {
                         pageBar(.horizontal)
                             .padding(.top, 4)
                             .background(Color.opaqueBar)
                     }
+                }
+            }
+            // In landscape, the height is short: the page bar stands at the side, within the free part of the screen,
+            // so that a notch on either side stays clear of it; its background reaches to the edge (ADR-0080).
+            .safeAreaInset(edge: .trailing, spacing: 0) {
+                if isLandscape {
+                    pageBar(.vertical)
+                        .frame(width: 60)
+                        .frame(maxHeight: .infinity)
+                        .background(Color.opaqueBar.ignoresSafeArea())
                 }
             }
             .observesKeyboard($isKeyboardShown)
@@ -462,6 +478,22 @@ enum PageSymbol {
                         .ignoresSafeArea(.container, edges: barEdge == .leading ? .leading : .trailing)
                 }
             }
+        }
+
+        /// Puts the scroll view back on the page, without moving, once the pages are laid out anew; unset first, as the
+        /// same value moves nothing.
+        private func returnToPage() {
+            shownSlot = nil
+            Task {
+                var jump = Transaction()
+                jump.disablesAnimations = true
+                withTransaction(jump) { shownSlot = .page(page) }
+            }
+        }
+
+        /// An iPhone in landscape, where the system puts no vertical bars; the page bar then stands at the side.
+        private var isLandscape: Bool {
+            barEdge == nil && verticalSizeClass == .compact
         }
 
         /// The pages there are: without APRS, its two go, and the map without the map.

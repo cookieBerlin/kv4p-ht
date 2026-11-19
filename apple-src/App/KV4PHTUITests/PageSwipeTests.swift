@@ -73,6 +73,81 @@ import XCTest
             XCTAssertTrue(message.waitForExistence(timeout: 5), "The packets shown are out of reach")
         }
 
+        /// In landscape, the sides of the screen are not free; a page then stands within the rest, rather than drifting
+        /// further to the side with each page that lies before it.
+        func testAPageStandsInTheMiddleInLandscape() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
+                throw XCTSkip("Only a phone has the page bar")
+            }
+            // Also when the test fails: a failure ends it at once, and the tests after it would start in landscape.
+            addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+            XCUIDevice.shared.orientation = .landscapeLeft
+            app.buttons["page-Settings"].firstMatch.tap()
+            let settings = app.navigationBars["Settings"].firstMatch
+            XCTAssertTrue(settings.waitForExistence(timeout: 5))
+            let window = app.windows.firstMatch.frame
+            // The page bar stands at the side in landscape, or below the pages.
+            let bar = app.buttons["page-Memories"].firstMatch.frame
+            let end = bar.minX > window.midX ? bar.minX : window.maxX
+            XCTAssertGreaterThanOrEqual(settings.frame.minX, window.minX, "The settings are cut off at the left")
+            XCTAssertLessThanOrEqual(settings.frame.maxX, end, "The settings are cut off at the right")
+        }
+
+        /// In landscape, the height is short; the page bar stands at the side, and the memories with the header and PTT
+        /// fit between the top and the bottom.
+        func testTheMemoriesFitInLandscape() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
+                throw XCTSkip("Only a phone has the page bar")
+            }
+            addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+            XCUIDevice.shared.orientation = .landscapeLeft
+            let window = app.windows.firstMatch
+            let frequency = app.textFields["frequency"].firstMatch
+            let ptt = app.buttons["mic"].firstMatch
+            let memories = app.buttons["page-Memories"].firstMatch
+            let settings = app.buttons["page-Settings"].firstMatch
+            XCTAssertTrue(ptt.waitForExistence(timeout: 60), "Not connected")
+            // A folded iPhone Duo does not turn; its page bar stands at the side anyway (ADR-0071).
+            let isLandscape = NSPredicate { element, _ in
+                guard let frame = (element as? XCUIElement)?.frame else { return false }
+                return frame.width > frame.height
+            }
+            guard XCTWaiter.wait(for: [expectation(for: isLandscape, evaluatedWith: window)], timeout: 5) == .completed
+            else {
+                throw XCTSkip("This iPhone does not turn to landscape")
+            }
+            XCTAssertGreaterThanOrEqual(frequency.frame.minY, window.frame.minY, "The frequency is cut off at the top")
+            XCTAssertLessThanOrEqual(ptt.frame.maxY, window.frame.maxY, "PTT is cut off at the bottom")
+            XCTAssertLessThanOrEqual(settings.frame.maxY, window.frame.maxY, "The page bar is cut off at the bottom")
+            XCTAssertGreaterThan(memories.frame.minX, ptt.frame.maxX, "The page bar does not stand at the side")
+        }
+
+        /// Turning the iPhone changes the width of the pages; the page shown stays, in both directions.
+        func testThePageStaysWhenTheIPhoneTurns() throws {
+            XCTAssertTrue(app.waitForStart(), "The app did not start")
+            guard app.hasPageBar else {
+                throw XCTSkip("Only a phone has the page bar")
+            }
+            addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+            let chats = app.buttons["page-Chats"].firstMatch
+            let newChat = app.buttons["New chat"].firstMatch
+            let window = app.windows.firstMatch
+            XCUIDevice.shared.orientation = .landscapeLeft
+            chats.tap()
+            XCTAssertTrue(isSelected(chats))
+            for orientation in [UIDeviceOrientation.portrait, .landscapeLeft, .portrait] {
+                XCUIDevice.shared.orientation = orientation
+                XCTAssertTrue(isSelected(chats), "Another page is chosen after turning to \(orientation.rawValue)")
+                XCTAssertTrue(newChat.waitForExistence(timeout: 5))
+                XCTAssertTrue(
+                    window.frame.contains(CGPoint(x: newChat.frame.midX, y: newChat.frame.midY)),
+                    "Another page shows after turning to \(orientation.rawValue)"
+                )
+            }
+        }
+
         /// Waits long enough for a busy machine, where a single look at the page bar can take seconds.
         private func isSelected(_ element: XCUIElement) -> Bool {
             let selected = NSPredicate(format: "isSelected == true")

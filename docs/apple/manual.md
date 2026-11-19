@@ -64,7 +64,8 @@ The structure is the same on all devices, and similar to the Android app:
 - ⚙ **Settings:** all other settings. 🖥 It opens the settings window (⌘,).
 
 📱 On an iPhone or in a narrow iPad window, **Memories** (☰), **Packets**, **Chats** (two speech bubbles), **Map**
-and ⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. The pages form a ring: a swipe
+and ⚙ **Settings** are pages: use the symbols in the bar at the bottom, or swipe sideways. With the iPhone turned sideways, the bar
+stands at the right edge, so that the memories, the header and **Push to talk** fit in the lower height. The pages form a ring: a swipe
 to the right on the memories goes straight to the settings, and a swipe to the left there back to the memories. The
 symbols keep their size with larger text; hold one to see it large with its name. The app opens the page you used
 last. Without APRS, *Packets* and *Chats* go from the bar and the ring, and without the map, *Map*. On the map, a
@@ -80,8 +81,7 @@ the packets, chats or map you were looking at stay in view. A held **Push to tal
 does not keep transmitting; sticky PTT stays on.
 
 Controls that are not self-explanatory explain themselves: 🖥 point at them for a
-tooltip; 📱 a short text is below each setting, and ⓘ explains the
-recipient of a message.
+tooltip; 📱 a short text is below each setting.
 
 The first time you connect, the app asks for access to the microphone and your location
 (📱 and for notifications), and over Bluetooth for Bluetooth. You can use it with any of
@@ -362,8 +362,8 @@ with a filter of its own, so that looking through the history leaves the main pa
 
 **Messages** (licence required): enter your callsign in ⚙ **Settings** under *Station* (the app
 ships with none and remembers yours), then a recipient and the text below the APRS list,
-then press Return or **Send**. Without a recipient the message goes out as the
-bulletin BLN1CQ. Without a connection, or without a callsign, the list and a chat show why in place of the line to
+then press Return or **Send** (the blue circle with the paper plane, grey while there is nothing to send). Without a
+recipient, as *To: all* in the empty field says, the message goes out as the bulletin BLN1CQ. Without a connection, or without a callsign, the list and a chat show why in place of the line to
 write, such as *Connect the radio to send.*
 
 - The message is sent on the current TX frequency, via WIDE1-1,WIDE2-1, only
