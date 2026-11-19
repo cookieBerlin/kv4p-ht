@@ -5,6 +5,8 @@ own, with its version, build and date.
 
 ## Unreleased
 
+## 0.3.0 (20261119.2005) – 2026-11-19
+
 ### Changed
 
 - APRS: **Send** below the packets and in a chat is a blue circle, grey while there is nothing to send. The recipient
