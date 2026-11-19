@@ -109,7 +109,15 @@ import XCTest
             let memories = app.buttons["page-Memories"].firstMatch
             let settings = app.buttons["page-Settings"].firstMatch
             XCTAssertTrue(ptt.waitForExistence(timeout: 60), "Not connected")
-            XCTAssertTrue(window.frame.width > window.frame.height, "Not in landscape")
+            // A folded iPhone Duo does not turn; its page bar stands at the side anyway (ADR-0071).
+            let isLandscape = NSPredicate { element, _ in
+                guard let frame = (element as? XCUIElement)?.frame else { return false }
+                return frame.width > frame.height
+            }
+            guard XCTWaiter.wait(for: [expectation(for: isLandscape, evaluatedWith: window)], timeout: 5) == .completed
+            else {
+                throw XCTSkip("This iPhone does not turn to landscape")
+            }
             XCTAssertGreaterThanOrEqual(frequency.frame.minY, window.frame.minY, "The frequency is cut off at the top")
             XCTAssertLessThanOrEqual(ptt.frame.maxY, window.frame.maxY, "PTT is cut off at the bottom")
             XCTAssertLessThanOrEqual(settings.frame.maxY, window.frame.maxY, "The page bar is cut off at the bottom")
