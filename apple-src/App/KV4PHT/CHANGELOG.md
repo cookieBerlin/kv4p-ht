@@ -81,8 +81,6 @@ own, with its version, build and date.
 
 ### Added
 
-- Mac: hold the space bar to transmit, or ⌥ and the space bar for the access tone. ⌘K connects and disconnects, and
-  the new **Radio** menu lists the keys.
 - A map with your position, the repeaters and frequencies of your memories, and the APRS beacons that have a position,
   each as a layer to switch on and off, by band.
 - The APRS stations and objects heard on the map, each at its last position with its symbol, within a time window
@@ -134,8 +132,6 @@ own, with its version, build and date.
 
 ### Added
 
-- Mac: hold the space bar to transmit, or ⌥ and the space bar for the access tone. ⌘K connects and disconnects, and
-  the new **Radio** menu lists the keys.
 - Control a kv4p HT radio from iPhone, iPad and Mac: over Bluetooth, or by USB cable on the Mac.
 - A built-in simulated radio, to try the app without hardware.
 - Frequency, bandwidth, CTCSS tones, squelch, power and filters, with an S-meter.

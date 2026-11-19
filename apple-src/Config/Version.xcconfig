@@ -1,4 +1,4 @@
 // The app's own version (ADR-0070): below 1.0 on TestFlight, 1.0.0 for the first App Store release. Raise it for
 // every TestFlight build that brings something new; the build ID tells the uploads apart.
 
-MARKETING_VERSION = 0.2.0
+MARKETING_VERSION = 0.3.0
